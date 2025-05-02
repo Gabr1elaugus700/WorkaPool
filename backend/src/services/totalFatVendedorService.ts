@@ -1,4 +1,4 @@
-import { buscarFaturamentoVendedor } from '../repositories/totalFatVendedorRepoitory';
+import { buscarFaturamentoVendedor } from '../repositories/totalFatVendedorRepository';
 
 export const getFaturamento = async (codRep: number, dataInicio: Date) => {
   const resultado = await buscarFaturamentoVendedor(codRep, dataInicio);

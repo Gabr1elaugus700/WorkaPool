@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchFaturamento } from '../services/useFatVendedor';
+import { fetchRankingProdutos } from '../services/useTotalProdutos'
 import DefaultLayout from '../layout/DefaultLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from "@/components/ui/progress"
@@ -10,9 +11,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts"
 import { Table, TableBody, TableHead, TableHeader, TableCell, TableRow } from '../components/ui/table'
 
@@ -25,26 +23,23 @@ const faturamentoDiario = [
   { dia: "05", valor: 2000 },
 ]
 
-const produtosMaisVendidos = [
-  { nome: "Produto A", vendas: 40 },
-  { nome: "Produto B", vendas: 30 },
-  { nome: "Produto C", vendas: 20 },
-  { nome: "Produto D", vendas: 10 },
-]
-
 const clientesTop = [
   { nome: "Cliente X", valor: 5200 },
   { nome: "Cliente Y", valor: 4100 },
   { nome: "Cliente Z", valor: 3900 },
 ]
 
-const cores = ["#6366F1", "#3B82F6", "#10B981", "#F59E0B"]
+//const cores = ["#6366F1", "#3B82F6", "#10B981", "#F59E0B"]
 
 export default function Dashboard() {
+  // Faturamento e Volume
   const [totalFaturado, setTotalFaturado] = useState<number>(0);
   const [totalkg, setTotalkg] = useState<number>(0);
   const [vendedor, setVendedor] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [produtosVendidos, setProdutosVendidos] = useState<{ PRODUTO: string; QUANT: number }[]>([]);
+  const [topCount, setTopCount] = useState<number>(10);
+
 
   useEffect(() => {
     const carregarFaturamento = async () => {
@@ -66,20 +61,41 @@ export default function Dashboard() {
     carregarFaturamento();
   }, []);
 
+  useEffect(() => {
+    const carregarProdutos = async () => {
+      try {
+        const codRep = 75;
+        const dataInicio = '2025-04-01';
+
+        const data = await fetchRankingProdutos(codRep, dataInicio, topCount);
+
+        setProdutosVendidos(data);
+      } catch (error) {
+        console.error('❌ Erro ao carregar produtos:', error);
+      }
+    };
+
+    carregarProdutos();
+  }, [topCount]);
+
+
+  //Carregando
   if (loading) {
     return <div className="text-center p-4">Carregando...</div>;
   }
+
 
   return (
     <DefaultLayout>
       <div className="p-6 grid grid-cols-5 md:grid-cols-2 xl:grid-cols-4 gap-1 border-2">
         <h1 className="text-2xl font-bold mb-4 col-span-5">Veja Seu desempenho, {vendedor}:</h1>
-        <Card className="bg-slate-300 col-span-4     md:col-span-3  ">
+
+        <Card className="bg-slate-300 col-span-2    md:col-span-3  ">
           <CardHeader>
             <CardTitle>Faturamento</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center h-36">
-            
+
             <p className="text-2xl font-bold mt-2">
               {totalFaturado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </p>
@@ -89,48 +105,59 @@ export default function Dashboard() {
                 maximumFractionDigits: 2,
               })}
             </p>
-            <Progress className="bg-slate-400 [&>div]:bg-emerald-500" value={65} />
+            <Progress className="bg-slate-400 [&>div]:bg-emerald-500 mt-2" value={65} />
           </CardContent>
         </Card>
-        {/* <Card className=" bg-slate-300 ">
+        <Card className="bg-slate-300 xl:col-span-4">
           <CardHeader>
-            <CardTitle>Meta de Vendas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-2">Meta: R$ 10.000</p>
-            <p className="text-lg font-semibold mb-2">Realizado: R$ 6.500</p>
-            
-          </CardContent>
-        </Card> */}
-
-        {/* Produtos mais vendidos */}
-        <Card className="bg-slate-300">
-          <CardHeader>
-            <CardTitle>Produtos Mais Vendidos</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={produtosMaisVendidos}
-                  dataKey="vendas"
-                  nameKey="nome"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label
+            <CardTitle>Top 10 Produtos Mais Vendidos</CardTitle>
+              <div className="mb-4">
+                <label className="font-semibold mr-2">Mostrar Top:</label>
+                <select
+                  value={topCount}
+                  onChange={(e) => setTopCount(Number(e.target.value))}
+                  className="border rounded px-2 py-1"
                 >
-                  {produtosMaisVendidos.map((_, index) => (
-                    <Cell key={index} fill={cores[index % cores.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={15}>15</option>
+                  <option value={20}>20</option>
+                </select>
+              </div>
+            
+          </CardHeader>
+          <CardContent>            
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>#</TableHead>
+                  <TableHead>Produto</TableHead>
+                  <TableHead className="text-right">Quantidade</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {produtosVendidos.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{index + 1}º</TableCell>
+                    <TableCell>{item.PRODUTO ?? '—'}</TableCell>
+                    <TableCell className="text-right">
+                      {item.QUANT !== undefined
+                        ? item.QUANT.toLocaleString('pt-BR', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                        : '—'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
+        {/* Produtos mais vendidos */}
+
         {/* Faturamento por dia */}
-        <Card className="col-span-1 xl:col-span-4 bg-slate-300">
+        <Card className="col-span-2 xl:col-span-4 bg-slate-300">
           <CardHeader>
             <CardTitle>Faturamento Diário</CardTitle>
           </CardHeader>
