@@ -45,26 +45,7 @@ export default function PedidosCarteira() {
             ))}
           </TableBody>
         </Table>
-        {/* <table className="w-full table-auto border-collapse">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border-2 border-gray-400 px-4 py-2 text-left ">Vendedor</th>
-              <th className="border-2 border-gray-400 px-4 py-2 text-left">Grupo</th>
-              <th className="border-2 border-gray-400 px-4 py-2 text-left">Quantidade</th>
-              <th className="border-2 border-gray-400 px-4 py-2 text-left">Valor</th>
-            </tr>
-          </thead>
-          <tbody>
-            {dados.map((item, index) => (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="border px-4 py-2">{item.VENDEDOR}</td>
-                <td className="border px-4 py-2">{item.GRUPO}</td>
-                <td className="border px-4 py-2">{item.QUANTIDADE}</td>
-                <td className="border px-4 py-2">R$ {item.VALOR.toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table> */}
+        
       </div>
     </DefaultLayout >
   )

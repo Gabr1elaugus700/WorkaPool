@@ -6,6 +6,7 @@ import dotenv from 'dotenv'
 import clienteRoutes from './routes/clienteRoutes'
 import testeConectionRoutes from './routes/testeConection'
 import pedidosRoutes from './routes/pedidosRoutes'
+import fatVenRoutes  from './routes/totalFatVendedorRoutes'
 
 dotenv.config()
 
@@ -19,6 +20,7 @@ app.use(express.json())
 app.use('/api/clientes', clienteRoutes)
 app.use('/api/teste', testeConectionRoutes)
 app.use('/api/pedidos', pedidosRoutes)
+app.use('/api/faturamento', fatVenRoutes)
 
 // Iniciar servidor
 const PORT = process.env.PORT || 3001

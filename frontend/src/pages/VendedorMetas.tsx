@@ -1,6 +1,5 @@
 import DefaultLayout from "../layout/DefaultLayout";
 import React, { useState } from 'react';
-import { Button } from "../components/Button";
 
 const vendedores = [
   { id: 'v1', nome: 'João' },
@@ -34,7 +33,7 @@ const VendedorMetas: React.FC = () => {
 
   return (
     <DefaultLayout>
-      <Button success> Salvar</Button>
+      {/* <Button success> Salvar</Button> */}
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Definição de Metas por Vendedor (em kg)</h1>
         <div className="overflow-auto bg-slat">

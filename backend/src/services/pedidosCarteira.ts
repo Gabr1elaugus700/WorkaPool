@@ -1,9 +1,9 @@
 import { sqlPool, sqlPoolConnect } from "../database/sqlServer";
 
 export async function getPedidosCarteira() {
-    await sqlPoolConnect;
+  await sqlPoolConnect;
 
-    const result = await sqlPool.request().query(`
+  const result = await sqlPool.request().query(`
         SELECT rep.aperep AS [VENDEDOR]
 				--,isnull(grp.CODGRP,'G099') AS  [CODGRU]
 				,isnull(grp.DESGRP,'OUTROS PRODUTOS') AS [GRUPO]
@@ -21,5 +21,5 @@ export async function getPedidosCarteira() {
         AND ped.tnspro <> '90150'
         group by rep.aperep, isnull(grp.CODGRP,'G099'), isnull(grp.DESGRP,'OUTROS PRODUTOS'), ipd.preuni, ipd.qtdped
         `)
-    return result.recordset
+  return result.recordset
 }

@@ -40,10 +40,7 @@ export default function DefaultLayout({ children }: Props) {
           </div>
         </div>
       </nav>
-      <head> 
-        <title>WorkaPool App</title>
-        <link rel="icon" href="/src/assets/logo.svg" />
-      </head>
+      
       {/* Conteúdo principal */}
       <main className="flex-1 container mx-auto p-4">{children}</main>
 
