@@ -9,6 +9,7 @@ import pedidosRoutes from './routes/pedidosRoutes'
 import fatVenRoutes  from './routes/totalFatVendedorRoutes'
 import rankingProdutosVendidos from './routes/rankingProdutosRoutes'
 import productRoutes from './routes/produtosRoutes'
+import vendedoresRoutes from './routes/vendedoresRoutes'
 
 dotenv.config()
 
@@ -24,7 +25,8 @@ app.use('/api/teste', testeConectionRoutes)
 app.use('/api/pedidos', pedidosRoutes)
 app.use('/api/faturamento', fatVenRoutes)
 app.use('/api/rankingProdutos', rankingProdutosVendidos)
-app.use("/api/produtos", productRoutes);
+app.use('/api/produtos', productRoutes);
+app.use('/api/vendedores', vendedoresRoutes);
 
 // Iniciar servidor
 const PORT = process.env.PORT || 3001
