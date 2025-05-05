@@ -10,10 +10,18 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
+  ResponsiveContainer
 } from "recharts"
 import { Table, TableBody, TableHead, TableHeader, TableCell, TableRow } from '../components/ui/table'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
+import { PieFaturamento } from '../components/charts/PieFaturamento'
 
 const faturamentoDiario = [
   { dia: "01", valor: 1200 },
@@ -90,7 +98,7 @@ export default function Dashboard() {
       <div className="p-6 grid grid-cols-5 md:grid-cols-2 xl:grid-cols-4 gap-1 border-2">
         <h1 className="text-2xl font-bold mb-4 col-span-5">Veja Seu desempenho, {vendedor}:</h1>
 
-        <Card className="bg-slate-300 col-span-2    md:col-span-3  ">
+        <Card className="bg-slate-300 col-span-2 md:col-span-4  ">
           <CardHeader>
             <CardTitle>Faturamento</CardTitle>
           </CardHeader>
@@ -108,25 +116,37 @@ export default function Dashboard() {
             <Progress className="bg-slate-400 [&>div]:bg-emerald-500 mt-2" value={65} />
           </CardContent>
         </Card>
-        <Card className="bg-slate-300 xl:col-span-4">
+        <Card className="col-span-2 xl:col-span-4">
+            <CardContent>
+              <PieFaturamento />
+            </CardContent>
+          </Card>
+        <Card className="bg-slate-300 xl:col-span-2">
           <CardHeader>
-            <CardTitle>Top 10 Produtos Mais Vendidos</CardTitle>
-              <div className="mb-4">
-                <label className="font-semibold mr-2">Mostrar Top:</label>
-                <select
-                  value={topCount}
-                  onChange={(e) => setTopCount(Number(e.target.value))}
-                  className="border rounded px-2 py-1"
+
+            <div className="flex items-center justify-between mb-4">
+              <CardTitle>Top {topCount} Produtos Mais Vendidos</CardTitle>
+              <div className="flex items-center space-x-2">
+                <span className="font-semibold text-sm">Mostrar Top:</span>
+                <Select
+                  onValueChange={(value) => setTopCount(Number(value))}
+                  defaultValue={topCount.toString()}
                 >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={15}>15</option>
-                  <option value={20}>20</option>
-                </select>
+                  <SelectTrigger className="w-[60px] h-8 text-sm px-1">
+                    <SelectValue placeholder="Qtd" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="15">15</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            
+            </div>
+
           </CardHeader>
-          <CardContent>            
+          
+          <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>

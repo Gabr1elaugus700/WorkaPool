@@ -1,12 +1,12 @@
 import { sqlPool, sqlPoolConnect } from "../database/sqlServer";
 
 export async function buscarTotalProdutos(codRep: number, dataInicio: Date) {
-    await sqlPoolConnect;
+  await sqlPoolConnect;
 
-    const result = await sqlPool.request()
-        .input('codRep', codRep)
-        .input('dataInicio', dataInicio)
-        .query(`
+  const result = await sqlPool.request()
+    .input('codRep', codRep)
+    .input('dataInicio', dataInicio)
+    .query(`
             SELECT 
         ISNULL(grp.desgrp,'OUTROS PRODUTOS')  AS [PRODUTO],
         SUM(CASE WHEN ipv.codpro = '101072' THEN (ipv.qtdfat - ipv.qtddev) / 2 ELSE (ipv.qtdfat - ipv.qtddev) END) AS [QUANT],
@@ -45,8 +45,8 @@ export async function buscarTotalProdutos(codRep: number, dataInicio: Date) {
         AND tns.venfat = 'S'
         AND ipv.codemp = 1 
         AND rep.codrep = @codRep
-      GROUP BY rep.aperep, rep.codrep, grp.desgrp
-        
+      GROUP BY grp.desgrp, rep.aperep, rep.codrep
+      ORDER BY [QUANT] DESC 
       `);
-      return result.recordset;
+  return result.recordset;
 }

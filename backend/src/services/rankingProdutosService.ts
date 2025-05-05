@@ -7,10 +7,16 @@ type ProdutoRanking = {
 
 export const getRankingProdutos = async (codRep: number, dataInicio: Date, top: number) => {
   const todos: ProdutoRanking[] = await buscarTotalProdutos(codRep, dataInicio);
-
-  const top10 = todos
+  
+  const topSorted = todos
+    .map(item => ({
+      ...item,
+      QUANTIDADE: Number(item.QUANTIDADE)
+    }))
     .sort((a, b) => b.QUANTIDADE - a.QUANTIDADE)
     .slice(0, top);
 
-  return top10;
+  console.log('🔝 Top ordenado:', topSorted);
+
+  return topSorted;
 };
