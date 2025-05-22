@@ -7,6 +7,7 @@ import Clientes from "../pages/Clientes";
 import Pedidos from "../pages/Pedidos";
 import Dashboard from '../pages/dashboardVendas';
 import DashboardTest from '../pages/dashboard'
+import MontagemDeCargas from '../pages/controleDeCargas';
 
 
 const AppRoutes = () => {
@@ -17,6 +18,7 @@ const AppRoutes = () => {
         <Route path="/metas" element={<VendedorMetas />} />
         <Route path="/clientes" element={<Clientes />} />
         <Route path="/pedidos" element={<Pedidos />} />
+        <Route path="/cargas" element={<MontagemDeCargas />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dashboardTest" element={<DashboardTest />} />
       </Routes>

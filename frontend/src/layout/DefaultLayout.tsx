@@ -1,6 +1,6 @@
-// src/layout/DefaultLayout.tsx
 import React from "react";
 import { Link } from "react-router-dom";
+import { Toaster } from "sonner";
 
 type Props = {
   children: React.ReactNode;
@@ -21,7 +21,7 @@ export default function DefaultLayout({ children }: Props) {
           <div className="flex gap-4">
             <Link
               to="/"
-              className="text-white hover:text-black transition-colors "
+              className="text-white hover:text-black transition-colors"
             >
               Início
             </Link>
@@ -40,13 +40,16 @@ export default function DefaultLayout({ children }: Props) {
           </div>
         </div>
       </nav>
-      
+
       {/* Conteúdo principal */}
       <main className="flex-1 container mx-auto p-4">{children}</main>
 
+      {/* Toaster do Sonner */}
+      <Toaster richColors position="top-center" />
+
       {/* Rodapé */}
       <footer className="bg-white border-t text-center py-4 text-sm text-gray-500">
-        &copy; 2025 - Feito com 🧠 por Gabriel Garbugio. 
+        &copy; 2025 - Feito com 🧠 por Gabriel Garbugio.
       </footer>
     </div>
   );

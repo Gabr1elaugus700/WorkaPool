@@ -52,8 +52,8 @@ export default function Dashboard() {
   useEffect(() => {
     const carregarFaturamento = async () => {
       try {
-        const codRep = 75;
-        const dataInicio = '2025-04-01';
+        const codRep = 4;
+        const dataInicio = '2025-05-01';
 
         const { total, vendedor, totalkg } = await fetchFaturamento(codRep, dataInicio);
         setTotalFaturado(total);
@@ -72,7 +72,7 @@ export default function Dashboard() {
   useEffect(() => {
     const carregarProdutos = async () => {
       try {
-        const codRep = 75;
+        const codRep = 4;
         const dataInicio = '2025-04-01';
 
         const data = await fetchRankingProdutos(codRep, dataInicio, topCount);

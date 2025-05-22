@@ -58,7 +58,7 @@ const VendedorMetas: React.FC = () => {
         <h1 className="text-2xl font-bold mb-4">Definição de Metas por Vendedor (em kg)</h1>
 
         <div className="max-h-[80vh] overflow-auto border rounded-xl">
-          <table className="min-w-full border-collapse">
+          <table className="min-w-full border-collapse sticky top-0">
             <thead className="sticky top-0 z-10 bg-white">
               <tr>
                 <th className="sticky top-0 left-0 z-30 bg-white px-4 py-2 w-[160px] text-left">####</th>
