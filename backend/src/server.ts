@@ -10,6 +10,8 @@ import fatVenRoutes  from './routes/totalFatVendedorRoutes'
 import rankingProdutosVendidos from './routes/rankingProdutosRoutes'
 import productRoutes from './routes/produtosRoutes'
 import vendedoresRoutes from './routes/vendedoresRoutes'
+import pedidosFechadosRoutes from './routes/pedidosFechadosRoutes'
+
 
 dotenv.config()
 
@@ -27,8 +29,9 @@ app.use('/api/faturamento', fatVenRoutes)
 app.use('/api/rankingProdutos', rankingProdutosVendidos)
 app.use('/api/produtos', productRoutes);
 app.use('/api/vendedores', vendedoresRoutes);
+app.use('/api/pedidosFechados', pedidosFechadosRoutes);
 
-// Iniciar servidor
+// Iniciar servidorp
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   // console.log(`🚀 Backend rodando em http://localhost:${PORT}`)
