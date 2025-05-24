@@ -1,11 +1,22 @@
 import { Request, Response } from "express";
-import { loginUser } from "../services/authService";
+import { registerUser, loginUser } from "../services/authService";
 
-export const login = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+export const register = async (req: Request, res: Response) => {
+  const { user, password, role } = req.body;
 
   try {
-    const token = await loginUser(email, password);
+    const createdUser = await registerUser(user, password, role);
+    res.status(201).json(createdUser);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+export const login = async (req: Request, res: Response) => {
+  const { user, password } = req.body;
+
+  try {
+    const token = await loginUser(user, password);
     res.json({ token });
   } catch (err: any) {
     res.status(401).json({ error: err.message });
