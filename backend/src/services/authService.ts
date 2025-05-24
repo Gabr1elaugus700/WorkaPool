@@ -29,9 +29,10 @@ export const loginUser = async (user: string, password: string) => {
   if (!dbUser || !(await bcrypt.compare(password, dbUser.password))) {
     throw new Error("Credenciais inválidas");
   }
+  // console.log("Login de:", dbUser);
 
   const token = jwt.sign(
-    { id: dbUser.id, role: dbUser.role },
+    { id: dbUser.id, role: dbUser.role, user: dbUser.user },
     JWT_SECRET,
     { expiresIn: "1h" }
   );

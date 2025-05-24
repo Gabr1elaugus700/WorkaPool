@@ -2,11 +2,27 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Toaster } from "sonner";
 
+import { useAuth } from "@/auth/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { CopyIcon, LogOutIcon } from "lucide-react";
+
+
+
 type Props = {
   children: React.ReactNode;
 };
 
 export default function DefaultLayout({ children }: Props) {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Navbar */}
@@ -37,7 +53,19 @@ export default function DefaultLayout({ children }: Props) {
             >
               DashBoards
             </Link>
+            <Button
+              variant="ghost"
+              onClick={handleLogout}
+              className="text-white hover:text-black transition-colors cursor-pointer"
+            >
+              <LogOutIcon></LogOutIcon> <span >Sair</span>
+            </Button>
           </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <>
+            
+          </>
         </div>
       </nav>
 

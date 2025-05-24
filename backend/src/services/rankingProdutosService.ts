@@ -16,7 +16,6 @@ export const getRankingProdutos = async (codRep: number, dataInicio: Date, top: 
     .sort((a, b) => b.QUANTIDADE - a.QUANTIDADE)
     .slice(0, top);
 
-  console.log('🔝 Top ordenado:', topSorted);
 
   return topSorted;
 };
