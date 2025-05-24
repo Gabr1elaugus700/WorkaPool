@@ -11,6 +11,7 @@ import rankingProdutosVendidos from './routes/rankingProdutosRoutes'
 import productRoutes from './routes/produtosRoutes'
 import vendedoresRoutes from './routes/vendedoresRoutes'
 import pedidosFechadosRoutes from './routes/pedidosFechadosRoutes'
+import authRoutes from './routes/authRoutes'
 
 
 dotenv.config()
@@ -30,6 +31,7 @@ app.use('/api/rankingProdutos', rankingProdutosVendidos)
 app.use('/api/produtos', productRoutes);
 app.use('/api/vendedores', vendedoresRoutes);
 app.use('/api/pedidosFechados', pedidosFechadosRoutes);
+app.use("/api/auth", authRoutes);
 
 // Iniciar servidorp
 const PORT = process.env.PORT || 3001
