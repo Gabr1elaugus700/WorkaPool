@@ -5,7 +5,7 @@ import { Toaster } from "sonner";
 import { useAuth } from "@/auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CopyIcon, LogOutIcon } from "lucide-react";
+import { LogOutIcon } from "lucide-react";
 
 
 

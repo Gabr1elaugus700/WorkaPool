@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
+import { useAuth } from "../auth/AuthContext";
 import { PieFaturamento } from '../components/charts/PieFaturamento'
 
 const faturamentoDiario = [
@@ -48,13 +48,14 @@ export default function Dashboard() {
   const [produtosVendidos, setProdutosVendidos] = useState<{ PRODUTO: string; QUANT: number }[]>([]);
   const [topCount, setTopCount] = useState<number>(10);
 
+  const { user } = useAuth(); 
 
   useEffect(() => {
+    if (!user?.codRep) return;
     const carregarFaturamento = async () => {
       try {
-        const codRep = 4;
         const dataInicio = '2025-05-01';
-
+        const codRep = user.codRep;
         const { total, vendedor, totalkg } = await fetchFaturamento(codRep, dataInicio);
         setTotalFaturado(total);
         setVendedor(vendedor);
@@ -67,12 +68,13 @@ export default function Dashboard() {
     };
 
     carregarFaturamento();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
+    if (!user?.codRep) return;
     const carregarProdutos = async () => {
       try {
-        const codRep = 4;
+        const codRep = user.codRep;
         const dataInicio = '2025-04-01';
 
         const data = await fetchRankingProdutos(codRep, dataInicio, topCount);
@@ -84,7 +86,7 @@ export default function Dashboard() {
     };
 
     carregarProdutos();
-  }, [topCount]);
+  }, [user, topCount]);
 
 
   //Carregando

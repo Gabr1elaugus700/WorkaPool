@@ -16,7 +16,7 @@ export const registerUser = async (user: string, password: string, role?: Role) 
     data: {
       user: user,
       password: hashedPassword,
-      role: role ?? "USER",
+      role: role ?? "USER"
     },
   });
 
@@ -32,7 +32,11 @@ export const loginUser = async (user: string, password: string) => {
   // console.log("Login de:", dbUser);
 
   const token = jwt.sign(
-    { id: dbUser.id, role: dbUser.role, user: dbUser.user },
+    { 
+      id: dbUser.id,
+      role: dbUser.role, 
+      name: dbUser.name, 
+      codRep: dbUser.codRep }, 
     JWT_SECRET,
     { expiresIn: "1h" }
   );

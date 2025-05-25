@@ -5,7 +5,9 @@ import { jwtDecode } from "jwt-decode";
 type JwtPayload = {
   id: string;
   role: string;
-  user?: string; // 'user' = nome de usuário no token
+  user?: string;
+  name?: string;
+  codRep: number;
 };
 
 // Tudo que o contexto expõe
