@@ -38,7 +38,7 @@ app.use('/api/pedidosFechados', pedidosFechadosRoutes);
 app.use('/api/auth', authRoutes);
 
 // Rota de consultas Banco de dados Prisma
-app.use('/api/CriarCargas', criarCargas)
+app.use('/api/Cargas', criarCargas)
 
 // Iniciar servidorp
 const PORT = process.env.PORT || 3001

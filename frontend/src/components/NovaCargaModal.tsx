@@ -41,7 +41,7 @@ export function NovaCargaModal({ onCreated }: Props) {
     };
 
     const criarCarga = async () => {
-        const res = await fetch(`${API}/api/CriarCargas`, {
+        const res = await fetch(`${API}/api/Cargas`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(form),
