@@ -10,6 +10,7 @@ export type PedidoAgrupado = {
     peso: number;
   }[];
   pesoTotal: number;
+  codCar?: number; // Opcional, se necessário
 };
 
 type RawItem = {

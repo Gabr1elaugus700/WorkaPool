@@ -10,9 +10,9 @@ import CargaDropzone from '@/components/CargaDropzone';
 
 import { Pedido, Carga } from '@/types/cargas';
 import { fetchPedidosFechados, PedidoAgrupado } from '@/services/usePedidosFechados';
-
 import { NovaCargaModal } from '@/components/NovaCargaModal';
 import { fetchCargasAbertas } from '@/services/useCargasAbertas';
+import { fetchPedidosCargas } from '@/services/usePedidosCarga';
 
 export default function ControleDeCargas() {
   const { user } = useAuth();
@@ -27,23 +27,45 @@ export default function ControleDeCargas() {
 
     const carregar = async () => {
       try {
+        // Carrega os pedidos gerais (disponíveis para alocar)
         const data = await fetchPedidosFechados(user.codRep);
         setPedidosResumo(data);
 
         const convertidos = data.map(p => ({
           id: p.numPed,
+          numPed: p.numPed,
           cliente: p.cliente,
           cidade: p.cidade,
           peso: p.pesoTotal,
           vendedor: p.vendedor,
           precoFrete: 0,
-          numPed: p.numPed,
+          codCar: p.codCar ?? null
         }));
 
         setPedidos(convertidos);
-        const cargasAbertas = await fetchCargasAbertas();
+
+        // Carrega as cargas e, para cada uma, os pedidos vinculados
+        const cargasBase = await fetchCargasAbertas();
+
+        const cargasComPedidos = await Promise.all(
+          cargasBase.map(async (carga) => {
+            const todosPedidos = await fetchPedidosCargas(carga.codCar.toString());
+
+            const pedidosFiltrados = todosPedidos.filter(
+              (pedido) => Number(pedido.codCar) === Number(carga.codCar)
+            );
+
+            return {
+              ...carga,
+              pedidos: pedidosFiltrados,
+              pesoAtual: pedidosFiltrados.reduce((soma, p) => soma + p.peso, 0),
+            };
+          })
+        );
+
+        setCargas(cargasComPedidos);
       } catch (err) {
-        console.error('Erro ao carregar pedidos:', err);
+        console.error('Erro ao carregar dados:', err);
       } finally {
         setLoading(false);
       }
@@ -51,9 +73,6 @@ export default function ControleDeCargas() {
 
     carregar();
   }, [user]);
-
-  
-
 
   const handleDragEnd = (event: DragEndEvent) => {
     const pedido = event.active.data.current?.pedido as Pedido;
@@ -105,17 +124,17 @@ export default function ControleDeCargas() {
       prev.map((c) =>
         c.id === destinoId
           ? {
-              ...c,
-              pedidos: [...c.pedidos, pedido],
-              pesoAtual: c.pesoAtual + pedido.peso,
-            }
+            ...c,
+            pedidos: [...c.pedidos, pedido],
+            pesoAtual: c.pesoAtual + pedido.peso,
+          }
           : {
-              ...c,
-              pedidos: c.pedidos.filter((p) => p.id !== pedido.id),
-              pesoAtual: c.pedidos.some((p) => p.id === pedido.id)
-                ? c.pesoAtual - pedido.peso
-                : c.pesoAtual,
-            }
+            ...c,
+            pedidos: c.pedidos.filter((p) => p.id !== pedido.id),
+            pesoAtual: c.pedidos.some((p) => p.id === pedido.id)
+              ? c.pesoAtual - pedido.peso
+              : c.pesoAtual,
+          }
       )
     );
   };
@@ -150,7 +169,7 @@ export default function ControleDeCargas() {
                     ...prev,
                     {
                       ...nova,
-                      custoMinimo: nova.custoMin, // mapeando para o campo correto
+                      custoMinimo: nova.custoMin,
                       pedidos: [],
                       pesoAtual: 0,
                     },
@@ -162,6 +181,8 @@ export default function ControleDeCargas() {
             {cargas.map((carga) => (
               <CargaDropzone key={carga.id} carga={carga}>
                 {carga.pedidos.map((pedido) => {
+                  console.log('carga.codCar:', carga.codCar, 'pedido.codCar:', pedido.codCar);
+
                   const resumo = pedidosResumo.find(p => p.numPed === pedido.numPed);
                   return (
                     <PedidoCard
@@ -173,6 +194,7 @@ export default function ControleDeCargas() {
                 })}
               </CargaDropzone>
             ))}
+
           </div>
         </div>
       </DndContext>
