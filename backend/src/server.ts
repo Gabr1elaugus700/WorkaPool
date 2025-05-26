@@ -13,7 +13,7 @@ import productRoutes from './routes/produtosRoutes'
 import vendedoresRoutes from './routes/vendedoresRoutes'
 import pedidosFechadosRoutes from './routes/pedidosFechadosRoutes'
 import authRoutes from './routes/authRoutes'
-
+import pedidosCargasRoutes from './routes/pedidosCargasRoutes'
 
 //Importando as rotas De Consulta no banco de dados Prisma
 import criarCargas from './routes/criaCargas'
@@ -35,9 +35,10 @@ app.use('/api/rankingProdutos', rankingProdutosVendidos)
 app.use('/api/produtos', productRoutes);
 app.use('/api/vendedores', vendedoresRoutes);
 app.use('/api/pedidosFechados', pedidosFechadosRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/api/pedidosEmCargas', pedidosCargasRoutes);
 
 // Rota de consultas Banco de dados Prisma
+app.use('/api/auth', authRoutes);
 app.use('/api/Cargas', criarCargas)
 
 // Iniciar servidorp

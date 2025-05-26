@@ -1,4 +1,4 @@
-import { buscarPedidosPorVendedor } from '../repositories/pedidosFechadosRepository';
+import { buscarPedidosPorCarga } from '../repositories/pedidosCargasRepository';
 
 type PedidosFechados = {
     NUM_PED: string;
@@ -16,9 +16,9 @@ type PedidosFechados = {
     CODCAR: number;
 };
 
-export const getPedidosFechados = async (codRep: number): Promise<PedidosFechados[]> => {
+export const getPedidosPorCarga = async (codCar: number): Promise<PedidosFechados[]> => {
   try {
-    const produtosList = await buscarPedidosPorVendedor(codRep);
+    const produtosList = await buscarPedidosPorCarga(codCar);
 
     const produtosMap = produtosList.map(produto => ({
       ...produto,
@@ -27,7 +27,7 @@ export const getPedidosFechados = async (codRep: number): Promise<PedidosFechado
 
     return produtosMap;
   } catch (error) {
-    console.error('Erro ao buscar pedidos fechados:', error);
-    throw new Error('Erro ao buscar pedidos fechados');
+    console.error('Erro ao buscar pedidos Por Carga', error);
+    throw new Error('Erro ao buscar pedidos dessa Carga!');
   }
 };

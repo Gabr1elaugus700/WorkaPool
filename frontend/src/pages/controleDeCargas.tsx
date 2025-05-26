@@ -12,6 +12,7 @@ import { Pedido, Carga } from '@/types/cargas';
 import { fetchPedidosFechados, PedidoAgrupado } from '@/services/usePedidosFechados';
 
 import { NovaCargaModal } from '@/components/NovaCargaModal';
+import { fetchCargasAbertas } from '@/services/useCargasAbertas';
 
 export default function ControleDeCargas() {
   const { user } = useAuth();
@@ -40,6 +41,7 @@ export default function ControleDeCargas() {
         }));
 
         setPedidos(convertidos);
+        const cargasAbertas = await fetchCargasAbertas();
       } catch (err) {
         console.error('Erro ao carregar pedidos:', err);
       } finally {
@@ -49,6 +51,9 @@ export default function ControleDeCargas() {
 
     carregar();
   }, [user]);
+
+  
+
 
   const handleDragEnd = (event: DragEndEvent) => {
     const pedido = event.active.data.current?.pedido as Pedido;
