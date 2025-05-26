@@ -1,4 +1,4 @@
-export interface Pedido {
+export type Pedido = {
   id: string;
   cliente: string;
   cidade: string;
@@ -6,8 +6,8 @@ export interface Pedido {
   vendedor: string;
   precoFrete: number;
   numPed: string;
-  situacao: 'atraso' | 'pendente' | 'alerta'
-}
+  // situacao: "pendente" | "alerta" | "atraso";
+};
 
 export interface Carga {
   id: string;

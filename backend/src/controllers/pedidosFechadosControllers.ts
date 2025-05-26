@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import { getPedidosFechados } from "../services/pedidosFechadosService";
 
 export const getPedFechados = async (req: Request, res: Response): Promise<any> => {
-  const { codRep } = req.body;
+  const codRep = Number(req.query.codRep);
+
 
   if (!codRep) {
     return res.status(400).json({ message: "Parâmetros obrigatórios" });
