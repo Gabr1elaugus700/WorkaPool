@@ -12,7 +12,7 @@ export async function buscarPedidosPorCarga(codCar: number) {
 				,cli.cidcli AS [CIDADE]
 				,cli.sigufs AS [ESTADO]
 				,rep.aperep AS [VENDEDOR]
-				,rep.codrep AS [COD_VEN]
+				,rep.codrep AS [CODREP]
 				,ped.pedblo AS [BLOQUEADO]
 				,sum(ipd.qtdped * der.pesbru) AS [PESO]
 				,ISNULL(grp.desgrp,'OUTROS PRODUTOS') AS [PRODUTOS]

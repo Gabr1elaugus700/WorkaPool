@@ -1,20 +1,6 @@
 import { buscarPedidosPorVendedor } from '../repositories/pedidosFechadosRepository';
+import { PedidosFechados } from '../types/cargas'
 
-type PedidosFechados = {
-    NUM_PED: string;
-    COD_CLI: string;
-    CLIENTE: string;
-    CIDADE: string;
-    ESTADO: string;
-    VENDEDOR: string;
-    COD_VEN: number;
-    BLOQUEADO: number;
-    PESO: number;
-    PRODUTOS: string;
-    DERIVACAO: string;
-    QUANTIDADE: number;
-    CODCAR: number;
-};
 
 export const getPedidosFechados = async (codRep: number): Promise<PedidosFechados[]> => {
   try {
@@ -24,7 +10,7 @@ export const getPedidosFechados = async (codRep: number): Promise<PedidosFechado
       ...produto,
       PRODUTOS: produto.PRODUTOS?.trim() || '',
     }));
-
+    // console.log('Produtos Fechados:', produtosMap);
     return produtosMap;
   } catch (error) {
     console.error('Erro ao buscar pedidos fechados:', error);

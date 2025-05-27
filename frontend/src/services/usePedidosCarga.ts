@@ -1,16 +1,6 @@
 const API = import.meta.env.VITE_API_URL;
 import { Pedido } from '@/types/cargas';
-
-type PedidoERP = {
-  NUM_PED: string;
-  CLIENTE: string;
-  CIDADE: string;
-  PESO: number;
-  VENDEDOR: string;
-  CODCAR: number | null;
-  PRODUTOS: string;
-  DERIVACAO: string;
-};
+import { PedidoERP } from '@/types/cargas';
 
 export async function fetchPedidosCargas(codCar: number): Promise<Pedido[]> {
   const response = await fetch(`${API}/api/pedidosEmCargas?codCar=${codCar}`);
@@ -31,6 +21,7 @@ export async function fetchPedidosCargas(codCar: number): Promise<Pedido[]> {
         cliente: item.CLIENTE,
         cidade: item.CIDADE,
         vendedor: item.VENDEDOR,
+        codRep: item.CODREP ?? null,
         peso: item.PESO,
         precoFrete: 0,
         codCar: item.CODCAR ?? null,

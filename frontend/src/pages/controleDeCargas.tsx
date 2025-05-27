@@ -9,7 +9,7 @@ import PedidoDropzone from '@/components/PedidoDropzone';
 import CargaDropzone from '@/components/CargaDropzone';
 
 import { Pedido, Carga } from '@/types/cargas';
-import { fetchPedidosFechados, PedidoAgrupado } from '@/services/usePedidosFechados';
+import { fetchPedidosFechados, } from '@/services/usePedidosFechados';
 import { NovaCargaModal } from '@/components/NovaCargaModal';
 import { fetchCargasAbertas } from '@/services/useCargasAbertas';
 import { fetchPedidosCargas } from '@/services/usePedidosCarga';
@@ -17,13 +17,14 @@ import { fetchPedidosCargas } from '@/services/usePedidosCarga';
 export default function ControleDeCargas() {
   const { user } = useAuth();
 
-  const [, setPedidosResumo] = useState<PedidoAgrupado[]>([]);
+  const [, setPedidosResumo] = useState<Pedido[]>([]);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [cargas, setCargas] = useState<Carga[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user?.codRep) return;
+    console.log('role do usuário:', user.role);
 
     // const testarFetchDireto = async () => {
     //   try {
@@ -50,13 +51,14 @@ export default function ControleDeCargas() {
           numPed: p.numPed,
           cliente: p.cliente,
           cidade: p.cidade,
-          peso: p.pesoTotal,
+          peso: p.peso,
           vendedor: p.vendedor,
+          codRep: p.codRep ?? null, // Código do representante
           precoFrete: 0,
           codCar: p.codCar ?? null,
           sitCar: p.sitCar ?? null,
           posCar: p.posCar ?? null,
-          produtos: p.produtos ?? [], 
+          produtos: p.produtos ?? [],
         }));
 
 
@@ -68,22 +70,27 @@ export default function ControleDeCargas() {
           cargasBase.map(async (carga) => {
             const todosPedidos = await fetchPedidosCargas(carga.codCar);
 
-            console.log(`🧪 CARGA ${carga.codCar} => pedidos retornados:`);
-            console.table(todosPedidos.map(p => ({
-              numPed: p.numPed,
-              codCar: p.codCar,
-            })));
+            // console.log(`🧪 CARGA ${carga.codCar} => pedidos retornados:`);
+            // console.table(todosPedidos.map(p => ({
+            //   numPed: p.numPed,
+            //   codCar: p.codCar,
+            // })));
 
             // 🔁 Garante que pedidos vinculados à carga também entrem no resumo
             setPedidosResumo((prev) => {
               const novos = todosPedidos.map((p) => ({
+                id: p.numPed,
                 numPed: p.numPed,
                 cliente: p.cliente,
                 cidade: p.cidade,
                 vendedor: p.vendedor,
+                codRep: p.codRep ?? null,
                 produtos: p.produtos ?? [], // ✅ PEGA OS PRODUTOS DO BACK
-                pesoTotal: p.peso,
+                peso: p.peso,
+                precoFrete: 0,
                 codCar: p.codCar,
+                sitCar: p.sitCar,
+                posCar: p.posCar,
               }));
 
               const combinados = [...prev];
@@ -121,10 +128,25 @@ export default function ControleDeCargas() {
 
 
   const handleDragEnd = (event: DragEndEvent) => {
+
     const pedido = event.active.data.current?.pedido as Pedido;
     const destinoId = event.over?.id?.toString();
 
     if (!pedido || !destinoId) return;
+    if (!user) {
+      toast.error('Usuário não autenticado.');
+      return;
+    }
+
+    const isLogistica = user.role === 'LOGISTICA';
+    const isVendas = user.role === 'VENDAS' && pedido.codRep === user.codRep;
+
+    
+    if (!isLogistica && !isVendas) {
+      console.log('BLOQUEADO:', { role: user.role, codRepUser: user.codRep, codRepPedido: pedido.codRep });
+      toast.error('Você não tem permissão para mover esse Pedido');
+      return;
+    }
 
     const isInPedidos = pedidos.some((p) => p.id === pedido.id);
 

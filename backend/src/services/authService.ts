@@ -5,7 +5,7 @@ import { PrismaClient, Role } from "@prisma/client";
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 
-export const registerUser = async (user: string, password: string, role?: Role) => {
+export const registerUser = async (user: string, password: string, role?: Role, name?: string) => {
   const exists = await prisma.user.findUnique({ where: { user: user } });
 
   if (exists) throw new Error("Usuário já existe");
@@ -16,7 +16,8 @@ export const registerUser = async (user: string, password: string, role?: Role) 
     data: {
       user: user,
       password: hashedPassword,
-      role: role ?? "USER"
+      role: role ?? "USER",
+      name: name,
     },
   });
 

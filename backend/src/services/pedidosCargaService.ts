@@ -1,22 +1,5 @@
 import { buscarPedidosPorCarga } from '../repositories/pedidosCargasRepository';
-
-type PedidosFechados = {
-    NUM_PED: string;
-    COD_CLI: string;
-    CLIENTE: string;
-    CIDADE: string;
-    ESTADO: string;
-    VENDEDOR: string;
-    COD_VEN: number;
-    BLOQUEADO: number;
-    PESO: number;
-    PRODUTOS: string;
-    DERIVACAO: string;
-    QUANTIDADE: number;
-    CODCAR: number;
-    POSCAR: number;
-    SITCAR: string;
-};
+import { PedidosFechados } from '../types/cargas';
 
 export const getPedidosPorCarga = async (codCar: number): Promise<PedidosFechados[]> => {
   try {
