@@ -17,7 +17,7 @@ import { fetchPedidosCargas } from '@/services/usePedidosCarga';
 export default function ControleDeCargas() {
   const { user } = useAuth();
 
-  const [pedidosResumo, setPedidosResumo] = useState<PedidoAgrupado[]>([]);
+  const [, setPedidosResumo] = useState<PedidoAgrupado[]>([]);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [cargas, setCargas] = useState<Carga[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +54,11 @@ export default function ControleDeCargas() {
           vendedor: p.vendedor,
           precoFrete: 0,
           codCar: p.codCar ?? null,
+          sitCar: p.sitCar ?? null,
+          posCar: p.posCar ?? null,
+          produtos: p.produtos ?? [], 
         }));
+
 
         setPedidos(convertidos);
 
@@ -77,7 +81,7 @@ export default function ControleDeCargas() {
                 cliente: p.cliente,
                 cidade: p.cidade,
                 vendedor: p.vendedor,
-                produtos: [], // pode melhorar depois com fetch de produtos
+                produtos: p.produtos ?? [], // ✅ PEGA OS PRODUTOS DO BACK
                 pesoTotal: p.peso,
                 codCar: p.codCar,
               }));
@@ -189,16 +193,14 @@ export default function ControleDeCargas() {
             <div className="text-center col-span-3 text-xl">Carregando pedidos...</div>
           ) : (
             <PedidoDropzone>
-              {pedidos.map((pedido) => {
-                const resumo = pedidosResumo.find(p => p.numPed === pedido.numPed);
-                return (
-                  <PedidoCard
-                    key={pedido.id}
-                    pedido={pedido}
-                    produtos={resumo?.produtos || []}
-                  />
-                );
-              })}
+              {pedidos.map((pedido) => (
+                <PedidoCard
+                  key={pedido.id}
+                  pedido={pedido}
+                  produtos={pedido.produtos || []}
+                />
+              ))}
+
             </PedidoDropzone>
           )}
 
@@ -222,19 +224,14 @@ export default function ControleDeCargas() {
 
             {cargas.map((carga) => (
               <CargaDropzone key={carga.id} carga={carga}>
-                {carga.pedidos.map((pedido) => {
-                  // console.log('carga.codCar:', carga.codCar, 'pedido.codCar:', pedido.codCar);
+                {carga.pedidos.map((pedido) => (
+                  <PedidoCard
+                    key={pedido.id}
+                    pedido={pedido}
+                    produtos={pedido.produtos || []}
+                  />
+                ))}
 
-                  const resumo = pedidosResumo.find(p => p.numPed === String(pedido.numPed));
-                  console.log('🧩 Pedido:', pedido.numPed, 'Resumo:', resumo);
-                  return (
-                    <PedidoCard
-                      key={pedido.id}
-                      pedido={pedido}
-                      produtos={resumo?.produtos || []}
-                    />
-                  );
-                })}
               </CargaDropzone>
             ))}
 

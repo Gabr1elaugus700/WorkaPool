@@ -19,6 +19,8 @@ export async function buscarPedidosPorCarga(codCar: number) {
 				,ipd.codder AS [DERIVACAO]
 				,ipd.qtdped AS [QUANTIDADE]
 				,ped.usu_codcar AS [CODCAR]
+                ,ped.usu_poscar AS [POSCAR]
+                ,ped.usu_sitcar AS [SITCAR]
             FROM e120ped ped 
             LEFT JOIN E120IPD ipd ON ipd.codemp = ped.codemp 
                         AND ipd.codfil = ped.codfil 
@@ -32,6 +34,6 @@ export async function buscarPedidosPorCarga(codCar: number) {
             WHERE PED.sitped = 1
             AND ped.codtra = 26
             and ped.usu_codcar=@codCar 
-            GROUP BY ped.numped, ped.codcli, cli.nomcli, cli.cidcli, cli.sigufs, rep.aperep, rep.codrep, ped.pedblo ,ipd.codder ,ipd.qtdped, grp.desgrp, ped.usu_codcar`);
+            GROUP BY ped.numped, ped.codcli, cli.nomcli, cli.cidcli, cli.sigufs, rep.aperep, rep.codrep, ped.pedblo ,ipd.codder ,ipd.qtdped, grp.desgrp, ped.usu_codcar, ped.usu_poscar, ped.usu_sitcar`);
     return result.recordset;
 }

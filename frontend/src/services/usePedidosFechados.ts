@@ -12,6 +12,8 @@ export type PedidoAgrupado = {
   }[];
   pesoTotal: number;
   codCar?: number | null;
+  posCar?: number | null; // Posição do pedido na carga	
+  sitCar?: string | null; // Situação do pedido na carga
 };
 
 type RawItem = {
@@ -23,6 +25,8 @@ type RawItem = {
   DERIVACAO: string;
   PRODUTOS: string;
   CODCAR: number | null;
+  POSCAR?: number | null; // Posição do Pedido na Carga
+  SITCAR?: string | null; // Situação Do pedido na carga 
 };
 
 export const fetchPedidosFechados = async (codRep: number): Promise<PedidoAgrupado[]> => {
@@ -49,6 +53,8 @@ export const fetchPedidosFechados = async (codRep: number): Promise<PedidoAgrupa
         }],
         pesoTotal: item.PESO,
         codCar: item.CODCAR ?? null,
+        posCar: item.POSCAR ?? null,
+        sitCar: item.SITCAR ?? null 
       });
     } else {
       const existente = agrupado.get(numPed)!;

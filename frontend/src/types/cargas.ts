@@ -14,7 +14,6 @@ export type Pedido = {
   }[];
 };
 
-
 export interface Carga {
   id: string;
   destino: string;

@@ -14,6 +14,8 @@ type PedidosFechados = {
     DERIVACAO: string;
     QUANTIDADE: number;
     CODCAR: number;
+    POSCAR: number;
+    SITCAR: string;
 };
 
 export const getPedidosPorCarga = async (codCar: number): Promise<PedidosFechados[]> => {
