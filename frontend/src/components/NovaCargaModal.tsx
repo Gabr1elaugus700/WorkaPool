@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 const API = import.meta.env.VITE_API_URL;
 import { useAuth } from "../auth/AuthContext";
+import { PackagePlus } from 'lucide-react';
 
 type Cargas = {
     id: string;
@@ -54,8 +55,9 @@ export function NovaCargaModal({ onCreated }: Props) {
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button className="bg-emerald-600 hover:bg-emerald-700">Nova Carga</Button>
+            <DialogTrigger asChild >
+                <Button className=" bg-emerald-600 text-white py-2 rounded hover:bg-emerald-700"> <PackagePlus size={64}
+                /> </Button>
             </DialogTrigger>
 
             <DialogContent>
@@ -80,7 +82,7 @@ export function NovaCargaModal({ onCreated }: Props) {
                         <Label>Custo Mínimo (R$)</Label>
                         <Input name="custoMin" type="number" value={form.custoMin} onChange={handleChange} />
                     </div>
-                    <Button onClick={criarCarga} className="w-full mt-2">
+                    <Button onClick={criarCarga} className="w-full mt-2  bg-emerald-600 text-white py-2 rounded hover:bg-emerald-700">
                         Criar Carga
                     </Button>
                 </div>

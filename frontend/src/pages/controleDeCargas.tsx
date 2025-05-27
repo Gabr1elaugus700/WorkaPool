@@ -210,7 +210,7 @@ export default function ControleDeCargas() {
   return (
     <DefaultLayout>
       <DndContext onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-3 gap-6 p-6">
+        <div className="grid grid-cols-5 gap-6 p-6">
           {loading ? (
             <div className="text-center col-span-3 text-xl">Carregando pedidos...</div>
           ) : (
@@ -226,8 +226,8 @@ export default function ControleDeCargas() {
             </PedidoDropzone>
           )}
 
-          <div className="col-span-2 bg-gray-400 p-6 rounded shadow-md">
-            <div className="px-6 mt-4 flex justify-between items-center">
+          <div className="col-span-3 bg-gray-400 p-6 rounded shadow-md">
+            <div className="px-6 mt-4 flex justify-between items-center h-14">
               <h1 className="text-3xl font-bold mb-4">Cargas</h1>
               <NovaCargaModal
                 onCreated={(nova) =>
