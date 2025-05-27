@@ -17,7 +17,9 @@ export default function CargaDropzone({ carga, children }: Props) {
     >
       <h2 className="text-lg font-bold mb-3">
         Carga: {carga.codCar} <br />
-        Peso: {carga.pesoMax}kg Máx / Utilizado: {carga.pesoAtual}kg - {carga.destino}
+        Peso: {carga.pesoMax}kg Máx / Utilizado: {carga.pesoAtual.toLocaleString('pt-BR',
+          { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+        )} kg - {carga.destino}
       </h2>
 
      

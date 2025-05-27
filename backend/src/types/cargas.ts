@@ -13,15 +13,3 @@ export type Pedido = {
     peso: number;
   }[];
 };
-
-
-export interface Carga {
-  id: string;
-  destino: string;
-  pesoMax: number;
-  pesoAtual: number;
-  custoMinimo: number;
-  codCar: number;
-  pedidos: Pedido[];
-}
-

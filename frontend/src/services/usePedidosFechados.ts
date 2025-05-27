@@ -1,4 +1,5 @@
 const API = import.meta.env.VITE_API_URL;
+
 export type PedidoAgrupado = {
   numPed: string;
   cliente: string;
@@ -10,7 +11,7 @@ export type PedidoAgrupado = {
     peso: number;
   }[];
   pesoTotal: number;
-  codCar?: number; // Opcional, se necessário
+  codCar?: number | null;
 };
 
 type RawItem = {
@@ -21,13 +22,11 @@ type RawItem = {
   PESO: number;
   DERIVACAO: string;
   PRODUTOS: string;
+  CODCAR: number | null;
 };
-
 
 export const fetchPedidosFechados = async (codRep: number): Promise<PedidoAgrupado[]> => {
   const response = await fetch(`${API}/api/pedidosFechados?codRep=${codRep}`);
-
-
   if (!response.ok) throw new Error('Erro ao buscar pedidos');
 
   const data: RawItem[] = await response.json();
@@ -49,6 +48,7 @@ export const fetchPedidosFechados = async (codRep: number): Promise<PedidoAgrupa
           peso: item.PESO,
         }],
         pesoTotal: item.PESO,
+        codCar: item.CODCAR ?? null,
       });
     } else {
       const existente = agrupado.get(numPed)!;

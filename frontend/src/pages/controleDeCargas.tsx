@@ -25,9 +25,23 @@ export default function ControleDeCargas() {
   useEffect(() => {
     if (!user?.codRep) return;
 
+    // const testarFetchDireto = async () => {
+    //   try {
+    //     const res = await fetch(`http://localhost:3001/api/pedidos?codCar=3`);
+    //     const data = await res.json();
+
+    //     console.log('🔍 TESTE FETCH DIRETO - CARGA 3');
+    //     console.table(data); // Veja se os campos estão presentes: NUM_PED, CODCAR, etc.
+    //   } catch (err) {
+    //     console.error('❌ Erro no fetch direto:', err);
+    //   }
+    // };
+
+    // testarFetchDireto();
+
+
     const carregar = async () => {
       try {
-        // Carrega os pedidos gerais (disponíveis para alocar)
         const data = await fetchPedidosFechados(user.codRep);
         setPedidosResumo(data);
 
@@ -39,17 +53,44 @@ export default function ControleDeCargas() {
           peso: p.pesoTotal,
           vendedor: p.vendedor,
           precoFrete: 0,
-          codCar: p.codCar ?? null
+          codCar: p.codCar ?? null,
         }));
 
         setPedidos(convertidos);
 
-        // Carrega as cargas e, para cada uma, os pedidos vinculados
         const cargasBase = await fetchCargasAbertas();
 
         const cargasComPedidos = await Promise.all(
           cargasBase.map(async (carga) => {
-            const todosPedidos = await fetchPedidosCargas(carga.codCar.toString());
+            const todosPedidos = await fetchPedidosCargas(carga.codCar);
+
+            console.log(`🧪 CARGA ${carga.codCar} => pedidos retornados:`);
+            console.table(todosPedidos.map(p => ({
+              numPed: p.numPed,
+              codCar: p.codCar,
+            })));
+
+            // 🔁 Garante que pedidos vinculados à carga também entrem no resumo
+            setPedidosResumo((prev) => {
+              const novos = todosPedidos.map((p) => ({
+                numPed: p.numPed,
+                cliente: p.cliente,
+                cidade: p.cidade,
+                vendedor: p.vendedor,
+                produtos: [], // pode melhorar depois com fetch de produtos
+                pesoTotal: p.peso,
+                codCar: p.codCar,
+              }));
+
+              const combinados = [...prev];
+              novos.forEach((novo) => {
+                if (!combinados.some((r) => r.numPed === novo.numPed)) {
+                  combinados.push(novo);
+                }
+              });
+
+              return combinados;
+            });
 
             const pedidosFiltrados = todosPedidos.filter(
               (pedido) => Number(pedido.codCar) === Number(carga.codCar)
@@ -73,6 +114,7 @@ export default function ControleDeCargas() {
 
     carregar();
   }, [user]);
+
 
   const handleDragEnd = (event: DragEndEvent) => {
     const pedido = event.active.data.current?.pedido as Pedido;
@@ -181,9 +223,10 @@ export default function ControleDeCargas() {
             {cargas.map((carga) => (
               <CargaDropzone key={carga.id} carga={carga}>
                 {carga.pedidos.map((pedido) => {
-                  console.log('carga.codCar:', carga.codCar, 'pedido.codCar:', pedido.codCar);
+                  // console.log('carga.codCar:', carga.codCar, 'pedido.codCar:', pedido.codCar);
 
-                  const resumo = pedidosResumo.find(p => p.numPed === pedido.numPed);
+                  const resumo = pedidosResumo.find(p => p.numPed === String(pedido.numPed));
+                  console.log('🧩 Pedido:', pedido.numPed, 'Resumo:', resumo);
                   return (
                     <PedidoCard
                       key={pedido.id}
