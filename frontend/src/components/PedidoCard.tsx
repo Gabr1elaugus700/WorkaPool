@@ -8,9 +8,10 @@ type Props = {
     derivacao: string
     peso: number
   }[];
+  destaque?: boolean;
 }
 
-export default function PedidoCard({ pedido, produtos }: Props) {
+export default function PedidoCard({ pedido, produtos, destaque = false }: Props) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: pedido.id,
     data: { pedido },
@@ -21,7 +22,9 @@ export default function PedidoCard({ pedido, produtos }: Props) {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className="min-w-[200px] max-w-[220px] border rounded p-2 shadow cursor-move bg-emerald-200 mb-3 border-gray-400 hover:border-gray-500 transition-colors"
+      className={`min-w-[200px] max-w-[220px] border rounded p-2 shadow cursor-move mb-3 border-gray-400 hover:border-gray-500 transition-colors ${
+        destaque ? 'bg-emerald-100' : 'bg-emerald-300'
+      }`}
       style={{
         transform: transform
           ? `translate(${transform.x}px, ${transform.y}px)`
