@@ -22,16 +22,36 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));
+  const [token, setToken] = useState<string | null>(() => {
+    try {
+      const saved = localStorage.getItem("token");
+      return saved || null;
+    } catch {
+      return null;
+    }
+  });
+
   const [user, setUser] = useState<JwtPayload | null>(() => {
-    const saved = localStorage.getItem("token");
-    return saved ? jwtDecode<JwtPayload>(saved) : null;
+    try {
+      const saved = localStorage.getItem("token");
+      if (!saved) return null;
+      return jwtDecode<JwtPayload>(saved);
+    } catch (error) {
+      console.error("Token inválido ao iniciar AuthProvider:", error);
+      localStorage.removeItem("token");
+      return null;  
+    }
   });
 
   const login = (newToken: string) => {
-    localStorage.setItem("token", newToken);
-    setToken(newToken);
-    setUser(jwtDecode<JwtPayload>(newToken));
+    try {
+      const decoded = jwtDecode<JwtPayload>(newToken);
+      localStorage.setItem("token", newToken);
+      setToken(newToken);
+      setUser(decoded);
+    } catch (error) {
+      console.error("Erro ao logar com token inválido:", error);
+    }
   };
 
   const logout = () => {
@@ -40,7 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
-  const isAuthenticated = !!token;
+  const isAuthenticated = !!token && !!user;
 
   return (
     <AuthContext.Provider value={{ token, user, login, logout, isAuthenticated }}>

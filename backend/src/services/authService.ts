@@ -18,6 +18,7 @@ export const registerUser = async (user: string, password: string, role?: Role, 
       password: hashedPassword,
       role: role ?? "USER",
       name: name,
+      mustChangePassword: true, // Default to true for new users
     },
   });
 
@@ -30,17 +31,42 @@ export const loginUser = async (user: string, password: string) => {
   if (!dbUser || !(await bcrypt.compare(password, dbUser.password))) {
     throw new Error("Credenciais inválidas");
   }
-  // console.log("Login de:", dbUser);
 
-  const token = jwt.sign(
-    { 
-      id: dbUser.id,
-      role: dbUser.role, 
-      name: dbUser.name, 
-      codRep: dbUser.codRep }, 
-    JWT_SECRET,
-    { expiresIn: "1h" }
+  const tokenPayload = {
+    id: dbUser.id,
+    role: dbUser.role,
+    name: dbUser.name,
+    codRep: dbUser.codRep,
+    mustChangePassword: dbUser.mustChangePassword, // ← importante!
+  };
+
+  const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: "1h" }
   );
 
-  return token;
+  return { 
+    token, 
+    mustChangePassword: dbUser.mustChangePassword 
+  };
 };
+
+export const changePasswordFirstLogin = async (user: string, newPassword: string) => {
+  const dbUser = await prisma.user.findUnique({ where: { user: user } });
+  if (!dbUser) throw new Error("Usuário não encontrado");
+
+  if (!dbUser.mustChangePassword) {
+    throw new Error("Senha já foi alterada anteriormente");
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  await prisma.user.update({
+    where: { user: user },
+    data: {
+      password: hashedPassword,
+      mustChangePassword: false,
+    },
+  });
+
+  return { message: "Senha alterada com sucesso" };
+};
+
