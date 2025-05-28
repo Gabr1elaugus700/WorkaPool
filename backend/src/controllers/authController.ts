@@ -2,10 +2,10 @@ import { Request, Response } from "express";
 import { registerUser, loginUser, changePasswordFirstLogin } from "../services/authService";
 
 export const register = async (req: Request, res: Response) => {
-  const { user, password, role, name } = req.body;
+  const { user, password, role, name, codRep } = req.body;
 
   try {
-    const createdUser = await registerUser(user, password, role, name);
+    const createdUser = await registerUser(user, password, role, name, codRep);
     res.status(201).json(createdUser);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
