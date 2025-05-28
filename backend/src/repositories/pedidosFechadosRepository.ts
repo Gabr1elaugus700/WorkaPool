@@ -4,6 +4,7 @@ export async function buscarPedidosPorVendedor(codRep: number) {
     await sqlPoolConnect;
 
     if (codRep === 999 || codRep === null || codRep === undefined) {
+        // If codRep is 999, null, or undefined, return all records 
         const result = await sqlPool.request()
             .query(`
             SELECT ped.numped AS [NUM_PED]

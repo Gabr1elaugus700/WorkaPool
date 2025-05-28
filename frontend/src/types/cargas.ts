@@ -5,6 +5,7 @@ export type Pedido = {
   cidade: string;
   vendedor: string;
   codRep?: number | null; // Código do representante
+  bloqueado?: string; // Indica se o pedido está bloqueado
   peso: number;
   precoFrete: number;
   codCar?: number | null;
@@ -34,6 +35,7 @@ export type RawItem = {
   CIDADE: string;
   VENDEDOR: string;
   CODREP?: number | null; // Código do representante
+  BLOQUEADO?: string; 
   PESO: number;
   DERIVACAO: string;
   PRODUTOS: string;
@@ -48,6 +50,7 @@ export type PedidoERP = {
   CIDADE: string;
   PESO: number;
   VENDEDOR: string;
+  BLOQUEADO: string;
   CODCAR: number | null;
   PRODUTOS: string;
   DERIVACAO: string;  

@@ -5,6 +5,7 @@ export type Pedido = {
   cidade: string;
   vendedor: string;
   codRep?: number | null; // Código do representante
+  bloqueado?: string;
   peso: number;
   precoFrete: number;
   codCar?: number | null;
@@ -23,7 +24,7 @@ export type PedidosFechados = {
     ESTADO: string;
     VENDEDOR: string;
     CODREP: number;
-    BLOQUEADO: number;
+    BLOQUEADO: string;
     PESO: number;
     PRODUTOS: string;
     DERIVACAO: string;

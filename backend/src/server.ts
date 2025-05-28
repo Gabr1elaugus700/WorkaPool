@@ -52,6 +52,6 @@ app.use('/api/Cargas', criarCargas)
 const PORT = Number(process.env.PORT) || 3001;
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Backend rodando em http://0.0.0.0:${PORT}`);
+  // console.log(`🚀 Backend rodando em http://0.0.0.0:${PORT}`);
 });
 

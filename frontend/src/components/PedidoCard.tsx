@@ -1,5 +1,6 @@
 import { useDraggable } from '@dnd-kit/core'
 import { Pedido } from '@/types/cargas'
+import clsx from 'clsx'
 
 type Props = {
   pedido: Pedido
@@ -12,25 +13,34 @@ type Props = {
 }
 
 export default function PedidoCard({ pedido, produtos, destaque = false }: Props) {
+  
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: pedido.id,
     data: { pedido },
   });
-
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`min-w-[200px] max-w-[220px] border rounded p-2 shadow cursor-move mb-3 border-gray-400 hover:border-gray-500 transition-colors ${
-        destaque ? 'bg-emerald-100' : 'bg-emerald-300'
-      }`}
+      className={clsx(
+        'min-w-[200px] max-w-[220px] border rounded p-2 shadow cursor-move mb-3',
+        'border-gray-400 hover:border-gray-500 transition-colors',
+        {
+          'bg-red-300': pedido.bloqueado === 'S',
+          'bg-emerald-100': pedido.bloqueado !== 'S' && destaque,
+          'bg-emerald-300': pedido.bloqueado !== 'S' && !destaque,
+        }
+      )}
+
+
       style={{
         transform: transform
           ? `translate(${transform.x}px, ${transform.y}px)`
           : undefined,
       }}
     >
+      
       <p className="font-bold text-lg">• {pedido.cidade}</p>
       <p className="text-sm">{pedido.cliente}</p>
       <p className="text-sm font-bold">Vendedor: {pedido.vendedor} </p>
@@ -47,7 +57,7 @@ export default function PedidoCard({ pedido, produtos, destaque = false }: Props
               <span>Derivação: {prod.derivacao} • Peso: {prod.peso.toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
-              }) }kg</span>
+              })}kg</span>
             </li>
           ))}
         </ul>

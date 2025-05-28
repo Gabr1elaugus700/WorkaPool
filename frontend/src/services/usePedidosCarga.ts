@@ -22,6 +22,7 @@ export async function fetchPedidosCargas(codCar: number): Promise<Pedido[]> {
         cidade: item.CIDADE,
         vendedor: item.VENDEDOR,
         codRep: item.CODREP ?? null,
+        bloqueado: item.BLOQUEADO,
         peso: item.PESO,
         precoFrete: 0,
         codCar: item.CODCAR ?? null,

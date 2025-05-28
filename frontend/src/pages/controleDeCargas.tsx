@@ -37,6 +37,7 @@ export default function ControleDeCargas() {
         peso: p.peso,
         vendedor: p.vendedor,
         codRep: p.codRep ?? null,
+        bloqueado: p.bloqueado,
         precoFrete: 0,
         codCar: p.codCar ?? null,
         sitCar: p.sitCar ?? null,
@@ -45,7 +46,7 @@ export default function ControleDeCargas() {
       }));
 
       setPedidos(convertidos);
-
+      console.log(convertidos)
       const cargasBase = await fetchCargasAbertas();
 
       const cargasComPedidos = await Promise.all(
@@ -60,6 +61,7 @@ export default function ControleDeCargas() {
               cidade: p.cidade,
               vendedor: p.vendedor,
               codRep: p.codRep ?? null,
+              bloqueado: p.bloqueado,
               produtos: p.produtos ?? [],
               peso: p.peso,
               precoFrete: 0,
@@ -213,11 +215,12 @@ export default function ControleDeCargas() {
             {cargas.map((carga) => (
               <CargaDropzone key={carga.id} carga={carga}>
                 {carga.pedidos.map((pedido) => (
+                  console.log(pedido),
                   <PedidoCard
                     key={pedido.id}
                     pedido={pedido}
                     produtos={pedido.produtos || []}
-                    destaque={user?.codRep !== pedido.codRep}
+                    // destaque={user?.codRep !== pedido.codRep}
 
                   />
                 ))}

@@ -11,7 +11,7 @@ export const getPedFechados = async (req: Request, res: Response): Promise<any> 
 
   try {
     const resultado = await getPedidosFechados(Number(codRep)); 
-    // console.log("Pedidos Fechados:", resultado);
+    // console.log("Pedidos Fechados: (CONTROLLER)", resultado);
     return res.json(resultado);
   } catch (error) {
     console.error(error);

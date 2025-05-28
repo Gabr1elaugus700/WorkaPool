@@ -6,7 +6,7 @@ export const updatePedido = async (req: Request, res: Response): Promise<any> =>
   const { codCar, posCar } = req.body;
 
   try {
-    console.log('📥 Dados recebidos - Controller:', { numPed, codCar, posCar });
+    // console.log('📥 Dados recebidos - Controller:', { numPed, codCar, posCar });
     if (!numPed || codCar == null || posCar == null) {
       return res.status(400).json({ error: "Dados obrigatórios ausentes para atualização de carga." });
     }

@@ -1,7 +1,7 @@
 import { UpdatePedidoCarga } from "../repositories/alteraPedidoCargaRepository";
 
 export async function atualizarPedidoNaCarga(numPed: number, codCar: number, posCar: number) {
-  console.log('📥 Dados recebidos Service:', { numPed, codCar, posCar });
+  // console.log('📥 Dados recebidos Service:', { numPed, codCar, posCar });
   if (numPed == null || codCar == null || posCar == null) {
   throw new Error("Dados obrigatórios ausentes");
 }
