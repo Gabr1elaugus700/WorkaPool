@@ -17,6 +17,8 @@ export default function DefaultLayout({ children }: Props) {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
+  const { user } = useAuth();
+
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -41,18 +43,41 @@ export default function DefaultLayout({ children }: Props) {
             >
               Início
             </Link>
-            <Link
-              to="/metas"
-              className="text-white hover:text-black transition-colors"
-            >
-              Metas
-            </Link>
-            <Link
-              to="/dashboard"
-              className="text-white hover:text-black transition-colors"
-            >
-              DashBoards
-            </Link>
+            {user?.role && ["VENDAS", "LOGISTICA"].includes(user.role) && (
+              <Link
+                to="/cargas"
+                className="text-white hover:text-black transition-colors"
+              >
+                Cargas
+              </Link>
+            )}
+
+            {user?.role === "ADMIN" && (
+              <Link
+                to="/metas"
+                className="text-white hover:text-black transition-colors"
+              >
+                Metas
+              </Link>
+            )}
+
+            {user?.role === "ADMIN" && (
+              <Link
+                to="/dashboard"
+                className="text-white hover:text-black transition-colors"
+              >
+                Dashboards
+              </Link>
+            )}
+
+            {user?.role === "ADMIN" && (
+              <Link
+                to="/deshboardTest"
+                className="text-white hover:text-black transition-colors"
+              >
+                DashBoardTeste
+              </Link>
+            )}
             <Button
               variant="ghost"
               onClick={handleLogout}
@@ -64,7 +89,7 @@ export default function DefaultLayout({ children }: Props) {
         </div>
         <div className="flex items-center gap-3">
           <>
-            
+
           </>
         </div>
       </nav>

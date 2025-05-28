@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "./AuthContext";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -11,6 +12,7 @@ export default function Login() {
     const [mustChangePassword, setMustChangePassword] = useState(false);
     const navigate = useNavigate();
 
+    const { login } = useAuth();
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
@@ -27,7 +29,6 @@ export default function Login() {
 
             if (!res.ok) throw new Error(data.error || "Erro ao logar");
 
-
             if (data.mustChangePassword) {
                 console.log("Usuário precisa trocar a senha:", data);
                 setMustChangePassword(true);
@@ -35,7 +36,7 @@ export default function Login() {
                 return;
             }
 
-            localStorage.setItem("token", data.token);
+            login(data.token);
             navigate("/");
         } catch (err: unknown) {
             if (err instanceof Error) {

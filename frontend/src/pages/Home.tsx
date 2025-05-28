@@ -2,8 +2,18 @@ import DefaultLayout from "../layout/DefaultLayout";
 import { useAuth } from "../auth/AuthContext";
 
 const Home: React.FC = () => {
+  
+  const { user, loading } = useAuth(); // Adicione `loading` no contexto
 
-  const { user } = useAuth();
+  if (loading || !user) {
+    return (
+      <DefaultLayout>
+        <div className="p-6 text-gray-700">Carregando usuário...</div>
+      </DefaultLayout>
+    );
+  }
+  
+  
   return (
 
     <DefaultLayout>
@@ -12,7 +22,7 @@ const Home: React.FC = () => {
           🏠 Bem-vindo ao WorkaPool, {user?.name}!
         </h1>
         <span className="text-gray-600">
-          Seu Codigo de Representante: {user?.codRep || "N/A"}
+          Seu Codigo de Vendedeor: {user?.codRep || "N/A"}
         </span>
 
         <p className="text-gray-900">Esta é a página inicial.</p>

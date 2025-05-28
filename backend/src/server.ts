@@ -24,7 +24,12 @@ dotenv.config()
 const app = express()
 
 // Middlewares
-app.use(cors())
+// app.use(cors())
+app.use(cors({
+  origin: 'http://192.168.0.32:5173',
+  credentials: true,
+}));
+
 app.use(express.json())
 
 // Rotas De consulta no banco de dados Sapiens
@@ -44,8 +49,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/Cargas', criarCargas)
 
 // Iniciar servidorp
-const PORT = process.env.PORT || 3001
-app.listen(PORT, () => {
-  // console.log(`🚀 Backend rodando em http://localhost:${PORT}`)
-})
+const PORT = Number(process.env.PORT) || 3001;
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Backend rodando em http://0.0.0.0:${PORT}`);
+});
 

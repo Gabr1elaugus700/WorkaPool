@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { jwtDecode } from "jwt-decode";
 
 // Payload esperado no JWT
@@ -17,31 +17,37 @@ type AuthContextType = {
   login: (token: string) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  loading: boolean; // <- ADD
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [token, setToken] = useState<string | null>(() => {
-    try {
-      const saved = localStorage.getItem("token");
-      return saved || null;
-    } catch {
-      return null;
-    }
-  });
+  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<JwtPayload | null>(null);
+  const [loading, setLoading] = useState(true); // <- ADD
 
-  const [user, setUser] = useState<JwtPayload | null>(() => {
-    try {
-      const saved = localStorage.getItem("token");
-      if (!saved) return null;
-      return jwtDecode<JwtPayload>(saved);
-    } catch (error) {
-      console.error("Token inválido ao iniciar AuthProvider:", error);
-      localStorage.removeItem("token");
-      return null;  
+  useEffect(() => {
+  console.log("AuthProvider: iniciando verificação de token no localStorage...");
+  try {
+    const savedToken = localStorage.getItem("token");
+    if (savedToken) {
+      console.log("Token encontrado:", savedToken);
+      const decoded = jwtDecode<JwtPayload>(savedToken);
+      setToken(savedToken);
+      setUser(decoded);
+      console.log("Usuário decodificado:", decoded);
+    } else {
+      console.log("Nenhum token encontrado no localStorage.");
     }
-  });
+  } catch (error) {
+    console.error("Erro ao decodificar token:", error);
+    localStorage.removeItem("token");
+  } finally {
+    console.log("Finalizando loading...");
+    setLoading(false);
+  }
+}, []);
 
   const login = (newToken: string) => {
     try {
@@ -63,7 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAuthenticated = !!token && !!user;
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ token, user, login, logout, isAuthenticated, loading }}>
       {children}
     </AuthContext.Provider>
   );
