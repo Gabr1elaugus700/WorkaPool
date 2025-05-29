@@ -11,9 +11,10 @@ import CargaDropzone from '@/components/CargaDropzone';
 import { Pedido, Carga } from '@/types/cargas';
 import { fetchPedidosFechados } from '@/services/usePedidosFechados';
 import { NovaCargaModal } from '@/components/NovaCargaModal';
-import { fetchCargasAbertas } from '@/services/useCargasAbertas';
+import { fetchCargas } from '@/services/useCargas';
 import { fetchPedidosCargas } from '@/services/usePedidosCarga';
 import { fetchPedidoToCarga } from '@/services/usePedidoToCarga';
+import { fetchUpdateSitCar } from '@/services/useUpdateSitCar';
 
 export default function ControleDeCargas() {
   const { user } = useAuth();
@@ -47,7 +48,7 @@ export default function ControleDeCargas() {
 
       setPedidos(convertidos);
       console.log(convertidos)
-      const cargasBase = await fetchCargasAbertas();
+      const cargasBase = await fetchCargas();
 
       const cargasComPedidos = await Promise.all(
         cargasBase.map(async (carga) => {
@@ -175,6 +176,22 @@ export default function ControleDeCargas() {
     }
   };
 
+  const handleChangeSituacao = async (id: string, novaSituacao: string) => {
+    setCargas(prev =>
+      prev.map(carga =>
+        carga.id === id ? { ...carga, situacao: novaSituacao } : carga
+      )
+    );
+
+    try {
+      const data = await fetchUpdateSitCar(id, novaSituacao);
+      console.log('atualizado com sucesso: ', data)
+    } catch (error) {
+      console.error('Erro ao atualizar situação da carga:', error);
+    }
+  };
+  
+
 
   return (
     <DefaultLayout>
@@ -213,20 +230,39 @@ export default function ControleDeCargas() {
               />
             </div>
 
-            {cargas.map((carga) => (
-              <CargaDropzone key={carga.id} carga={carga}>
-                {carga.pedidos.map((pedido) => (
-                  console.log(pedido),
-                  <PedidoCard
-                    key={pedido.id}
-                    pedido={pedido}
-                    produtos={pedido.produtos || []}
-                    destaque={user?.codRep !== pedido.codRep}
+            {cargas
+              .filter((carga) => {
+                if (!user) return false;
 
-                  />
-                ))}
-              </CargaDropzone>
-            ))}
+                // Se for do grupo que só vê abertas
+                if (user.role === 'VENDAS') {
+                  return carga.situacao === 'ABERTA';
+                }
+
+                // Logística vê todas as outras
+                // if (user.role === 'LOGISTICA') {
+                //   return carga.situacao !== 'ABERTA';
+                // }
+
+                return true; // fallback: mostra tudo
+              })
+              .map((carga) => (
+                <CargaDropzone
+                  key={carga.id}
+                  carga={carga}
+                  onChangeSituacao={handleChangeSituacao}
+                >
+                  {carga.pedidos.map((pedido) => (
+                    <PedidoCard
+                      key={pedido.id}
+                      pedido={pedido}
+                      produtos={pedido.produtos || []}
+                      destaque={user?.codRep !== pedido.codRep}
+                    />
+                  ))}
+                </CargaDropzone>
+              ))}
+
           </div>
         </div>
       </DndContext>

@@ -41,9 +41,7 @@ export const cargaController = {
 
     async ListarAbertas(req: Request, res: Response): Promise<any>  {
         try {
-            const cargas = await prisma.cargas.findMany({
-                where: { situacao: 'ABERTA' }
-            });
+            const cargas = await prisma.cargas.findMany();
 
             return res.status(200).json(cargas);
         } catch (error) {
@@ -51,5 +49,25 @@ export const cargaController = {
             return res.status(500).json({ error: 'Erro ao buscar cargas' });
         }
     },
+
+     async atualizarSitCarga(req: Request, res: Response): Promise<any>{
+        const { id } = req.params;
+        const { situacao } = req.body;
+
+        if(!situacao){
+            return res.status(400).json({ message: 'Situação é obrigatória!'})
+        };
+
+        try {
+            const cargaAtualizada = await prisma.cargas.update({
+                where: { id },
+                data: { situacao },
+            });
+            return res.status(200).json(cargaAtualizada);
+        } catch (error) {
+            console.error('Erro ao Atualizar ', error);
+            return res.status(500).json({ error: 'Erro ao alterar Situação' });
+        }
+     }
 
 }

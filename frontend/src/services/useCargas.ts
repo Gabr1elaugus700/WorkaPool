@@ -3,7 +3,7 @@ import { Carga } from '@/types/cargas';
 
 
 
-export const fetchCargasAbertas = async (): Promise<Carga[]> => {
+export const fetchCargas = async (): Promise<Carga[]> => {
   const response = await fetch(`${API}/api/cargas`, {
     method: 'GET',
     headers: {
