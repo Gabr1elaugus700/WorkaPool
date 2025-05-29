@@ -14,6 +14,7 @@ type Cargas = {
     destino: string;
     pesoMax: number;
     custoMin: number;
+    previsaoSaida: Date;
     situacao: string;
     createdAt: string;
 };
@@ -31,15 +32,24 @@ export function NovaCargaModal({ onCreated }: Props) {
     const [form, setForm] = useState({
         name: '',
         destino: '',
-        pesoMax: 0,
-        custoMin: 0,
+        pesoMax: 10000,
+        custoMin: 1,
         situacao: situacao,
+        previsaoSaida: ''
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setForm({ ...form, [name]: name === 'name' || name === 'destino' ? value : Number(value) });
-    };
+    const { name, value } = e.target;
+
+    let newValue: string | number = value;
+
+    if (name === 'pesoMax' || name === 'custoMin') {
+        newValue = Number(value);
+    }
+
+    setForm({ ...form, [name]: newValue });
+};
+
 
     const criarCarga = async () => {
         const res = await fetch(`${API}/api/Cargas`, {
@@ -50,14 +60,22 @@ export function NovaCargaModal({ onCreated }: Props) {
 
         const nova = await res.json();
         onCreated(nova);
+        setForm({
+            name: '',
+        destino: '',
+        pesoMax: 10000,
+        custoMin: 0,
+        situacao: situacao,
+        previsaoSaida: ''
+        })
         setOpen(false);
+        console.log(nova)
     };
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild >
-                <Button className=" bg-emerald-600 text-white py-2 rounded hover:bg-emerald-700"> <PackagePlus size={64}
-                /> </Button>
+                <Button className=" bg-emerald-600 text-white rounded hover:bg-emerald-700"> <PackagePlus className='!w-6 !h-6'/> </Button>
             </DialogTrigger>
 
             <DialogContent>
@@ -73,6 +91,10 @@ export function NovaCargaModal({ onCreated }: Props) {
                     <div>
                         <Label>Destino</Label>
                         <Input name="destino" value={form.destino} onChange={handleChange} />
+                    </div>
+                    <div>
+                        <Label>Previsão Saída da Carga</Label>
+                        <Input name="previsaoSaida" type='date' value={form.previsaoSaida} onChange={handleChange} />
                     </div>
                     <div>
                         <Label>Peso Máximo (kg)</Label>

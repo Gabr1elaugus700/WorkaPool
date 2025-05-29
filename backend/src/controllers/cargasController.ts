@@ -5,9 +5,11 @@ const prisma = new PrismaClient();
 export const cargaController = {
 
     async CreateCarga(req: Request, res: Response): Promise<any> {
-        const { name, destino, pesoMax, custoMin, situacao } = req.body;
+        const { name, destino, pesoMax, custoMin, situacao, previsaoSaida } = req.body;
+        
+        // console.log(req)
 
-        if (!name || !destino || !pesoMax || !custoMin || !situacao) {
+        if (!name || !destino || !pesoMax || !custoMin || !situacao || !previsaoSaida) {
             return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
         }
 
@@ -24,12 +26,15 @@ export const cargaController = {
                     destino,
                     pesoMax,
                     custoMin,
+                    previsaoSaida: new Date(previsaoSaida),
                     situacao: situacao || 'ABERTA',
                 },
             });
+
             return res.status(201).json(novaCarga);
         } catch (error) {
             console.error('Erro ao criar carga:', error);
+            
             return res.status(500).json({ error: 'Erro ao criar carga.' });
         }
     },

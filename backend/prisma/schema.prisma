@@ -49,12 +49,13 @@ enum CargaSituacao {
 }
 
 model Cargas {
-  id        String        @id @default(uuid())
-  codCar    Int           @unique
-  name      String
-  destino   String
-  pesoMax   Int
-  custoMin  Int
-  situacao  CargaSituacao @default(ABERTA)
-  createdAt DateTime      @default(now())
+  id            String        @id @default(uuid())
+  codCar        Int           @unique
+  name          String
+  destino       String
+  pesoMax       Int
+  custoMin      Int
+  situacao      CargaSituacao @default(ABERTA)
+  previsaoSaida DateTime      @default(now())
+  createdAt     DateTime      @default(now())
 }

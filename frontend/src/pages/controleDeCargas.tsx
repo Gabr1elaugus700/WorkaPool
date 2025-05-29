@@ -206,6 +206,7 @@ export default function ControleDeCargas() {
                       custoMinimo: nova.custoMin,
                       pedidos: [],
                       pesoAtual: 0,
+                      previsaoSaida: nova.previsaoSaida
                     },
                   ])
                 }
@@ -220,7 +221,7 @@ export default function ControleDeCargas() {
                     key={pedido.id}
                     pedido={pedido}
                     produtos={pedido.produtos || []}
-                    // destaque={user?.codRep !== pedido.codRep}
+                    destaque={user?.codRep !== pedido.codRep}
 
                   />
                 ))}

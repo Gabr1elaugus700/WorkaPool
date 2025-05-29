@@ -43,7 +43,7 @@ export default function DefaultLayout({ children }: Props) {
             >
               Início
             </Link>
-            {user?.role && ["VENDAS", "LOGISTICA"].includes(user.role) && (
+            {user?.role && ["VENDAS", "LOGISTICA", "ADMIN"].includes(user.role) && (
               <Link
                 to="/cargas"
                 className="text-white hover:text-black transition-colors"
@@ -72,7 +72,7 @@ export default function DefaultLayout({ children }: Props) {
 
             {user?.role === "ADMIN" && (
               <Link
-                to="/deshboardTest"
+                to="/dashboardTest"
                 className="text-white hover:text-black transition-colors"
               >
                 DashBoardTeste
@@ -102,7 +102,7 @@ export default function DefaultLayout({ children }: Props) {
 
       {/* Rodapé */}
       <footer className="bg-white border-t text-center py-4 text-sm text-gray-500">
-        &copy; 2025 - Feito com 🧠 por Gabriel Garbugio.
+        &copy; 2025 - Feito com 🧠 por Gabriel Garbugio. V 1.0.1
       </footer>
     </div>
   );

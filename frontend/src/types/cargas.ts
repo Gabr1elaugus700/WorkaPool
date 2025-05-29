@@ -25,6 +25,7 @@ export interface Carga {
   pesoMax: number;
   pesoAtual: number;
   custoMinimo: number;
+  previsaoSaida: Date;
   codCar: number;
   pedidos: Pedido[];
 }
