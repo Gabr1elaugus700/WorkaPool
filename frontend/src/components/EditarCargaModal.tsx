@@ -82,7 +82,7 @@ export function EditarCargaModal({ carga, onUpdated }: Props) {
                     </div>
                     <div>
                         <Label>Custo Mínimo (R$)</Label>
-                        <Input name="custoMin" type="number" value={form.custoMinimo} onChange={handleChange} />
+                        <Input name="custoMin" type="number" value={form.custoMin} onChange={handleChange} />
                     </div>
                     <div>
                         <Label>Situação</Label>
