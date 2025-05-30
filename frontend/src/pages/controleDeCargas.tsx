@@ -220,7 +220,7 @@ export default function ControleDeCargas() {
                     ...prev,
                     {
                       ...nova,
-                      custoMinimo: nova.custoMin,
+                      custoMin: nova.custoMin,
                       pedidos: [],
                       pesoAtual: 0,
                       previsaoSaida: nova.previsaoSaida

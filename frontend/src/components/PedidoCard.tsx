@@ -41,7 +41,7 @@ export default function PedidoCard({ pedido, produtos, destaque = false }: Props
       }}
     >
       
-      <p className="font-bold text-lg">• {pedido.cidade}</p>
+      <p className="font-bold text-lg">• {pedido.cidade} - {pedido.numPed} </p>
       <p className="text-sm">{pedido.cliente}</p>
       <p className="text-sm font-bold">Vendedor: {pedido.vendedor} </p>
       <p className="text-sm">Peso total: {pedido.peso.toLocaleString('pt-BR', {

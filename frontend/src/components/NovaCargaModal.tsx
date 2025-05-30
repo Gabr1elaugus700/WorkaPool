@@ -84,10 +84,10 @@ export function NovaCargaModal({ onCreated }: Props) {
                 </DialogHeader>
 
                 <div className="space-y-3">
-                    <div>
+                    {/* <div>
                         <Label>Nome</Label>
                         <Input name="name" value={form.name} onChange={handleChange} />
-                    </div>
+                    </div> */}
                     <div>
                         <Label>Destino</Label>
                         <Input name="destino" value={form.destino} onChange={handleChange} />

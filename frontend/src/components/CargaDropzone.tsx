@@ -37,8 +37,8 @@ export default function CargaDropzone({ carga, children, onUpdate }: Props) {
         </h2>
         <h4>
           Capacidade: {carga.pesoMax}kg Máx • Utilizado: {carga.pesoAtual.toLocaleString('pt-BR',
-            { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-          )} kg
+            { minimumFractionDigits: 2, maximumFractionDigits: 2 } 
+          )} kg • Custo: R${carga.custoMin}
         </h4>
         {user?.role && ["LOGISTICA", "ADMIN"].includes(user.role) && (
           <div className='flex justify-end'>

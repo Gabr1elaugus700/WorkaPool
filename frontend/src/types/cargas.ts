@@ -24,7 +24,7 @@ export interface Carga {
   destino: string;
   pesoMax: number;
   pesoAtual: number;
-  custoMinimo: number;
+  custoMin: number;
   previsaoSaida: string | Date;
   situacao: string;
   codCar: number;

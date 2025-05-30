@@ -51,7 +51,6 @@ enum CargaSituacao {
 model Cargas {
   id            String        @id @default(uuid())
   codCar        Int           @unique
-  name          String
   destino       String
   pesoMax       Int
   custoMin      Int

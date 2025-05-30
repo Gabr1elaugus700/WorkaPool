@@ -5,11 +5,11 @@ const prisma = new PrismaClient();
 export const cargaController = {
 
     async CreateCarga(req: Request, res: Response): Promise<any> {
-        const { name, destino, pesoMax, custoMin, situacao, previsaoSaida } = req.body;
+        const { destino, pesoMax, custoMin, situacao, previsaoSaida } = req.body;
 
         // console.log(req)
 
-        if (!name || !destino || !pesoMax || !custoMin || !situacao || !previsaoSaida) {
+        if (!destino || !pesoMax || !custoMin || !situacao || !previsaoSaida) {
             return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
         }
 
@@ -22,7 +22,7 @@ export const cargaController = {
             const novaCarga = await prisma.cargas.create({
                 data: {
                     codCar: ultimaCarga ? ultimaCarga.codCar + 1 : 1,
-                    name,
+                    // name,
                     destino,
                     pesoMax,
                     custoMin,
@@ -73,7 +73,7 @@ export const cargaController = {
     async atualizarCargaCompleta(req: Request, res: Response): Promise<any> {
         const { id } = req.params;
         const {
-            name,
+            // name,
             destino,
             pesoMax,
             custoMin,
@@ -81,7 +81,7 @@ export const cargaController = {
             situacao
         } = req.body;
 
-        if (!name || !destino || !pesoMax || !custoMin || !previsaoSaida || !situacao) {
+        if (!destino || !pesoMax || !custoMin || !previsaoSaida || !situacao) {
             return res.status(400).json({ message: 'Todos os campos são obrigatórios para atualização completa.' });
         }
 
@@ -89,7 +89,7 @@ export const cargaController = {
             const cargaAtualizada = await prisma.cargas.update({
                 where: { id },
                 data: {
-                    name,
+                    // name,
                     destino,
                     pesoMax,
                     custoMin,
