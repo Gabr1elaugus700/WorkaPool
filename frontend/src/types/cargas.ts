@@ -25,11 +25,13 @@ export interface Carga {
   pesoMax: number;
   pesoAtual: number;
   custoMinimo: number;
-  previsaoSaida: Date;
+  previsaoSaida: string | Date;
   situacao: string;
   codCar: number;
   pedidos: Pedido[];
 }
+
+export type CargaUpdate = Omit<Carga, 'pedidos'>;
 
 export type RawItem = {
   NUM_PED: number;

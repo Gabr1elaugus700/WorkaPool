@@ -1,13 +1,7 @@
 import { useDroppable } from '@dnd-kit/core'
 import { Carga } from '@/types/cargas'
-import { Truck } from 'lucide-react'
-import { Button } from './ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuItem,
-} from '../components/ui/dropdown-menu'
+// import { Truck } from 'lucide-react'
+import { EditarCargaModal } from './EditarCargaModal'
 import clsx from 'clsx'
 import { useAuth } from '@/auth/AuthContext'
 
@@ -15,9 +9,10 @@ type Props = {
   carga: Carga
   children: React.ReactNode
   onChangeSituacao: (id: string, novaSituacao: string) => void
+  onUpdate: (cargaAtualizada: Carga) => void
 }
 
-export default function CargaDropzone({ carga, children, onChangeSituacao }: Props) {
+export default function CargaDropzone({ carga, children, onUpdate }: Props) {
   const { setNodeRef } = useDroppable({ id: carga.id })
 
   const { user } = useAuth()
@@ -47,26 +42,12 @@ export default function CargaDropzone({ carga, children, onChangeSituacao }: Pro
         </h4>
         {user?.role && ["LOGISTICA", "ADMIN"].includes(user.role) && (
           <div className='flex justify-end'>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  className='bg-emerald-600 text-white rounded hover:bg-emerald-700 w-12 h-12 mr-2'
-                >
-                  <Truck className='!w-6 !h-6' />
-                </Button>
-              </DropdownMenuTrigger>
+            <EditarCargaModal
+              carga={carga}
+              onUpdated={onUpdate}
+            />
 
-              <DropdownMenuContent>
-                {['ABERTA', 'FECHADA', 'SOLICITADA', 'CANCELADA'].map((situacao) => (
-                  <DropdownMenuItem
-                    key={situacao}
-                    onClick={() => onChangeSituacao(carga.id, situacao)}
-                  >
-                    {situacao}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+
           </div>
         )}
       </div>

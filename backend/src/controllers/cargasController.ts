@@ -6,7 +6,7 @@ export const cargaController = {
 
     async CreateCarga(req: Request, res: Response): Promise<any> {
         const { name, destino, pesoMax, custoMin, situacao, previsaoSaida } = req.body;
-        
+
         // console.log(req)
 
         if (!name || !destino || !pesoMax || !custoMin || !situacao || !previsaoSaida) {
@@ -34,12 +34,12 @@ export const cargaController = {
             return res.status(201).json(novaCarga);
         } catch (error) {
             console.error('Erro ao criar carga:', error);
-            
+
             return res.status(500).json({ error: 'Erro ao criar carga.' });
         }
     },
 
-    async ListarAbertas(req: Request, res: Response): Promise<any>  {
+    async ListarAbertas(req: Request, res: Response): Promise<any> {
         try {
             const cargas = await prisma.cargas.findMany();
 
@@ -50,12 +50,12 @@ export const cargaController = {
         }
     },
 
-     async atualizarSitCarga(req: Request, res: Response): Promise<any>{
+    async atualizarSitCarga(req: Request, res: Response): Promise<any> {
         const { id } = req.params;
         const { situacao } = req.body;
 
-        if(!situacao){
-            return res.status(400).json({ message: 'Situação é obrigatória!'})
+        if (!situacao) {
+            return res.status(400).json({ message: 'Situação é obrigatória!' })
         };
 
         try {
@@ -68,6 +68,41 @@ export const cargaController = {
             console.error('Erro ao Atualizar ', error);
             return res.status(500).json({ error: 'Erro ao alterar Situação' });
         }
-     }
+    },
+
+    async atualizarCargaCompleta(req: Request, res: Response): Promise<any> {
+        const { id } = req.params;
+        const {
+            name,
+            destino,
+            pesoMax,
+            custoMin,
+            previsaoSaida,
+            situacao
+        } = req.body;
+
+        if (!name || !destino || !pesoMax || !custoMin || !previsaoSaida || !situacao) {
+            return res.status(400).json({ message: 'Todos os campos são obrigatórios para atualização completa.' });
+        }
+
+        try {
+            const cargaAtualizada = await prisma.cargas.update({
+                where: { id },
+                data: {
+                    name,
+                    destino,
+                    pesoMax,
+                    custoMin,
+                    previsaoSaida: new Date(previsaoSaida),
+                    situacao
+                }
+            });
+
+            return res.status(200).json(cargaAtualizada);
+        } catch (error) {
+            console.error('Erro ao atualizar carga:', error);
+            return res.status(500).json({ message: 'Erro ao atualizar carga.' });
+        }
+    }
 
 }

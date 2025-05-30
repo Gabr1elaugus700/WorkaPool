@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { toast } from 'sonner';
+// import { useNavigate } from 'react-router-dom';
 
 import DefaultLayout from '@/layout/DefaultLayout';
 import { useAuth } from '@/auth/AuthContext';
@@ -18,6 +19,7 @@ import { fetchUpdateSitCar } from '@/services/useUpdateSitCar';
 
 export default function ControleDeCargas() {
   const { user } = useAuth();
+  // const navigate = useNavigate();
 
   const [, setPedidosResumo] = useState<Pedido[]>([]);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
@@ -191,7 +193,6 @@ export default function ControleDeCargas() {
   };
 
 
-
   return (
     <DefaultLayout>
       <DndContext onDragEnd={handleDragEnd}>
@@ -255,6 +256,13 @@ export default function ControleDeCargas() {
                   key={carga.id}
                   carga={carga}
                   onChangeSituacao={handleChangeSituacao}
+                  onUpdate={(cargaAtualizada: Carga) => {
+                    setCargas((prev) =>
+                      prev.map((c) => (c.id === cargaAtualizada.id ? cargaAtualizada : c))
+                    );
+                  }}
+
+
                 >
                   {carga.pedidos
                     .slice()
@@ -267,7 +275,7 @@ export default function ControleDeCargas() {
                         destaque={user?.codRep !== pedido.codRep}
                       />
                     ))}
-                </CargaDropzone> 
+                </CargaDropzone>
               ))}
           </div>
         </div>
