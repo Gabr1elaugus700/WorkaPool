@@ -42,7 +42,7 @@ export type RawItem = {
   DERIVACAO: string;
   PRODUTOS: string;
   CODCAR: number | null;
-  POSCAR?: number | null; // Posição do Pedido na Carga
+  POSCAR: number; // Posição do Pedido na Carga
   SITCAR?: string | null; // Situação Do pedido na carga 
 };
 
@@ -53,8 +53,10 @@ export type PedidoERP = {
   PESO: number;
   VENDEDOR: string;
   BLOQUEADO: string;
-  CODCAR: number | null;
   PRODUTOS: string;
   DERIVACAO: string;  
-  CODREP?: number | null; // Código do representante
+  CODREP?: number | null;
+  CODCAR: number | null;
+  POSCAR: number; // Posição do Pedido na Carga
+  SITCAR?: string | null; // Código do representante
 };

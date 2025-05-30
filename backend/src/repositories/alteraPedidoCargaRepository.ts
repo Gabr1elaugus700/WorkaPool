@@ -11,7 +11,7 @@ export async function UpdatePedidoCarga(codCar: number, posCar: number, numPed: 
             UPDATE e120ped 
             SET usu_codcar=@codCar 
                ,usu_poscar =@posCar
-            WHERE numped = @numPed
+            WHERE numped =@numPed
         `);
     return result.rowsAffected[0];
 }

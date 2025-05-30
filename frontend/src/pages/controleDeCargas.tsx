@@ -47,7 +47,6 @@ export default function ControleDeCargas() {
       }));
 
       setPedidos(convertidos);
-      console.log(convertidos)
       const cargasBase = await fetchCargas();
 
       const cargasComPedidos = await Promise.all(
@@ -77,7 +76,7 @@ export default function ControleDeCargas() {
                 combinados.push(novo);
               }
             });
-
+            console.log('TEste', combinados)
             return combinados;
           });
 
@@ -190,13 +189,13 @@ export default function ControleDeCargas() {
       console.error('Erro ao atualizar situação da carga:', error);
     }
   };
-  
+
 
 
   return (
     <DefaultLayout>
       <DndContext onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-5 gap-6 p-6">
+        <div className="grid grid-cols-5 gap-6 p-6 ">
           {loading ? (
             <div className="text-center col-span-3 text-xl">Carregando pedidos...</div>
           ) : (
@@ -234,17 +233,22 @@ export default function ControleDeCargas() {
               .filter((carga) => {
                 if (!user) return false;
 
-                // Se for do grupo que só vê abertas
                 if (user.role === 'VENDAS') {
                   return carga.situacao === 'ABERTA';
                 }
 
-                // Logística vê todas as outras
-                // if (user.role === 'LOGISTICA') {
-                //   return carga.situacao !== 'ABERTA';
-                // }
+                return true;
+              })
+              .sort((a, b) => {
+                const prioridade = ['SOLICITADA', 'ABERTA'];
+                const indexA = prioridade.indexOf(a.situacao);
+                const indexB = prioridade.indexOf(b.situacao);
 
-                return true; // fallback: mostra tudo
+                if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+                if (indexA !== -1) return -1;
+                if (indexB !== -1) return 1;
+
+                return a.situacao.localeCompare(b.situacao);
               })
               .map((carga) => (
                 <CargaDropzone
@@ -252,17 +256,19 @@ export default function ControleDeCargas() {
                   carga={carga}
                   onChangeSituacao={handleChangeSituacao}
                 >
-                  {carga.pedidos.map((pedido) => (
-                    <PedidoCard
-                      key={pedido.id}
-                      pedido={pedido}
-                      produtos={pedido.produtos || []}
-                      destaque={user?.codRep !== pedido.codRep}
-                    />
-                  ))}
-                </CargaDropzone>
+                  {carga.pedidos
+                    .slice()
+                    .sort((a, b) => (a.posCar ?? 0) - (b.posCar ?? 0)) // ou a.posPed se for o nome certo
+                    .map((pedido) => (
+                      <PedidoCard
+                        key={pedido.id}
+                        pedido={pedido}
+                        produtos={pedido.produtos || []}
+                        destaque={user?.codRep !== pedido.codRep}
+                      />
+                    ))}
+                </CargaDropzone> 
               ))}
-
           </div>
         </div>
       </DndContext>

@@ -26,6 +26,7 @@ export async function fetchPedidosCargas(codCar: number): Promise<Pedido[]> {
         peso: item.PESO,
         precoFrete: 0,
         codCar: item.CODCAR ?? null,
+        posCar: item.POSCAR,
         produtos: [{
           nome: item.PRODUTOS?.trim() || 'Sem nome',
           derivacao: item.DERIVACAO,

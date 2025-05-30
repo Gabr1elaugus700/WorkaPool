@@ -26,7 +26,7 @@ export default function CargaDropzone({ carga, children, onChangeSituacao }: Pro
     <div
       ref={setNodeRef}
       className={clsx(
-        'border-2 rounded mb-4 min-h-[150px]',
+        'border-2 rounded mb-4 min-h-[150px] p-4',
         {
           'bg-yellow-300 shadow-md': carga.situacao === 'SOLICITADA',
           'bg-gray-200 shadow-md': carga.situacao === 'ABERTA',
@@ -38,7 +38,7 @@ export default function CargaDropzone({ carga, children, onChangeSituacao }: Pro
       {/* bg-gray-200 shadow-md */}
       <div className='grid grid-cols-3 gap-3 p-6'>
         <h2 className="text-lg font-bold mb-3 ">
-          Carga: {carga.destino} • {carga.situacao} <br />
+          Carga: {carga.destino} • {carga.situacao}  <br />
         </h2>
         <h4>
           Capacidade: {carga.pesoMax}kg Máx • Utilizado: {carga.pesoAtual.toLocaleString('pt-BR',

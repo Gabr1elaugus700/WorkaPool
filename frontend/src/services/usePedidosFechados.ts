@@ -23,6 +23,7 @@ export const fetchPedidosFechados = async (codRep: number): Promise<Pedido[]> =>
         codRep: item.CODREP,
         bloqueado: item.BLOQUEADO,
         peso: item.PESO,
+        posCar: item.POSCAR,
         precoFrete: 0,
         produtos: [{
           nome: item.PRODUTOS,
