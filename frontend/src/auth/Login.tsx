@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
+import { getBaseUrl } from '@/lib/apiBase';
 
-const API = import.meta.env.VITE_API_URL;
 
 export default function Login() {
     const [user, setUser] = useState("");
@@ -18,7 +18,7 @@ export default function Login() {
         setError("");
 
         try {
-            const res = await fetch(`${API}/api/auth/login`, {
+            const res = await fetch(`${getBaseUrl()}/api/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ user, password }),
@@ -52,7 +52,7 @@ export default function Login() {
         setError("");
 
         try {
-            const res = await fetch(`${API}/api/auth/change-password-first-login`, {
+            const res = await fetch(`${getBaseUrl()}/api/auth/change-password-first-login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

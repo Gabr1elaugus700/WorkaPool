@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-const API = import.meta.env.VITE_API_URL;
+import { getBaseUrl } from '@/lib/apiBase';
 import { useAuth } from "../auth/AuthContext";
 import { PackagePlus } from 'lucide-react';
 
@@ -52,7 +52,7 @@ export function NovaCargaModal({ onCreated }: Props) {
 
 
     const criarCarga = async () => {
-        const res = await fetch(`${API}/api/Cargas`, {
+        const res = await fetch(`${getBaseUrl()}/api/Cargas`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(form),

@@ -1,4 +1,4 @@
-const API = import.meta.env.VITE_API_URL;
+import { getBaseUrl } from '@/lib/apiBase';
 
 type Vendedor = {
   COD_REP: number;
@@ -8,7 +8,7 @@ type Vendedor = {
 
 
 export const fetchVendedores = async (): Promise<Vendedor[]> => {
-  const response = await fetch(`${API}/api/vendedores`, {
+  const response = await fetch(`${getBaseUrl()}/api/vendedores`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

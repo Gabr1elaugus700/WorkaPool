@@ -1,7 +1,7 @@
-const API = import.meta.env.VITE_API_URL;
+import { getBaseUrl } from '@/lib/apiBase';
 
 export const fetchRankingProdutos = async (codRep: number, dataInicio: string, top: number) => {
-  const response = await fetch(`${API}/api/rankingProdutos`, {
+  const response = await fetch(`${getBaseUrl()}/api/rankingProdutos`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

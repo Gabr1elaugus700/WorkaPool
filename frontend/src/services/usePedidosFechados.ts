@@ -1,9 +1,9 @@
-const API = import.meta.env.VITE_API_URL;
+import { getBaseUrl } from '@/lib/apiBase';
 import { Pedido, PedidoERP} from  '../types/cargas';
 
 
 export const fetchPedidosFechados = async (codRep: number): Promise<Pedido[]> => {
-  const response = await fetch(`${API}/api/pedidosFechados?codRep=${codRep}`);
+  const response = await fetch(`${getBaseUrl()}/api/pedidosFechados?codRep=${codRep}`);
   if (!response.ok) throw new Error('Erro ao buscar pedidos');
 
   const data: PedidoERP[] = await response.json();

@@ -10,8 +10,7 @@ import { Carga as Cargas } from '@/types/cargas'
 // import { useNavigate } from 'react-router-dom';
 
 
-const API = import.meta.env.VITE_API_URL;
-
+import { getBaseUrl } from '@/lib/apiBase';
 
 
 type Props = {
@@ -39,7 +38,7 @@ export function EditarCargaModal({ carga, onUpdated }: Props) {
     };
 
     const atualizarCarga = async () => {
-        const res = await fetch(`${API}/api/Cargas/${carga.id}`, {
+        const res = await fetch(`${getBaseUrl()}/api/Cargas/${carga.id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(form),

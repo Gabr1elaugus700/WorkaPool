@@ -1,4 +1,4 @@
-const API = import.meta.env.VITE_API_URL;
+import { getBaseUrl } from '@/lib/apiBase';
 
 export async function fetchPedidoToCarga(
   numPed: number,
@@ -8,7 +8,7 @@ export async function fetchPedidoToCarga(
     if (!numPed) {
         throw new Error("Número do pedido é obrigatório");
     }
-  const response = await fetch(`${API}/api/pedidoToCarga/${numPed}`, {
+  const response = await fetch(`${getBaseUrl()}/api/pedidoToCarga/${numPed}`, {
     method: 'PUT',
     headers: {
       "Content-Type": "application/json",

@@ -1,7 +1,7 @@
-const API = import.meta.env.VITE_API_URL;
+import { getBaseUrl } from '@/lib/apiBase';
 
 export const fetchUpdateSitCar = async (id: string, situacao: string): Promise<void[]> => {
-  const response = await fetch(`${API}/api/cargas/${id}/situacao`, {
+  const response = await fetch(`${getBaseUrl()}/api/cargas/${id}/situacao`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',

@@ -25,8 +25,23 @@ const app = express()
 
 // Middlewares
 // app.use(cors())
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://192.168.0.32:5173',
+  'http://pooltecnica.no-ip.biz:5173',
+];
+
 app.use(cors({
-  origin: 'http://192.168.0.32:5173',
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // Permitir requisições sem origin (como curl/teste)
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.warn('CORS bloqueado para:', origin);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 }));
 
