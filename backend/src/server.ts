@@ -1,5 +1,5 @@
 // backend/src/server.ts
-
+import { setupSwagger } from './swagger';
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
@@ -22,13 +22,19 @@ import criarCargas from './routes/criaCargas'
 dotenv.config()
 
 const app = express()
-
+setupSwagger(app);
 // Middlewares
 // app.use(cors())
+// const allowedOrigins = [
+//   'http://localhost:5173',
+//   'http://192.168.0.32:5173',
+//   'http://pooltecnica.no-ip.biz:5173',
+// ];
+
+
 const allowedOrigins = [
-  'http://localhost:5173',
-  'http://192.168.0.32:5173',
-  'http://pooltecnica.no-ip.biz:5173',
+  'http://localhost:5858',
+  'http://192.168.0.32:5858',
 ];
 
 app.use(cors({
@@ -64,7 +70,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/Cargas', criarCargas)
 
 // Iniciar servidorp
-const PORT = Number(process.env.PORT) || 3001;
+const PORT = Number(process.env.PORT) || 3005;
 
 app.listen(PORT, '0.0.0.0', () => {
   // console.log(`🚀 Backend rodando em http://0.0.0.0:${PORT}`);
