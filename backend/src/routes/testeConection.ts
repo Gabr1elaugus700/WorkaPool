@@ -1,3 +1,12 @@
+/**
+ * @openapi
+ * /api/teste:
+ *   get:
+ *     summary: Testa conexao com o banco
+ *     responses:
+ *       200:
+ *         description: Conexao bem sucedida
+ */
 import { Router } from 'express'
 import { sqlPoolConnect, sqlPool } from '../database/sqlServer'
 
