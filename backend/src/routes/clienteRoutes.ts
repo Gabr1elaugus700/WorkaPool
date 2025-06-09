@@ -1,3 +1,12 @@
+/**
+ * @openapi
+ * /api/clientes:
+ *   get:
+ *     summary: Lista clientes
+ *     responses:
+ *       200:
+ *         description: Lista de clientes
+ */
 import { Router } from 'express';
 
 const router = Router();
