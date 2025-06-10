@@ -11,7 +11,7 @@ export function setupSwagger(app: Express) {
         title: 'WorkaPool API',
         version: '1.0.0',
       },
-      servers: [{ url: 'http://localhost:3001' }],
+      servers: [{ url: 'http://192.168.0.32:3005' }], //atualizar em produção
     },
     apis: ['src/routes/**/*.ts', 'src/controllers/**/*.ts'],
   };
