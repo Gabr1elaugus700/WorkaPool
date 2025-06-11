@@ -3,7 +3,7 @@ import { sqlPool, sqlPoolConnect } from "../database/sqlServer";
 export async function GetProdutosEstoque() {
     await sqlPoolConnect;
 
-    const result = await sqlPool.request()
+    const result = await sqlPool.request()  
         .query(`
             SELECT TOP 5 
                 grp.desgrp AS [PRODUTO], 
