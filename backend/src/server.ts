@@ -16,6 +16,7 @@ import authRoutes from './routes/authRoutes'
 import pedidosCargasRoutes from './routes/pedidosCargasRoutes'
 import alteraPedidoCarga from './routes/alteraPedidoCagasRoutes'
 import clientesInativos from './routes/clientesInativosRoutes'
+import produtosEstoque from './routes/estoqueProdutosRoutes'
 
 //Importando as rotas De Consulta no banco de dados Prisma
 import criarCargas from './routes/criaCargas'
@@ -72,6 +73,8 @@ app.use('/api/pedidoToCarga', alteraPedidoCarga);
 //Clientes Perdidos
 app.use('/api/clientes-inativos', clientesInativos)
 
+//Produtos Em Estoque (5)
+app.use('/api/produtosEstoque', produtosEstoque)
 // Rota de consultas Banco de dados Prisma
 app.use('/api/auth', authRoutes);
 app.use('/api/Cargas', criarCargas)
