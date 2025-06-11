@@ -3,13 +3,13 @@ import { ClienteInativo } from '../types/clientes'
 
 
 export const getClientesInativos = async (
-  inicio: string,
-  fim: string,
+  dataInicio: string,
+  dataFim: string,
   codRep: number,
   diasSCompra: number
 ): Promise<ClienteInativo[]> => {
   try {
-    const clientes = await BuscarClientesInativos(inicio, fim, codRep, diasSCompra)
+    const clientes = await BuscarClientesInativos(dataInicio, dataFim, codRep, diasSCompra)
 
     const clientesFormatados = clientes.map(cliente => ({
       ...cliente,

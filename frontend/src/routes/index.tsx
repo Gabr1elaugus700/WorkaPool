@@ -10,6 +10,7 @@ import Pedidos from "../pages/Pedidos";
 import Dashboard from '../pages/dashboardVendas';
 import DashboardTest from '../pages/dashboard'
 import MontagemDeCargas from '../pages/controleDeCargas';
+import ClientesInativos from '../pages/ClientesInativos';
 import Login from "@/auth/Login";
 
 
@@ -28,6 +29,14 @@ const AppRoutes = () => {
             }
           />
 
+          <Route
+            path="/vendasPerdidas"
+            element={
+              <PrivateRoute>
+                <ClientesInativos />
+              </PrivateRoute>
+            }
+          />
           <Route
             path="/metas"
             element={

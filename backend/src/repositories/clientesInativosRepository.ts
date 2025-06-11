@@ -1,8 +1,8 @@
 import { sqlPool, sqlPoolConnect } from "../database/sqlServer";
 
 export async function BuscarClientesInativos(
-  inicio: string,
-  fim: string,
+  dataInicio: string,
+  dataFim: string,
   codRep: number,
   diasSCompra: number
 ) {
@@ -15,8 +15,8 @@ export async function BuscarClientesInativos(
   await sqlPoolConnect;
 
   const result = await sqlPool.request()
-    .input("inicio", inicio)
-    .input("fim", fim)
+    .input("dataInicio", dataInicio)
+    .input("dataFim", dataFim)
     .input("codRep", codRep)
     .input("dataLimite", dataLimiteFormatada)
     .query(`
@@ -51,7 +51,7 @@ export async function BuscarClientesInativos(
       LEFT JOIN poolbi.dbo.grppro grp ON grp.codpro = ipv.codpro									
       WHERE 
         nfv.sitnfv = 2 AND
-        nfv.datemi BETWEEN @inicio AND @fim AND
+        nfv.datemi BETWEEN @dataInicio AND @dataFim AND
         tns.venfat = 'S' AND
         cli.tipcli = 'J' AND
         rep.codrep = @codRep AND

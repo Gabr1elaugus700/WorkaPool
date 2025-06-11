@@ -2,27 +2,24 @@ import { Request, Response } from "express"
 import { getClientesInativos } from "../services/clientesInativosService"
 
 export const handleGetClientesInativos = async (req: Request, res: Response): Promise<any> =>{
-  const { inicio, fim, codRep, diasSCompra } = req.body
+  const { dataInicio, dataFim, codRep, diasSCompra } = req.body
 
-  if (!inicio || !fim || !codRep) {
-    return res.status(400).json({ error: "Parâmetros 'inicio', 'fim' e 'codRep' e 'diasSCompra' são obrigatórios." })
+  if (!dataInicio || !dataFim || !codRep || !diasSCompra) {
+    return res.status(400).json({ error: "Parâmetros 'dataInicio', 'dataFim' e 'codRep' e 'diasSCompra' são obrigatórios." })
   }
 
 
   try {
     const clientes = await getClientesInativos(
-      String(inicio),
-      String(fim),
+      String(dataInicio),
+      String(dataFim),
       Number(codRep),
       Number(diasSCompra)
     )
     return res.json(clientes)
   } catch (error) {
-    console.log("dados Recebidos:", inicio, fim, codRep)
+    console.log("dados Recebidos:", dataInicio, dataFim, codRep)
     return res.status(500).json({ error: "(CONTROLLER) Erro ao buscar clientes inativos." })
   }
 }
-
-// util interno rápido
-const calcularDiferencaMeses = (inicio: Date, fim: Date) =>
-  (fim.getFullYear() - inicio.getFullYear()) * 12 + (fim.getMonth() - inicio.getMonth())
+  

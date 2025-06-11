@@ -60,6 +60,14 @@ export default function DefaultLayout({ children }: Props) {
                 Metas
               </Link>
             )}
+            {user?.role === "ADMIN" && (
+              <Link
+                to="/vendasPerdidas"
+                className="text-white hover:text-black transition-colors"
+              >
+                Vendas Perdidas
+              </Link>
+            )}
 
             {user?.role === "ADMIN" && (
               <Link

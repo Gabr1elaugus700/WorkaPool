@@ -3,6 +3,6 @@ import { handleGetClientesInativos } from "../controllers/clientesInativosContro
 
 const router = Router()
 
-router.get("/", handleGetClientesInativos)
+router.post("/", handleGetClientesInativos)
 
 export default router
