@@ -27,7 +27,7 @@ export async function BuscarClientesInativos(
         rep.aperep AS vendedor,
         rep.codrep,
         ISNULL(grp.desgrp, 'OUTROS PRODUTOS') AS produto,
-        sum(ipv.qtdfat) AS [KG_TOTAL_PERIODO]
+        sum(ipv.qtdfat) AS qtd_total
       FROM e140ipv ipv
       LEFT JOIN e140nfv nfv ON nfv.codemp = ipv.codemp 
                             AND nfv.codfil = ipv.codfil 
@@ -68,6 +68,8 @@ export async function BuscarClientesInativos(
 
       HAVING 
         SUM(ipv.qtdfat) > 1000
+
+      ORDER BY cli.codcli 
     `)
 
   return result.recordset

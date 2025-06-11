@@ -110,7 +110,7 @@ export default function DefaultLayout({ children }: Props) {
 
       {/* Rodapé */}
       <footer className="bg-white border-t text-center py-4 text-sm text-gray-500">
-        &copy; 2025 - Feito com 🧠 por Gabriel Garbugio. V 1.0.1
+        &copy; 2025 - Feito com 🧠 por Gabriel Garbugio. V 1.0.3
       </footer>
     </div>
   );

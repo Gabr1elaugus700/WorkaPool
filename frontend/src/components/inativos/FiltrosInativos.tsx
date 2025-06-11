@@ -2,9 +2,11 @@ import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Calendar } from "@/components/ui/calendar"
+import { useAuth } from "@/auth/AuthContext"
 
-export function FiltrosInativos({ onApply }: {
+export function FiltrosInativos({
+  onApply,
+}: {
   onApply: (filtros: {
     codRep: number
     dataInicio: string
@@ -12,40 +14,57 @@ export function FiltrosInativos({ onApply }: {
     diasSCompra: number
   }) => void
 }) {
-  const [codRep, setCodRep] = useState(8)
-  const [dias, setDias] = useState(30)
-  const [inicio, setInicio] = useState(new Date(new Date().setFullYear(new Date().getFullYear() - 1)))
-  const [fim, setFim] = useState(new Date())
+  const { user } = useAuth()
 
-  const format = (d: Date) => d.toISOString().split("T")[0]
+  const [dias, setDias] = useState(30)
+  const [inicio, setInicio] = useState("2023-01-01")
+  const [fim, setFim] = useState("2024-01-01")
+
+  const codRep = user?.codRep ?? 0
 
   return (
     <div className="space-y-4 p-4 border rounded-xl mb-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label>Representante (código)</Label>
-          <Input type="number" value={codRep} onChange={(e) => setCodRep(Number(e.target.value))} />
+          <Label>Representante</Label>
+          <Input type="number" value={codRep} disabled />
         </div>
         <div>
           <Label>Dias sem compra</Label>
-          <Input type="number" value={dias} onChange={(e) => setDias(Number(e.target.value))} />
+          <Input
+            type="number"
+            value={dias}
+            onChange={(e) => setDias(Number(e.target.value))}
+          />
         </div>
         <div>
           <Label>Data Início</Label>
-          <Calendar mode="single" selected={inicio} onSelect={(d) => d && setInicio(d)} />
+          <Input
+            type="date"
+            value={inicio}
+            onChange={(e) => setInicio(e.target.value)}
+          />
         </div>
         <div>
           <Label>Data Fim</Label>
-          <Calendar mode="single" selected={fim} onSelect={(d) => d && setFim(d)} />
+          <Input
+            type="date"
+            value={fim}
+            onChange={(e) => setFim(e.target.value)}
+          />
         </div>
       </div>
 
-      <Button onClick={() => onApply({
-        codRep,
-        dataInicio: format(inicio),
-        dataFim: format(fim),
-        diasSCompra: dias,
-      })}>
+      <Button
+        onClick={() =>
+          onApply({
+            codRep,
+            dataInicio: inicio,
+            dataFim: fim,
+            diasSCompra: dias,
+          })
+        }
+      >
         Aplicar Filtros
       </Button>
     </div>
