@@ -2,6 +2,8 @@ import DefaultLayout from "../layout/DefaultLayout";
 import React, { useState, useEffect } from "react";
 import { fetchProdutos } from "../services/useProdutos";
 import { fetchVendedores } from "../services/useVendedores";
+import { Vendedor } from "../types/Vendedor";
+import VendedoresSection from "@/components/metas/vendedoresSection";
 
 
 type ProdutoBase = {
@@ -9,11 +11,7 @@ type ProdutoBase = {
   PRODUTOS: string;
 };
 
-type Vendedor = {
-  COD_REP: number;
-  NOME_REP: string;
-  APE_REP: string;
-};
+
 
 const VendedorMetas: React.FC = () => {
   const [metas, setMetas] = useState<{ [vId: number]: { [codGrupo: string]: string } }>({});
@@ -55,6 +53,7 @@ const VendedorMetas: React.FC = () => {
   return (
     <DefaultLayout>
       <div className="p-6">
+        <VendedoresSection> </VendedoresSection>
         <h1 className="text-2xl font-bold mb-4">Definição de Metas por Vendedor (em kg)</h1>
 
         <div className="max-h-[80vh] overflow-auto border rounded-xl">

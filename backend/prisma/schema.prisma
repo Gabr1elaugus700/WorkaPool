@@ -58,3 +58,13 @@ model Cargas {
   previsaoSaida DateTime      @default(now())
   createdAt     DateTime      @default(now())
 }
+
+model Metas {
+  id          String   @id @default(uuid())
+  produto     String   @default("")
+  metaProduto Int      @default(0)
+  createdAt   DateTime @default(now())
+  codRep      Int      @default(0)
+  mesMeta     Int      @default(0)
+  anoMeta     Int      @default(0)
+}
