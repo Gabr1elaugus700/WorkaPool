@@ -59,6 +59,21 @@ model Cargas {
   createdAt     DateTime      @default(now())
 }
 
+enum Meses {
+  JANEIRO
+  FEVEREIRO
+  MARCO
+  ABRIL
+  MAIO
+  JUNHO
+  JULHO
+  AGOSTO
+  SETEMBRO
+  OUTUBRO
+  NOVEMBRO
+  DEZEMBRO
+}
+
 model Metas {
   id          String   @id @default(uuid())
   produto     String   @default("")
@@ -67,4 +82,11 @@ model Metas {
   codRep      Int      @default(0)
   mesMeta     Int      @default(0)
   anoMeta     Int      @default(0)
+}
+
+model CalendarioMetas {
+  id        String   @id @default(uuid())
+  mes       Meses    @default(JANEIRO)
+  ano       Int      @default(2025)
+  createdAt DateTime @default(now())
 }

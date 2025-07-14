@@ -20,6 +20,7 @@ import produtosEstoque from './routes/estoqueProdutosRoutes'
 
 //Importando as rotas De Consulta no banco de dados Prisma
 import criarCargas from './routes/criaCargas'
+import metasRoutes from './routes/metasRoutes';
 
 dotenv.config()
 
@@ -75,10 +76,13 @@ app.use('/api/clientes-inativos', clientesInativos)
 
 //Produtos Em Estoque (5)
 app.use('/api/produtosEstoque', produtosEstoque)
+
 // Rota de consultas Banco de dados Prisma
 app.use('/api/auth', authRoutes);
 app.use('/api/Cargas', criarCargas)
 
+// Metas
+app.use('/api/metas', metasRoutes)
 // Iniciar servidorp
 const PORT = Number(process.env.PORT) || 3005;
 

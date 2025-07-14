@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/auth/AuthContext";
 import PrivateRoute from "@/auth/PrivateRoute";
 import Home from "../pages/Home";
-import VendedorMetas from "../pages/VendedorMetas";
+import VendedorMetas from "../pages/MetasPage";
 import Clientes from "../pages/Clientes";
 import Pedidos from "../pages/Pedidos";
 import Dashboard from '../pages/dashboardVendas';
@@ -38,7 +38,7 @@ const AppRoutes = () => {
             }
           />
           <Route
-            path="/metas"
+            path="/metas/*"
             element={
               <PrivateRoute>
                 <VendedorMetas />
