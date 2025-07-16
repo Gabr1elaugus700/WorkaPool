@@ -62,6 +62,14 @@ export default function DefaultLayout({ children }: Props) {
             )}
             {user?.role === "ADMIN" && (
               <Link
+                to="/fretes"
+                className="text-white hover:text-black transition-colors"
+              >
+                Fretes
+              </Link>
+            )}
+            {user?.role === "ADMIN" && (
+              <Link
                 to="/vendasPerdidas"
                 className="text-white hover:text-black transition-colors"
               >
@@ -71,7 +79,7 @@ export default function DefaultLayout({ children }: Props) {
 
             {user?.role === "ADMIN" && (
               <Link
-                to="/dashboard" 
+                to="/dashboard"
                 className="text-white hover:text-black transition-colors"
               >
                 Dashboards

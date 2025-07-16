@@ -12,6 +12,7 @@ import DashboardTest from '../pages/dashboard'
 import MontagemDeCargas from '../pages/controleDeCargas';
 import ClientesInativos from '../pages/ClientesInativos';
 import Login from "@/auth/Login";
+import FretesPage from "@/pages/FretesPage";
 
 
 const AppRoutes = () => {
@@ -42,6 +43,14 @@ const AppRoutes = () => {
             element={
               <PrivateRoute>
                 <VendedorMetas />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/fretes"
+            element={
+              <PrivateRoute>
+                <FretesPage />
               </PrivateRoute>
             }
           />
