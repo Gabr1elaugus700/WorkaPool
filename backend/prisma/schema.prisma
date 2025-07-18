@@ -82,6 +82,8 @@ model Metas {
   codRep      Int      @default(0)
   mesMeta     Int      @default(0)
   anoMeta     Int      @default(0)
+  precoMedio  Float    @default(0.0)
+  totalVendas Float    @default(0.0)
 }
 
 model CalendarioMetas {

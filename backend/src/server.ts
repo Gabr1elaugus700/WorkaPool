@@ -83,7 +83,12 @@ app.use('/api/Cargas', criarCargas)
 
 // Metas
 app.use('/api/metas', metasRoutes)
-// Iniciar servidorp
+
+// Rotas Power BI
+import pbiMetasRoutes from './routes/pbiMetasRoutes';
+
+app.use('/api/pbi-Metas', pbiMetasRoutes);
+// Iniciar servidor
 const PORT = Number(process.env.PORT) || 3005;
 
 app.listen(PORT, '0.0.0.0', () => {

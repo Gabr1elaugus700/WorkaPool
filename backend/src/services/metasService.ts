@@ -8,6 +8,8 @@ type MetaPayload = {
   metas: {
     produto: string;
     metaProduto: number;
+    precoMedio?: number; // Optional, can be added later if needed
+    totalVendas?: number; // Optional, can be added later if needed
   }[];
 };
 
@@ -23,6 +25,8 @@ export const MetasService = {
       anoMeta,
       produto: m.produto,
       metaProduto: m.metaProduto,
+      precoMedio: m.precoMedio,
+      totalVendas: m.totalVendas,
     }));
 
     return MetasRepository.salvarMetasEmLote(metasFormatadas);

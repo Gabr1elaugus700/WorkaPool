@@ -14,6 +14,8 @@ export const MetasRepository = {
     anoMeta: number;
     produto: string;
     metaProduto: number;
+    precoMedio?: number;
+    totalVendas?: number;
   }[]) {
     return prisma.metas.createMany({
       data: metas,

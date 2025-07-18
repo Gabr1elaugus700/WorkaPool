@@ -8,7 +8,7 @@ export const metasController = {
 
     async createMetas(req: Request, res: Response): Promise<any> {
 
-        const { codRep, mesMeta, anoMeta, metas } = req.body;
+        const { codRep, mesMeta, anoMeta, metas, precoMedio, totalVendas } = req.body;
 
         if (!codRep || !mesMeta || !anoMeta || !Array.isArray(metas)) {
             return res.status(400).json({ error: "Dados incompletos." });
@@ -25,7 +25,7 @@ export const metasController = {
 
     async getMetas(req: Request, res: Response): Promise<any> {
         const { codRep, mesMeta, anoMeta } = req.query;
-        console.log("Parâmetros recebidos:", codRep, mesMeta, anoMeta);
+        // console.log("Parâmetros recebidos:", codRep, mesMeta, anoMeta);
         if (!codRep || !mesMeta || !anoMeta) {
             return res.status(400).json({ error: "Parâmetros ausentes." });
         }

@@ -29,7 +29,7 @@ export default function VendedorMetas() {
 
   const [vendedor, setVendedor] = useState<Vendedor | null>(null);
   const [produtos, setProdutos] = useState<ProdutoBase[]>([]);
-  const [metas, setMetas] = useState<{ [codGrupo: string]: string }>({});
+  const [metas, setMetas] = useState<{ [codGrupo: string]: { metaProduto: string; precoMedio?: number; totalVendas?: number } }>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,12 +54,19 @@ export default function VendedorMetas() {
 
         const metasSalvas = await res.json();
 
-        type Meta = { produto: string; metaProduto: string };
-        const metasMap: { [codGrupo: string]: string } = {};
+        type Meta = { produto: string; metaProduto: string; precoMedio?: number; totalVendas?: number };
+        const metasMap: { [codGrupo: string]: { metaProduto: string; precoMedio?: number; totalVendas?: number } } = {};
+
         metasSalvas.forEach((meta: Meta) => {
-          metasMap[meta.produto] = meta.metaProduto;
+          metasMap[meta.produto] = {
+            metaProduto: meta.metaProduto ?? "",
+            precoMedio: meta.precoMedio ?? 0,
+            totalVendas: meta.totalVendas ?? 0,
+          };
         });
+
         setMetas(metasMap);
+
 
       } catch (err) {
         console.error("Erro ao carregar dados:", err);
@@ -71,18 +78,35 @@ export default function VendedorMetas() {
     carregar();
   }, [idVendedor, mes, ano]);
 
-  const handleMetaChange = (codGrupo: string, value: string) => {
-    setMetas((prev) => ({ ...prev, [codGrupo]: value }));
+  const handleMetaChange = (
+    codGrupo: string,
+    campo: "metaProduto" | "precoMedio",
+    value: string
+  ) => {
+    setMetas((prev) => ({
+      ...prev,
+      [codGrupo]: {
+        ...prev[codGrupo],
+        [campo]: value,
+      },
+    }));
   };
+
 
   if (loading) return <p>Carregando...</p>;
   if (!vendedor) return <p>Vendedor não encontrado.</p>;
 
   const salvarMetas = async () => {
-    const metasArray = Object.entries(metas).map(([produto, metaProduto]) => ({
-      produto,
-      metaProduto: parseInt(metaProduto || "0", 10),
-    }));
+    const metasArray = Object.entries(metas).map(([produto, { metaProduto, precoMedio }]) => {
+      const meta = parseFloat(metaProduto ?? "0");
+      const preco = parseFloat(precoMedio?.toString() ?? "0");
+      return {
+        produto,
+        metaProduto: meta,
+        precoMedio: preco,
+        totalVendas: meta * preco,
+      };
+    });
 
     const payload = {
       codRep: parseInt(idVendedor!, 10),
@@ -130,6 +154,8 @@ export default function VendedorMetas() {
               <TableRow>
                 <TableHead className="text-left px-4 py-2">Produto</TableHead>
                 <TableHead className="text-center px-4 py-2">Meta (kg)</TableHead>
+                <TableHead className="text-center px-4 py-2">Preço Médio (R$)</TableHead>
+                <TableHead className="text-center px-4 py-2">Total Vendas (R$)</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -141,10 +167,40 @@ export default function VendedorMetas() {
                     <input
                       type="number"
                       className="w-full rounded border px-2 py-1 text-center"
-                      value={metas[p.COD_GRUPO] || ""}
-                      onChange={(e) => handleMetaChange(p.COD_GRUPO, e.target.value)}
+                      value={metas[p.COD_GRUPO]?.metaProduto || ""}
+                      onChange={(e) => handleMetaChange(p.COD_GRUPO, "metaProduto", e.target.value)}
+
                     />
                   </TableCell>
+                  <TableCell className="px-2 py-1">
+                    <input
+                      type="number"
+                      className="w-full rounded border px-2 py-1 text-center"
+                      value={metas[p.COD_GRUPO]?.precoMedio || ""}
+                      onChange={(e) => handleMetaChange(p.COD_GRUPO, "precoMedio", e.target.value)}
+
+                    />
+                  </TableCell>
+                  <TableCell className="px-2 py-1">
+                    <input
+                      type="text"
+                      className="w-full rounded border px-2 py-1 text-center"
+                      value={
+                        (() => {
+                          const metaProduto = parseFloat(metas[p.COD_GRUPO]?.metaProduto || "0");
+                          const precoMedio = parseFloat((metas[p.COD_GRUPO]?.precoMedio ?? "0").toString());
+                          return metaProduto && precoMedio
+                            ? (metaProduto * precoMedio).toLocaleString("pt-BR", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                            : "";
+                        })()
+                      }
+                      readOnly
+                    />
+                  </TableCell>
+
                 </TableRow>
               ))}
             </TableBody>
