@@ -15,7 +15,7 @@ export const metasController = {
         }
 
         try {
-            await MetasService.salvar({ codRep, mesMeta, anoMeta, metas });
+            await MetasService.salvar({ codRep, mesMeta, anoMeta, metas});
             return res.status(200).json({ message: "Metas salvas com sucesso!" });
         } catch (err) {
             console.error("Erro ao salvar metas:", err);

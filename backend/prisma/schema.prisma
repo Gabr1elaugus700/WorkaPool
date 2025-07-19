@@ -74,6 +74,7 @@ enum Meses {
   DEZEMBRO
 }
 
+
 model Metas {
   id          String   @id @default(uuid())
   produto     String   @default("")
