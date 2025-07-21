@@ -50,14 +50,15 @@ enum CargaSituacao {
 }
 
 model Cargas {
-  id            String        @id @default(uuid())
-  codCar        Int           @unique
-  destino       String
-  pesoMax       Int
-  custoMin      Int
-  situacao      CargaSituacao @default(ABERTA)
-  previsaoSaida DateTime      @default(now())
-  createdAt     DateTime      @default(now())
+  id             String           @id @default(uuid())
+  codCar         Int              @unique
+  destino        String
+  pesoMax        Int
+  custoMin       Int
+  situacao       CargaSituacao    @default(ABERTA)
+  previsaoSaida  DateTime         @default(now())
+  createdAt      DateTime         @default(now())
+  CargasFechadas CargasFechadas[]
 }
 
 enum Meses {
@@ -94,3 +95,11 @@ model CalendarioMetas {
   ano       Int      @default(2025)
   createdAt DateTime @default(now())
 }
+
+model CargasFechadas {
+  id      String @id @default(uuid())
+  cargaId String
+  carga   Cargas @relation(fields: [cargaId], references: [id])
+  pedidos Json[]
+}
+

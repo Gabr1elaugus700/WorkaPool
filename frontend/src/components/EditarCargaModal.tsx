@@ -48,8 +48,8 @@ export function EditarCargaModal({ carga, onUpdated }: Props) {
         setOpen(false);
         onUpdated({
             ...atualizada,
-            pedidos: carga.pedidos ?? [], // evita undefined
-            pesoAtual: carga.pesoAtual ?? 0, // evita undefined
+            pedidos: carga.pedidos ?? [], 
+            pesoAtual: carga.pesoAtual ?? 0, 
         });
     };
 

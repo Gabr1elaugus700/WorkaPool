@@ -31,7 +31,7 @@ export const cargaController = {
                 },
             });
 
-            return res.status(201).json(novaCarga);
+            return res.status(200).json(novaCarga);
         } catch (error) {
             console.error('Erro ao criar carga:', error);
 
@@ -57,6 +57,18 @@ export const cargaController = {
         if (!situacao) {
             return res.status(400).json({ message: 'Situação é obrigatória!' })
         };
+
+        if (situacao === 'FECHADA') {
+            const cargaFechada = await prisma.cargasFechadas.create({
+                data: {
+                    carga: {
+                        connect: { id }
+                    },
+                    pedidos: []
+                }
+            });
+            return res.status(200).json(cargaFechada);
+        }
 
         try {
             const cargaAtualizada = await prisma.cargas.update({
