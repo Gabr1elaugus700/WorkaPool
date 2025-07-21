@@ -38,5 +38,6 @@ export const metasController = {
             },
         });
 
+        // console.log("Metas encontradas:", metas);
         return res.status(200).json(metas);
     }}

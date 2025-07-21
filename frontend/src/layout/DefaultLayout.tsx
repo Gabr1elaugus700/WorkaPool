@@ -43,7 +43,7 @@ export default function DefaultLayout({ children }: Props) {
             >
               Início
             </Link>
-            {user?.role && ["VENDAS", "LOGISTICA", "ADMIN"].includes(user.role) && (
+            {user?.role && ["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"].includes(user.role) && (
               <Link
                 to="/cargas"
                 className="text-white hover:text-black transition-colors"

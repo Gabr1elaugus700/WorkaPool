@@ -18,6 +18,7 @@ enum Role {
   USER
   VENDAS
   LOGISTICA
+  ALMOX
 }
 
 model User {
@@ -74,7 +75,6 @@ enum Meses {
   DEZEMBRO
 }
 
-
 model Metas {
   id          String   @id @default(uuid())
   produto     String   @default("")
@@ -85,6 +85,7 @@ model Metas {
   anoMeta     Int      @default(0)
   precoMedio  Float    @default(0.0)
   totalVendas Float    @default(0.0)
+  cod_grp     String?  @default("")
 }
 
 model CalendarioMetas {

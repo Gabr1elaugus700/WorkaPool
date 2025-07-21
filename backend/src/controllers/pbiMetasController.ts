@@ -28,7 +28,7 @@ export const pbiMetasController = async (req: Request, res: Response): Promise<a
 
 // 👉 POST: Salvar uma única meta simples
 export const salvarMetaSimples = async (req: Request, res: Response): Promise<any> => {
-  const { codRep, mesMeta, anoMeta, produto, metaProduto, precoMedio, totalVendas } = req.body;
+  const { codRep, mesMeta, anoMeta, produto, metaProduto, precoMedio, totalVendas, cod_grp } = req.body;
 
   if (
     !codRep ||
@@ -37,7 +37,8 @@ export const salvarMetaSimples = async (req: Request, res: Response): Promise<an
     !produto ||
     metaProduto == null ||
     precoMedio == null ||
-    totalVendas == null
+    totalVendas == null ||
+    !cod_grp
   ) {
     return res.status(400).json({ error: "Dados incompletos." });
   }
@@ -52,10 +53,11 @@ export const salvarMetaSimples = async (req: Request, res: Response): Promise<an
         metaProduto,
         precoMedio,
         totalVendas,
+        cod_grp,
       },
     });
 
-    res.status(201).json({ message: "Meta salva com sucesso!", meta: novaMeta });
+    res.status(200).json({ message: "Meta salva com sucesso!", meta: novaMeta });
   } catch (err) {
     console.error("Erro ao salvar meta simples:", err);
     res.status(500).json({ error: "Erro interno ao salvar meta." });

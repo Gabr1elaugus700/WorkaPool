@@ -29,7 +29,7 @@ export default function VendedorMetas() {
 
   const [vendedor, setVendedor] = useState<Vendedor | null>(null);
   const [produtos, setProdutos] = useState<ProdutoBase[]>([]);
-  const [metas, setMetas] = useState<{ [codGrupo: string]: { metaProduto: string; precoMedio?: number; totalVendas?: number } }>({});
+  const [metas, setMetas] = useState<{ [cod_Grp: string]: { metaProduto: string; precoMedio?: number; totalVendas?: number } }>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,15 +54,17 @@ export default function VendedorMetas() {
 
         const metasSalvas = await res.json();
 
-        type Meta = { produto: string; metaProduto: string; precoMedio?: number; totalVendas?: number };
-        const metasMap: { [codGrupo: string]: { metaProduto: string; precoMedio?: number; totalVendas?: number } } = {};
+        type Meta = { produto: string; metaProduto: string; precoMedio?: number; totalVendas?: number; cod_grp?: string };
+        const metasMap: { [codGrupo: string]: { metaProduto: string; precoMedio?: number; totalVendas?: number; cod_grp?: string } } = {};
 
         metasSalvas.forEach((meta: Meta) => {
-          metasMap[meta.produto] = {
-            metaProduto: meta.metaProduto ?? "",
-            precoMedio: meta.precoMedio ?? 0,
-            totalVendas: meta.totalVendas ?? 0,
-          };
+          if (meta.cod_grp) {
+            metasMap[meta.cod_grp] = {
+              metaProduto: meta.metaProduto ?? "",
+              precoMedio: meta.precoMedio ?? 0,
+              totalVendas: meta.totalVendas ?? 0,
+            };
+          }
         });
 
         setMetas(metasMap);
@@ -167,7 +169,11 @@ export default function VendedorMetas() {
                     <input
                       type="number"
                       className="w-full rounded border px-2 py-1 text-center"
-                      value={metas[p.COD_GRUPO]?.metaProduto || ""}
+                      value={
+                        metas[p.COD_GRUPO]?.metaProduto
+                          ? parseFloat(metas[p.COD_GRUPO].metaProduto).toLocaleString("pt-BR")
+                          : ""
+                      }
                       onChange={(e) => handleMetaChange(p.COD_GRUPO, "metaProduto", e.target.value)}
 
                     />
@@ -176,7 +182,16 @@ export default function VendedorMetas() {
                     <input
                       type="number"
                       className="w-full rounded border px-2 py-1 text-center"
-                      value={metas[p.COD_GRUPO]?.precoMedio || ""}
+                      value={
+                        metas[p.COD_GRUPO] && metas[p.COD_GRUPO].precoMedio !== undefined
+                          ? parseFloat(metas[p.COD_GRUPO].precoMedio!.toString()).toLocaleString("pt-BR", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })
+                          : ""
+                      }
+
+
                       onChange={(e) => handleMetaChange(p.COD_GRUPO, "precoMedio", e.target.value)}
 
                     />

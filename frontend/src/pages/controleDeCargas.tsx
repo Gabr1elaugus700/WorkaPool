@@ -200,15 +200,17 @@ export default function ControleDeCargas() {
           {loading ? (
             <div className="text-center col-span-3 text-xl">Carregando pedidos...</div>
           ) : (
-            <PedidoDropzone>
-              {pedidos.map((pedido) => (
-                <PedidoCard
-                  key={pedido.id}
-                  pedido={pedido}
-                  produtos={pedido.produtos || []}
-                />
-              ))}
-            </PedidoDropzone>
+            user?.role !== 'ALMOX' && (
+              <PedidoDropzone>
+                {pedidos.map((pedido) => (
+                  <PedidoCard
+                    key={pedido.id}
+                    pedido={pedido}
+                    produtos={pedido.produtos || []}
+                  />
+                ))}
+              </PedidoDropzone>
+            )
           )}
 
           <div className="col-span-3 bg-gray-400 p-6 rounded shadow-md">
@@ -237,7 +239,9 @@ export default function ControleDeCargas() {
                 if (user.role === 'VENDAS') {
                   return carga.situacao === 'ABERTA';
                 }
-
+                if (user.role === 'LOGISTICA') {
+                  return carga.situacao === 'ABERTA' || carga.situacao === 'SOLICITADA';
+                }
                 return true;
               })
               .sort((a, b) => {
