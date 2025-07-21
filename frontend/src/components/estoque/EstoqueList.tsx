@@ -18,10 +18,11 @@ export function EstoqueList() {
   if (loading) return <p className="text-center text-gray-500">Carregando...</p>;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-2 ">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-2">
       {produtos.map((item, idx) => (
         <CardProduto key={idx} nome={item.PRODUTO} estoque={item.ESTOQUE} />
       ))}
     </div>
+
   );
 }
