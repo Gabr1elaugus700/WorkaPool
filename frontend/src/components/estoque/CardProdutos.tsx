@@ -7,16 +7,20 @@ type CardProps = {
 
 export function CardProduto({ nome, estoque }: CardProps) {
   return (
-    <Card className="transition-shado bg-green-100 border-solid border-4 border-green-600/70 hover:shadow-lg flex-wrap justify-center items-center">
-      <CardHeader className="display flex justify-center items-center">
+    <Card className="bg-card text-card-foreground rounded-lg p-6 shadow-sm">
+      <CardHeader className="text-xl font-semibold">
         <CardTitle>{nome}</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col items">
-        <p className="text-xl text-gray-950 flex justify-center mt-0">Estoque: {estoque.toLocaleString('pt-BR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })} KG</p>
+
+      <CardContent className="flex flex-col items-center">
+        <p className="text-xl text-foreground mt-2">
+          Estoque: {estoque.toLocaleString("pt-BR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })} KG
+        </p>
       </CardContent>
     </Card>
+
   );
 }

@@ -26,9 +26,10 @@ export default function DefaultLayout({ children }: Props) {
 
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col ">
       {/* Navbar */}
-      <nav className="bg-emerald-600 shadow">
+      <nav className="bg-primary text-primary-foreground shadow">
+
         <div className="container mx-auto px-3 py-3 flex justify-between items-center">
           {/* Logo */}
           <Link to="/" className="text-xl font-bold text-white">
@@ -37,70 +38,45 @@ export default function DefaultLayout({ children }: Props) {
 
           {/* Links */}
           <div className="flex gap-4">
-            <Link
-              to="/"
-              className="text-white hover:text-black transition-colors"
-            >
-              Início
-            </Link>
+            <Button asChild variant="link" className="text-primary-foreground">
+              <Link to="/">Início</Link>
+            </Button>
+
             {user?.role && ["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"].includes(user.role) && (
-              <Link
-                to="/cargas"
-                className="text-white hover:text-black transition-colors"
-              >
-                Cargas
-              </Link>
+              <Button asChild variant="link" className="text-primary-foreground">
+                <Link to="/cargas">Cargas</Link>
+              </Button>
             )}
 
             {user?.role === "ADMIN" && (
-              <Link
-                to="/metas"
-                className="text-white hover:text-black transition-colors"
-              >
-                Metas
-              </Link>
-            )}
-            {user?.role === "ADMIN" && (
-              <Link
-                to="/fretes"
-                className="text-white hover:text-black transition-colors"
-              >
-                Fretes
-              </Link>
-            )}
-            {user?.role === "ADMIN" && (
-              <Link
-                to="/vendasPerdidas"
-                className="text-white hover:text-black transition-colors"
-              >
-                Vendas Perdidas
-              </Link>
+              <>
+                <Button asChild variant="link" className="text-primary-foreground">
+                  <Link to="/metas">Metas</Link>
+                </Button>
+                <Button asChild variant="link" className="text-primary-foreground">
+                  <Link to="/fretes">Fretes</Link>
+                </Button>
+                <Button asChild variant="link" className="text-primary-foreground">
+                  <Link to="/vendasPerdidas">Vendas Perdidas</Link>
+                </Button>
+                <Button asChild variant="link" className="text-primary-foreground">
+                  <Link to="/dashboard">Dashboards</Link>
+                </Button>
+                <Button asChild variant="link" className="text-primary-foreground">
+                  <Link to="/dashboardTest">DashBoardTeste</Link>
+                </Button>
+              </>
             )}
 
-            {user?.role === "ADMIN" && (
-              <Link
-                to="/dashboard"
-                className="text-white hover:text-black transition-colors"
-              >
-                Dashboards
-              </Link>
-            )}
-
-            {user?.role === "ADMIN" && (
-              <Link
-                to="/dashboardTest"
-                className="text-white hover:text-black transition-colors"
-              >
-                DashBoardTeste
-              </Link>
-            )}
             <Button
               variant="ghost"
               onClick={handleLogout}
-              className="text-white hover:text-black transition-colors cursor-pointer"
+              className="text-primary-foreground hover:text-background flex items-center gap-2"
             >
-              <LogOutIcon></LogOutIcon> <span >Sair</span>
+              <LogOutIcon className="w-4 h-4" />
+              <span>Sair</span>
             </Button>
+
           </div>
         </div>
         <div className="flex items-center gap-3">

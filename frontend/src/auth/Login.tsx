@@ -1,123 +1,127 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
-import { getBaseUrl } from '@/lib/apiBase';
+import { getBaseUrl } from "@/lib/apiBase";
 
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function Login() {
-    const [user, setUser] = useState("");
-    const [password, setPassword] = useState("");
-    const [newPassword, setNewPassword] = useState("");
-    const [error, setError] = useState("");
-    const [mustChangePassword, setMustChangePassword] = useState(false);
-    const navigate = useNavigate();
+  const [user, setUser] = useState("");
+  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [error, setError] = useState("");
+  const [mustChangePassword, setMustChangePassword] = useState(false);
+  const navigate = useNavigate();
 
-    const { login } = useAuth();
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
+  const { login } = useAuth();
 
-        try {
-            const res = await fetch(`${getBaseUrl()}/api/auth/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user, password }),
-            });
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
 
-            const data = await res.json();
-            console.log("Resposta do login:", data);
+    try {
+      const res = await fetch(`${getBaseUrl()}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user, password }),
+      });
 
-            if (!res.ok) throw new Error(data.error || "Erro ao logar");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao logar");
 
-            if (data.mustChangePassword) {
-                console.log("Usuário precisa trocar a senha:", data);
-                setMustChangePassword(true);
-                localStorage.setItem("temp-token", data.token); // salvar token temporário
-                return;
-            }
+      if (data.mustChangePassword) {
+        setMustChangePassword(true);
+        localStorage.setItem("temp-token", data.token);
+        return;
+      }
 
-            login(data.token);
-            navigate("/");
-        } catch (err: unknown) {
-            if (err instanceof Error) {
-                setError(err.message);
-            } else {
-                setError("Erro desconhecido.");
-            }
+      login(data.token);
+      navigate("/");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro desconhecido.");
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const res = await fetch(
+        `${getBaseUrl()}/api/auth/change-password-first-login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("temp-token")}`,
+          },
+          body: JSON.stringify({ user, newPassword }),
         }
-    };
+      );
 
-    const handleChangePassword = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao trocar senha");
 
-        try {
-            const res = await fetch(`${getBaseUrl()}/api/auth/change-password-first-login`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("temp-token")}`,
-                },
-                body: JSON.stringify({ user, newPassword }),
-            });
+      alert("Senha alterada com sucesso! Faça login novamente.");
+      localStorage.removeItem("temp-token");
+      setMustChangePassword(false);
+      setPassword("");
+      setNewPassword("");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro desconhecido.");
+    }
+  };
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Erro ao trocar senha");
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-muted">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">
+            {mustChangePassword ? "Altere sua Senha" : "Login"}
+          </CardTitle>
+        </CardHeader>
 
-            alert("Senha alterada com sucesso! Faça login novamente.");
-            localStorage.removeItem("temp-token");
-            setMustChangePassword(false);
-            setPassword("");
-            setNewPassword("");
-        } catch (err: unknown) {
-            if (err instanceof Error) {
-                setError(err.message);
-            } else {
-                setError("Erro desconhecido.");
-            }
-        }
-    };
+        <CardContent>
+          <form
+            onSubmit={mustChangePassword ? handleChangePassword : handleLogin}
+            className="space-y-4"
+          >
+            <Input
+              type="text"
+              placeholder="Usuário"
+              value={user}
+              onChange={(e) => setUser(e.target.value)}
+              disabled={mustChangePassword}
+            />
 
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <form
-                onSubmit={mustChangePassword ? handleChangePassword : handleLogin}
-                className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm space-y-4"
-            >
-                <h2 className="text-xl font-bold flex justify-center">
-                    {mustChangePassword ? "Você Precisa Alterar a Senha!" : "Login"}
-                </h2>
+            <Input
+              type="password"
+              placeholder={mustChangePassword ? "Nova senha" : "Senha"}
+              value={mustChangePassword ? newPassword : password}
+              onChange={(e) =>
+                mustChangePassword
+                  ? setNewPassword(e.target.value)
+                  : setPassword(e.target.value)
+              }
+            />
 
-                <input
-                    type="text"
-                    placeholder="Usuário"
-                    className="w-full px-3 py-2 border rounded"
-                    value={user}
-                    onChange={(e) => setUser(e.target.value)}
-                    disabled={mustChangePassword}
-                />
+            {error && (
+              <p className="text-sm text-destructive">{error}</p>
+            )}
 
-                <input
-                    type="password"
-                    placeholder={mustChangePassword ? "Nova senha" : "Senha"}
-                    className="w-full px-3 py-2 border rounded"
-                    value={mustChangePassword ? newPassword : password}
-                    onChange={(e) =>
-                        mustChangePassword
-                            ? setNewPassword(e.target.value)
-                            : setPassword(e.target.value)
-                    }
-                />
-
-                {error && <p className="text-red-600 text-sm">{error}</p>}
-
-                <button
-                    type="submit"
-                    className="w-full bg-emerald-600 text-white py-2 rounded hover:bg-emerald-700"
-                >
-                    {mustChangePassword ? "Salvar Senha" : "Entrar"}
-                </button>
-            </form>
-        </div>
-    );
+            <Button type="submit" className="w-full">
+              {mustChangePassword ? "Salvar Senha" : "Entrar"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
