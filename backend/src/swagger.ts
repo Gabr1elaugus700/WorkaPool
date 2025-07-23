@@ -9,7 +9,7 @@ export function setupSwagger(app: Express) {
       openapi: '3.0.0',
       info: {
         title: 'WorkaPool API',
-        version: '1.0.0',
+        version: '1.0.4',
       },
       servers: [{ url: 'http://192.168.0.32:3005' }], //atualizar em produção
     },

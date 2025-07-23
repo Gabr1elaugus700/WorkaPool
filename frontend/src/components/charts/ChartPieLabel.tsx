@@ -1,65 +1,73 @@
-// src/charts/ChartPieLabel.tsx
-
-"use client"
-import { TrendingUp } from "lucide-react"
+import { Pie, PieChart } from "recharts"
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { PieChart, Pie, Tooltip, ResponsiveContainer } from "recharts"
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent
+} from "@/components/ui/chart"
 
 
-type ProdutoEstoque = {
-  PRODUTO: string
-  ESTOQUE: number
+type ChartPieLabelProps = {
+  title?: string
+  description?: string
+  data: {
+    label: string
+    value: number
+  }[]
 }
 
-type Props = {
-  produtos: ProdutoEstoque[]
-}
+const colors = [
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+]
 
-
-
-export function ChartPieLabel({ produtos }: Props) {
-  const chartData = produtos.map((item, index) => ({
-    browser: item.PRODUTO, // Renomeando para `browser` pois o componente espera isso
-    visitors: item.ESTOQUE,
-    fill: `var(--chart-${(index % 5) + 1})`, // gera cores variando
+export function ChartPieLabel({ title, description, data }: ChartPieLabelProps) {
+  const chartData = data.map((item, index) => ({
+    label: item.label,
+    value: item.value,
+    fill: colors[index % colors.length],
   }))
 
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
-        <CardTitle>Estoque - Pizza</CardTitle>
-        <CardDescription>Distribuição por produto</CardDescription>
+        <CardTitle>{title ?? "Gráfico"}</CardTitle>
+        <CardDescription>{description ?? ""}</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 pb-0">
-        <ResponsiveContainer width="100%" height={250}>
-          <PieChart>
-            <Tooltip />
+      <CardContent className="flex-1 pb-0 ">
+        <ChartContainer
+          config={{}}
+          className="[&_.recharts-pie-label-text]:fill-foreground mx-auto aspect-square max-h-[300px] mt-3 p-6 "
+        >
+          <PieChart className="">
+            <ChartTooltip content={<ChartTooltipContent hideIndicator labelKey="label"  />} />
             <Pie
               data={chartData}
-              dataKey="visitors"
-              nameKey="browser"
-              label
-              fill="#888234"
+              dataKey="value"
+              nameKey="label"
+              outerRadius={80}
+              label={({ value }) => value.toLocaleString("pt-BR")}
+              labelLine={false}
+            />
+
+            <ChartLegend
+              content={<ChartLegendContent nameKey="label" />}
+              className="-translate-y-2 flex-wrap gap-2 *:basis-1/4 *:justify-center mt-4 p-4"
             />
           </PieChart>
-        </ResponsiveContainer>
-
+        </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 leading-none font-medium">
-          Dados atualizados <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="text-muted-foreground leading-none">
-          Produtos em estoque
-        </div>
-      </CardFooter>
     </Card>
   )
 }

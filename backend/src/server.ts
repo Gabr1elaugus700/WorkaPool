@@ -28,6 +28,8 @@ const app = express()
 setupSwagger(app);
 // Middlewares
 // app.use(cors())
+
+// Produção // 
 // const allowedOrigins = [
 //   'http://localhost:5173',
 //   'http://192.168.0.32:5173',
@@ -39,7 +41,9 @@ const allowedOrigins = [
   'http://localhost:5858',
   'http://192.168.0.32:5858',
   'http://192.168.0.32:3005',
+  'http://pooltecnica.no-ip.biz:5173',
 ];
+
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -89,9 +93,9 @@ import pbiMetasRoutes from './routes/pbiMetasRoutes';
 
 app.use('/api/pbi-Metas', pbiMetasRoutes);
 // Iniciar servidor
-const PORT = Number(process.env.PORT) || 3005;
+const PORT = Number(process.env.PORT) || 3001;
 
 app.listen(PORT, '0.0.0.0', () => {
-  // console.log(`🚀 Backend rodando em http://0.0.0.0:${PORT}`);
+  console.log(`🚀 Backend rodando em http://192.168.0.32:${PORT}`);
 });
 

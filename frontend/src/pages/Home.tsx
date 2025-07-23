@@ -21,9 +21,6 @@ const Home: React.FC = () => {
         <h1 className="text-xl font-semibold text-gray-900">
           🏠 Bem-vindo ao WorkaPool, {user?.name}!
         </h1>
-        <h1 className="text-xl font-semibold text-gray-900">
-          Produtos em Alto Volume No Estoque:
-        </h1>
         <EstoqueList />
       </div>
 

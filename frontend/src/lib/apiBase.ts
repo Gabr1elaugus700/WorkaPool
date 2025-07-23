@@ -4,6 +4,6 @@ export function getBaseUrl() {
     window.location.hostname === 'localhost';
 
   return isLocal
-    ? `http://${window.location.hostname}:3005`
-    : 'http://pooltecnica.no-ip.biz:3005';
+    ? `http://${window.location.hostname}:3001`
+    : 'http://pooltecnica.no-ip.biz:3001';
 }

@@ -24,11 +24,11 @@
     --input: 240 5.9% 90%;
     --ring: 142.1 76.2% 36.3%;
     --radius: 0.65rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 140 60% 70%;  /* verde limão claro */
+    --chart-2: 140 65% 50%;  /* verde médio vivo */
+    --chart-3: 140 65% 40%;  /* verde médio escuro */
+    --chart-4: 140 55% 35%;  /* verde mais escuro */
+    --chart-5: 140 55% 25%;  /* verde escuro profundo */
   }
 
   .dark {
