@@ -103,3 +103,55 @@ model CargasFechadas {
   pedidos Json[]
 }
 
+model Caminhao {
+  id                 Int    @id @default(autoincrement())
+  modelo             String // exemplo: "bi-truck - scania"
+  eixos              Int // qtd_eixos geral
+  eixos_carregado    Int
+  eixos_vazio        Int
+  pneus              Int
+  capacidade_kg      Int // ex: 18000
+  consumo_medio_km_l Float // ex: 3.5
+
+  tipo String?
+  
+  rotas Rota_base[]
+}
+
+model Rota_base {
+  id                    Int    @id @default(autoincrement())
+  caminhao_id           Int // referenciado
+  origem                String
+  destino               String
+  total_km              Int
+  dias_viagem           Int
+  pedagio_ida           Float
+  pedagio_volta         Float
+  custo_diesel          Float
+  custo_arla_32         Float
+  salario_motorista     Float
+  refeicao_motorista    Float
+  ajuda_custo_motorista Float
+  chapa_descarga        Float
+  desgaste_pneus        Float
+  custo_total_base      Float // custo da viagem com base no peso_base
+  peso_base             Int // peso da simulação original
+  rentabilidade_padrao  Float
+  valor_sugerido_base   Float
+  frete_kg_base         Float
+
+  caminhao Caminhao @relation(fields: [caminhao_id], references: [id])
+}
+
+model ParametrosGlobaisViagem {
+  id                           Int      @id @default(autoincrement())
+  valor_diesel_s10_sem_icms    Float
+  valor_diesel_s10_com_icms    Float
+  valor_arla_32                Float //Verificar o que é isso Com Silvana
+  valor_salario_motorista_dia  Float
+  valor_refeicao_motorista_dia Float
+  valor_ajuda_custo_motorista  Float
+  valor_chapa_descarga         Float
+  valor_desgaste_pneus         Float
+  updatedAt                    DateTime @updatedAt
+}

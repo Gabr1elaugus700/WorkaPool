@@ -1,9 +1,13 @@
 import DefaultLayout from "@/layout/DefaultLayout";
 import CardCaminhoes from "@/components/fretes/CardCaminhoes";
+import CadCaminhoes from "@/components/caminhoes/CadCaminhao";
 
 export default function FretesPage() {
   return (
     <DefaultLayout>
+      <div>
+        <CadCaminhoes />
+      </div>
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Calculo de Fretes</h1>
         <p className="text-gray-600">Esta página está em desenvolvimento.</p>
