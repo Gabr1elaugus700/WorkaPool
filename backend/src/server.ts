@@ -22,6 +22,7 @@ import produtosEstoque from './routes/estoqueProdutosRoutes'
 import criarCargas from './routes/criaCargas'
 import metasRoutes from './routes/metasRoutes';
 import caminhoes from './routes/caminhoesRoutes';
+import parametrosGlobaisFretes from './routes/parametrosFretesRoutes';
 
 dotenv.config()
 
@@ -86,6 +87,7 @@ app.use('/api/produtosEstoque', produtosEstoque)
 app.use('/api/auth', authRoutes);
 app.use('/api/Cargas', criarCargas)
 app.use('/api/caminhoes', caminhoes);
+app.use('/api/parametrosFretes', parametrosGlobaisFretes);
 
 // Metas
 app.use('/api/metas', metasRoutes)

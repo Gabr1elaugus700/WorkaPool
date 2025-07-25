@@ -147,7 +147,6 @@ model ParametrosGlobaisViagem {
   id                           Int      @id @default(autoincrement())
   valor_diesel_s10_sem_icms    Float
   valor_diesel_s10_com_icms    Float
-  valor_arla_32                Float //Verificar o que é isso Com Silvana
   valor_salario_motorista_dia  Float
   valor_refeicao_motorista_dia Float
   valor_ajuda_custo_motorista  Float

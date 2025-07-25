@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { cadastroCaminhaoController } from '../controllers/cadastroCaminhaoController';
+import { cadastroCaminhaoController } from '../controllers/caminhoesController';
 
 const router = Router();
 

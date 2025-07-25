@@ -6,6 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, DialogContent, DialogHeader, DialogClose, DialogDescription, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { fetchCaminhoes } from "@/services/useCarminhoesService";
 import { useState } from "react";
+import { PlusIcon } from "lucide-react";
+
 
 const vehicleSchema = z.object({
     modelo: z.string().min(1, "Modelo é obrigatório"),
@@ -40,7 +42,9 @@ export default function CadCaminhoes() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline">Cadastrar Caminhão</Button>
+                <Button variant="outline">Cadastrar Caminhão
+                    <PlusIcon className="w-4 h-4 ml-2" />
+                </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
