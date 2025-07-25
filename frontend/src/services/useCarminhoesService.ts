@@ -26,3 +26,16 @@ export const fetchCaminhoes = async (modelo: string, eixos: number, eixos_carreg
     const data = await response.json();
     return data;
 };
+
+export const getCaminhoes = async (): Promise<Caminhao[]> => {
+    const response = await fetch(`${getBaseUrl()}/api/caminhoes`, {
+        method: 'GET',
+    });
+
+    if (!response.ok) {
+        throw new Error('Erro ao obter caminhões');
+    }
+
+    const data = await response.json();
+    return data;
+};

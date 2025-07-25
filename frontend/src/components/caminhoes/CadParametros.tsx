@@ -53,9 +53,9 @@ export default function CadParametros() {
                 console.error("Erro ao atualizar parâmetros de frete:", error);
             });
     }
-        
-    function getParametros() {
-        return getParametrosFrete()
+
+    async function getParametros() {
+        return await getParametrosFrete()
             .then(response => {
                 console.log("Parâmetros de frete obtidos com sucesso:", response);
                 return response;
