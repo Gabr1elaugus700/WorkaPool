@@ -7,8 +7,6 @@ export const cargaController = {
     async CreateCarga(req: Request, res: Response): Promise<any> {
         const { destino, pesoMax, custoMin, situacao, previsaoSaida } = req.body;
 
-        // console.log(req)
-
         if (!destino || !pesoMax || !custoMin || !situacao || !previsaoSaida) {
             return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
         }
