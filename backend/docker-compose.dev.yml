@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  db-dev:
+    image: postgres:15
+    container_name: dev-postgres
+    restart: always
+    ports:
+      - "5433:5432"  # <--- Porta 5433 local para não conflitar com a produção
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: workapool_dev
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_dev_data:

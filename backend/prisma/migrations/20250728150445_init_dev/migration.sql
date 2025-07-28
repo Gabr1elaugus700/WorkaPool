@@ -1,4 +1,4 @@
-﻿-- CreateEnum
+-- CreateEnum
 CREATE TYPE "Role" AS ENUM ('ADMIN', 'USER', 'VENDAS', 'LOGISTICA', 'ALMOX');
 
 -- CreateEnum
@@ -6,6 +6,9 @@ CREATE TYPE "CargaSituacao" AS ENUM ('ABERTA', 'SOLICITADA', 'FECHADA', 'CANCELA
 
 -- CreateEnum
 CREATE TYPE "Meses" AS ENUM ('JANEIRO', 'FEVEREIRO', 'MARCO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO');
+
+-- CreateEnum
+CREATE TYPE "Status" AS ENUM ('PENDENTE', 'EM_ANDAMENTO', 'FINALIZADO', 'CANCELADO');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -99,27 +102,23 @@ CREATE TABLE "Caminhao" (
 -- CreateTable
 CREATE TABLE "Rota_base" (
     "id" SERIAL NOT NULL,
-    "caminhao_id" INTEGER NOT NULL,
     "origem" TEXT NOT NULL,
     "destino" TEXT NOT NULL,
     "total_km" INTEGER NOT NULL,
     "dias_viagem" INTEGER NOT NULL,
-    "pedagio_ida" DOUBLE PRECISION NOT NULL,
-    "pedagio_volta" DOUBLE PRECISION NOT NULL,
-    "custo_diesel" DOUBLE PRECISION NOT NULL,
-    "custo_arla_32" DOUBLE PRECISION NOT NULL,
-    "salario_motorista" DOUBLE PRECISION NOT NULL,
-    "refeicao_motorista" DOUBLE PRECISION NOT NULL,
-    "ajuda_custo_motorista" DOUBLE PRECISION NOT NULL,
-    "chapa_descarga" DOUBLE PRECISION NOT NULL,
-    "desgaste_pneus" DOUBLE PRECISION NOT NULL,
-    "custo_total_base" DOUBLE PRECISION NOT NULL,
-    "peso_base" INTEGER NOT NULL,
-    "rentabilidade_padrao" DOUBLE PRECISION NOT NULL,
-    "valor_sugerido_base" DOUBLE PRECISION NOT NULL,
-    "frete_kg_base" DOUBLE PRECISION NOT NULL,
 
     CONSTRAINT "Rota_base_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "CaminhaoRota" (
+    "id" SERIAL NOT NULL,
+    "rota_base_id" INTEGER NOT NULL,
+    "caminhao_id" INTEGER NOT NULL,
+    "pedagio_ida" DOUBLE PRECISION NOT NULL,
+    "pedagio_volta" DOUBLE PRECISION NOT NULL,
+
+    CONSTRAINT "CaminhaoRota_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -127,15 +126,28 @@ CREATE TABLE "ParametrosGlobaisViagem" (
     "id" SERIAL NOT NULL,
     "valor_diesel_s10_sem_icms" DOUBLE PRECISION NOT NULL,
     "valor_diesel_s10_com_icms" DOUBLE PRECISION NOT NULL,
-    "valor_arla_32" DOUBLE PRECISION NOT NULL,
     "valor_salario_motorista_dia" DOUBLE PRECISION NOT NULL,
     "valor_refeicao_motorista_dia" DOUBLE PRECISION NOT NULL,
     "valor_ajuda_custo_motorista" DOUBLE PRECISION NOT NULL,
     "valor_chapa_descarga" DOUBLE PRECISION NOT NULL,
     "valor_desgaste_pneus" DOUBLE PRECISION NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "margem_lucro_frete" DOUBLE PRECISION NOT NULL DEFAULT 0.35,
 
     CONSTRAINT "ParametrosGlobaisViagem_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SolicitacaoRota" (
+    "id" SERIAL NOT NULL,
+    "data_solicitacao" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "peso" INTEGER NOT NULL,
+    "origem" TEXT NOT NULL,
+    "destino" TEXT NOT NULL,
+    "status" "Status" NOT NULL DEFAULT 'PENDENTE',
+    "solicitante_user" TEXT NOT NULL,
+
+    CONSTRAINT "SolicitacaoRota_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -148,5 +160,10 @@ CREATE UNIQUE INDEX "Cargas_codCar_key" ON "Cargas"("codCar");
 ALTER TABLE "CargasFechadas" ADD CONSTRAINT "CargasFechadas_cargaId_fkey" FOREIGN KEY ("cargaId") REFERENCES "Cargas"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Rota_base" ADD CONSTRAINT "Rota_base_caminhao_id_fkey" FOREIGN KEY ("caminhao_id") REFERENCES "Caminhao"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "CaminhaoRota" ADD CONSTRAINT "CaminhaoRota_rota_base_id_fkey" FOREIGN KEY ("rota_base_id") REFERENCES "Rota_base"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+-- AddForeignKey
+ALTER TABLE "CaminhaoRota" ADD CONSTRAINT "CaminhaoRota_caminhao_id_fkey" FOREIGN KEY ("caminhao_id") REFERENCES "Caminhao"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SolicitacaoRota" ADD CONSTRAINT "SolicitacaoRota_solicitante_user_fkey" FOREIGN KEY ("solicitante_user") REFERENCES "User"("user") ON DELETE RESTRICT ON UPDATE CASCADE;
