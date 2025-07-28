@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,14 +5,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-enum Role {
-  ADMIN
-  USER
-  VENDAS
-  LOGISTICA
-  ALMOX
 }
 
 model User {
@@ -32,21 +18,12 @@ model User {
   mustChangePassword Boolean  @default(true)
 }
 
-// Caminhões Disponíveis
 model Trucks {
   id        String   @id @default(uuid())
   name      String
   capacity  Int
   createdAt DateTime @default(now())
   codRep    Int      @default(0)
-}
-
-enum CargaSituacao {
-  ABERTA
-  SOLICITADA
-  FECHADA
-  CANCELADA
-  ENTREGUE
 }
 
 model Cargas {
@@ -59,21 +36,6 @@ model Cargas {
   previsaoSaida  DateTime         @default(now())
   createdAt      DateTime         @default(now())
   CargasFechadas CargasFechadas[]
-}
-
-enum Meses {
-  JANEIRO
-  FEVEREIRO
-  MARCO
-  ABRIL
-  MAIO
-  JUNHO
-  JULHO
-  AGOSTO
-  SETEMBRO
-  OUTUBRO
-  NOVEMBRO
-  DEZEMBRO
 }
 
 model Metas {
@@ -99,28 +61,26 @@ model CalendarioMetas {
 model CargasFechadas {
   id      String @id @default(uuid())
   cargaId String
-  carga   Cargas @relation(fields: [cargaId], references: [id])
   pedidos Json[]
+  carga   Cargas @relation(fields: [cargaId], references: [id])
 }
 
 model Caminhao {
-  id                 Int    @id @default(autoincrement())
-  modelo             String // exemplo: "bi-truck - scania"
-  eixos              Int // qtd_eixos geral
+  id                 Int         @id @default(autoincrement())
+  modelo             String
+  eixos              Int
   eixos_carregado    Int
   eixos_vazio        Int
   pneus              Int
-  capacidade_kg      Int // ex: 18000
-  consumo_medio_km_l Float // ex: 3.5
-
-  tipo String?
-  
-  rotas Rota_base[]
+  capacidade_kg      Int
+  consumo_medio_km_l Float
+  tipo               String?
+  Rota_base          Rota_base[]
 }
 
 model Rota_base {
-  id                    Int    @id @default(autoincrement())
-  caminhao_id           Int // referenciado
+  id                    Int      @id @default(autoincrement())
+  caminhao_id           Int
   origem                String
   destino               String
   total_km              Int
@@ -134,23 +94,54 @@ model Rota_base {
   ajuda_custo_motorista Float
   chapa_descarga        Float
   desgaste_pneus        Float
-  custo_total_base      Float // custo da viagem com base no peso_base
-  peso_base             Int // peso da simulação original
+  custo_total_base      Float
+  peso_base             Int
   rentabilidade_padrao  Float
   valor_sugerido_base   Float
   frete_kg_base         Float
-
-  caminhao Caminhao @relation(fields: [caminhao_id], references: [id])
+  Caminhao              Caminhao @relation(fields: [caminhao_id], references: [id])
 }
 
 model ParametrosGlobaisViagem {
   id                           Int      @id @default(autoincrement())
   valor_diesel_s10_sem_icms    Float
   valor_diesel_s10_com_icms    Float
+  valor_arla_32                Float
   valor_salario_motorista_dia  Float
   valor_refeicao_motorista_dia Float
   valor_ajuda_custo_motorista  Float
   valor_chapa_descarga         Float
   valor_desgaste_pneus         Float
   updatedAt                    DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  USER
+  VENDAS
+  LOGISTICA
+  ALMOX
+}
+
+enum CargaSituacao {
+  ABERTA
+  SOLICITADA
+  FECHADA
+  CANCELADA
+  ENTREGUE
+}
+
+enum Meses {
+  JANEIRO
+  FEVEREIRO
+  MARCO
+  ABRIL
+  MAIO
+  JUNHO
+  JULHO
+  AGOSTO
+  SETEMBRO
+  OUTUBRO
+  NOVEMBRO
+  DEZEMBRO
 }

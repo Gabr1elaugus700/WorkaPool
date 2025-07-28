@@ -3,6 +3,8 @@ import CadCaminhoes from "@/components/caminhoes/CadCaminhao";
 import CadParametros from "@/components/caminhoes/CadParametros";
 import CardCaminhoes from "@/components/caminhoes/CardsCaminhao";
 
+import { Separator } from "@/components/ui/separator"
+
 export default function FretesPage() {
   return (
     <DefaultLayout>
@@ -14,6 +16,7 @@ export default function FretesPage() {
         <div>
           <CardCaminhoes />
         </div>
+        <Separator className="my-4 bg-gray-500" />
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6 p-6 ">
 
         </div>

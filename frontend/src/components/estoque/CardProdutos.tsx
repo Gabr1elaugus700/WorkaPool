@@ -7,7 +7,7 @@ type CardProps = {
 
 export function CardProduto({ nome, estoque }: CardProps) {
   return (
-    <Card className="bg-card text-card-foreground rounded-lg p-6 shadow-sm">
+    <Card className="bg-muted border-2 border-gray-200 text-card-foreground rounded-lg p-3 shadow-sm">
       <CardHeader className="text-xl font-semibold">
         <CardTitle>{nome}</CardTitle>
       </CardHeader>

@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from "@prisma/client";
-import { get } from 'http';
 const prisma = new PrismaClient();
 
 export const cadastroCaminhaoController = {
