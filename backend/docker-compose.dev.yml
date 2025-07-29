@@ -6,7 +6,7 @@ services:
     container_name: dev-postgres
     restart: always
     ports:
-      - "5433:5432"  # <--- Porta 5433 local para não conflitar com a produção
+      - "5433:5433"  # <--- Porta 5433 local para não conflitar com a produção
     environment:
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: dev

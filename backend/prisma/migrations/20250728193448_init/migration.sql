@@ -117,6 +117,19 @@ CREATE TABLE "CaminhaoRota" (
     "caminhao_id" INTEGER NOT NULL,
     "pedagio_ida" DOUBLE PRECISION NOT NULL,
     "pedagio_volta" DOUBLE PRECISION NOT NULL,
+    "custo_combustivel" DOUBLE PRECISION NOT NULL,
+    "custo_total" DOUBLE PRECISION NOT NULL,
+    "salario_motorista_rota" DOUBLE PRECISION NOT NULL,
+    "refeicao_motorista_rota" DOUBLE PRECISION NOT NULL,
+    "ajuda_custo_motorista_rota" DOUBLE PRECISION NOT NULL,
+    "chapa_descarga_rota" DOUBLE PRECISION NOT NULL,
+    "desgaste_pneus_rota" DOUBLE PRECISION NOT NULL,
+    "margem_lucro_frete" DOUBLE PRECISION NOT NULL DEFAULT 0.35,
+    "custo_total_rota" DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    "custo_por_kg" DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    "valor_frete_kg" DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    "custo_operacional" DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "CaminhaoRota_pkey" PRIMARY KEY ("id")
 );

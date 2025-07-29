@@ -12,7 +12,6 @@ export const parametrosGlobaisViagemController = {
                 data: {
                     valor_diesel_s10_sem_icms,
                     valor_diesel_s10_com_icms,
-                    valor_arla_32: 0, // Assuming this is a placeholder, as it was commented out in the schema
                     valor_salario_motorista_dia,
                     valor_refeicao_motorista_dia,
                     valor_ajuda_custo_motorista,
@@ -35,7 +34,6 @@ export const parametrosGlobaisViagemController = {
                 data: {
                     valor_diesel_s10_sem_icms,
                     valor_diesel_s10_com_icms,
-                    valor_arla_32: 0, // Assuming this is a placeholder, as it was commented out in the schema
                     valor_salario_motorista_dia,
                     valor_refeicao_motorista_dia,
                     valor_ajuda_custo_motorista,

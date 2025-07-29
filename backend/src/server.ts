@@ -23,8 +23,13 @@ import criarCargas from './routes/criaCargas'
 import metasRoutes from './routes/metasRoutes';
 import caminhoes from './routes/caminhoesRoutes';
 import parametrosGlobaisFretes from './routes/parametrosFretesRoutes';
+import fretesRoutes from './routes/fretesRoutes';
 
 dotenv.config()
+
+// dotenv.config({ path: '.env.development' })
+console.log('🧪 DATABASE_URL carregado:', process.env.DATABASE_URL)
+
 
 const app = express()
 setupSwagger(app);
@@ -88,6 +93,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/Cargas', criarCargas)
 app.use('/api/caminhoes', caminhoes);
 app.use('/api/parametrosFretes', parametrosGlobaisFretes);
+
+app.use('/api/fretes', fretesRoutes)
 
 // Metas
 app.use('/api/metas', metasRoutes)

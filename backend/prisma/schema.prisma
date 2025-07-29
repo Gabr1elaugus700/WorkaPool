@@ -138,6 +138,19 @@ model CaminhaoRota {
   caminhao_id   Int
   pedagio_ida   Float
   pedagio_volta Float
+  custo_combustivel Float
+  custo_total   Float
+  salario_motorista_rota Float
+  refeicao_motorista_rota Float
+  ajuda_custo_motorista_rota Float
+  chapa_descarga_rota Float
+  desgaste_pneus_rota Float
+  margem_lucro_frete Float @default(0.35) // 35%
+  custo_total_rota Float @default(0.0)
+  custo_por_kg Float @default(0.0)
+  valor_frete_kg Float @default(0.0)
+  custo_operacional Float @default(0.0)
+  createdAt DateTime @default(now())
 }
 
 model ParametrosGlobaisViagem {

@@ -120,30 +120,9 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.UserScalarFieldEnum = {
-  id: 'id',
-  user: 'user',
-  password: 'password',
-  role: 'role',
-  createdAt: 'createdAt'
-};
-
-exports.Prisma.SortOrder = {
-  asc: 'asc',
-  desc: 'desc'
-};
-
-exports.Prisma.QueryMode = {
-  default: 'default',
-  insensitive: 'insensitive'
-};
-exports.Role = exports.$Enums.Role = {
-  ADMIN: 'ADMIN',
-  USER: 'USER'
-};
 
 exports.Prisma.ModelName = {
-  User: 'User'
+
 };
 
 /**
