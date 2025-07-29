@@ -4,9 +4,6 @@ const prisma = new PrismaClient();
 
 export const fretesController = {
 
-    
-
-
     rotaBase: async (req: Request, res: Response): Promise<any> => {
         const { origem, destino, total_km, dias_viagem } = req.body;
 
@@ -26,16 +23,44 @@ export const fretesController = {
         }
     },
 
-    caminhaRota: async (req: Request, res: Response): Promise<any> => {
-        const { rota_base_id, caminhao_id, pedagio_ida, pedagio_volta } = req.body;
+    caminhaoRota: async (req: Request, res: Response): Promise<any> => {
+        const { 
+            rota_base_id,
+            caminhao_id,
+            pedagio_ida,
+            pedagio_volta,
+            custo_combustivel,
+            custo_total,
+            salario_motorista_rota,
+            refeicao_motorista_rota,
+            ajuda_custo_motorista_rota,
+            chapa_descarga_rota,
+            desgaste_pneus_rota,
+            margem_lucro_frete,
+            custo_por_kg,
+            valor_frete_kg,
+            custo_operacional
+        
+        } = req.body;
 
         try {
             const associacao = await prisma.caminhaoRota.create({
-                data: {
+                data: { 
                     rota_base_id,
                     caminhao_id,
                     pedagio_ida,
-                    pedagio_volta
+                    pedagio_volta,
+                    custo_combustivel,
+                    custo_total,
+                    salario_motorista_rota,
+                    refeicao_motorista_rota,
+                    ajuda_custo_motorista_rota,
+                    chapa_descarga_rota,
+                    desgaste_pneus_rota,
+                    margem_lucro_frete,
+                    custo_por_kg,
+                    valor_frete_kg,
+                    custo_operacional
                 }
             });
             return res.status(200).json(associacao);

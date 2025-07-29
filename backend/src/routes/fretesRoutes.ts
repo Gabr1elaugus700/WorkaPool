@@ -4,7 +4,7 @@ import { fretesController  } from '../controllers/fretesController';
 const router = Router();
 
 router.post('/rota-base', fretesController.rotaBase);
-router.post('/caminhao-rota', fretesController.caminhaRota);
+router.post('/caminhao-rota', fretesController.caminhaoRota);
 router.post('/solicitacao-rota', fretesController.solicitacaoRota);
 
 router.get('/rotas', fretesController.listarRotas);
