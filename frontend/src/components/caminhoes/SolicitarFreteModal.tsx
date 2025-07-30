@@ -1,6 +1,6 @@
 // components/fretes/SolicitarFreteModal.tsx
 import { useState } from "react";
-import { solicitacaoRota } from "@/services/fretesService";
+import { solicitacaoRota } from "@/services/useFretesService";
 import { Button } from "../ui/button";
 
 import { toast } from "sonner"

@@ -4,10 +4,10 @@ import CadCaminhoes from "@/components/caminhoes/CadCaminhao";
 import CadParametros from "@/components/caminhoes/CadParametros";
 import CardCaminhoes from "@/components/caminhoes/CardsCaminhao";
 import { SearchSelect, SolicitacaoFrete } from "@/components/caminhoes/Filtro";
-import { getRotas } from "@/services/fretesService";
+import { getRotas } from "@/services/useFretesService";
 import { Separator } from "@/components/ui/separator";
 import SolicitarFreteModal from "@/components/caminhoes/SolicitarFreteModal";
-import RotasSolicitadasList from "@/components/caminhoes/fretesSolicitados";
+import RotasSolicitadasList from "@/components/caminhoes/FretesSolicitados";
 
 
 export default function FretesPage() {

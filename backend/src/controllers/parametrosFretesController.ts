@@ -30,7 +30,7 @@ export const parametrosGlobaisViagemController = {
         console.log("Received parameters:", req.body);
         try {
             const parametrosGlobaisViagem = await prisma.parametrosGlobaisViagem.update({
-                where: { id: 1 }, // Assuming you want to update a single record
+                where: { id: 2 }, // Assuming you want to update a single record
                 data: {
                     valor_diesel_s10_sem_icms,
                     valor_diesel_s10_com_icms,
@@ -50,7 +50,7 @@ export const parametrosGlobaisViagemController = {
     get: async (req: Request, res: Response): Promise<any> => {
         try {
             const parametrosGlobaisViagem = await prisma.parametrosGlobaisViagem.findFirst({
-                where: { id: 1 } // Assuming you want to get a single record
+                where: { id: 2 } // Assuming you want to get a single record
             });
             if (!parametrosGlobaisViagem) {
                 return res.status(404).json({ error: "Parâmetros não encontrados" });

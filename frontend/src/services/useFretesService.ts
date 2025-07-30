@@ -1,5 +1,5 @@
 import { getBaseUrl } from '@/lib/apiBase';
-import { SolicitacaoFrete, RotaBase  } from '@/types/fretes';
+import { SolicitacaoFrete, RotaBase } from '@/types/fretes';
 
 
 export const rotaBase = async (origem: string, destino: string, distancia: number, diasViagem: number): Promise<RotaBase> => {
@@ -8,11 +8,11 @@ export const rotaBase = async (origem: string, destino: string, distancia: numbe
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-            origem, 
-            destino, 
-            distancia, 
-            diasViagem 
+        body: JSON.stringify({
+            origem,
+            destino,
+            distancia,
+            diasViagem
         })
     });
 
@@ -26,7 +26,7 @@ export const rotaBase = async (origem: string, destino: string, distancia: numbe
 
 
 export const solicitacaoRota = async (peso: number, origem: string, destino: string, status: string, solicitante_user: string): Promise<SolicitacaoFrete> => {
-    
+
     const response = await fetch(`${getBaseUrl()}/api/fretes/solicitacao-rota`, {
         method: 'POST',
         headers: {
@@ -82,7 +82,19 @@ export const getRotasSolicitadas = async (): Promise<SolicitacaoFrete[]> => {
 };
 
 
-export const associarCaminhaoRota = async (rota_base_id: number, caminhao_id: number, pedagio_ida: number, pedagio_volta: number) => {
+export const associarCaminhaoRota = async (rota_base_id: number,
+    caminhao_id: number,
+    pedagio_ida: number,
+    pedagio_volta: number,
+    custo_combustivel: number,
+    custo_total: number,
+    salario_motorista_rota: number,
+    refeicao_motorista_rota: number,
+    ajuda_custo_motorista_rota: number,
+    chapa_descarga_rota: number,
+    desgaste_pneus_rota: number,
+    custo_por_kg: number,
+    valor_frete_kg: number) => {
     const response = await fetch(`${getBaseUrl()}/api/fretes/caminhao-rota`, {
         method: 'POST',
         headers: {
@@ -92,7 +104,17 @@ export const associarCaminhaoRota = async (rota_base_id: number, caminhao_id: nu
             rota_base_id,
             caminhao_id,
             pedagio_ida,
-            pedagio_volta
+            pedagio_volta,
+            custo_combustivel,
+            custo_total,
+            salario_motorista_rota,
+            refeicao_motorista_rota,
+            ajuda_custo_motorista_rota,
+            chapa_descarga_rota,
+            desgaste_pneus_rota,
+            custo_por_kg,
+            valor_frete_kg,
+
         })
     });
 

@@ -8,4 +8,5 @@ export interface ParametrosFrete {
     valor_ajuda_custo_motorista: number;
     valor_chapa_descarga: number;
     valor_desgaste_pneus: number;
+    margem_lucro: number;
 }
