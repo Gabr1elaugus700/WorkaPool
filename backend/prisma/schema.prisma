@@ -151,6 +151,7 @@ model CaminhaoRota {
   valor_frete_kg             Float     @default(0.0)
   custo_operacional          Float     @default(0.0)
   createdAt                  DateTime  @default(now())
+  @@unique([rota_base_id, caminhao_id])
 }
 
 model ParametrosGlobaisViagem {

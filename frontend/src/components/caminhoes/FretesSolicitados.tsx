@@ -1,7 +1,6 @@
 "use client";
-
 import { useEffect, useState } from "react";
-import { getRotasSolicitadas } from "@/services/useFretesService";
+import { associarCaminhaoRota, atualizarCaminhaoRota, getCaminhaoRota, getRotas, getRotasSolicitadas, rotaBase } from "@/services/useFretesService";
 import { getCaminhoes } from "@/services/useCarminhoesService";
 import { getParametrosFrete } from "@/services/useParametrosFretesService";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -20,8 +19,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Caminhao } from "@/types/caminhoes";
 import { ParametrosFrete } from "@/types/Parametros";
+import { CaminhaoRotaVinculo } from "@/types/fretes";
 
-// Função de cálculo fornecida pelo usuário
 interface CalcularCustosParams {
   parametrosGlobais: ParametrosFrete | null;
   kmTotal: number;
@@ -34,7 +33,7 @@ interface CalcularCustosParams {
   peso?: number;
   diasViagem?: number;
   qtdePneus?: number;
-} 
+}
 
 function calcularCustosPorCaminhao({
   parametrosGlobais,
@@ -48,39 +47,19 @@ function calcularCustosPorCaminhao({
   diasViagem,
   qtdePneus,
 }: CalcularCustosParams) {
-  // const custoCombustivel = kmTotal * parametrosGlobais.;
   if (!diasViagem) {
     diasViagem = Math.ceil(kmTotal / 500);
   }
-  console.log("Dias de viagem calculados:", diasViagem);
 
   const qtdeDiesel = kmTotal / (consumoCombustivel ?? 1);
-  console.log("Quantidade de diesel calculada:", qtdeDiesel);
-
   const custoCombustivel = qtdeDiesel * (parametrosGlobais?.valor_diesel_s10_sem_icms ?? 0);
-  console.log("Valor Diesel S10 sem ICMS:", parametrosGlobais?.valor_diesel_s10_sem_icms);
-  console.log("Custo de combustível calculado:", custoCombustivel);
-
   const calcArla = (qtdeDiesel / (1000 / 50));
-  console.log("Custo de Arla calculado:", calcArla);
-
   const custoArla = calcArla * 3.90;
-  console.log("Custo de Arla calculado:", custoArla);
-
   const custoPneus = (parametrosGlobais?.valor_desgaste_pneus ?? 0) * kmTotal * (qtdePneus || 1);
-  console.log("Custo de pneus calculado:", custoPneus);
-
   const custoMotorista = diasViagem * (parametrosGlobais?.valor_salario_motorista_dia ?? 0);
-  console.log("Custo de motorista calculado:", custoMotorista);
-
   const refeicaoMotorista = diasViagem * (parametrosGlobais?.valor_refeicao_motorista_dia ?? 0);
-  console.log("Custo de refeição do motorista calculado:", refeicaoMotorista);
-
   const ajudaCustoMotorista = diasViagem * (parametrosGlobais?.valor_ajuda_custo_motorista ?? 0);
-  console.log("Custo de ajuda de custo do motorista calculado:", ajudaCustoMotorista);
-
   const chapaDescarga = (parametrosGlobais?.valor_chapa_descarga ?? 0);
-  console.log("Custo de chapa de descarga calculado:", chapaDescarga);
 
   const custoTotal =
     (
@@ -91,9 +70,8 @@ function calcularCustosPorCaminhao({
       custoMotorista +
       refeicaoMotorista +
       ajudaCustoMotorista +
-      chapaDescarga + custoArla) * (1 + (parametrosGlobais?.margem_lucro ?? 0) / 100);
-
-  console.log("Custo total calculado:", custoTotal);
+      chapaDescarga +
+      custoArla) * (1 + (parametrosGlobais?.margem_lucro ?? 0) / 100);
 
   const custoPorKg = peso ? custoTotal / peso : custoTotal / 1;
   return {
@@ -112,7 +90,6 @@ function calcularCustosPorCaminhao({
   };
 }
 
-// Tipos auxiliares
 type SolicitacaoFrete = {
   id?: string;
   origem: string;
@@ -120,6 +97,9 @@ type SolicitacaoFrete = {
   peso: number;
   status: string;
   solicitante_user: string;
+  km_total?: number;
+  dias_viagem?: number;
+  rotaBaseId?: number;
 };
 
 const statusBgClasses: Record<string, string> = {
@@ -149,11 +129,13 @@ export default function RotasSolicitadasList() {
   const [caminhoesVinculados, setCaminhoesVinculados] = useState<
     { id: string; modelo: string; pedagioIda: number; pedagioVolta: number; consumo_medio: number; pneus: number }[]
   >([]);
+  const [caminhoesJaVinculados, setCaminhoesJaVinculados] = useState<CaminhaoRotaVinculo[]>([]);
   const [mostrandoFormularioCaminhao, setMostrandoFormularioCaminhao] = useState(false);
 
-  // Custos em tempo real para exibir na tela
   type CustosPorCaminhao = ReturnType<typeof calcularCustosPorCaminhao>;
   const [custosPorCaminhao, setCustosPorCaminhao] = useState<CustosPorCaminhao[]>([]);
+  const [rotaBaseId, setRotaBaseId] = useState<number | null>(null);
+
 
   useEffect(() => {
     async function carregar() {
@@ -175,7 +157,18 @@ export default function RotasSolicitadasList() {
         .then((data) => setCaminhoesDisponiveis(data))
         .catch((err) => console.error("Erro ao buscar caminhões", err));
     }
-  }, [rotaSelecionada]);
+  }, [rotaSelecionada, rotaBaseId]);
+
+  useEffect(() => {
+    async function carregarCaminhoesVinculados() {
+      if (rotaBaseId) {
+        console.log("Carregando caminhões vinculados para rota base ID:", rotaBaseId);
+        const vinculados = await getCaminhaoRota(rotaBaseId);
+        setCaminhoesJaVinculados(vinculados); // mantenha objetos completos!
+      }
+    }
+    carregarCaminhoesVinculados();
+  }, [rotaBaseId]);
 
   useEffect(() => {
     async function carregarParametros() {
@@ -209,65 +202,171 @@ export default function RotasSolicitadasList() {
     setMostrandoFormularioCaminhao(false);
   }
 
-  function removerCaminhao(id: string) {
+  function removerCaminhao(id: string | number) {
     setCaminhoesVinculados((prev) => prev.filter((c) => c.id !== id));
+  }
+
+  // Função para garantir o rota_base_id (busca ou cria se não existir)
+  async function garantirRotaBaseId(origem: string, destino: string, km: number, dias: number): Promise<number | null> {
+    console.log("Garantindo rota base ID...");
+    if (!origem || !destino || !km || !dias) {
+      console.error("Parâmetros insuficientes para garantir rota base ID");
+      return null;
+    }
+    const rotas = await getRotas();
+    const rota = rotas.find((r) => r.destino === destino && r.origem === origem);
+    if (rota) {
+      const id = rota.id !== undefined ? Number(rota.id) : null;
+      setRotaBaseId(id);
+      console.log("Rota já existe, usando ID:", id);
+      return id;
+    } else {
+      const novaRota = await rotaBase(origem, destino, km, dias);
+      const id = novaRota.id !== undefined ? Number(novaRota.id) : null;
+      setRotaBaseId(id);
+      console.log("Nova rota criada, usando ID:", id);
+      return id;
+    }
   }
 
   // Cálculo dos custos em tempo real para exibir na tela
   useEffect(() => {
-    if (
-      parametrosGlobais &&
-      kmTotal &&
-      caminhoesVinculados.length > 0
-    ) {
-      const km = parseFloat(kmTotal);
-      const custos = caminhoesVinculados.map((caminhao) =>
-        calcularCustosPorCaminhao({
-          parametrosGlobais,
-          kmTotal: km,
-          freteCaminhao: 0, // ajuste se precisar
-          pedagioIda: caminhao.pedagioIda,
-          pedagioVolta: caminhao.pedagioVolta,
-          rotaBaseId: rotaSelecionada?.id,
-          caminhaoId: caminhao.id,
-          diasViagem: parseFloat(diasViagem),
-          peso: rotaSelecionada?.peso, // Peso da carga, se necessário
-          consumoCombustivel: caminhao.consumo_medio,
-          qtdePneus: caminhao.pneus || 0,
-        })
-      );
-      setCustosPorCaminhao(custos);
-    } else {
-      setCustosPorCaminhao([]);
+    async function calcularCustos() {
+      if (
+        parametrosGlobais &&
+        kmTotal &&
+        caminhoesVinculados.length > 0 &&
+        rotaSelecionada?.origem &&
+        rotaSelecionada?.destino &&
+        diasViagem
+      ) {
+        const km = parseFloat(kmTotal);
+        const dias = parseFloat(diasViagem);
+        // Busca ou cria a rota antes do cálculo só para garantir id correto
+        const rota_base_id = await garantirRotaBaseId(rotaSelecionada.origem, rotaSelecionada.destino, km, dias);
+
+        const custos = caminhoesVinculados.map((caminhao) =>
+          calcularCustosPorCaminhao({
+            parametrosGlobais,
+            kmTotal: km,
+            freteCaminhao: 0,
+            pedagioIda: caminhao.pedagioIda,
+            pedagioVolta: caminhao.pedagioVolta,
+            rotaBaseId: rota_base_id ?? undefined,
+            caminhaoId: caminhao.id,
+            diasViagem: dias,
+            peso: rotaSelecionada?.peso,
+            consumoCombustivel: caminhao.consumo_medio,
+            qtdePneus: caminhao.pneus || 0,
+          })
+        );
+        setCustosPorCaminhao(custos);
+      } else {
+        setCustosPorCaminhao([]);
+      }
     }
+    calcularCustos();
   }, [parametrosGlobais, kmTotal, caminhoesVinculados, rotaSelecionada, diasViagem]);
 
   async function salvarVinculo() {
+    if (
+      !rotaSelecionada?.origem ||
+      !rotaSelecionada?.destino ||
+      !kmTotal ||
+      !diasViagem
+    ) {
+      alert("Preencha todos os campos obrigatórios!");
+      return;
+    }
+
     const parametros = await getParametrosFrete();
     const km = parseFloat(kmTotal);
+    const dias = parseFloat(diasViagem);
+
+    // Garante que a rota existe e pega o id correto
+    const rota_base_id = await garantirRotaBaseId(rotaSelecionada.origem, rotaSelecionada.destino, km, dias);
+    console.log("Rota base ID para salvar Caminhão: ", rota_base_id);
+    // Carregue vínculos do backend como array de objetos completos!
+    const caminhoesJaVinculados = await getCaminhaoRota(Number(rota_base_id));
 
     const custosPorCaminhao = caminhoesVinculados.map((caminhao) =>
       calcularCustosPorCaminhao({
         parametrosGlobais: parametros,
         kmTotal: km,
-        freteCaminhao: 0, // ajuste se precisar
+        freteCaminhao: 0,
         pedagioIda: caminhao.pedagioIda,
         pedagioVolta: caminhao.pedagioVolta,
-        rotaBaseId: rotaSelecionada?.id,
+        rotaBaseId: rota_base_id ?? undefined,
         caminhaoId: caminhao.id,
-        consumoCombustivel: caminhao.consumo_medio
+        diasViagem: dias,
+        peso: rotaSelecionada.peso,
+        consumoCombustivel: caminhao.consumo_medio,
+        qtdePneus: caminhao.pneus || 0,
       })
     );
 
-    console.log("Salvar rota", rotaSelecionada?.id, {
-      kmTotal,
-      caminhoes: caminhoesVinculados,
-      custosPorCaminhao,
-    });
+    console.log("Custos por caminhão calculados:", custosPorCaminhao);
+    for (const custo of custosPorCaminhao) {
+      console.log("Caminhões já vinculados:", caminhoesJaVinculados);
 
+      // Procura se já existe vínculo para este caminhão
+      const jaVinculado = caminhoesJaVinculados.find(
+        (v: { caminhao_id: string | number }) => String(v.caminhao_id) === String(custo.caminhao_id)
+      );
+
+      if (!jaVinculado) {
+        // Não existe vínculo: criar
+        console.log("Associando novo caminhão à rota base:", custo);
+        await associarCaminhaoRota(
+          Number(custo.rota_base_id),
+          Number(custo.caminhao_id),
+          Number(custo.pedagio_ida),
+          Number(custo.pedagio_volta),
+          Number(custo.custo_combustivel),
+          Number(custo.custo_total),
+          Number(custo.salario_motorista_rota),
+          Number(custo.refeicao_motorista_rota),
+          Number(custo.ajuda_custo_motorista_rota),
+          Number(custo.chapa_descarga_rota),
+          Number(custo.desgaste_pneus_rota)
+        );
+      } else {
+        // Já existe, comparar os campos relevantes
+        const dadosIguais =
+          jaVinculado.pedagio_ida === custo.pedagio_ida &&
+          jaVinculado.pedagio_volta === custo.pedagio_volta &&
+          jaVinculado.custo_combustivel === custo.custo_combustivel &&
+          jaVinculado.custo_total === custo.custo_total &&
+          jaVinculado.salario_motorista_rota === custo.salario_motorista_rota &&
+          jaVinculado.refeicao_motorista_rota === custo.refeicao_motorista_rota &&
+          jaVinculado.ajuda_custo_motorista_rota === custo.ajuda_custo_motorista_rota &&
+          jaVinculado.chapa_descarga_rota === custo.chapa_descarga_rota &&
+          jaVinculado.desgaste_pneus_rota === custo.desgaste_pneus_rota;
+
+        if (!dadosIguais) {
+          await atualizarCaminhaoRota(Number(jaVinculado.rota_base_id), Number(jaVinculado.caminhao_id),
+            {
+              pedagio_ida: custo.pedagio_ida,
+              pedagio_volta: custo.pedagio_volta,
+              custo_combustivel: custo.custo_combustivel,
+              custo_total: custo.custo_total,
+              salario_motorista_rota: custo.salario_motorista_rota,
+              refeicao_motorista_rota: custo.refeicao_motorista_rota,
+              ajuda_custo_motorista_rota: custo.ajuda_custo_motorista_rota,
+              chapa_descarga_rota: custo.chapa_descarga_rota,
+              desgaste_pneus_rota: custo.desgaste_pneus_rota
+            });
+        }
+        // Se for igual, não faz nada!
+      }
+    }
+
+    // Limpar estados caso queira
     setRotaSelecionada(null);
     setKmTotal("");
+    setDiasViagem("");
     setCaminhoesVinculados([]);
+    setCustosPorCaminhao([]);
   }
 
   if (loading) return <p>Carregando...</p>;
@@ -289,7 +388,24 @@ export default function RotasSolicitadasList() {
                 <CardTitle className="text-lg font-bold">
                   {rota.origem} → {rota.destino}
                 </CardTitle>
-                <button onClick={() => setRotaSelecionada(rota)}>
+                <button onClick={async () => {
+                  setRotaSelecionada(rota); // salva a solicitação (id)
+                  setKmTotal(String(rota.km_total || ""));
+                  setDiasViagem(String(rota.dias_viagem || ""));
+
+                  if (rota.rotaBaseId) {
+                    // Só busca caminhões vinculados SE existe rotaBaseId!
+                    setRotaBaseId(Number(rota.rotaBaseId));
+                    const vinculados = await getCaminhaoRota(Number(rota.rotaBaseId));
+                    setCaminhoesJaVinculados(vinculados);
+                  } else {
+                    setRotaBaseId(null);
+                    setCaminhoesJaVinculados([]);
+                  }
+                  setMostrandoFormularioCaminhao(false);
+                  setCaminhoesVinculados([]);
+                  setCustosPorCaminhao([]);
+                }}>
                   <Pencil />
                 </button>
               </div>
@@ -351,22 +467,24 @@ export default function RotasSolicitadasList() {
               <Input type="text" value={rotaSelecionada?.destino || ""} />
             </div>
 
-            {caminhoesVinculados.length > 0 && (
+            {caminhoesJaVinculados.length > 0 && (
               <div>
-                <p className="font-semibold text-sm mb-2">Caminhões vinculados</p>
+                <p className="font-semibold text-sm mb-2">Caminhões já vinculados a esta rota</p>
                 <ul className="space-y-1">
-                  {caminhoesVinculados.map((c) => (
+                  {caminhoesJaVinculados.map((c) => (
                     <li
-                      key={c.id}
+                      key={c.caminhao_id}
                       className="flex justify-between items-center border p-2 rounded-md text-sm"
                     >
                       <span>
-                        {c.modelo} | Ida: R$ {c.pedagioIda.toFixed(2)} | Volta: R$ {c.pedagioVolta.toFixed(2)}
+                        {/* Ajuste os campos conforme o objeto retornado do backend */}
+                        Caminhão: {c.modelo ?? c.caminhao_id} | Ida: R$ {Number(c.pedagio_ida).toFixed(2)} | Volta: R$ {Number(c.pedagio_volta).toFixed(2)}
                       </span>
+                      {/* Se quiser permitir remover o vínculo direto daqui, implemente a função removerCaminhaoVinculado */}
                       <Button
                         variant="destructive"
                         size="icon"
-                        onClick={() => removerCaminhao(c.id)}
+                        onClick={() => removerCaminhao(c.caminhao_id)}
                       >
                         <Trash size={14} />
                       </Button>

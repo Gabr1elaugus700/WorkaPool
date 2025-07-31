@@ -35,11 +35,7 @@ export const fretesController = {
             refeicao_motorista_rota,
             ajuda_custo_motorista_rota,
             chapa_descarga_rota,
-            desgaste_pneus_rota,
-            margem_lucro_frete,
-            custo_por_kg,
-            valor_frete_kg,
-            custo_operacional
+            desgaste_pneus_rota
         
         } = req.body;
 
@@ -57,10 +53,6 @@ export const fretesController = {
                     ajuda_custo_motorista_rota,
                     chapa_descarga_rota,
                     desgaste_pneus_rota,
-                    margem_lucro_frete,
-                    custo_por_kg,
-                    valor_frete_kg,
-                    custo_operacional
                 }
             });
             return res.status(200).json(associacao);
@@ -112,9 +104,45 @@ export const fretesController = {
             console.error("Error fetching route requests:", error);
             return res.status(500).json({ error: "Internal server error" });
         }
+    },
+    getCaminhaoRota: async (req: Request, res: Response): Promise<any> => {
+        const { rotaId } = req.params;
+        try {
+            const caminhaoRota = await prisma.caminhaoRota.findMany({
+                where: { rota_base_id: Number(rotaId) }
+            });
+            if (!caminhaoRota || caminhaoRota.length === 0) {
+                return res.status(200).json({});
+            }
+            return res.status(200).json(caminhaoRota);
+        } catch (error) {
+            console.error("Erro ao buscar caminhão por rota:", error);
+            return res.status(500).json({ error: "Erro ao buscar caminhão por rota" });
+        }
+    },
+    putCaminhaoRota: async (req: Request, res: Response): Promise<any> => {
+        const { rota_id, caminhao_id, pedagio_ida, pedagio_volta, custo_combustivel, custo_total, salario_motorista_rota, refeicao_motorista_rota, ajuda_custo_motorista_rota, chapa_descarga_rota, desgaste_pneus_rota } = req.body;
+
+        try {
+            const updatedCaminhaoRota = await prisma.caminhaoRota.update({
+                where: { id: Number(rota_id) },
+                data: {
+                    caminhao_id,
+                    pedagio_ida,
+                    pedagio_volta,
+                    custo_combustivel,
+                    custo_total,
+                    salario_motorista_rota,
+                    refeicao_motorista_rota,
+                    ajuda_custo_motorista_rota,
+                    chapa_descarga_rota,
+                    desgaste_pneus_rota
+                }
+            });
+            return res.status(200).json(updatedCaminhaoRota);
+        } catch (error) {
+            console.error("Error updating truck route association:", error);
+            return res.status(500).json({ error: "Internal server error" });
+        }
     }
-
-    
-
-
 }

@@ -10,5 +10,7 @@ router.post('/solicitacao-rota', fretesController.solicitacaoRota);
 router.get('/rotas', fretesController.listarRotas);
 router.get('/fretes-solicitados', fretesController.listarRotasSolicitadas);
 
+router.get('/caminhaoRota/:rotaId', fretesController.getCaminhaoRota);
+router.put('/caminhao-rota', fretesController.putCaminhaoRota);
 
 export default router;

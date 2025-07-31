@@ -61,4 +61,5 @@ export const parametrosGlobaisViagemController = {
             return res.status(500).json({ error: "Erro ao buscar parâmetros globais de viagem" });
         }
     }
+    
 };

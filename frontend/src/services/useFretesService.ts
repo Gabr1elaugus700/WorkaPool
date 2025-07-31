@@ -1,5 +1,5 @@
 import { getBaseUrl } from '@/lib/apiBase';
-import { SolicitacaoFrete, RotaBase } from '@/types/fretes';
+import { SolicitacaoFrete, RotaBase, CaminhaoRotaVinculo } from '@/types/fretes';
 
 
 export const rotaBase = async (origem: string, destino: string, distancia: number, diasViagem: number): Promise<RotaBase> => {
@@ -11,8 +11,8 @@ export const rotaBase = async (origem: string, destino: string, distancia: numbe
         body: JSON.stringify({
             origem,
             destino,
-            distancia,
-            diasViagem
+            total_km: distancia,
+            dias_viagem: diasViagem
         })
     });
 
@@ -92,9 +92,20 @@ export const associarCaminhaoRota = async (rota_base_id: number,
     refeicao_motorista_rota: number,
     ajuda_custo_motorista_rota: number,
     chapa_descarga_rota: number,
-    desgaste_pneus_rota: number,
-    custo_por_kg: number,
-    valor_frete_kg: number) => {
+    desgaste_pneus_rota: number,) => {
+    console.log("Dados Recebidos pelo Service:", {
+        rota_base_id,
+        caminhao_id,
+        pedagio_ida,
+        pedagio_volta,
+        custo_combustivel,
+        custo_total,
+        salario_motorista_rota,
+        refeicao_motorista_rota,
+        ajuda_custo_motorista_rota,
+        chapa_descarga_rota,
+        desgaste_pneus_rota,
+    });
     const response = await fetch(`${getBaseUrl()}/api/fretes/caminhao-rota`, {
         method: 'POST',
         headers: {
@@ -112,9 +123,6 @@ export const associarCaminhaoRota = async (rota_base_id: number,
             ajuda_custo_motorista_rota,
             chapa_descarga_rota,
             desgaste_pneus_rota,
-            custo_por_kg,
-            valor_frete_kg,
-
         })
     });
 
@@ -126,3 +134,37 @@ export const associarCaminhaoRota = async (rota_base_id: number,
     return data;
 };
 
+export const getCaminhaoRota = async (rotaId: number) => {
+    const response = await fetch(`${getBaseUrl()}/api/fretes/caminhaoRota/${rotaId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error('Erro ao buscar caminhão associado à rota: ' + response.statusText);
+    }
+
+    const data = await response.json();
+    if (Array.isArray(data)) return data;
+    if (data && typeof data === 'object') return Object.values(data);
+    return [];
+};
+
+export const atualizarCaminhaoRota = async (rotaId: number, caminhaoId: number, dadosAtualizados: Partial<CaminhaoRotaVinculo>) => {
+    const response = await fetch(`${getBaseUrl()}/api/fretes/caminhaoRota/${rotaId}/${caminhaoId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dadosAtualizados)
+    });
+
+    if (!response.ok) {
+        throw new Error('Erro ao atualizar caminhão associado à rota: ' + response.statusText);
+    }
+
+    const data = await response.json();
+    return data;
+};
