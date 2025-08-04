@@ -81,6 +81,23 @@ export const getRotasSolicitadas = async (): Promise<SolicitacaoFrete[]> => {
     return data;
 };
 
+export const atualizarSolicitacaoRota = async (id: number): Promise<number> => {
+    console.log("Atualizando solicitação de rota com ID:", id);
+    
+    const response = await fetch(`${getBaseUrl()}/api/fretes/solicitacao-rota/${id}`, {
+        method: 'PUT',
+        headers: {
+            "Content-Type": "application/json",
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error('Erro ao atualizar solicitação de rota: ' + response.statusText);
+    }
+
+    const data = await response.json();
+    return data;
+};
 
 export const associarCaminhaoRota = async (rota_base_id: number,
     caminhao_id: number,

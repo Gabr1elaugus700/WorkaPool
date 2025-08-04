@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { associarCaminhaoRota, atualizarCaminhaoRota, getCaminhaoRota, getRotas, getRotasSolicitadas, rotaBase } from "@/services/useFretesService";
+import { associarCaminhaoRota, atualizarCaminhaoRota, atualizarSolicitacaoRota, getCaminhaoRota, getRotas, getRotasSolicitadas, rotaBase } from "@/services/useFretesService";
 import { getCaminhoes } from "@/services/useCarminhoesService";
 import { getParametrosFrete } from "@/services/useParametrosFretesService";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -14,6 +14,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -136,6 +146,8 @@ export default function RotasSolicitadasList() {
   const [custosPorCaminhao, setCustosPorCaminhao] = useState<CustosPorCaminhao[]>([]);
   const [rotaBaseId, setRotaBaseId] = useState<number | null>(null);
 
+  const [idParaFechar, setIdParaFechar] = useState<number | null>(null);
+  const [openDialogConfirm, setOpenDialogConfirm] = useState(false);
 
   useEffect(() => {
     async function carregar() {
@@ -149,6 +161,7 @@ export default function RotasSolicitadasList() {
       }
     }
     carregar();
+    carregarRotasSolicitas();
   }, []);
 
   useEffect(() => {
@@ -178,6 +191,29 @@ export default function RotasSolicitadasList() {
     carregarParametros();
   }, []);
 
+  async function carregarRotasSolicitas() {
+    try {
+      const data = await getRotasSolicitadas();
+      setRotas(data);
+    } catch (error) {
+      console.error("Erro ao carregar rotas solicitadas:", error);
+    }
+  }
+
+  function handleFecharSolicitacao(rota: SolicitacaoFrete) {
+      setIdParaFechar(rota.id !== undefined ? Number(rota.id) : null);
+      setOpenDialogConfirm(true);
+    }
+
+    async function confirmarFechamento() {
+      if (idParaFechar) {
+        await atualizarSolicitacaoRota(Number(idParaFechar));
+        console.log("Solicitação de rota atualizada:", idParaFechar);
+        setOpenDialogConfirm(false);
+        setIdParaFechar(null);
+        await carregarRotasSolicitas();
+      }
+    }
   function adicionarCaminhao() {
     if (!caminhaoSelecionado || !pedagioIda || !pedagioVolta) return;
 
@@ -361,12 +397,12 @@ export default function RotasSolicitadasList() {
       }
     }
 
-    // Limpar estados caso queira
-    setRotaSelecionada(null);
+    
     setKmTotal("");
     setDiasViagem("");
     setCaminhoesVinculados([]);
     setCustosPorCaminhao([]);
+    carregarRotasSolicitas();
   }
 
   if (loading) return <p>Carregando...</p>;
@@ -429,7 +465,7 @@ export default function RotasSolicitadasList() {
       </div>
 
       <Dialog open={!!rotaSelecionada} onOpenChange={() => setRotaSelecionada(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg w-full">
           <DialogHeader>
             <DialogTitle>Vincular Caminhões à Rota</DialogTitle>
             <DialogDescription>
@@ -437,7 +473,7 @@ export default function RotasSolicitadasList() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="max-h-[500px] overflow-y-auto space-y-4 p-2">
             <div>
               <label className="text-sm font-medium">KM Total da Rota</label>
               <Input
@@ -552,10 +588,26 @@ export default function RotasSolicitadasList() {
           </div>
 
           <DialogFooter>
-            <Button onClick={salvarVinculo}>Salvar</Button>
+            <Button onClick={() => {salvarVinculo(); handleFecharSolicitacao(rotaSelecionada as SolicitacaoFrete);}}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <AlertDialog open={openDialogConfirm} onOpenChange={setOpenDialogConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deseja Fechar a Solicitação de Rota?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setOpenDialogConfirm(false)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmarFechamento}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

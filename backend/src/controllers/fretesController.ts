@@ -24,7 +24,7 @@ export const fretesController = {
     },
 
     caminhaoRota: async (req: Request, res: Response): Promise<any> => {
-        const { 
+        const {
             rota_base_id,
             caminhao_id,
             pedagio_ida,
@@ -36,12 +36,12 @@ export const fretesController = {
             ajuda_custo_motorista_rota,
             chapa_descarga_rota,
             desgaste_pneus_rota
-        
+
         } = req.body;
 
         try {
             const associacao = await prisma.caminhaoRota.create({
-                data: { 
+                data: {
                     rota_base_id,
                     caminhao_id,
                     pedagio_ida,
@@ -82,6 +82,37 @@ export const fretesController = {
         }
     },
 
+    atualizarSolicitacaoRota: async (req: Request, res: Response): Promise<any> => {
+
+        console.log("Updating request with params:", req.params);
+
+        const { solicitacaoId } = req.params;
+        const idNum = Number(solicitacaoId);
+
+        if (isNaN(idNum)) {
+            return res.status(400).json({ error: "ID inválido" });
+        }
+
+        try {
+            const solicitacao = await prisma.solicitacaoRota.update({
+                where: { id: idNum },
+                data: { status: "FINALIZADO" },
+            });
+
+            return res.status(200).json(solicitacao);
+        } catch (error: any) {
+            console.error("Error updating request:", error);
+
+            // Tratamento de erro Prisma
+            if (error.code === "P2025") {
+                // Registro não encontrado
+                return res.status(404).json({ error: "Solicitação não encontrada" });
+            }
+
+            return res.status(500).json({ error: "Erro interno ao atualizar solicitação" });
+        }
+    },
+
     listarRotas: async (req: Request, res: Response): Promise<any> => {
         try {
             const rotas = await prisma.rota_base.findMany();
@@ -95,7 +126,7 @@ export const fretesController = {
     listarRotasSolicitadas: async (req: Request, res: Response): Promise<any> => {
         try {
             const solicitacoes = await prisma.solicitacaoRota.findMany({
-                where:{
+                where: {
                     status: 'PENDENTE'
                 }
             });
