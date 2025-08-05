@@ -39,40 +39,42 @@ export function SearchSelect({ data, onSelect, onCreateFrete, placeholder }: Sea
         <div className="w-full max-w-md space-y-2">
             {/* Campo de busca + botão cadastrar */}
             <div className="flex gap-2 items-center">
-                <Input
-                    placeholder={placeholder || "Buscar por origem ou destino..."}
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                />
+            <Input
+                placeholder={placeholder || "Buscar por origem ou destino..."}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+            />
 
-                {search.trim() !== "" && filtered.length === 0 && (
-                    <Button
-                        onClick={() => setOpenDialog(true)}
-                        className="px-4 py-2 bg-primary text-white rounded-md"
-                    >
-                        Solicitar Frete
-                    </Button>
-                )}
+            {search.trim() !== "" && filtered.length === 0 && (
+                <Button
+                onClick={() => setOpenDialog(true)}
+                className="px-4 py-2 bg-primary text-white rounded-md"
+                >
+                Solicitar Frete
+                </Button>
+            )}
             </div>
 
             {/* Lista de resultados */}
             {search.trim() !== "" && filtered.length > 0 && (
-                <ScrollArea className="h-48 border rounded-md mt-2">
-                    <div className="p-2 space-y-1">
-                        {filtered.map((item) => (
-                            <div
-                                key={item.id}
-                                onClick={() => onSelect(item)}
-                                className="cursor-pointer rounded-md px-2 py-1 hover:bg-accent"
-                            >
-                                {item.origem} → {item.destino}
-                            </div>
-                        ))}
+            <ScrollArea className="h-auto border rounded-md mt-2">
+                <div className="p-2 space-y-1">
+                {filtered.map((item) => (
+                    <div
+                    key={item.id}
+                    onClick={() => {
+                        onSelect(item);
+                        setSearch(""); // Limpa a busca ao selecionar
+                    }}
+                    className="cursor-pointer rounded-md px-2 py-1 hover:bg-accent"
+                    >
+                    {item.origem} → {item.destino}
                     </div>
-                </ScrollArea>
+                ))}
+                </div>
+            </ScrollArea>
             )}
 
-            {/* Dialog para criação de frete */}
             <Dialog open={openDialog} onOpenChange={setOpenDialog}>
                 <DialogContent>
                     <DialogHeader>

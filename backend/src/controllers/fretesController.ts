@@ -140,12 +140,34 @@ export const fretesController = {
         const { rotaId } = req.params;
         try {
             const caminhaoRota = await prisma.caminhaoRota.findMany({
-                where: { rota_base_id: Number(rotaId) }
+                where: { rota_base_id: Number(rotaId) },
+                include: {
+                    caminhao: true,
+                    rota_base: true
+                }
             });
             if (!caminhaoRota || caminhaoRota.length === 0) {
-                return res.status(200).json({});
+                return res.status(200).json([]);
             }
-            return res.status(200).json(caminhaoRota);
+            
+            // Mapear os dados para incluir o modelo do caminhão
+            const caminhaoRotaFormatted = caminhaoRota.map(item => ({
+                id: item.id,
+                rota_base_id: item.rota_base_id,
+                caminhao_id: item.caminhao_id,
+                pedagio_ida: item.pedagio_ida,
+                pedagio_volta: item.pedagio_volta,
+                custo_combustivel: item.custo_combustivel,
+                custo_total: item.custo_total,
+                salario_motorista_rota: item.salario_motorista_rota,
+                refeicao_motorista_rota: item.refeicao_motorista_rota,
+                ajuda_custo_motorista_rota: item.ajuda_custo_motorista_rota,
+                chapa_descarga_rota: item.chapa_descarga_rota,
+                desgaste_pneus_rota: item.desgaste_pneus_rota,
+                modelo: item.caminhao.modelo
+            }));
+            
+            return res.status(200).json(caminhaoRotaFormatted);
         } catch (error) {
             console.error("Erro ao buscar caminhão por rota:", error);
             return res.status(500).json({ error: "Erro ao buscar caminhão por rota" });

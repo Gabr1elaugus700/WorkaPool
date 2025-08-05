@@ -31,4 +31,5 @@ export type CaminhaoRotaVinculo = {
     chapa_descarga_rota: number;
     desgaste_pneus_rota: number;
     modelo: string;
+    capacidade_kg: number;
 };

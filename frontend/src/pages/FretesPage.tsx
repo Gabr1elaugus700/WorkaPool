@@ -8,6 +8,7 @@ import { getRotas } from "@/services/useFretesService";
 import { Separator } from "@/components/ui/separator";
 import SolicitarFreteModal from "@/components/caminhoes/SolicitarFreteModal";
 import RotasSolicitadasList from "@/components/caminhoes/FretesSolicitados";
+import { CalculoRotaVendedor } from "@/components/caminhoes/CalculoVendedor";
 
 
 export default function FretesPage() {
@@ -33,17 +34,23 @@ export default function FretesPage() {
 
   return (
     <DefaultLayout>
+
       <div className="p-6">
-        <h1 className="text-3xl font-semibold mb-3">Parâmetros de Frete</h1>
-        <div className="flex justify-start items-center mb-6 gap-4">
-          <CadCaminhoes />
-          <CadParametros />
-        </div>
-        <CardCaminhoes />
-        <Separator className="my-4 bg-gray-500" />
-        <h1 className="text-3xl font-semibold mb-3">Fretes Solicitados:</h1>
-        <RotasSolicitadasList />
-        <Separator className="my-4 bg-gray-500" />
+        {["usuario", "admin", "logistica"].includes(usuarioLogado) && (
+          <>
+            <h1 className="text-3xl font-semibold mb-3">Parâmetros de Frete</h1>
+            <div className="flex justify-start items-center mb-6 gap-4">
+              <CadCaminhoes />
+              <CadParametros />
+            </div>
+            <CardCaminhoes />
+            <Separator className="my-4 bg-gray-500" />
+            <h1 className="text-3xl font-semibold mb-3">Fretes Solicitados:</h1>
+            <RotasSolicitadasList />
+            <Separator className="my-4 bg-gray-500" />
+
+          </>
+        )}
         <h1 className="text-3xl font-semibold">Cálculos De Fretes</h1>
         <div className="p-6">
           <SearchSelect
@@ -61,19 +68,26 @@ export default function FretesPage() {
               <p><strong>ID:</strong> {rotaSelecionada.id}</p>
               <p><strong>Origem:</strong> {rotaSelecionada.origem}</p>
               <p><strong>Destino:</strong> {rotaSelecionada.destino}</p>
+              <p><strong>Peso Calculado:</strong> </p>
             </div>
           )}
         </div>
+
+        <SolicitarFreteModal
+          open={openModal}
+          onClose={() => setOpenModal(false)}
+          rotaInicial={rotaInicial}
+          solicitante={usuarioLogado}
+          onSucesso={() => carregarRotas()}
+        />
+
+        {rotaSelecionada && (
+          <CalculoRotaVendedor
+            rotaBaseId={rotaSelecionada.id}
+          />
+        )}
       </div>
 
-      <SolicitarFreteModal
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        rotaInicial={rotaInicial}
-        solicitante={usuarioLogado}
-        onSucesso={() => carregarRotas()}
-      />
-      
     </DefaultLayout>
   );
 }

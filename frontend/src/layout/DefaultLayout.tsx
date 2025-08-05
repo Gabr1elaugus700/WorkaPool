@@ -43,9 +43,14 @@ export default function DefaultLayout({ children }: Props) {
             </Button>
 
             {user?.role && ["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"].includes(user.role) && (
-              <Button asChild variant="link" className="text-primary-foreground">
-                <Link to="/cargas">Cargas</Link>
-              </Button>
+              <>
+                <Button asChild variant="link" className="text-primary-foreground">
+                  <Link to="/cargas">Cargas</Link>
+                </Button>
+                <Button asChild variant="link" className="text-primary-foreground">
+                  <Link to="/fretes">Fretes</Link>
+                </Button>
+              </>
             )}
 
             {user?.role === "ADMIN" && (
@@ -53,9 +58,7 @@ export default function DefaultLayout({ children }: Props) {
                 <Button asChild variant="link" className="text-primary-foreground">
                   <Link to="/metas">Metas</Link>
                 </Button>
-                <Button asChild variant="link" className="text-primary-foreground">
-                  <Link to="/fretes">Fretes</Link>
-                </Button>
+                
                 <Button asChild variant="link" className="text-primary-foreground">
                   <Link to="/vendasPerdidas">Vendas Perdidas</Link>
                 </Button>
