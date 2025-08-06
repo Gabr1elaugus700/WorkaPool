@@ -113,6 +113,49 @@ export const cargaController = {
             console.error('Erro ao atualizar carga:', error);
             return res.status(500).json({ message: 'Erro ao atualizar carga.' });
         }
-    }
+    },
+    async salvarPedidoCarga(req: Request, res: Response): Promise<any> {
+        const { id } = req.params;
+        const { pedidos } = req.body;
 
-}
+        if (!pedidos || !Array.isArray(pedidos)) {
+            return res.status(400).json({ message: 'Pedidos inválidos.' });
+        }
+
+        const atualizar = await prisma.cargasFechadas.findFirst({
+            where: { cargaId: id },
+        });
+        if (atualizar) {
+            console.log('Atualizando pedidos na carga existente:', atualizar.id);
+            try {
+                const cargaAtualizada = await prisma.cargasFechadas.update({
+                    where: { id: atualizar.id },
+                    data: {
+                        pedidos: { set: pedidos.map(p => ({ id: p })) }
+                    }
+                });
+
+                return res.status(200).json(cargaAtualizada);
+            } catch (error) {
+                console.error('Erro ao atualizar pedidos na carga:', error);
+                return res.status(500).json({ message: 'Erro ao atualizar pedidos na carga.' });
+            }
+        } else {
+            try {
+                const cargaAtualizada = await prisma.cargasFechadas.create({
+                    data: {
+                        carga: {
+                            connect: { id }
+                        },
+                        pedidos: { set: pedidos.map(p => ({ id: p })) }
+                    }
+                });
+
+                return res.status(200).json(cargaAtualizada);
+            } catch (error) {
+                console.error('Erro ao salvar pedidos na carga:', error);
+                return res.status(500).json({ message: 'Erro ao salvar pedidos na carga.' });
+            }
+        }
+    }
+};

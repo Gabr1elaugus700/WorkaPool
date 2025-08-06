@@ -19,7 +19,7 @@ const situacaoClasses: Record<string, string> = {
   CANCELADA: "border-red-600",
 };
 
-export default function CargaDropzone({ carga, children, onUpdate }: Props) {
+export default function CargaDropzone({ carga, children, onUpdate, onChangeSituacao }: Props) {
   const { setNodeRef } = useDroppable({ id: carga.id });
   const { user } = useAuth();
 
@@ -57,7 +57,7 @@ export default function CargaDropzone({ carga, children, onUpdate }: Props) {
 
         {user?.role && ["LOGISTICA", "ADMIN"].includes(user.role) && (
           <div className="flex justify-end">
-            <EditarCargaModal carga={carga} onUpdated={onUpdate} />
+            <EditarCargaModal carga={carga} onUpdated={onUpdate} onChangeSituacao={onChangeSituacao} />
           </div>
         )}
       </div>

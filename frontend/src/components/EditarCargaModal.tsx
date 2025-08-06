@@ -23,9 +23,10 @@ import { getBaseUrl } from "@/lib/apiBase";
 type Props = {
   carga: Cargas;
   onUpdated: (nova: Cargas) => void;
+  onChangeSituacao?: (id: string, novaSituacao: string) => void;
 };
 
-export function EditarCargaModal({ carga, onUpdated }: Props) {
+export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     ...carga,
@@ -40,24 +41,43 @@ export function EditarCargaModal({ carga, onUpdated }: Props) {
     }));
   };
 
+  // Implementando a função handleSituacaoChange
   const handleSituacaoChange = (value: string) => {
     setForm((prev) => ({ ...prev, situacao: value }));
   };
 
   const atualizarCarga = async () => {
-    const res = await fetch(`${getBaseUrl()}/api/Cargas/${carga.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    try {
+      // Verificar se houve mudança na situação
+      const situacaoMudou = form.situacao !== carga.situacao;
+      const novaSituacao = form.situacao;
 
-    const atualizada = await res.json();
-    setOpen(false);
-    onUpdated({
-      ...atualizada,
-      pedidos: carga.pedidos ?? [],
-      pesoAtual: carga.pesoAtual ?? 0,
-    });
+      // Atualizar a carga usando um fetch direto
+      const res = await fetch(`${getBaseUrl()}/api/Cargas/${carga.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const atualizada = await res.json();
+      setOpen(false);
+
+      const cargaAtualizada = {
+        ...atualizada,
+        pedidos: carga.pedidos ?? [],
+        pesoAtual: carga.pesoAtual ?? 0,
+      };
+
+      onUpdated(cargaAtualizada);
+
+      // Se a situação mudou para FECHADA e existe o callback onChangeSituacao, chamá-lo
+      if (situacaoMudou && novaSituacao === "FECHADA" && onChangeSituacao) {
+        console.log("Situação alterada para FECHADA - chamando onChangeSituacao");
+        onChangeSituacao(carga.id, novaSituacao);
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar carga:", error);
+    }
   };
 
   return (

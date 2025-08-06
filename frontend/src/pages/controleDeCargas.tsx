@@ -15,6 +15,7 @@ import { fetchCargas } from "@/services/useCargas";
 import { fetchPedidosCargas } from "@/services/usePedidosCarga";
 import { fetchPedidoToCarga } from "@/services/usePedidoToCarga";
 import { fetchUpdateSitCar } from "@/services/useUpdateSitCar";
+import { salvarPedidosCargaFechada } from "@/services/useCargaPedidos";
 
 export default function ControleDeCargas() {
   const { user } = useAuth();
@@ -166,6 +167,9 @@ export default function ControleDeCargas() {
   };
 
   const handleChangeSituacao = async (id: string, novaSituacao: string) => {
+    console.log("Atualizando situação da carga:", id, novaSituacao);
+
+    // Atualizar estado local
     setCargas((prev) =>
       prev.map((carga) =>
         carga.id === id ? { ...carga, situacao: novaSituacao } : carga
@@ -173,9 +177,36 @@ export default function ControleDeCargas() {
     );
 
     try {
+      // Primeiro atualiza a situação da carga no banco de dados
       await fetchUpdateSitCar(id, novaSituacao);
+
+      // Depois verifica se a situação é FECHADA
+      if (novaSituacao === "FECHADA") {
+        // Encontra a carga que foi alterada
+        const cargaFechada = cargas.find(carga => carga.id === id);
+
+        // Se encontrou a carga e ela tem pedidos
+        if (cargaFechada && cargaFechada.pedidos && cargaFechada.pedidos.length > 0) {
+          // Extrai apenas os números dos pedidos
+          const numerosPedidos = cargaFechada.pedidos.map(pedido => Number(pedido.numPed));
+
+          console.log("Salvando pedidos da carga fechada:", id, numerosPedidos);
+
+          try {
+            // Chama o serviço para salvar os pedidos
+            await salvarPedidosCargaFechada(id, numerosPedidos);
+            toast.success("Pedidos da carga fechada salvos com sucesso");
+          } catch (error) {
+            console.error("Erro ao salvar pedidos da carga fechada:", error);
+            toast.error("Erro ao salvar pedidos da carga fechada");
+          }
+        } else {
+          console.log("Carga sem pedidos para salvar:", cargaFechada);
+        }
+      }
     } catch (error) {
       console.error("Erro ao atualizar situação da carga:", error);
+      toast.error("Erro ao atualizar situação da carga");
     }
   };
 
