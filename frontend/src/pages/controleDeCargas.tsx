@@ -17,6 +17,7 @@ import { fetchPedidoToCarga } from "@/services/usePedidoToCarga";
 import { fetchUpdateSitCar } from "@/services/useUpdateSitCar";
 import { salvarPedidosCargaFechada } from "@/services/useCargaPedidos";
 import CargasFechadas from "@/components/cargas/CargasFechadas";
+import { FiltroCarga } from "@/components/cargas/FiltroCargas";
 
 export default function ControleDeCargas() {
   const { user } = useAuth();
@@ -25,6 +26,7 @@ export default function ControleDeCargas() {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [cargas, setCargas] = useState<Carga[]>([]);
   const [loading, setLoading] = useState(true);
+  const [destinosFiltrados, setDestinosFiltrados] = useState<string[]>([]);
 
   const carregar = useCallback(async () => {
     if (!user?.codRep) return;
@@ -167,6 +169,29 @@ export default function ControleDeCargas() {
     }
   };
 
+  const cargasFiltradas = cargas.filter((carga) => {
+    // Aplica filtro de permissão do usuário
+    if (!user) return false;
+
+    if (user.role === "VENDAS") {
+      return carga.situacao === "ABERTA";
+    }
+    if (user.role === "LOGISTICA") {
+      return (
+        carga.situacao === "ABERTA" ||
+        carga.situacao === "SOLICITADA"
+      );
+    }
+    
+    // Se nenhum destino está selecionado, mostra todas as cargas
+    if (destinosFiltrados.length === 0) {
+      return true;
+    }
+    
+    // Se há filtros aplicados, mostra apenas as cargas dos destinos selecionados
+    return destinosFiltrados.includes(carga.destino);
+  });
+
   const handleChangeSituacao = async (id: string, novaSituacao: string) => {
     console.log("Atualizando situação da carga:", id, novaSituacao);
 
@@ -211,67 +236,74 @@ export default function ControleDeCargas() {
     }
   };
 
-  return (
+   return (
     <DefaultLayout>
       <DndContext onDragEnd={handleDragEnd}>
         <div className="grid grid-cols-5 gap-6 p-6">
-          {loading ? (
-            <div className="text-center col-span-3 text-lg text-muted-foreground">
-              Carregando pedidos...
-            </div>
-          ) : (
-            user?.role !== "ALMOX" && (
-              <PedidoDropzone>
-                {pedidos.map((pedido) => (
-                  <PedidoCard
-                    key={pedido.id}
-                    pedido={pedido}
-                    produtos={pedido.produtos || []}
-                  />
-                ))}
-              </PedidoDropzone>
-            )
-          )}
 
+          {/* Coluna dos pedidos */}
+          <div className="col-span-2">
+            {loading ? (
+              <div className="text-center text-lg text-muted-foreground">
+                Carregando pedidos...
+              </div>
+            ) : (
+              user?.role !== "ALMOX" && (
+                <PedidoDropzone>
+                  {pedidos.map((pedido) => (
+                    <PedidoCard
+                      key={pedido.id}
+                      pedido={pedido}
+                      produtos={pedido.produtos || []}
+                    />
+                  ))}
+                </PedidoDropzone>
+              )
+            )}
+          </div>
+
+          {/* Coluna das cargas */}
           <div className="col-span-3 bg-muted p-6 rounded-lg shadow-md">
             <div className="flex justify-between items-center h-14 mb-4 px-2">
-              <h1 className="text-2xl font-bold text-foreground">Cargas</h1>
+              <h1 className="text-2xl font-bold text-foreground">
+                Cargas
+                {destinosFiltrados.length > 0 && (
+                  <span className="text-sm font-normal text-muted-foreground ml-2">
+                    ({destinosFiltrados.join(", ")})
+                  </span>
+                )}
+              </h1>
+              
+              <div className="flex items-center gap-2">
+                <FiltroCarga
+                  cargas={cargas}
+                  onFiltroChange={(destinos) => {
+                    setDestinosFiltrados(destinos);
+                  }}
+                />
+                
+                {user?.role && ["LOGISTICA", "ADMIN"].includes(user.role) && (
+                  <CargasFechadas />
+                )}
 
-              {user?.role && ["LOGISTICA", "ADMIN"].includes(user.role) && (
-                <CargasFechadas />
-              )}
-
-              <NovaCargaModal
-                onCreated={(nova) =>
-                  setCargas((prev): Carga[] => [
-                    ...prev,
-                    {
-                      ...nova,
-                      custoMin: nova.custoMin,
-                      pedidos: [],
-                      pesoAtual: 0,
-                      previsaoSaida: nova.previsaoSaida,
-                    },
-                  ])
-                }
-              />
+                <NovaCargaModal
+                  onCreated={(nova) =>
+                    setCargas((prev): Carga[] => [
+                      ...prev,
+                      {
+                        ...nova,
+                        custoMin: nova.custoMin,
+                        pedidos: [],
+                        pesoAtual: 0,
+                        previsaoSaida: nova.previsaoSaida,
+                      },
+                    ])
+                  }
+                />
+              </div>
             </div>
 
-            {cargas
-              .filter((carga) => {
-                if (!user) return false;
-
-                if (user.role === "VENDAS") {
-                  return carga.situacao === "ABERTA";
-                }
-                if (user.role === "LOGISTICA") {
-                  return (
-                    carga.situacao === "ABERTA" ||
-                    carga.situacao === "SOLICITADA"
-                  );
-                }
-                return true;
-              })
+            {cargasFiltradas
               .sort((a, b) => {
                 const prioridade = ["SOLICITADA", "ABERTA"];
                 const indexA = prioridade.indexOf(a.situacao);
