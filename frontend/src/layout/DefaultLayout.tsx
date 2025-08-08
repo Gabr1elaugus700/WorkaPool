@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOutIcon } from "lucide-react";
 
+import ButtonLink from "@/components/navBar/ButtonLink";
+// ...existing code...
 
 
 type Props = {
@@ -17,7 +19,6 @@ export default function DefaultLayout({ children }: Props) {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
-  const { user } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -38,39 +39,49 @@ export default function DefaultLayout({ children }: Props) {
 
           {/* Links */}
           <div className="flex gap-4">
-            <Button asChild variant="link" className="text-primary-foreground">
-              <Link to="/">Início</Link>
-            </Button>
+            <ButtonLink to="/">Início</ButtonLink>
 
-            {user?.role && ["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"].includes(user.role) && (
-              <>
-                <Button asChild variant="link" className="text-primary-foreground">
-                  <Link to="/cargas">Cargas</Link>
-                </Button>
-                <Button asChild variant="link" className="text-primary-foreground">
-                  <Link to="/fretes">Fretes</Link>
-                </Button>
-              </>
-            )}
+            <ButtonLink
+              to="/cargas"
+              allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
+            >
+              Cargas
+            </ButtonLink>
 
-            {user?.role === "ADMIN" && (
-              <>
-                <Button asChild variant="link" className="text-primary-foreground">
-                  <Link to="/metas">Metas</Link>
-                </Button>
-                
-                <Button asChild variant="link" className="text-primary-foreground">
-                  <Link to="/vendasPerdidas">Vendas Perdidas</Link>
-                </Button>
-                <Button asChild variant="link" className="text-primary-foreground">
-                  <Link to="/dashboard">Dashboards</Link>
-                </Button>
-                <Button asChild variant="link" className="text-primary-foreground">
-                  <Link to="/dashboardTest">DashBoardTeste</Link>
-                </Button>
-              </>
-            )}
+            <ButtonLink
+              to="/fretes"
+              allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
+            >
+              Fretes
+            </ButtonLink>
 
+            <ButtonLink
+              to="/metas"
+              allowedRoles={["ADMIN"]}
+            >
+              Metas
+            </ButtonLink>
+
+            <ButtonLink
+              to="/vendasPerdidas"
+              allowedRoles={["ADMIN"]}
+            >
+              Vendas Perdidas
+            </ButtonLink>
+
+            <ButtonLink
+              to="/dashboard"
+              allowedRoles={["ADMIN"]}
+            >
+              Dashboards
+            </ButtonLink>
+
+            {/* <ButtonLink
+              to="/dashboardTest"
+              allowedRoles={["ADMIN"]}
+            >
+              DashBoardTeste
+            </ButtonLink> */}
             <Button
               variant="ghost"
               onClick={handleLogout}
