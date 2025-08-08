@@ -100,7 +100,6 @@ app.use('/api/fretes', fretesRoutes)
 app.use('/api/metas', metasRoutes)
 
 
-
 // Rotas Power BI
 import pbiMetasRoutes from './routes/pbiMetasRoutes';
 
@@ -111,4 +110,3 @@ const PORT = Number(process.env.PORT) || 3001;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend rodando em http://192.168.0.32:${PORT}`);
 });
-

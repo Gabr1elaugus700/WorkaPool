@@ -1,6 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { Role } from "../generated/prisma";
+// Define Role enum locally if not exported from prisma
+enum Role {
+  USER = "USER",
+  ADMIN = "ADMIN"
+}
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 
