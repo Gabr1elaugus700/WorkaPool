@@ -103,6 +103,7 @@ model CargasFechadas {
   cargaId String
   carga   Cargas @relation(fields: [cargaId], references: [id])
   pedidos Json[]
+  createdAt DateTime @default(now())
 }
 
 model Caminhao {

@@ -90,5 +90,6 @@ router.get('/', cargaController.ListarAbertas);
 router.patch('/:id/situacao', cargaController.atualizarSitCarga);
 router.put('/:id', cargaController.atualizarCargaCompleta)
 router.post('/carga-pedidos/:id', cargaController.salvarPedidoCarga);
+router.get('/pedidosCargaFechada/', cargaController.listarPedidosCargasFechadas);
 
 export default router;

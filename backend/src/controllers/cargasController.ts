@@ -157,5 +157,19 @@ export const cargaController = {
                 return res.status(500).json({ message: 'Erro ao salvar pedidos na carga.' });
             }
         }
+    },
+    async listarPedidosCargasFechadas(req: Request, res: Response): Promise<any> {
+        try {
+            const cargasFechadas = await prisma.cargasFechadas.findMany({
+                include: {
+                    carga: true
+                },
+            });
+            
+            return res.status(200).json(cargasFechadas);
+        } catch (error) {
+            console.error('Erro ao buscar cargas fechadas:', error);
+            return res.status(500).json({ error: 'Erro ao buscar cargas fechadas' });
+        }
     }
 };
