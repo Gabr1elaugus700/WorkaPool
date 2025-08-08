@@ -4,13 +4,13 @@ import { toast } from "sonner";
 
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
-import PedidoCard from "@/components/PedidoCard";
-import PedidoDropzone from "@/components/PedidoDropzone";
-import CargaDropzone from "@/components/CargaDropzone";
+import PedidoCard from "@/components/cargas/PedidoCard";
+import PedidoDropzone from "@/components/cargas/PedidoDropzone";
+import CargaDropzone from "@/components/cargas/CargaDropzone";
 
 import { Pedido, Carga } from "@/types/cargas";
 import { fetchPedidosFechados } from "@/services/usePedidosFechados";
-import { NovaCargaModal } from "@/components/NovaCargaModal";
+import { NovaCargaModal } from "@/components/cargas/NovaCargaModal";
 import { fetchCargas } from "@/services/useCargas";
 import { fetchPedidosCargas } from "@/services/usePedidosCarga";
 import { fetchPedidoToCarga } from "@/services/usePedidoToCarga";
