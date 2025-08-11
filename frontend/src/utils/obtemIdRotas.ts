@@ -1,4 +1,4 @@
-import { getRotas, rotaBase } from "@/services/useFretesService";
+import { getRotas, rotaBase } from "@/shared/api/useFretesService";
 
  
 export async function garantirRotaBaseId(origem: string, destino: string, km: number, dias: number): Promise<number | null> {

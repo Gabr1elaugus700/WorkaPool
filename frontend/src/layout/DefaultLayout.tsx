@@ -4,10 +4,10 @@ import { Toaster } from "sonner";
 
 import { useAuth } from "@/auth/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { LogOutIcon } from "lucide-react";
 
-import ButtonLink from "@/components/navBar/ButtonLink";
+import ButtonLink from "@/widgets/navBar/ButtonLink";
 // ...existing code...
 
 
