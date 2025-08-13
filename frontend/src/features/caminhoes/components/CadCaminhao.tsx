@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, DialogContent, DialogHeader, DialogClose, DialogDescription, DialogTitle, DialogTrigger } from "@/shared/components/ui/dialog";
-import { fetchCaminhoes } from "@/services/useCarminhoesService";
+import { fetchCaminhoes } from "../services/useCarminhoesService";
 import { useState } from "react";
 import { PlusIcon } from "lucide-react";
 

@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 
 // Importando serviços e
 import { associarCaminhaoRota, atualizarCaminhaoRota, atualizarSolicitacaoRota, getCaminhaoRota, getRotasSolicitadas } from "@/services/useFretesService";
-import { getCaminhoes } from "@/services/useCarminhoesService";
-import { getParametrosFrete } from "@/services/useParametrosFretesService";
+import { getCaminhoes } from "../services/useCarminhoesService";
+import { getParametrosFrete } from "/services/useParametrosFretesService";
 import clsx from "clsx";
 
 // UI Components

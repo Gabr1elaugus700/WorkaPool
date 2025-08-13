@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import DefaultLayout from "@/shared/components/layout/DefaultLayout";
-import CadCaminhoes from "@/features/caminhoes/CadCaminhao";
-import CadParametros from "@/features/caminhoes/CadParametros";
-import CardCaminhoes from "@/features/caminhoes/CardsCaminhao";
-import { SearchSelect, SolicitacaoFrete } from "@/features/caminhoes/Filtro";
+import CadCaminhoes from "@/features/caminhoes/components/CadCaminhao";
+import CadParametros from "@/features/caminhoes/components/CadParametros";
+import CardCaminhoes from "@/features/caminhoes/components/CardsCaminhao";
+import { SearchSelect, SolicitacaoFrete } from "@/features/caminhoes/components/Filtro";
 import { getRotas } from "@/shared/services/useFretesService";
-import { Separator } from "@/features/ui/separator";
-import SolicitarFreteModal from "@/features/caminhoes/SolicitarFreteModal";
-import RotasSolicitadasList from "@/features/caminhoes/FretesSolicitados";
+import { Separator } from "@/shared/components/ui/separator";
+import SolicitarFreteModal from "@/features/caminhoes/components/SolicitarFreteModal";
+import RotasSolicitadasList from "@/features/caminhoes/components/RotasSolicitadasList";
 import { CalculoRotaVendedor } from "@/features/caminhoes/CalculoVendedor";
 
 
