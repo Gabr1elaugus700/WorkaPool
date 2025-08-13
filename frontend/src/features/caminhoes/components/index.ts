@@ -1,0 +1,11 @@
+// Componentes de Caminhões
+export { AssociarCaminhaoForm } from './AssociarCaminhaoForm'
+export { default as CadCaminhao } from './CadCaminhao'
+export { default as CadParametros } from './CadParametros'
+export { CalculoRotaVendedor } from './CalculoVendedor'
+export { CaminhoesVinculadosList } from './CaminhoesVinculadosList'
+export { default as CardsCaminhao } from './CardsCaminhao'
+export * from './ConfirmacaoDialog'
+export * from './Filtro'
+export { default as FretesSolicitados } from './FretesSolicitados'
+export { default as SolicitarFreteModal } from './SolicitarFreteModal'

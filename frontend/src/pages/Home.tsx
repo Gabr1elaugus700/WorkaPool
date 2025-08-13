@@ -1,6 +1,6 @@
 import DefaultLayout from "../layout/DefaultLayout";
 import { useAuth } from "../auth/AuthContext";
-import { EstoqueList } from "@/components/estoque/EstoqueList";
+import { EstoqueList } from "@/features/estoque/EstoqueList";
 
 const Home: React.FC = () => {
 

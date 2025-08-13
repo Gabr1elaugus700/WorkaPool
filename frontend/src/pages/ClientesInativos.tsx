@@ -2,9 +2,9 @@ import { useState } from "react"
 import { useClientesInativos } from "@/hooks/useClientesInativosHook"
 import { FiltrosInativos } from "../components/inativos/FiltrosInativos"
 import { ClientesInativosTable } from "../components/inativos/ClientesInativosTable"
-import DefaultLayout from "@/layout/DefaultLayout"
+import DefaultLayout from "@/shared/components/layout/DefaultLayout"
 import { useAuth } from '@/auth/AuthContext';
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@/features/ui/skeleton"
 
 export default function ClientesInativosPage() {
   const { user } = useAuth();

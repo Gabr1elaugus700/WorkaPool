@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import DefaultLayout from "@/layout/DefaultLayout";
-import CadCaminhoes from "@/components/caminhoes/CadCaminhao";
-import CadParametros from "@/components/caminhoes/CadParametros";
-import CardCaminhoes from "@/components/caminhoes/CardsCaminhao";
-import { SearchSelect, SolicitacaoFrete } from "@/components/caminhoes/Filtro";
-import { getRotas } from "@/services/useFretesService";
-import { Separator } from "@/components/ui/separator";
-import SolicitarFreteModal from "@/components/caminhoes/SolicitarFreteModal";
-import RotasSolicitadasList from "@/components/caminhoes/FretesSolicitados";
-import { CalculoRotaVendedor } from "@/components/caminhoes/CalculoVendedor";
+import DefaultLayout from "@/shared/components/layout/DefaultLayout";
+import CadCaminhoes from "@/features/caminhoes/CadCaminhao";
+import CadParametros from "@/features/caminhoes/CadParametros";
+import CardCaminhoes from "@/features/caminhoes/CardsCaminhao";
+import { SearchSelect, SolicitacaoFrete } from "@/features/caminhoes/Filtro";
+import { getRotas } from "@/shared/services/useFretesService";
+import { Separator } from "@/features/ui/separator";
+import SolicitarFreteModal from "@/features/caminhoes/SolicitarFreteModal";
+import RotasSolicitadasList from "@/features/caminhoes/FretesSolicitados";
+import { CalculoRotaVendedor } from "@/features/caminhoes/CalculoVendedor";
 
 
 export default function FretesPage() {

@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { fetchFaturamento } from '../services/useFatVendedor';
 import { fetchRankingProdutos } from '../services/useTotalProdutos'
 import DefaultLayout from '../layout/DefaultLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from "@/components/ui/progress"
+import { Card, CardContent, CardHeader, CardTitle } from '@/features/ui/card';
+import { Progress } from "@/features/ui/progress"
 import {
   BarChart,
   Bar,
@@ -19,7 +19,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/features/ui/select"
 import { useAuth } from "../auth/AuthContext";
 import { PieFaturamento } from '../components/charts/PieFaturamento'
 

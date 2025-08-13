@@ -2,22 +2,22 @@ import { useCallback, useEffect, useState } from "react";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { toast } from "sonner";
 
-import DefaultLayout from "@/layout/DefaultLayout";
+import DefaultLayout from "@/shared/components/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
-import PedidoCard from "@/components/cargas/PedidoCard";
-import PedidoDropzone from "@/components/cargas/PedidoDropzone";
-import CargaDropzone from "@/components/cargas/CargaDropzone";
+import PedidoCard from "@/features/cargas/PedidoCard";
+import PedidoDropzone from "@/features/cargas/PedidoDropzone";
+import CargaDropzone from "@/features/cargas/CargaDropzone";
 
-import { Pedido, Carga } from "@/types/cargas";
-import { fetchPedidosFechados } from "@/services/usePedidosFechados";
-import { NovaCargaModal } from "@/components/cargas/NovaCargaModal";
-import { fetchCargas } from "@/services/useCargas";
-import { fetchPedidosCargas } from "@/services/usePedidosCarga";
-import { fetchPedidoToCarga } from "@/services/usePedidoToCarga";
-import { fetchUpdateSitCar } from "@/services/useUpdateSitCar";
-import { salvarPedidosCargaFechada } from "@/services/useCargaPedidos";
-import CargasFechadas from "@/components/cargas/CargasFechadas";
-import { FiltroCarga } from "@/components/cargas/FiltroCargas";
+import { Pedido, Carga } from "@/shared/types/cargas";
+import { fetchPedidosFechados } from "@/shared/services/usePedidosFechados";
+import { NovaCargaModal } from "@/features/cargas/NovaCargaModal";
+import { fetchCargas } from "@/shared/services/useCargas";
+import { fetchPedidosCargas } from "@/shared/services/usePedidosCarga";
+import { fetchPedidoToCarga } from "@/shared/services/usePedidoToCarga";
+import { fetchUpdateSitCar } from "@/shared/services/useUpdateSitCar";
+import { salvarPedidosCargaFechada } from "@/shared/services/useCargaPedidos";
+import CargasFechadas from "@/features/cargas/CargasFechadas";
+import { FiltroCarga } from "@/features/cargas/FiltroCargas";
 
 export default function ControleDeCargas() {
   const { user } = useAuth();

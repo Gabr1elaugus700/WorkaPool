@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import VendedoresSection from "../components/metas/vendedoresSection";
 import VendedorMetas from "../components/metas/VendedorMetas";
-import DefaultLayout from "@/layout/DefaultLayout";
+import DefaultLayout from "@/shared/components/layout/DefaultLayout";
 
 export default function MetasPage() {
   return (
