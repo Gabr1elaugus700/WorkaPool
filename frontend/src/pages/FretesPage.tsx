@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import SolicitarFreteModal from "@/components/caminhoes/SolicitarFreteModal";
 import RotasSolicitadasList from "@/components/caminhoes/FretesSolicitados";
 import { CalculoRotaVendedor } from "@/components/caminhoes/CalculoVendedor";
-
+import { useAuth } from "@/auth/AuthContext";
 
 export default function FretesPage() {
   const [rotas, setRotas] = useState<SolicitacaoFrete[]>([]);
@@ -17,7 +17,9 @@ export default function FretesPage() {
   const [rotaSelecionada, setRotaSelecionada] = useState<SolicitacaoFrete | null>(null);
   const [openModal, setOpenModal] = useState(false);
   const [rotaInicial, setRotaInicial] = useState("");
-  const [usuarioLogado] = useState("gabriel"); // <- pegar de auth real
+  const { user } = useAuth();
+
+  const [usuarioLogado] = useState(user?.role || ""); // <- pegar de auth real
 
   const carregarRotas = () => {
     getRotas().then((data) => {
@@ -36,7 +38,7 @@ export default function FretesPage() {
     <DefaultLayout>
 
       <div className="p-6">
-        {["usuario", "admin", "logistica"].includes(usuarioLogado) && (
+        {["ADMIN", "LOGISTICA"].includes(usuarioLogado) && (
           <>
             <h1 className="text-3xl font-semibold mb-3">Parâmetros de Frete</h1>
             <div className="flex justify-start items-center mb-6 gap-4">
