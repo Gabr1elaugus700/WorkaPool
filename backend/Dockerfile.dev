@@ -1,0 +1,22 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Instalar dependências
+COPY package*.json ./
+RUN npm install
+
+# Instalar dependências de desenvolvimento globalmente se necessário
+RUN npm install -g ts-node-dev prisma
+
+# Copiar código fonte
+COPY . .
+
+# Gerar cliente Prisma
+RUN npx prisma generate
+
+# Expor porta
+EXPOSE 3001
+
+# Comando padrão (será sobrescrito no docker-compose)
+CMD ["npm", "run", "dev"]
