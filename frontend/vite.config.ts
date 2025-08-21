@@ -22,6 +22,10 @@ export default defineConfig(({ mode }) => {
     },
     allowedHosts: ['pooltecnica.no-ip.biz'],
   },
+  preview: {
+    port: 5173,
+    host: true,
+  },
   build: {
     outDir: 'dist',
   }

@@ -170,20 +170,27 @@ export default function ControleDeCargas() {
   };
 
   const cargasFiltradas = cargas.filter((carga) => {
-    // Aplica filtro de permissão do usuário
+    // Aplica filtro de permissão do usuário primeiro
     if (!user) return false;
 
+    let passaPermissao = false;
+    
     if (user.role === "VENDAS") {
-      return carga.situacao === "ABERTA";
-    }
-    if (user.role === "LOGISTICA") {
-      return (
+      passaPermissao = carga.situacao === "ABERTA";
+    } else if (user.role === "LOGISTICA") {
+      passaPermissao = (
         carga.situacao === "ABERTA" ||
         carga.situacao === "SOLICITADA"
       );
+    } else {
+      passaPermissao = true; // Outros roles veem todas
     }
     
-    // Se nenhum destino está selecionado, mostra todas as cargas
+    // Se não passa na permissão, já remove
+    if (!passaPermissao) return false;
+    
+    // Agora aplica filtro de destino
+    // Se nenhum destino está selecionado, mostra todas as cargas (que passaram na permissão)
     if (destinosFiltrados.length === 0) {
       return true;
     }

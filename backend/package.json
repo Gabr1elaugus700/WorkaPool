@@ -2,12 +2,16 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development ts-node-dev --respawn --transpile-only src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
-    "start": "cross-env NODE_ENV=production node dist/server.js"
+    "build": "npx prisma generate && tsc",
+    "start": "cross-env NODE_ENV=production node dist/server.js",
+    "prisma:pull": "dotenv -e .env.production -- npx prisma db pull",
+    "prisma:migrate": "dotenv -e .env.production -- npx prisma migrate deploy",
+    "prisma:status": "dotenv -e .env.production -- npx prisma migrate status",
+    "prisma:generate": "dotenv -e .env.production -- npx prisma generate"
   },
   "keywords": [],
   "author": "",
@@ -28,7 +32,7 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "@prisma/client": "^6.8.2",
+    "@prisma/client": "^6.14.0",
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
@@ -37,6 +41,7 @@
     "@types/node": "^22.16.4",
     "@types/soap": "^0.18.0",
     "cross-env": "^10.0.0",
+    "dotenv-cli": "^10.0.0",
     "prisma": "^6.8.2",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.20.3",

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -14,29 +14,58 @@ interface FiltroCargatProps {
 export function FiltroCarga({ cargas, onFiltroChange }: FiltroCargatProps) {
   const [destinosSelecionados, setDestinosSelecionados] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
+  
+  useEffect(() => {
+    console.log('🔧 FiltroCarga - Cargas recebidas:', cargas?.length || 0);
+    console.log('🔧 FiltroCarga - Primeira carga:', cargas?.[0]);
+  }, [cargas]);
 
   // Extrai todos os destinos únicos das cargas abertas
   const destinosUnicos = useMemo(() => {
-    const destinos = cargas
-      .filter(carga => carga.situacao === "ABERTA" || carga.situacao === "SOLICITADA")
+    console.log('🔧 Calculando destinos únicos...');
+
+    if (!cargas || cargas.length === 0) {
+      console.log('❌ Nenhuma carga disponível');
+      return [];
+    }
+
+    const cargasAbertas = cargas.filter(carga =>
+      carga.situacao === "ABERTA" || carga.situacao === "SOLICITADA"
+    );
+
+    console.log('🔧 Cargas abertas/solicitadas:', cargasAbertas.length);
+
+    const destinos = cargasAbertas
       .map(carga => carga.destino)
+      .filter(destino => destino && destino.trim() !== '') // Filtrar destinos vazios
       .filter((destino, index, array) => array.indexOf(destino) === index)
       .sort();
+
+    console.log('🔧 Destinos únicos encontrados:', destinos);
     return destinos;
   }, [cargas]);
 
+  // DEBUG: Log mudanças de destinos selecionados
+  useEffect(() => {
+    console.log('🔧 Destinos selecionados:', destinosSelecionados);
+  }, [destinosSelecionados]);
+
   const handleDestinoChange = (destino: string, checked: boolean) => {
+    console.log('🔧 Mudança de destino:', destino, checked);
+
     let novosDestinos: string[];
-    
+
     if (checked) {
       novosDestinos = [...destinosSelecionados, destino];
     } else {
       novosDestinos = destinosSelecionados.filter(d => d !== destino);
     }
-    
+
+    console.log('🔧 Novos destinos:', novosDestinos);
     setDestinosSelecionados(novosDestinos);
     onFiltroChange(novosDestinos);
   };
+
 
   const handleSelecionarTodos = () => {
     if (destinosSelecionados.length === destinosUnicos.length) {
@@ -62,8 +91,8 @@ export function FiltroCarga({ cargas, onFiltroChange }: FiltroCargatProps) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button 
-          variant={destinosSelecionados.length > 0 ? "default" : "outline"} 
+        <Button
+          variant={destinosSelecionados.length > 0 ? "default" : "outline"}
           size="sm"
           className="gap-2"
         >
@@ -76,15 +105,15 @@ export function FiltroCarga({ cargas, onFiltroChange }: FiltroCargatProps) {
           )}
         </Button>
       </PopoverTrigger>
-      
+
       <PopoverContent className="w-64 p-4" align="end">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h4 className="font-medium text-sm">Filtrar por Destino</h4>
             {destinosSelecionados.length > 0 && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleLimparFiltros}
                 className="h-auto p-1 text-xs"
               >
@@ -106,7 +135,7 @@ export function FiltroCarga({ cargas, onFiltroChange }: FiltroCargatProps) {
               Selecionar todos
             </label>
           </div>
-          
+
           <ScrollArea className="h-48">
             <div className="space-y-2">
               {destinosUnicos.map((destino) => (
@@ -126,7 +155,7 @@ export function FiltroCarga({ cargas, onFiltroChange }: FiltroCargatProps) {
               ))}
             </div>
           </ScrollArea>
-          
+
           {destinosSelecionados.length > 0 && (
             <div className="text-xs text-muted-foreground pt-2 border-t">
               {destinosSelecionados.length} de {destinosUnicos.length} selecionados
@@ -134,9 +163,9 @@ export function FiltroCarga({ cargas, onFiltroChange }: FiltroCargatProps) {
           )}
 
           <div className="flex gap-2 pt-2">
-            <Button 
-              size="sm" 
-              variant="outline" 
+            <Button
+              size="sm"
+              variant="outline"
               onClick={() => setOpen(false)}
               className="flex-1"
             >
