@@ -1,8 +1,11 @@
-// backend/src/server.ts
+// PRIMEIRO: Configurar variáveis de ambiente
+import './config/env'
+
+// DEPOIS: Importar tudo o resto
 import { setupSwagger } from './swagger';
 import express from 'express'
 import cors from 'cors'
-import dotenv from 'dotenv'
+
 // Importando as rotas De Consulta no banco de dados Sapiens
 import clienteRoutes from './routes/clienteRoutes'
 import testeConectionRoutes from './routes/testeConection'
@@ -25,11 +28,7 @@ import caminhoes from './routes/caminhoesRoutes';
 import parametrosGlobaisFretes from './routes/parametrosFretesRoutes';
 import fretesRoutes from './routes/fretesRoutes';
 
-dotenv.config()
-
-// dotenv.config({ path: '.env.development' })
 console.log('🧪 DATABASE_URL carregado:', process.env.DATABASE_URL)
-
 
 const app = express()
 setupSwagger(app);
