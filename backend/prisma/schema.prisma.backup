@@ -1,0 +1,187 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+  VENDAS
+  LOGISTICA
+  ALMOX
+}
+
+model User {
+  id                 String   @id @default(uuid())
+  name               String   @default("")
+  user               String   @unique
+  password           String
+  role               Role     @default(USER)
+  createdAt          DateTime @default(now())
+  codRep             Int      @default(0)
+  mustChangePassword Boolean  @default(true)
+
+  solicitacaoRota SolicitacaoRota[]
+}
+
+// Caminhões Disponíveis
+model Trucks {
+  id        String   @id @default(uuid())
+  name      String
+  capacity  Int
+  createdAt DateTime @default(now())
+  codRep    Int      @default(0)
+}
+
+enum CargaSituacao {
+  ABERTA
+  SOLICITADA
+  FECHADA
+  CANCELADA
+  ENTREGUE
+}
+
+model Cargas {
+  id             String           @id @default(uuid())
+  codCar         Int              @unique
+  destino        String
+  pesoMax        Int
+  custoMin       Int
+  situacao       CargaSituacao    @default(ABERTA)
+  previsaoSaida  DateTime         @default(now())
+  createdAt      DateTime         @default(now())
+  CargasFechadas CargasFechadas[]
+}
+
+enum Meses {
+  JANEIRO
+  FEVEREIRO
+  MARCO
+  ABRIL
+  MAIO
+  JUNHO
+  JULHO
+  AGOSTO
+  SETEMBRO
+  OUTUBRO
+  NOVEMBRO
+  DEZEMBRO
+}
+
+model Metas {
+  id          String   @id @default(uuid())
+  produto     String   @default("")
+  metaProduto Int      @default(0)
+  createdAt   DateTime @default(now())
+  codRep      Int      @default(0)
+  mesMeta     Int      @default(0)
+  anoMeta     Int      @default(0)
+  precoMedio  Float    @default(0.0)
+  totalVendas Float    @default(0.0)
+  cod_grp     String?  @default("")
+}
+
+model CalendarioMetas {
+  id        String   @id @default(uuid())
+  mes       Meses    @default(JANEIRO)
+  ano       Int      @default(2025)
+  createdAt DateTime @default(now())
+}
+
+model CargasFechadas {
+  id      String @id @default(uuid())
+  cargaId String
+  carga   Cargas @relation(fields: [cargaId], references: [id])
+  pedidos Json[]
+  createdAt DateTime @default(now())
+}
+
+model Caminhao {
+  id                 Int    @id @default(autoincrement())
+  modelo             String // exemplo: "bi-truck - scania"
+  eixos              Int // qtd_eixos geral
+  eixos_carregado    Int
+  eixos_vazio        Int
+  pneus              Int
+  capacidade_kg      Int // ex: 18000
+  consumo_medio_km_l Float // ex: 3.5
+
+  tipo String?
+
+  rotas CaminhaoRota[]
+}
+
+model Rota_base {
+  id          Int    @id @default(autoincrement())
+  origem      String
+  destino     String
+  total_km    Int
+  dias_viagem Int
+
+  caminhoes CaminhaoRota[]
+}
+
+model CaminhaoRota {
+  id                         Int       @id @default(autoincrement())
+  rota_base                  Rota_base @relation(fields: [rota_base_id], references: [id])
+  rota_base_id               Int
+  caminhao                   Caminhao  @relation(fields: [caminhao_id], references: [id])
+  caminhao_id                Int
+  pedagio_ida                Float
+  pedagio_volta              Float
+  custo_combustivel          Float
+  custo_total                Float
+  salario_motorista_rota     Float
+  refeicao_motorista_rota    Float
+  ajuda_custo_motorista_rota Float
+  chapa_descarga_rota        Float
+  desgaste_pneus_rota        Float
+  margem_lucro_frete         Float     @default(0.35) // 35%
+  custo_total_rota           Float     @default(0.0)
+  custo_por_kg               Float     @default(0.0)
+  valor_frete_kg             Float     @default(0.0)
+  custo_operacional          Float     @default(0.0)
+  createdAt                  DateTime  @default(now())
+  @@unique([rota_base_id, caminhao_id])
+}
+
+model ParametrosGlobaisViagem {
+  id                           Int      @id @default(autoincrement())
+  valor_diesel_s10_sem_icms    Float
+  valor_diesel_s10_com_icms    Float
+  valor_salario_motorista_dia  Float
+  valor_refeicao_motorista_dia Float
+  valor_ajuda_custo_motorista  Float
+  valor_chapa_descarga         Float
+  valor_desgaste_pneus         Float
+  updatedAt                    DateTime @updatedAt
+  margem_lucro_frete           Float    @default(0.35) // 35% de margem de lucro
+}
+
+enum Status {
+  PENDENTE
+  EM_ANDAMENTO
+  FINALIZADO
+  CANCELADO
+}
+
+model SolicitacaoRota {
+  id               Int      @id @default(autoincrement())
+  data_solicitacao DateTime @default(now())
+  peso             Int
+  origem           String
+  destino          String
+  status           Status   @default(PENDENTE)
+  solicitante      User     @relation(fields: [solicitante_user], references: [user])
+  solicitante_user String
+}
