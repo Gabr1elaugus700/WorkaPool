@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,6 +13,7 @@ enum Role {
   VENDAS
   LOGISTICA
   ALMOX
+  MANUTENCAO
 }
 
 model User {
@@ -32,6 +27,8 @@ model User {
   mustChangePassword Boolean  @default(true)
 
   solicitacaoRota SolicitacaoRota[]
+
+  OrdemServico OrdemServico[]
 }
 
 // Caminhões Disponíveis
@@ -99,10 +96,10 @@ model CalendarioMetas {
 }
 
 model CargasFechadas {
-  id      String @id @default(uuid())
-  cargaId String
-  carga   Cargas @relation(fields: [cargaId], references: [id])
-  pedidos Json[]
+  id        String   @id @default(uuid())
+  cargaId   String
+  carga     Cargas   @relation(fields: [cargaId], references: [id])
+  pedidos   Json[]
   createdAt DateTime @default(now())
 }
 
@@ -152,6 +149,7 @@ model CaminhaoRota {
   valor_frete_kg             Float     @default(0.0)
   custo_operacional          Float     @default(0.0)
   createdAt                  DateTime  @default(now())
+
   @@unique([rota_base_id, caminhao_id])
 }
 
@@ -184,4 +182,22 @@ model SolicitacaoRota {
   status           Status   @default(PENDENTE)
   solicitante      User     @relation(fields: [solicitante_user], references: [user])
   solicitante_user String
+}
+
+enum StatusOrdemServico {
+  ABERTA
+  EM_ANDAMENTO
+  FINALIZADA
+  CANCELADA
+}
+
+model OrdemServico {
+  id                String             @id @default(uuid())
+  descricao         String             @default("")
+  status            StatusOrdemServico @default(ABERTA)
+  data_criacao      DateTime           @default(now())
+  data_conclusao    DateTime?
+  email_solicitante String
+  id_solicitante    String?
+  solicitante       User?               @relation(fields: [id_solicitante], references: [user])
 }

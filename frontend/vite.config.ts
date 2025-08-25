@@ -12,10 +12,10 @@ export default defineConfig({
   },
   server: {
     host: true,
-    port: 5173, // opcional, pode mudar a porta se quiser
+    port: 5858, // opcional, pode mudar a porta se quiser
     
   },
   preview: {
-    port: 5173,
+    port: 5858,
   }
 })
