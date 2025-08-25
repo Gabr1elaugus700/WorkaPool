@@ -13,7 +13,6 @@ enum Role {
   VENDAS
   LOGISTICA
   ALMOX
-  MANUTENCAO
 }
 
 model User {
@@ -27,8 +26,8 @@ model User {
   mustChangePassword Boolean  @default(true)
 
   solicitacaoRota SolicitacaoRota[]
-
-  OrdemServico OrdemServico[]
+  OrdemServico    OrdemServico[]
+  Vistoria        Vistoria[]
 }
 
 // Caminhões Disponíveis
@@ -191,13 +190,68 @@ enum StatusOrdemServico {
   CANCELADA
 }
 
+enum Prioridade {
+  BAIXA
+  MEDIA
+  ALTA
+}
+
+enum DptoRecebeOs {
+  MANUTENCAO
+  TI
+  SGQ
+}
+
 model OrdemServico {
   id                String             @id @default(uuid())
   descricao         String             @default("")
   status            StatusOrdemServico @default(ABERTA)
+  prioridade        Prioridade         @default(BAIXA)
   data_criacao      DateTime           @default(now())
   data_conclusao    DateTime?
-  email_solicitante String
-  id_solicitante    String?
-  solicitante       User?               @relation(fields: [id_solicitante], references: [user])
+  email_solicitante String?
+  setor_responsavel DptoRecebeOs?
+
+  // Vincular nome do Usuário
+  id_solicitante String?
+  solicitante    User?   @relation(fields: [id_solicitante], references: [user])
+
+  id_vistoria String?
+  Vistoria    Vistoria[]
+}
+
+model Vistoria {
+  id            String   @id @default(uuid())
+  data_vistoria DateTime @default(now())
+
+  // Relacionamento
+  ordem_servico    OrdemServico @relation(fields: [ordem_servico_id], references: [id])
+  ordem_servico_id String
+
+  // Dpto Realizado Vistoria
+  departamento_id String
+  vistoria_dpto   Departamento @relation(fields: [departamento_id], references: [name])
+
+  // Vincular nome do Usuário
+  responsavel_name String
+  responsavel      User   @relation(fields: [responsavel_name], references: [user])
+}
+
+model ChecklistModelo {
+  id        String   @id @default(uuid())
+  descricao String
+  createdAt DateTime @default(now())
+
+  // Relacionamento com DPTO 
+  departamento_id String
+  departamento    Departamento @relation(fields: [departamento_id], references: [id])
+}
+
+model Departamento {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  Vistorias  Vistoria[]
+  Checklists ChecklistModelo[]
 }
