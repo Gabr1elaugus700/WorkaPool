@@ -196,11 +196,6 @@ enum Prioridade {
   ALTA
 }
 
-enum DptoRecebeOs {
-  MANUTENCAO
-  TI
-  SGQ
-}
 
 model OrdemServico {
   id                String             @id @default(uuid())
@@ -210,23 +205,18 @@ model OrdemServico {
   data_criacao      DateTime           @default(now())
   data_conclusao    DateTime?
   email_solicitante String?
-  setor_responsavel DptoRecebeOs?
+
 
   // Vincular nome do Usuário
   id_solicitante String?
   solicitante    User?   @relation(fields: [id_solicitante], references: [user])
 
   id_vistoria String?
-  Vistoria    Vistoria[]
 }
 
 model Vistoria {
   id            String   @id @default(uuid())
   data_vistoria DateTime @default(now())
-
-  // Relacionamento
-  ordem_servico    OrdemServico @relation(fields: [ordem_servico_id], references: [id])
-  ordem_servico_id String
 
   // Dpto Realizado Vistoria
   departamento_id String
@@ -250,7 +240,8 @@ model ChecklistModelo {
 model Departamento {
   id        String   @id @default(uuid())
   name      String   @unique
-  createdAt DateTime @default(now())
+  created_at DateTime @default(now())
+  recebe_os  Boolean  @default(false)
 
   Vistorias  Vistoria[]
   Checklists ChecklistModelo[]

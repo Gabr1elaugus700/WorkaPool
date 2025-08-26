@@ -28,6 +28,8 @@ import caminhoes from './routes/caminhoesRoutes';
 import parametrosGlobaisFretes from './routes/parametrosFretesRoutes';
 import fretesRoutes from './routes/fretesRoutes';
 
+import ordemServico from './features/os/routes/osRoutes';
+
 console.log('🧪 DATABASE_URL carregado:', process.env.DATABASE_URL)
 
 const app = express()
@@ -102,6 +104,9 @@ app.use('/api/caminhoes', caminhoes);
 app.use('/api/parametrosFretes', parametrosGlobaisFretes);
 
 app.use('/api/fretes', fretesRoutes)
+
+//Rotas de Ordem de Servico
+app.use('/api/os', ordemServico);
 
 // Metas
 app.use('/api/metas', metasRoutes)
