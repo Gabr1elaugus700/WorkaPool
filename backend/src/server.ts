@@ -29,6 +29,7 @@ import parametrosGlobaisFretes from './routes/parametrosFretesRoutes';
 import fretesRoutes from './routes/fretesRoutes';
 
 import ordemServico from './features/os/routes/osRoutes';
+import departamentos from './features/os/routes/departamentosRoutes';
 
 console.log('🧪 DATABASE_URL carregado:', process.env.DATABASE_URL)
 
@@ -107,6 +108,7 @@ app.use('/api/fretes', fretesRoutes)
 
 //Rotas de Ordem de Servico
 app.use('/api/os', ordemServico);
+app.use('/api/departamentos', departamentos);
 
 // Metas
 app.use('/api/metas', metasRoutes)

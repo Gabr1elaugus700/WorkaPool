@@ -212,6 +212,8 @@ model OrdemServico {
   solicitante    User?   @relation(fields: [id_solicitante], references: [user])
 
   id_vistoria String?
+  id_departamento String?
+  departamento_os Departamento? @relation(fields: [id_departamento], references: [name])
 }
 
 model Vistoria {
@@ -245,4 +247,5 @@ model Departamento {
 
   Vistorias  Vistoria[]
   Checklists ChecklistModelo[]
+  OrdensServico OrdemServico[]
 }
