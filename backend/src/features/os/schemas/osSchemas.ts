@@ -8,6 +8,7 @@ export const createOSSchema = z.object({
     email_solicitante: z.string().email().optional(),
     id_solicitante: z.string().uuid().optional(),
     id_vistoria: z.string().uuid().optional(),
+    id_departamento: z.string().uuid().min(1, "Informe o Departamento"),
   }),
 });
 

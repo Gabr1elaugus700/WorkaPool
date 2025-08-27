@@ -1,8 +1,22 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { osRepository } from "../repositories/osRepository";
+
+const prisma = new PrismaClient();
 
 export const osService = {
     create: async (data: Prisma.OrdemServicoCreateInput) => {
+        if (data.departamento_os?.connect?.id) {
+            const departamento = await prisma.departamento.findUnique({
+                where: { id: data.departamento_os.connect.id },
+                select: { id: true, recebe_os: true, name: true },
+            });
+            if (!departamento) {
+                throw new Error("Departamento não encontrado");
+            }
+            if (!departamento.recebe_os) {
+                throw new Error(`O departamento ${departamento.name} não recebe ordens de serviço`);
+            }
+        }
         return await osRepository.create(data);
     },
 

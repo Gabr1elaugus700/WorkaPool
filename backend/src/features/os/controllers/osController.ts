@@ -1,22 +1,26 @@
 import { Request, Response } from "express";
 import { osService } from "../services/osService";
-import { StatusOrdemServico } from "@prisma/client";
+import { StatusOrdemServico, Prioridade } from "@prisma/client";
 
 export const osController = {
   create: async (req: Request, res: Response) => {
     if(!req.body.descricao) {
       return res.status(400).json({ message: "Descrição do serviço é obrigatória!" });
     }
+    if(!req.body.id_departamento) {
+      return res.status(400).json({ message: "ID do departamento é obrigatório!" });
+    }
 
     try {
       const ordem = await osService.create({ 
-        ...req.body,
-        status: StatusOrdemServico[
-            req.body.status as keyof typeof StatusOrdemServico
-        ],
-        prioridade: StatusOrdemServico[
-            req.body.prioridade as keyof typeof StatusOrdemServico
-        ],
+        descricao: req.body.descricao,
+        status: req.body.status ? StatusOrdemServico[req.body.status as keyof typeof StatusOrdemServico] : StatusOrdemServico.ABERTA,
+        prioridade: req.body.prioridade ? Prioridade[req.body.prioridade as keyof typeof Prioridade] : Prioridade.BAIXA,
+        email_solicitante: req.body.email_solicitante,
+        solicitante: req.body.id_solicitante ? { connect: { user: req.body.id_solicitante } } : undefined,
+        departamento_os: {
+          connect: { id: req.body.id_departamento }
+        }
       });
       return res.status(201).json(ordem);
     } catch (error: any) {
