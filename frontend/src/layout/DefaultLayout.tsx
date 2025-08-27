@@ -47,6 +47,12 @@ export default function DefaultLayout({ children }: Props) {
             >
               Cargas
             </ButtonLink>
+            <ButtonLink
+              to="/os"
+              allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
+            >
+              Ordens de Serviço
+            </ButtonLink>
 
             <ButtonLink
               to="/fretes"

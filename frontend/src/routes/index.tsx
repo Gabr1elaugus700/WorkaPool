@@ -13,6 +13,7 @@ import MontagemDeCargas from '../pages/controleDeCargas';
 import ClientesInativos from '../pages/ClientesInativos';
 import Login from "@/auth/Login";
 import FretesPage from "@/pages/FretesPage";
+import OsListView from "@/features/os/views/osView";
 
 
 const AppRoutes = () => {
@@ -30,6 +31,14 @@ const AppRoutes = () => {
             }
           />
 
+          <Route
+            path="/Os"
+            element={
+              <PrivateRoute>
+                <OsListView />
+              </PrivateRoute>
+            }
+          />
           <Route
             path="/vendasPerdidas"
             element={

@@ -6,16 +6,19 @@ if "%FEATURE%"=="" (
     exit /b 1
 )
 
-mkdir features\%FEATURE%\services
-mkdir features\%FEATURE%\model
-mkdir features\%FEATURE%\view
-mkdir features\%FEATURE%\modelview
 mkdir features\%FEATURE%\components
+mkdir features\%FEATURE%\models
+mkdir features\%FEATURE%\services
+mkdir features\%FEATURE%\types
+mkdir features\%FEATURE%\viewmodels
+mkdir features\%FEATURE%\views
 
-type nul > features\%FEATURE%\services\%FEATURE%-service.js
-type nul > features\%FEATURE%\model\%FEATURE%-model.js
-type nul > features\%FEATURE%\view\%FEATURE%-view.js
-type nul > features\%FEATURE%\modelview\%FEATURE%-modelview.js
-type nul > features\%FEATURE%\components\%FEATURE%-component.js
+type nul > features\%FEATURE%\components\%FEATURE%-service.ts
+type nul > features\%FEATURE%\models\%FEATURE%-model.ts
+type nul > features\%FEATURE%\views\%FEATURE%-view.ts
+type nul > features\%FEATURE%\viewmodels\%FEATURE%-viewmodel.ts
+type nul > features\%FEATURE%\types\%FEATURE%-component.ts
+type nul > features\%FEATURE%\services\%FEATURE%-component.ts
+
 
 echo Estrutura criada para a feature: %FEATURE%
