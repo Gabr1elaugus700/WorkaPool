@@ -29,7 +29,7 @@ import parametrosGlobaisFretes from './routes/parametrosFretesRoutes';
 import fretesRoutes from './routes/fretesRoutes';
 
 import ordemServico from './features/os/routes/osRoutes';
-import departamentos from './features/os/routes/departamentosRoutes';
+import departamentos from './features/departamentos/routes/departamentosRoutes';
 
 console.log('🧪 DATABASE_URL carregado:', process.env.DATABASE_URL)
 
