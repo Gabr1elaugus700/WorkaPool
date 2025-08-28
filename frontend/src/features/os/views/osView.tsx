@@ -1,23 +1,18 @@
 import { useEffect, useState } from "react";
 import { osService } from "../services/osService";
 import { mapToOsViewModel } from "../viewmodels/osViewModel";
-import { OsCard } from "../components/osCard";
+import { OsViewModel } from "../types/osType";
 import { useAuth } from "@/auth/AuthContext";
 import DefaultLayout from "@/layout/DefaultLayout";
-
-
-interface OsViewModel {
-  id: string | number;
-  titulo: string;
-  prioridade: string;
-}
+import { OsCard } from "../components/osCard";
 
 export const OsListView = () => {
   const [ordens, setOrdens] = useState<OsViewModel[]>([]);
 
   useEffect(() => {
     osService.getAll().then((data) => {
-      setOrdens(data.map(mapToOsViewModel));
+      const mappedData = data.map(mapToOsViewModel) as OsViewModel[];
+      setOrdens(mappedData);
     });
   }, []);
 
@@ -37,7 +32,7 @@ export const OsListView = () => {
         <h2>Ordens de Serviço</h2>
         <div className="grid grid-cols-5 gap-4 mb-4">
           {ordens.map((os) => (
-            <OsCard key={os.id} descricao={os.titulo} status={os.prioridade} />
+            <OsCard key={os.id} descricao={os.titulo} prioridade={os.prioridade} status={os.status} solicitante={os.solicitante} data_criacao="20-20-2020" />
           ))}
         </div>
       </div>

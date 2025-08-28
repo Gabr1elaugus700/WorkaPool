@@ -1,8 +1,12 @@
-export type StatusOS = "ABERTO" | "FECHADO" | "PENDENTE";
 
-export interface CreateOSDTO {
-  descricao: string;
-  status: StatusOS;
-  prioridade: "BAIXA" | "MEDIA" | "ALTA";
-  email_solicitante?: string;
+export type StatusType = "ABERTA" | "EM_ANDAMENTO" | "FINALIZADA" | "CANCELADA";
+export type PrioridadeType = "baixa" | "media" | "alta";
+
+export interface OsViewModel {
+  id: string | number;
+  titulo: string;
+  status: StatusType;
+  prioridade: PrioridadeType;
+  solicitante: string;
+  data_criacao?: string;
 }
