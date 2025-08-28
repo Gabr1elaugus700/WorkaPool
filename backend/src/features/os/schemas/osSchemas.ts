@@ -3,7 +3,7 @@ import { z } from "zod";
 export const createOSSchema = z.object({
   body: z.object({
     descricao: z.string().min(1, "Descrição Do serviço é Obrigatória!"),
-    status: z.enum(["ABERTO", "FECHADO", "PENDENTE"]),
+    status: z.enum(["ABERTA", "EM_ANDAMENTO", "FINALIZADA", "CANCELADA"]),
     prioridade: z.enum(["BAIXA", "MEDIA", "ALTA"]),
     email_solicitante: z.string().email().optional(),
     id_solicitante: z.string().uuid().optional(),

@@ -2,9 +2,9 @@ import { OrdemServico } from "../models/osModel";
 
 export const mapToOsViewModel = (os: OrdemServico) => ({
   id: os.id,
-  titulo: `${os.descricao}`,
+  descricao: `${os.descricao}`,
   status: `${os.status}`,
-  prioridade: os.prioridade.toLowerCase(),
+  prioridade: os.prioridade.toUpperCase(),
   solicitante: os.email_solicitante ?? "Desconhecido",
-  criadoEm: new Date(os.data_criacao).toLocaleDateString()
+  data_criacao: new Date(os.data_criacao).toLocaleDateString()
 });
