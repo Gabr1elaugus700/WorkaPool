@@ -14,6 +14,7 @@ import ClientesInativos from '../pages/ClientesInativos';
 import Login from "@/auth/Login";
 import FretesPage from "@/pages/FretesPage";
 import OsListView from "@/features/os/views/osView";
+import UsersView from "@/features/users/views/usersView";
 
 
 const AppRoutes = () => {
@@ -36,6 +37,14 @@ const AppRoutes = () => {
             element={
               <PrivateRoute>
                 <OsListView />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <PrivateRoute>
+                <UsersView />
               </PrivateRoute>
             }
           />

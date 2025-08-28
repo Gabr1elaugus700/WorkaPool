@@ -1,4 +1,3 @@
-
 export type StatusType = "ABERTA" | "EM_ANDAMENTO" | "FINALIZADA" | "CANCELADA";
 export type PrioridadeType = "BAIXA" | "MEDIA" | "ALTA";
 

@@ -15,7 +15,7 @@ import rankingProdutosVendidos from './routes/rankingProdutosRoutes'
 import productRoutes from './routes/produtosRoutes'
 import vendedoresRoutes from './routes/vendedoresRoutes'
 import pedidosFechadosRoutes from './routes/pedidosFechadosRoutes'
-import authRoutes from '../src/features/users/routes/authRoutes'
+import authRoutes from './features/users/routes/authRoutes'
 import pedidosCargasRoutes from './routes/pedidosCargasRoutes'
 import alteraPedidoCarga from './routes/alteraPedidoCagasRoutes'
 import clientesInativos from './routes/clientesInativosRoutes'
@@ -30,6 +30,8 @@ import fretesRoutes from './routes/fretesRoutes';
 
 import ordemServico from './features/os/routes/osRoutes';
 import departamentos from './features/departamentos/routes/departamentosRoutes';
+
+import userRoutes from './features/users/routes/userRoutes';
 
 console.log('🧪 DATABASE_URL carregado:', process.env.DATABASE_URL)
 
@@ -109,6 +111,7 @@ app.use('/api/fretes', fretesRoutes)
 //Rotas de Ordem de Servico
 app.use('/api/os', ordemServico);
 app.use('/api/departamentos', departamentos);
+app.use('/api/users', userRoutes);
 
 // Metas
 app.use('/api/metas', metasRoutes)

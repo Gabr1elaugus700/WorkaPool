@@ -79,9 +79,9 @@ export const userController = {
   // Buscar departamentos de um usuário específico (mantém no users pois é informação do usuário)
   getUserDepartments: async (req: Request, res: Response) => {
     try {
-      const { userId } = req.params;
-      
-      const departamentos = await userService.buscarDepartamentosDoUsuario(userId);
+      const { id } = req.params;
+
+      const departamentos = await userService.buscarDepartamentosDoUsuario(id);
       res.json(departamentos);
     } catch (err: any) {
       res.status(400).json({ error: err.message });
