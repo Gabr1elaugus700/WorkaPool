@@ -13,6 +13,12 @@ enum Role {
   VENDAS
   LOGISTICA
   ALMOX
+  GERENTE_DPTO  // Novo role para gerentes de departamento
+}
+
+enum FuncaoDepartamento {
+  GERENTE
+  FUNCIONARIO
 }
 
 model User {
@@ -25,9 +31,13 @@ model User {
   codRep             Int      @default(0)
   mustChangePassword Boolean  @default(true)
 
-  solicitacaoRota SolicitacaoRota[]
-  OrdemServico    OrdemServico[]
-  Vistoria        Vistoria[]
+  solicitacaoRota    SolicitacaoRota[]
+  OrdemServico       OrdemServico[]
+  Vistoria           Vistoria[]
+  
+  departamentos      UsuarioDepartamento[]
+  ordensAtribuidas   OrdemServico[] @relation("OSAtribuida")
+  ordensAtribuidasPor OrdemServico[] @relation("OSAtribuidaPor")
 }
 
 // Caminhões Disponíveis
@@ -206,14 +216,24 @@ model OrdemServico {
   data_conclusao    DateTime?
   email_solicitante String?
 
+  // Solicitante
+  id_solicitante    String?
+  solicitante       User?   @relation(fields: [id_solicitante], references: [id])
 
-  // Vincular nome do Usuário
-  id_solicitante String?
-  solicitante    User?   @relation(fields: [id_solicitante], references: [user])
+  // Atribuição da OS
+  id_responsavel    String?
+  responsavel       User?   @relation("OSAtribuida", fields: [id_responsavel], references: [id])
+  
+  id_atribuida_por  String?
+  atribuida_por     User?   @relation("OSAtribuidaPor", fields: [id_atribuida_por], references: [id])
+  
+  data_atribuicao   DateTime?
 
-  id_vistoria String?
-  id_departamento String?
-  departamento_os Departamento? @relation(fields: [id_departamento], references: [name])
+  // Departamento
+  id_departamento   String?
+  departamento_os   Departamento? @relation(fields: [id_departamento], references: [id])
+
+  id_vistoria       String?
 }
 
 model Vistoria {
@@ -240,12 +260,29 @@ model ChecklistModelo {
 }
 
 model Departamento {
-  id        String   @id @default(uuid())
-  name      String   @unique
+  id         String   @id @default(uuid())
+  name       String   @unique
   created_at DateTime @default(now())
   recebe_os  Boolean  @default(false)
 
-  Vistorias  Vistoria[]
-  Checklists ChecklistModelo[]
-  OrdensServico OrdemServico[]
+  // Relacionamentos
+  usuarios       UsuarioDepartamento[]
+  Vistorias      Vistoria[]
+  Checklists     ChecklistModelo[]
+  OrdensServico  OrdemServico[]
+}
+
+model UsuarioDepartamento {
+  id           String             @id @default(uuid())
+  user_id      String
+  departamento_id String
+  funcao       FuncaoDepartamento @default(FUNCIONARIO)
+  ativo        Boolean            @default(true)
+  created_at   DateTime           @default(now())
+
+  // Relacionamentos
+  usuario      User         @relation(fields: [user_id], references: [id])
+  departamento Departamento @relation(fields: [departamento_id], references: [id])
+
+  @@unique([user_id, departamento_id])
 }
