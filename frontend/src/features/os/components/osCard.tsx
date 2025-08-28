@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { Clock, User, AlertCircle } from "lucide-react";
 
 type StatusType = "ABERTA" | "EM_ANDAMENTO" | "FINALIZADA" | "CANCELADA";
-type PrioridadeType = "baixa" | "media" | "alta";
+type PrioridadeType = "BAIXA" | "MEDIA" | "ALTA";
 
 interface OsCardProps {
   descricao: string;
@@ -35,11 +35,11 @@ export const OsCard = ({ descricao, status, prioridade, solicitante, data_criaca
   // Cores para Prioridade
   const getPrioridadeColor = (prioridade: PrioridadeType) => {
     switch (prioridade) {
-      case "baixa":
+      case "BAIXA":
         return "bg-gray-100 text-gray-700 border-gray-300";
-      case "media":
+      case "MEDIA":
         return "bg-orange-100 text-orange-800 border-orange-200";
-      case "alta":
+      case "ALTA":
         return "bg-red-100 text-red-800 border-red-200";
       default:
         return "bg-gray-100 text-gray-700 border-gray-300";
@@ -49,11 +49,11 @@ export const OsCard = ({ descricao, status, prioridade, solicitante, data_criaca
   // Borda lateral colorida baseada na prioridade
   const getBorderColor = (prioridade: PrioridadeType) => {
     switch (prioridade) {
-      case "baixa":
+      case "BAIXA":
         return "border-l-blue-400";
-      case "media":
+      case "MEDIA":
         return "border-l-orange-500";
-      case "alta":
+      case "ALTA":
         return "border-l-red-500";
       default:
         return "border-l-gray-400";
@@ -72,7 +72,7 @@ export const OsCard = ({ descricao, status, prioridade, solicitante, data_criaca
               className={`text-xs font-medium ${getPrioridadeColor(prioridade)}`}
               variant="outline"
             >
-              {prioridade === "alta" && <AlertCircle className="w-3 h-3 mr-1" />}
+              {prioridade === "ALTA" && <AlertCircle className="w-3 h-3 mr-1" />}
               {prioridade}
             </Badge>
           </div>

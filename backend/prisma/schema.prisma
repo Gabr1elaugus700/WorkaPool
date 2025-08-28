@@ -13,7 +13,7 @@ enum Role {
   VENDAS
   LOGISTICA
   ALMOX
-  GERENTE_DPTO  // Novo role para gerentes de departamento
+  GERENTE_DPTO // Novo role para gerentes de departamento
 }
 
 enum FuncaoDepartamento {
@@ -31,13 +31,13 @@ model User {
   codRep             Int      @default(0)
   mustChangePassword Boolean  @default(true)
 
-  solicitacaoRota    SolicitacaoRota[]
-  OrdemServico       OrdemServico[]
-  Vistoria           Vistoria[]
-  
-  departamentos      UsuarioDepartamento[]
-  ordensAtribuidas   OrdemServico[] @relation("OSAtribuida")
-  ordensAtribuidasPor OrdemServico[] @relation("OSAtribuidaPor")
+  solicitacaoRota SolicitacaoRota[]
+  OrdemServico    OrdemServico[]
+  Vistoria        Vistoria[]
+
+  departamentos       UsuarioDepartamento[]
+  ordensAtribuidas    OrdemServico[]        @relation("OSAtribuida")
+  ordensAtribuidasPor OrdemServico[]        @relation("OSAtribuidaPor")
 }
 
 // Caminhões Disponíveis
@@ -206,7 +206,6 @@ enum Prioridade {
   ALTA
 }
 
-
 model OrdemServico {
   id                String             @id @default(uuid())
   descricao         String             @default("")
@@ -217,23 +216,23 @@ model OrdemServico {
   email_solicitante String?
 
   // Solicitante
-  id_solicitante    String?
-  solicitante       User?   @relation(fields: [id_solicitante], references: [id])
+  id_solicitante String?
+  solicitante    User?   @relation(fields: [id_solicitante], references: [id])
 
   // Atribuição da OS
-  id_responsavel    String?
-  responsavel       User?   @relation("OSAtribuida", fields: [id_responsavel], references: [id])
-  
-  id_atribuida_por  String?
-  atribuida_por     User?   @relation("OSAtribuidaPor", fields: [id_atribuida_por], references: [id])
-  
-  data_atribuicao   DateTime?
+  id_responsavel String?
+  responsavel    User?   @relation("OSAtribuida", fields: [id_responsavel], references: [id])
+
+  id_atribuida_por String?
+  atribuida_por    User?   @relation("OSAtribuidaPor", fields: [id_atribuida_por], references: [id])
+
+  data_atribuicao DateTime?
 
   // Departamento
-  id_departamento   String?
-  departamento_os   Departamento? @relation(fields: [id_departamento], references: [id])
+  id_departamento String?
+  departamento_os Departamento? @relation(fields: [id_departamento], references: [id])
 
-  id_vistoria       String?
+  id_vistoria String?
 }
 
 model Vistoria {
@@ -266,19 +265,19 @@ model Departamento {
   recebe_os  Boolean  @default(false)
 
   // Relacionamentos
-  usuarios       UsuarioDepartamento[]
-  Vistorias      Vistoria[]
-  Checklists     ChecklistModelo[]
-  OrdensServico  OrdemServico[]
+  usuarios      UsuarioDepartamento[]
+  Vistorias     Vistoria[]
+  Checklists    ChecklistModelo[]
+  OrdensServico OrdemServico[]
 }
 
 model UsuarioDepartamento {
-  id           String             @id @default(uuid())
-  user_id      String
+  id              String             @id @default(uuid())
+  user_id         String
   departamento_id String
-  funcao       FuncaoDepartamento @default(FUNCIONARIO)
-  ativo        Boolean            @default(true)
-  created_at   DateTime           @default(now())
+  funcao          FuncaoDepartamento @default(FUNCIONARIO)
+  ativo           Boolean            @default(true)
+  created_at      DateTime           @default(now())
 
   // Relacionamentos
   usuario      User         @relation(fields: [user_id], references: [id])

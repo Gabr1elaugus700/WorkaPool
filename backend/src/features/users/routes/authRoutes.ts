@@ -59,12 +59,14 @@
  *         description: Senha alterada
  */
 import express from "express";
-import { login, register, changePasswordFirstL } from "../controllers/authController";
+import { authController } from "../controllers/userController";
+import { validate } from "../../../middlewares/validate";
+import { registerSchema, loginSchema, changePasswordFirstLoginSchema } from "../schemas/userSchemas";
 
 const router = express.Router();
 
-router.post("/register", register);
-router.post("/login", login);
-router.post("/change-password-first-login", changePasswordFirstL);
+router.post("/register", validate(registerSchema), authController.register);
+router.post("/login", validate(loginSchema), authController.login);
+router.post("/change-password-first-login", validate(changePasswordFirstLoginSchema), authController.changePasswordFirstLogin);
 
 export default router;

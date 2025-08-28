@@ -1,6 +1,6 @@
 
 export type StatusType = "ABERTA" | "EM_ANDAMENTO" | "FINALIZADA" | "CANCELADA";
-export type PrioridadeType = "baixa" | "media" | "alta";
+export type PrioridadeType = "BAIXA" | "MEDIA" | "ALTA";
 
 export interface OsViewModel {
   id: string | number;
@@ -8,5 +8,5 @@ export interface OsViewModel {
   status: StatusType;
   prioridade: PrioridadeType;
   solicitante: string;
-  data_criacao?: string;
+  criadoEm: string;
 }
