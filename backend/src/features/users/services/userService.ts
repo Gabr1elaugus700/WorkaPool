@@ -80,6 +80,7 @@ export const userService = {
   },
 
   update: async (id: string, data: any) => {
+    console.log("Updating user with data: Service", data);
     return await userRepository.update(id, data);
   },
 

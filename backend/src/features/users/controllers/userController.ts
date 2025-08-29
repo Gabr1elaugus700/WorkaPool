@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { userService } from "../services/userServiceClean";
+import { userService } from "../services/userService";
 
 export const authController = {
   register: async (req: Request, res: Response) => {
@@ -57,6 +57,7 @@ export const userController = {
   },
 
   update: async (req: Request, res: Response) => {
+    console.log("Request body received in update:", req.body);
     try {
       const { id } = req.params;
       const updatedUser = await userService.update(id, req.body);

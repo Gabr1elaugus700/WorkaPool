@@ -4,6 +4,7 @@ import { User } from "../models/usersModel";
 import { usersService } from "../services/usersService";
 import DefaultLayout from "@/layout/DefaultLayout";
 import TableUsers from "../components/TableUsers";
+import AddDptoButton from "../../departamentos/components/AddDptoButton";
 
 export const UsersView = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -24,7 +25,7 @@ export const UsersView = () => {
     <DefaultLayout>
       <div>
         <h1>Detalhes do Usuário</h1>
-
+        <AddDptoButton />
         <TableUsers users={users} />
       </div>
     </DefaultLayout>

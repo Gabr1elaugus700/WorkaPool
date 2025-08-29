@@ -13,12 +13,12 @@ mkdir features\%FEATURE%\types
 mkdir features\%FEATURE%\viewmodels
 mkdir features\%FEATURE%\views
 
-type nul > features\%FEATURE%\components\%FEATURE%-service.ts
-type nul > features\%FEATURE%\models\%FEATURE%-model.ts
-type nul > features\%FEATURE%\views\%FEATURE%-view.ts
-type nul > features\%FEATURE%\viewmodels\%FEATURE%-viewmodel.ts
-type nul > features\%FEATURE%\types\%FEATURE%-component.ts
-type nul > features\%FEATURE%\services\%FEATURE%-component.ts
+type nul > features\%FEATURE%\components\%FEATURE%Component.ts
+type nul > features\%FEATURE%\models\%FEATURE%Model.ts
+type nul > features\%FEATURE%\views\%FEATURE%View.ts
+type nul > features\%FEATURE%\viewmodels\%FEATURE%Viewmodel.ts
+type nul > features\%FEATURE%\types\%FEATURE%Type.ts
+type nul > features\%FEATURE%\services\%FEATURE%Service.ts
 
 
 echo Estrutura criada para a feature: %FEATURE%

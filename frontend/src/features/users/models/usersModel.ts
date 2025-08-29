@@ -9,4 +9,5 @@ export interface User {
   createdAt: Date;
   updatedAt: Date;
   mustChangePassword: boolean;
+  funcao: string;
 }
