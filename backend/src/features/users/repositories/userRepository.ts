@@ -8,7 +8,15 @@ export const userRepository = {
     },
 
     findAll: async () => {
-        return await prisma.user.findMany();
+        return await prisma.user.findMany({
+            include: {
+                departamentos: {
+                    include: {
+                        departamento: { select: { id: true, name: true } }
+                    }
+                }
+            }
+        });
     },
 
     findById: async (id: string) => {

@@ -5,7 +5,8 @@ export interface User {
   codRep?: number;
   role?: string;
   isActive?: boolean;
-  departamentos?: string[];
+  departamentos?: { departamento: { id: string; name: string } }[];
+  departamentoNome?: string;
   createdAt: Date;
   updatedAt: Date;
   mustChangePassword: boolean;

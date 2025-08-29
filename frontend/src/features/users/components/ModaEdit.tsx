@@ -11,6 +11,7 @@ import { User } from "../models/usersModel"
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { usersService } from "../services/usersService";
+import { departamentosService } from "../../departamentos/services/departamentosService";
 import {
     Select,
     SelectContent,
@@ -20,20 +21,54 @@ import {
 } from "@/components/ui/select"
 import { useEffect, useState } from "react";
 import { toast } from "sonner"
+import { Departamento } from "@/features/departamentos/models/departamentosModel";
 
 
-export default function EditUserModal({ isOpen, onClose, user }: { isOpen: boolean; onClose: () => void; user: User | null; }) {
+export default function EditUserModal({ isOpen, onClose, user, fetchUsers }: { isOpen: boolean; onClose: () => void; user: User | null; fetchUsers: () => void; }) {
     const [selectedRole, setSelectedRole] = useState(user?.role || "");
+    const [funcao, setFuncao] = useState(user?.funcao || ""); 
     const [name, setName] = useState(user?.name || "");
     const [login, setLogin] = useState(user?.user || "");
-    const [departamentos, setDepartamentos] = useState(user?.departamentos || "");
+    const [departamentos, setDepartamentos] = useState<string>(
+        typeof user?.departamentos === "string"
+            ? user.departamentos
+            : Array.isArray(user?.departamentos)
+                ? (typeof user.departamentos[0] === "string"
+                    ? user.departamentos[0]
+                    : user.departamentos[0]?.departamento?.id?.toString() || "")
+                : ""
+    );
+    const [listDepartamentos, setListDepartamentos] = useState<Departamento[]>([]);
+
+    useEffect(() => {
+
+        const fetchDepartamentos = async () => {
+            try {
+                const response = await departamentosService.getAll();
+                setListDepartamentos(response);
+            } catch (error) {
+                console.error("Error fetching departamentos:", error);
+            }
+        };
+
+        fetchDepartamentos();
+    }, []);
+
 
     useEffect(() => {
         if (user) {
             setSelectedRole(user.role || "");
             setName(user.name || "");
             setLogin(user.user || "");
-            setDepartamentos(user.departamentos || "");
+            setDepartamentos(
+                typeof user.departamentos === "string"
+                    ? user.departamentos
+                    : Array.isArray(user.departamentos)
+                        ? (typeof user.departamentos[0] === "string"
+                            ? user.departamentos[0]
+                            : user.departamentos[0]?.departamento?.id?.toString() || "")
+                        : ""
+            );
         }
     }, [user]);
 
@@ -49,8 +84,10 @@ export default function EditUserModal({ isOpen, onClose, user }: { isOpen: boole
             };
 
             await usersService.updateUser(user.id, updatedUser);
+            await usersService.addToDepartment(user.id, departamentos, funcao);
             
             toast.success('Usuário atualizado com sucesso!');
+            fetchUsers();
             onClose();
 
         } catch (error) {
@@ -89,11 +126,27 @@ export default function EditUserModal({ isOpen, onClose, user }: { isOpen: boole
                     </div>
                     <div className="mt-4">
                         <label htmlFor="departamentos">Departamento:</label>
-                        <Input
+                        <Select
+                            value={departamentos}
+                            onValueChange={setDepartamentos}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecione um departamento" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-200">
+                                {listDepartamentos.map((departamento) => (
+                                    <SelectItem key={departamento.id} value={departamento.id?.toString() ?? ""}>
+                                        {departamento.name.toUpperCase()}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        {/* <Input
                             type="text"
                             id="departamentos"
                             value={departamentos}
-                            onChange={(e) => setDepartamentos(e.target.value)} />
+                            onChange={(e) => setDepartamentos(e.target.value)} /> */}
                     </div>
                     <div className="mt-4">
                         <label htmlFor="role">Nivel de Acesso:</label>
@@ -109,7 +162,22 @@ export default function EditUserModal({ isOpen, onClose, user }: { isOpen: boole
                                 <SelectItem value="GERENTE_DPTO">GERENTE DEPARTAMENTO</SelectItem>
                                 <SelectItem value="USER">USUÁRIO</SelectItem>
                                 <SelectItem value="ALMOX">ALMOXARIFADO</SelectItem>
-                                <SelectItem value="GERENTE_DPTO">GERENTE DEPARTAMENTO</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        
+                    </div>
+                    <div className="mt-4">
+                        <label htmlFor="role">Função:</label>
+                        <Select
+                            value={funcao}
+                            onValueChange={setFuncao}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecione uma função" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-200">
+                                <SelectItem value="GERENTE">GERENTE</SelectItem>
+                                <SelectItem value="FUNCIONARIO">FUNCIONÁRIO</SelectItem>
                             </SelectContent>
                         </Select>
                         <DialogFooter className="mt-4">
@@ -121,6 +189,7 @@ export default function EditUserModal({ isOpen, onClose, user }: { isOpen: boole
                             </Button>
                         </DialogFooter>
                     </div>
+
                 </div>
             </DialogContent>
 

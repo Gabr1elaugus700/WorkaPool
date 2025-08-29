@@ -5,6 +5,7 @@ export const userViewModel = {
     id: user.id,
     name: user.name,
     role: user.role,
+    user: user.user,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   }),

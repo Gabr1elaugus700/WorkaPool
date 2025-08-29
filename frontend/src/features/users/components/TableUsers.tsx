@@ -14,7 +14,8 @@ import { useState } from "react";
 import EditUserModal from "./ModaEdit";
 
 
-export default function TableUsers({ users }: { users: User[] }) {
+
+export default function TableUsers({ users, fetchUsers }: { users: User[]; fetchUsers: () => void }) {
   const [editUser, setEditUser] = useState<User | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -28,22 +29,25 @@ export default function TableUsers({ users }: { users: User[] }) {
       console.error("Error fetching user data:", error);
     }
   };
+  console.log("Users in TableUsers:", users);
 
   return (
-    <div>
+    <div className="border-collapse border border-zinc-500 rounded-lg p-4 w-full">
       <EditUserModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         user={editUser}
+        fetchUsers={fetchUsers}
       />
-      <Table className="border-collapse border border-slate-300">
+      <Table >
         <TableCaption>Lista de Usuários</TableCaption>
         <TableHeader>
           <TableRow>
             {/* <TableHead>ID</TableHead> */}
             <TableHead>Nome</TableHead>
-            <TableHead>Dpto</TableHead>
             <TableHead>Login</TableHead>
+            <TableHead>Acesso</TableHead>
+            <TableHead>Dpto</TableHead>
             <TableHead>Função</TableHead>
             <TableHead>Ações</TableHead>
 
@@ -54,8 +58,12 @@ export default function TableUsers({ users }: { users: User[] }) {
             <TableRow key={user.id}>
               {/* <TableCell>{user.id}</TableCell> */}
               <TableCell>{user.name}</TableCell>
-              <TableCell>{user.departamentos}</TableCell>
-              <TableCell>{user.user}</TableCell>  
+              <TableCell>{user.user}</TableCell>
+              <TableCell>{user.role}</TableCell>
+
+              <TableCell>
+                {user.departamentoNome ?? ""}
+              </TableCell>
               <TableCell>{user.funcao}</TableCell>
               <TableCell>
                 <EditarButton userId={user.id} onEdit={handleEdit} />
@@ -68,6 +76,7 @@ export default function TableUsers({ users }: { users: User[] }) {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         user={editUser}
+        fetchUsers={fetchUsers}
       />
     </div>
   );

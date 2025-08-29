@@ -21,13 +21,14 @@ export const usersService = {
     return response.json();
   },
 
-  addToDepartment: async (userId: string, departmentId: string, funcao: string): Promise<void> => {
-    const response = await fetch(`${getBaseUrl()}/api/departamentos/add/users`, {
+  addToDepartment: async (userId: string, departamentoId: string, funcao: string): Promise<void> => {
+    console.log("Adding user to department: Service", { userId, departamentoId, funcao });
+    const response = await fetch(`${getBaseUrl()}/api/departamentos/users/add`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ userId, departmentId, funcao }),
+      body: JSON.stringify({ userId, departamentoId, funcao }),
     });
     if (!response.ok) {
       throw new Error("Failed to add user to department");
