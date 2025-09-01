@@ -237,37 +237,57 @@ model OrdemServico {
 }
 
 model Vistoria {
-  id                String   @id @default(uuid())
-  data_vistoria     DateTime @default(now())
+  id                String              @id @default(uuid())
+  data_vistoria     DateTime            @default(now())
   departamento_id   String
-  vistoria_dpto     Departamento @relation(fields: [departamento_id], references: [id])
+  vistoria_dpto     Departamento        @relation(fields: [departamento_id], references: [id])
   responsavel_id    String
-  responsavel       User   @relation(fields: [responsavel_id], references: [id])
+  responsavel       User                @relation(fields: [responsavel_id], references: [id])
   checklistVistoria ChecklistVistoria[]
 }
 
+model ChecklistItem {
+  id                String                @id @default(uuid())
+  descricao         String
+  modelos           ChecklistModeloItem[]
+  ChecklistVistoria ChecklistVistoria[]
+}
+
 model ChecklistModelo {
-  id                 String   @id @default(uuid())
-  descricao          String
-  createdAt          DateTime @default(now())
-  departamento_id    String
-  departamento       Departamento @relation(fields: [departamento_id], references: [id])
-  checklistVistoria  ChecklistVistoria[]
+  id              String                @id @default(uuid())
+  nome            String
+  createdAt       DateTime              @default(now())
+  departamento_id String
+  departamento    Departamento          @relation(fields: [departamento_id], references: [id])
+  itens           ChecklistModeloItem[]
+  vistorias       ChecklistVistoria[]
+}
+
+model ChecklistModeloItem {
+  id                String @id @default(uuid())
+  checklistModeloId String
+  checklistItemId   String
+
+  checklistModelo ChecklistModelo @relation(fields: [checklistModeloId], references: [id])
+  checklistItem   ChecklistItem   @relation(fields: [checklistItemId], references: [id])
+
+  @@unique([checklistModeloId, checklistItemId])
 }
 
 model ChecklistVistoria {
-  id              String  @id @default(uuid())
-  vistoria_id     String
-  checklist_id    String
-  ordemServico_id String?
-  checked         Boolean @default(false)
-  observacao      String?
+  id                String  @id @default(uuid())
+  vistoria_id       String
+  checklistModeloId String
+  checklistItemId   String
+  checked           Boolean @default(false)
+  observacao        String?
 
   vistoria        Vistoria        @relation(fields: [vistoria_id], references: [id])
-  checklistModelo ChecklistModelo @relation(fields: [checklist_id], references: [id])
-  ordemServico    OrdemServico?   @relation(fields: [ordemServico_id], references: [id])
+  checklistModelo ChecklistModelo @relation(fields: [checklistModeloId], references: [id])
+  checklistItem   ChecklistItem   @relation(fields: [checklistItemId], references: [id])
+  OrdemServico    OrdemServico?   @relation(fields: [ordemServicoId], references: [id])
+  ordemServicoId  String?
 }
-
 
 model Departamento {
   id         String   @id @default(uuid())
