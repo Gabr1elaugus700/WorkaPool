@@ -29,6 +29,7 @@ import parametrosGlobaisFretes from './routes/parametrosFretesRoutes';
 import fretesRoutes from './routes/fretesRoutes';
 
 import ordemServico from './features/os/routes/osRoutes';
+import itemChecklist from './features/os/routes/itemChecklistRoutes';
 import departamentos from './features/departamentos/routes/departamentosRoutes';
 
 import userRoutes from './features/users/routes/userRoutes';
@@ -110,8 +111,11 @@ app.use('/api/fretes', fretesRoutes)
 
 //Rotas de Ordem de Servico
 app.use('/api/os', ordemServico);
+app.use('/api/item-checklist', itemChecklist);
+
 app.use('/api/departamentos', departamentos);
 app.use('/api/users', userRoutes);
+
 
 // Metas
 app.use('/api/metas', metasRoutes)
