@@ -232,31 +232,42 @@ model OrdemServico {
   id_departamento String?
   departamento_os Departamento? @relation(fields: [id_departamento], references: [id])
 
-  id_vistoria String?
+  id_vistoria       String?
+  ChecklistVistoria ChecklistVistoria[]
 }
 
 model Vistoria {
-  id            String   @id @default(uuid())
-  data_vistoria DateTime @default(now())
-
-  // Dpto Realizado Vistoria
-  departamento_id String
-  vistoria_dpto   Departamento @relation(fields: [departamento_id], references: [name])
-
-  // Vincular nome do Usuário
-  responsavel_name String
-  responsavel      User   @relation(fields: [responsavel_name], references: [user])
+  id                String   @id @default(uuid())
+  data_vistoria     DateTime @default(now())
+  departamento_id   String
+  vistoria_dpto     Departamento @relation(fields: [departamento_id], references: [id])
+  responsavel_id    String
+  responsavel       User   @relation(fields: [responsavel_id], references: [id])
+  checklistVistoria ChecklistVistoria[]
 }
 
 model ChecklistModelo {
-  id        String   @id @default(uuid())
-  descricao String
-  createdAt DateTime @default(now())
-
-  // Relacionamento com DPTO 
-  departamento_id String
-  departamento    Departamento @relation(fields: [departamento_id], references: [id])
+  id                 String   @id @default(uuid())
+  descricao          String
+  createdAt          DateTime @default(now())
+  departamento_id    String
+  departamento       Departamento @relation(fields: [departamento_id], references: [id])
+  checklistVistoria  ChecklistVistoria[]
 }
+
+model ChecklistVistoria {
+  id              String  @id @default(uuid())
+  vistoria_id     String
+  checklist_id    String
+  ordemServico_id String?
+  checked         Boolean @default(false)
+  observacao      String?
+
+  vistoria        Vistoria        @relation(fields: [vistoria_id], references: [id])
+  checklistModelo ChecklistModelo @relation(fields: [checklist_id], references: [id])
+  ordemServico    OrdemServico?   @relation(fields: [ordemServico_id], references: [id])
+}
+
 
 model Departamento {
   id         String   @id @default(uuid())
