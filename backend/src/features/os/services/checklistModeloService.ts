@@ -1,11 +1,16 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { checklistModeloRepository } from "../repositories/checklistModeloRepository";
+import { connect } from "http2";
 
 const prisma = new PrismaClient();
 
 export const checklistModeloService = {
-    create: async (data: Prisma.ChecklistModeloCreateInput) => {
-        return await checklistModeloRepository.create(data);
+    create: async (data: { nome: string; departamento_id: string; itens: string[] }) => {
+        return await checklistModeloRepository.create({
+            nome: data.nome,
+            departamento_id: data.departamento_id,
+            itens: data.itens,
+        });
     },
 
     findAll: async () => {
