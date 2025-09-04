@@ -1,6 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { checklistModeloRepository } from "../repositories/checklistModeloRepository";
-import { connect } from "http2";
 
 const prisma = new PrismaClient();
 

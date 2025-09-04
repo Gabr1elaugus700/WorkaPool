@@ -33,6 +33,7 @@ import itemChecklist from './features/os/routes/itemChecklistRoutes';
 import departamentos from './features/departamentos/routes/departamentosRoutes';
 import checklistModelo from './features/os/routes/checklistModeloRoutes';
 import vistoriaRoutes from './features/os/routes/vistoriaRoutes'
+import checklistVistoria from './features/os/routes/chacklilstVistoriaRoutes'
 
 import userRoutes from './features/users/routes/userRoutes';
 
@@ -116,13 +117,15 @@ app.use('/api/os', ordemServico);
 app.use('/api/item-checklist', itemChecklist);
 app.use('/api/checklist-modelo', checklistModelo);
 app.use('/api/vistoria', vistoriaRoutes);
+app.use('/api/checklist-vistoria', checklistVistoria);
 
 app.use('/api/departamentos', departamentos);
 app.use('/api/users', userRoutes);
 
 
 // Metas
-app.use('/api/metas', metasRoutes)
+app.use('/api/metas', metasRoutes)  
+
 
 
 // Rotas Power BI
