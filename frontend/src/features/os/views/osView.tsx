@@ -6,6 +6,8 @@ import { useAuth } from "@/auth/AuthContext";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { OsCard } from "../components/osCard";
 import CriarChecklist from "../components/criarChecklist";
+import Vistoria from "../components/vistoria";
+import CriarItensChecklist from "../components/criarItensChecklist";
 
 export const OsListView = () => {
   const [ordens, setOrdens] = useState<OsViewModel[]>([]);
@@ -44,7 +46,11 @@ export const OsListView = () => {
               {error}
             </div>
           )}
-          <CriarChecklist />
+          <div className="grid grid-cols-4 gap-4 bg-emerald-300">
+            <CriarItensChecklist />
+            <Vistoria />
+            <CriarChecklist />
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
           {ordens.length > 0 ? (

@@ -10,3 +10,4 @@ export interface OrdemServico {
   id_vistoria?: string | null;
   id_departamento?: string | null;
 }
+
