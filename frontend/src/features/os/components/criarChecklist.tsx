@@ -1,11 +1,13 @@
-import { Plus } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 
-
-export default function CriarChecklist() {
+export default function Vistoria() {
+  
+  const navigate = useNavigate();
   const handleClick = () => {
-    
+    navigate("/os/vistorias");
   };
 
   return (
@@ -13,7 +15,6 @@ export default function CriarChecklist() {
       variant="outline" 
       onClick={handleClick}
     >
-      <Plus className="h-4 w-4 text-black-500" /> Criar Checklist
     </Button>
   );
 }

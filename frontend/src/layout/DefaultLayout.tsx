@@ -39,7 +39,7 @@ export default function DefaultLayout({ children }: Props) {
 
           {/* Links */}
           <div className="flex gap-4">
-            <ButtonLink to="/">Início</ButtonLink>
+            {/* <ButtonLink to="/">Início</ButtonLink>
 
             <ButtonLink
               to="/cargas"
@@ -52,16 +52,22 @@ export default function DefaultLayout({ children }: Props) {
               allowedRoles={["ADMIN"]}
             >
               Usuários
-            </ButtonLink>
+            </ButtonLink> */}
 
-            <ButtonLink
+            {/* <ButtonLink
               to="/os"
               allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
             >
               Ordens de Serviço
+            </ButtonLink> */}
+            <ButtonLink
+              to="/vistoria"
+              allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
+            >
+              Vistorias
             </ButtonLink>
 
-            <ButtonLink
+            {/* <ButtonLink
               to="/fretes"
               allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
             >
@@ -87,7 +93,7 @@ export default function DefaultLayout({ children }: Props) {
               allowedRoles={["ADMIN"]}
             >
               Dashboards
-            </ButtonLink>
+            </ButtonLink> */}
 
             {/* <ButtonLink
               to="/dashboardTest"
