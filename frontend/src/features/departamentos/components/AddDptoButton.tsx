@@ -21,7 +21,7 @@ export default function AddDptoButton() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await departamentosService.create({
+            await departamentosService.create({ 
                 name,
                 recebe_os
             });

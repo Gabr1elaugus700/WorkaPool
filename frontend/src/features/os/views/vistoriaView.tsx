@@ -1,13 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/auth/AuthContext";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { Button } from "@/components/ui/button";
+import VistoriasList from "../components/obtemVistorias";
 
 export const OsListView = () => {
   // const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-   // Carregar dados de vistorias
+    // Carregar dados de vistorias
   }, []);
 
   const { loading } = useAuth();
@@ -25,16 +26,16 @@ export const OsListView = () => {
       <div>
         <div className="mb-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="font-semibold text-lg mb-1 text-center sm:text-left">Vistorias</h2>
-            <div className="flex gap-2 justify-center bg-slate-500 p-2 rounded">
-              <Button variant="default" onClick={() => {/* Navegar para criar vistoria */}}>
+            <h2 className="font-semibold text-lg mb-1 text-center sm:text-left">Ações</h2>
+            <div className="flex gap-2 justify-center p-2 rounded">
+              <Button variant="mobile" onClick={() => {/* Navegar para criar vistoria */ }}>
                 Agendar
               </Button>
-              <Button variant="default" onClick={() => {/* Navegar para criar vistoria */}}>
-                Registrar 
+              <Button variant="mobile" onClick={() => {/* Navegar para criar vistoria */ }}>
+                Registrar
               </Button>
-              <Button variant="default" onClick={() => {/* Navegar para criar vistoria */}}>
-                Criar 
+              <Button variant="mobile" onClick={() => {/* Navegar para criar vistoria */ }}>
+                Criar
               </Button>
             </div>
             {/* {error && (
@@ -42,10 +43,10 @@ export const OsListView = () => {
                 {error}
               </div>
             )} */}
+            <VistoriasList />
           </div>
-          
         </div>
-        
+
       </div>
     </DefaultLayout>
   );
