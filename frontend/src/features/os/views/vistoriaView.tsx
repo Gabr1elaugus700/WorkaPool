@@ -3,6 +3,7 @@ import { useAuth } from "@/auth/AuthContext";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { Button } from "@/components/ui/button";
 import VistoriasList from "../components/obtemVistorias";
+import ButtonRegistrarVistoria from "../components/botaoRegistrarVistoria";
 
 export const OsListView = () => {
   // const [error, setError] = useState<string | null>(null);
@@ -31,9 +32,7 @@ export const OsListView = () => {
               <Button variant="mobile" onClick={() => {/* Navegar para criar vistoria */ }}>
                 Agendar
               </Button>
-              <Button variant="mobile" onClick={() => {/* Navegar para criar vistoria */ }}>
-                Registrar
-              </Button>
+              <ButtonRegistrarVistoria descricao="Registrar"/>
               <Button variant="mobile" onClick={() => {/* Navegar para criar vistoria */ }}>
                 Criar
               </Button>

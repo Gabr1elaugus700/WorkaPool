@@ -20,6 +20,10 @@ export const vistoriaService = {
         return await vistoriaRepository.findById(id);
     },
 
+    findByDepartamentoId: async (departamento_id: string) => {
+        return await vistoriaRepository.findByDepartamentoId(departamento_id);
+    },
+
     update: async (id: string, data: Prisma.VistoriaUpdateInput) => {
         return await vistoriaRepository.update(id, data);
     },

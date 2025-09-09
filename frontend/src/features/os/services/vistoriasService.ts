@@ -24,4 +24,15 @@ export const vistoriasService = {
     const data = await response.json();
     return data;
   },
+
+  getVistoriasByDepartamentoId: async (departamento_id: string): Promise<Vistoria[]> => {
+    const response = await fetch(`${getBaseUrl()}/api/vistoria/departamento/${departamento_id}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+    const data = await response.json();
+    return data;
+  }
 };

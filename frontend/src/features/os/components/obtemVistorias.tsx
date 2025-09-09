@@ -5,9 +5,11 @@ import { Departamento } from "@/features/departamentos/models/departamentosModel
 // import { CalendarDays } from 'lucide-react';
 import { clsx } from "clsx";
 import { Plus } from "lucide-react";
+import VistoriasDepartamentoModal from "./modalVistoriasDepartamento";
 
 export default function DepartamentosList() {
     const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
+    const [modalDepartamentoId, setModalDepartamentoId] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchDepartamentos = async () => {
@@ -34,7 +36,9 @@ export default function DepartamentosList() {
                             )}
                         >
                             <div className="flex items-center justify-start">
-                                <button>
+                                <button
+                                    onClick={() => setModalDepartamentoId(departamento.id?.toString() ?? "")}
+                                >
                                     <Plus className="h-4 w-4 text-primary" />
                                 </button>
                                 <h2 className="font-semibold text-lg ml-2">Departamento: {departamento.name}</h2>
@@ -43,6 +47,12 @@ export default function DepartamentosList() {
                     );
                 })}
             </section>
+            {modalDepartamentoId && (
+                <VistoriasDepartamentoModal
+                    departamentoId={modalDepartamentoId}
+                    onClose={() => setModalDepartamentoId(null)}
+                />
+            )}
 
 
         </div>

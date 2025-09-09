@@ -8,6 +8,7 @@ const router = Router();
 router.post("/", validate(CreateVistoriaSchema), vistoriaController.create);
 router.get("/", vistoriaController.findAll);
 router.get("/:id", vistoriaController.findById);
+router.get("/departamento/:departamento_id", vistoriaController.findByDepartamentoId);
 router.put("/:id", validate(updateVistoriaSchema), vistoriaController.update);
 router.delete("/:id", vistoriaController.delete);
 

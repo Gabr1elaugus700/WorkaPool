@@ -44,6 +44,22 @@ export const vistoriaRepository = {
         });
     },
 
+    findByDepartamentoId: async (departamento_id: string) => {
+        return await prisma.vistoria.findMany({
+            where: { departamento_id },
+            include: {
+                vistoria_dpto: true,
+                responsavel: {
+                    select: {
+                        id: true,
+                        name: true,
+                    }
+                },
+                checklistVistoria: true
+            }
+        });
+    },
+
     update: async (id: string, data: Prisma.VistoriaUpdateInput) => {
         return await prisma.vistoria.update({
             where: { id },

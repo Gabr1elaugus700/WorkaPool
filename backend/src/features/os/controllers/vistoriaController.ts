@@ -31,6 +31,16 @@ export const vistoriaController = {
     }
   },
 
+  findByDepartamentoId: async (req: Request, res: Response) => {
+    try {
+      const { departamento_id } = req.params;
+      const ordens = await vistoriaService.findByDepartamentoId(departamento_id);
+      return res.json(ordens);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  },
+
   update: async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
