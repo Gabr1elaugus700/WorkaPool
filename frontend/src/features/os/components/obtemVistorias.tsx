@@ -1,57 +1,47 @@
 import { useEffect, useState } from "react";
-import { vistoriasService } from "../services/vistoriasService";
+import { departamentosService } from '@/features/departamentos/services/departamentosService';
 import { Card } from "@/components/ui/card";
-import { Vistoria } from "../models/vistoriasModel";
-import { CalendarDays } from 'lucide-react';
+import { Departamento } from "@/features/departamentos/models/departamentosModel";
+// import { CalendarDays } from 'lucide-react';
 import { clsx } from "clsx";
+import { Plus } from "lucide-react";
 
-export default function VistoriasList() {
-    const [vistorias, setVistorias] = useState<Vistoria[]>([]);
+export default function DepartamentosList() {
+    const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
 
     useEffect(() => {
-        const fetchVistorias = async () => {
-            const vistorias = await vistoriasService.getAll();
-            setVistorias(vistorias);
+        const fetchDepartamentos = async () => {
+            const departamentos = await departamentosService.getAll();
+            setDepartamentos(departamentos);
         };
-        fetchVistorias();
+        fetchDepartamentos();
     }, []);
 
     return (
         <div className="p-2">
-            <h1 className="font-semibold text-lg mb-1 text-center sm:text-left">Vistorias Por Departamentos:</h1>
-            <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <h1 className="font-semibold text-lg mb-1 text-center sm:text-left">Departamentos:</h1>
+            <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                {departamentos.map((departamento: Departamento) => {
+                    // Cor padrão para todos os departamentos
+                    const bgColor = "bg-primary/20 border-primary/50 border-2"; // azul
 
-
-                {vistorias.map((vistoria: Vistoria) => {
-                    const diasRestantes = Math.ceil(
-                        (new Date(vistoria.data_vistoria).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-                    );
-                    let bgColor = "bg-emerald-100 border-emerald-300 border-2"; // verde
-                    if (diasRestantes <= 10) {
-                        bgColor = "bg-red-200 border-red-400 border-2"; // vermelho
-                    } else if (diasRestantes <= 20) {
-                        bgColor = "bg-yellow-200 border-yellow-400 border-2"; // amarelo
-                        }
-                        return (
+                    return (
                         <Card
-                            key={vistoria.id}
+                            key={departamento.id}
                             className={clsx(
-                                "p-4 mb-4 w-full border rounded-lg shadow-md cursor-move transition-colors text-sm space-y-1",
+                                "p-1 w-full border rounded-sm shadow-md transition-colors text-sm",
                                 bgColor
                             )}
                         >
-                            <div className="mr-3 flex-shrink-0 flex items-center justify-center bg-primary/90 rounded-full w-10 h-10">
-                                <CalendarDays className="text-white" />
-                            </div>
-                            <div>
-                                <h2 className="font-semibold text-lg">Departamento: {vistoria.vistoria_dpto?.name}</h2>
-                                <p>Responsável: {vistoria.responsavel?.name}</p>
-                                <p>Próxima Vistoria: {new Date(vistoria.data_vistoria).toLocaleDateString()}</p>
+                            <div className="flex items-center justify-start">
+                                <button>
+                                    <Plus className="h-4 w-4 text-primary" />
+                                </button>
+                                <h2 className="font-semibold text-lg ml-2">Departamento: {departamento.name}</h2>
                             </div>
                         </Card>
                     );
                 })}
-
             </section>
 
 
