@@ -8,12 +8,14 @@ type JwtPayload = {
   user?: string;
   name?: string;
   codRep: number;
+  departamentos?: { departamento: { id: string; name: string } }[];
 };
 
 // Tudo que o contexto expõe
 type AuthContextType = {
   token: string | null;
   user: JwtPayload | null;
+  
   login: (token: string) => void;
   logout: () => void;
   isAuthenticated: boolean;

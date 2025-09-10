@@ -40,6 +40,8 @@ export const userService = {
       name: dbUser.name,
       codRep: dbUser.codRep,
       mustChangePassword: dbUser.mustChangePassword,
+      departamentos: await userRepository.findUserDepartamentos(dbUser.id),
+      user: dbUser.user
     };
 
     const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: "1h" });

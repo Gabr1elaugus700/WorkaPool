@@ -26,5 +26,14 @@ export const departamentosService = {
       body: JSON.stringify(data),
     });
     return response.json();
+  },
+  usersInDepartamento: async (departamentoId: string) => {
+    const response = await fetch(`${getBaseUrl()}/api/departamentos/${departamentoId}/users`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.json();
   }
 };
