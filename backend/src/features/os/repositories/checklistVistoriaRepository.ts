@@ -3,49 +3,52 @@ import { PrismaClient, Prisma } from "@prisma/client"
 const prisma = new PrismaClient();
 
 
-export const vistoriaRepository = {
-    create: async (data: { departamento_id: string; data_vistoria: Date; responsavel_id: string; }) => {
-        return await prisma.vistoria.create({
+export const checklistVistoriaRepository = {
+    create: async (data: { checklistModeloId: string; vistoria_id: string; checklistItemId: string; checked: boolean; observacao?: string }) => {
+        return await prisma.checklistVistoria.create({
             data: {
-                departamento_id: data.departamento_id,
-                responsavel_id: data.responsavel_id,
+                checklistModeloId: data.checklistModeloId,
+                vistoria_id: data.vistoria_id,
+                checklistItemId: data.checklistItemId,
+                checked: data.checked,
+                observacao: data.observacao,
             }
         });
     },
 
     findAll: async () => {
-        return await prisma.vistoria.findMany({
+        return await prisma.checklistVistoria.findMany({
             include: {
-                vistoria_dpto: true,
-                responsavel: {
+                checklistModelo: true,
+                checklistItem: {
                     select: {
                         id: true,
-                        name: true,
+                        descricao: true,
                     }
                 },
-                checklistVistoria: true
+                OrdemServico: true
             }
         });
     },
 
     findById: async (id: string) => {
-        return await prisma.vistoria.findUnique({
+        return await prisma.checklistVistoria.findUnique({
             where: { id },
             include: {
-                vistoria_dpto: true,
-                responsavel: {
+                checklistModelo: true,
+                checklistItem: {
                     select: {
                         id: true,
-                        name: true,
+                        descricao: true,
                     }
                 },
-                checklistVistoria: true
+                OrdemServico: true
             }
         });
     },
 
-    update: async (id: string, data: Prisma.VistoriaUpdateInput) => {
-        return await prisma.vistoria.update({
+    update: async (id: string, data: Prisma.ChecklistVistoriaUpdateInput) => {
+        return await prisma.checklistVistoria.update({
             where: { id },
             data,
         });
@@ -53,7 +56,7 @@ export const vistoriaRepository = {
 
 
     delete: async (id: string) => {
-        return await prisma.vistoria.delete({
+        return await prisma.checklistVistoria.delete({
             where: { id },
         });
     },

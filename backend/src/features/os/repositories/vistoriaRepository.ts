@@ -4,11 +4,12 @@ const prisma = new PrismaClient();
 
 
 export const vistoriaRepository = {
-    create: async (data: { departamento_id: string; data_vistoria: Date; responsavel_id: string; }) => {
+    create: async (data: { departamento_id: string; data_vistoria: string; responsavel_id: string; }) => {
         return await prisma.vistoria.create({
             data: {
                 departamento_id: data.departamento_id,
                 responsavel_id: data.responsavel_id,
+                data_vistoria: data.data_vistoria, // string ISO
             }
         });
     },

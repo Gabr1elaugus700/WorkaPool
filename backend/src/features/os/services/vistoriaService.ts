@@ -4,7 +4,7 @@ import { vistoriaRepository } from "../repositories/vistoriaRepository";
 const prisma = new PrismaClient();
 
 export const vistoriaService = {
-    create: async (data: { departamento_id: string; data_vistoria: Date; responsavel_id: string; }) => {
+    create: async (data: { departamento_id: string; data_vistoria: string; responsavel_id: string; }) => {
         return await vistoriaRepository.create({
             departamento_id: data.departamento_id,
             data_vistoria: data.data_vistoria,

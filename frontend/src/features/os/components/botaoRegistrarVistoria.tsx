@@ -8,15 +8,17 @@ import {
 import { useState, useEffect, } from "react";
 import { Button } from "@/components/ui/button";
 import { departamentosService } from '@/features/departamentos/services/departamentosService';
-
 import { Departamento } from '@/features/departamentos/models/departamentosModel';
 import { DepartamentoUsuario } from '@/features/departamentos/models/departamentoUsuarioModel';
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale/pt-BR";
 import { toast } from "sonner";
 import { useAuth } from "@/auth/AuthContext";
+import { vistoriasService } from "../services/vistoriasService";
+import ListChecklists from "./listarChecklists";
 
 interface ButtonRegistrarVistoriaProps {
   departamentoId?: string;
@@ -31,8 +33,8 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
   const [selectUserSetor, setSelectUserSetor] = useState<string>("");
   const [dataVistoria, setDataVistoria] = useState<Date | undefined>(undefined);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedChecklistId, setSelectedChecklistId] = useState<string>("");
 
   const { user } = useAuth();
   // console.log(user)
@@ -46,6 +48,16 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
       departamentosService.getAll().then(setDepartamentos);
     }
   }, [departamentoId, open]);
+
+  // Carregar Checlist Selecionado
+  useEffect(() => {
+    const fetchChecklist = async () => {
+      const response = await vistoriasService.getChecklist();
+      const data = response;
+      return data;
+    };
+    fetchChecklist();
+  }, [setSelectedChecklistId]);
 
 
   // Carregar usuários do departamento do usuário logado apenas uma vez
@@ -73,8 +85,19 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
         setLoading(false);
         return;
       }
-      // Aqui você pode chamar o serviço de criação de vistoria
-      setSuccess(true);
+
+      const response = await vistoriasService.createVistoria(
+        departamentoId || selectedDepartamento,
+        selectUserSetor,
+        dataVistoria.toISOString()
+      );
+
+      const vistoriaId = response.data?.id;
+
+      console.log("Vistoria criada, id:", vistoriaId);
+      // Agora você pode usar o retorno em `response`
+      toast.success("Vistoria criada com sucesso!");
+
       setOpen(false);
       setSelectUserSetor("");
       setDataVistoria(undefined);
@@ -138,12 +161,20 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
               selected={dataVistoria}
               onSelect={setDataVistoria}
               className="border rounded-md"
-              required
+              locale={ptBR}
             />
             {dataVistoria && (
               <div className="text-xs text-gray-500 mt-1">Selecionado: {format(dataVistoria, 'dd/MM/yyyy')}</div>
             )}
           </div>
+          <Label htmlFor="checklistModelo">Checklist:
+            <ListChecklists
+              selectedChecklistId={selectedChecklistId}
+              setSelectedChecklistId={setSelectedChecklistId}
+            />
+          </Label>
+          {/* {selectedChecklistId !== "" && (<div>Checklist selecionado: {selectedChecklistId}</div>
+          )} */}
           {error && <div className="text-red-600 text-sm">{error}</div>}
           <div className="flex justify-end">
             <Button type="submit" disabled={loading}>
@@ -151,7 +182,6 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
             </Button>
           </div>
         </form>
-        {success && <div className="text-green-600 mt-2">Vistoria criada com sucesso!</div>}
       </DialogContent>
     </Dialog>
   );
