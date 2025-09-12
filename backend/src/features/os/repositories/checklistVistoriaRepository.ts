@@ -4,16 +4,19 @@ const prisma = new PrismaClient();
 
 
 export const checklistVistoriaRepository = {
-    create: async (data: { checklistModeloId: string; vistoria_id: string; checklistItemId: string; checked: boolean; observacao?: string }) => {
-        return await prisma.checklistVistoria.create({
-            data: {
-                checklistModeloId: data.checklistModeloId,
+    create: async (data: { vistoria_id: string; checklistModeloId: string; ordemServicoId?: string | null; itens: { checklistItemId: string; checked: boolean; observacao?: string | null }[] }) => {
+        // Cria vários registros ChecklistVistoria de uma vez
+        const created = await prisma.checklistVistoria.createMany({
+            data: data.itens.map(item => ({
                 vistoria_id: data.vistoria_id,
-                checklistItemId: data.checklistItemId,
-                checked: data.checked,
-                observacao: data.observacao,
-            }
+                checklistModeloId: data.checklistModeloId,
+                checklistItemId: item.checklistItemId,
+                checked: item.checked,
+                observacao: item.observacao ?? null,
+                ordemServicoId: data.ordemServicoId ?? null,
+            })),
         });
+        return created;
     },
 
     findAll: async () => {
