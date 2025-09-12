@@ -28,7 +28,7 @@ export default function ListChecklists({ selectedChecklistId, setSelectedCheckli
                 </SelectTrigger>
                 <SelectContent>
                     {checklists.map((checklist) => (
-                        <SelectItem key={checklist.id} value={checklist.id}>
+                        <SelectItem key={checklist.id} value={checklist.id } className="cursor-pointer">
                             {checklist.nome}
                         </SelectItem>
                     ))}

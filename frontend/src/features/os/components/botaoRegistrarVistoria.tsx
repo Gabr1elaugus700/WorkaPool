@@ -1,10 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState, useEffect, } from "react";
 import { Button } from "@/components/ui/button";
 import { departamentosService } from '@/features/departamentos/services/departamentosService';
@@ -12,13 +6,13 @@ import { Departamento } from '@/features/departamentos/models/departamentosModel
 import { DepartamentoUsuario } from '@/features/departamentos/models/departamentoUsuarioModel';
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale/pt-BR";
 import { toast } from "sonner";
 import { useAuth } from "@/auth/AuthContext";
 import { vistoriasService } from "../services/vistoriasService";
 import ListChecklists from "./listarChecklists";
+import CheckboxModeloVistoria from "./checklistSelecionado";
+
 
 interface ButtonRegistrarVistoriaProps {
   departamentoId?: string;
@@ -27,13 +21,18 @@ interface ButtonRegistrarVistoriaProps {
 
 export default function ButtonRegistrarVistoria({ departamentoId, descricao }: ButtonRegistrarVistoriaProps) {
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Busca departamentos e usuários
   const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
   const [users, setUsers] = useState<DepartamentoUsuario[]>([]);
+  // Form state
   const [selectedDepartamento, setSelectedDepartamento] = useState<string>(departamentoId || "");
   const [selectUserSetor, setSelectUserSetor] = useState<string>("");
   const [dataVistoria, setDataVistoria] = useState<Date | undefined>(undefined);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  // Checklist selecionado
   const [selectedChecklistId, setSelectedChecklistId] = useState<string>("");
 
   const { user } = useAuth();
@@ -115,12 +114,22 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
       <DialogTrigger asChild>
         <Button>{descricao || "Registrar Vistoria"}</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl w-full p-4 px-8 rounded-lg">
+      <DialogContent
+        className="max-w-2xl w-full p-4 px-8 rounded-lg sm:rounded-lg"
+        style={{
+          maxHeight: '100dvh',
+          height: '100dvh',
+          width: '100vw',
+          borderRadius: 0,
+          padding: 0,
+          overflow: 'auto',
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Criar nova Vistoria</DialogTitle>
           Seu departamento: {departamentoUsuarioLogadoName}
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+        <form onSubmit={handleSubmit} className="space-y-4 mt-2 px-4 py-2 sm:px-0" style={{ maxHeight: 'calc(100dvh - 80px)', overflowY: 'auto' }}>
           {/* Departamento (se não vier por prop) */}
           {!departamentoId && (
             <div>
@@ -131,7 +140,7 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
                 </SelectTrigger>
                 <SelectContent>
                   {departamentos.map((d) => (
-                    <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                    <SelectItem className="cursor-pointer" key={d.id} value={String(d.id)}>{d.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -146,27 +155,49 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
               </SelectTrigger>
               <SelectContent>
                 {users.map((item) => (
-                  <SelectItem key={item.usuario.id} value={item.usuario.id}>
+                  <SelectItem className="cursor-pointer" key={item.usuario.id} value={item.usuario.id}>
                     {item.usuario.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          {/* Data da Vistoria */}
-          <div>
+            <div>
             <Label htmlFor="data_vistoria">Data da Vistoria</Label>
-            <Calendar
-              mode="single"
-              selected={dataVistoria}
-              onSelect={setDataVistoria}
-              className="border rounded-md"
-              locale={ptBR}
-            />
-            {dataVistoria && (
-              <div className="text-xs text-gray-500 mt-1">Selecionado: {format(dataVistoria, 'dd/MM/yyyy')}</div>
-            )}
-          </div>
+            <div className="relative flex items-center">
+              <input
+              id="data_vistoria"
+              type="date"
+              className="border rounded-md px-2 py-2 w-full mt-1 pr-10"
+              value={dataVistoria ? format(dataVistoria, 'yyyy-MM-dd') : ''}
+              onChange={e => {
+                const val = e.target.value;
+                setDataVistoria(val ? new Date(val) : undefined);
+              }}
+              required
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+              {/* Lucide Calendar Icon */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width={20}
+                height={20}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-calendar"
+              >
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                <line x1="16" x2="16" y1="2" y2="6" />
+                <line x1="8" x2="8" y1="2" y2="6" />
+                <line x1="3" x2="21" y1="10" y2="10" />
+              </svg>
+              </span>
+            </div>
+            </div>
           <Label htmlFor="checklistModelo">Checklist:
             <ListChecklists
               selectedChecklistId={selectedChecklistId}
@@ -176,6 +207,12 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
           {/* {selectedChecklistId !== "" && (<div>Checklist selecionado: {selectedChecklistId}</div>
           )} */}
           {error && <div className="text-red-600 text-sm">{error}</div>}
+          {selectedChecklistId && (
+            <div className="mt-4">
+              <h4 className="font-semibold mb-2">Itens do Checklist</h4>
+              <CheckboxModeloVistoria selectedChecklistId={selectedChecklistId} />
+            </div>
+          )}
           <div className="flex justify-end">
             <Button type="submit" disabled={loading}>
               {loading ? "Salvando..." : "Salvar Vistoria"}
