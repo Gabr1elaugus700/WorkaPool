@@ -60,6 +60,18 @@ export const vistoriasService = {
     return data;
   },
 
+  createVistoriaWithChecklist: async (vistoria_id: string, checklistModeloId: string, itens: { checklistItemId: string; checked: boolean; observacao: string }[], ordemServicoId?: string) => {
+    const response = await fetch(`${getBaseUrl()}/api/checklist-vistoria`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ vistoria_id, checklistModeloId, itens, ordemServicoId }),
+    });
+    const data = await response.json();
+    return data;
+  },
+
   getChecklistByModeloId: async (checklistModeloId: string): Promise<ChecklistModelo> => {
     const response = await fetch(`${getBaseUrl()}/api/checklist-modelo/${checklistModeloId}`, {
       method: "GET",

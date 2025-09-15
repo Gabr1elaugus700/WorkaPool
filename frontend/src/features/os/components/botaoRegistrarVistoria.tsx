@@ -6,7 +6,6 @@ import { Departamento } from '@/features/departamentos/models/departamentosModel
 import { DepartamentoUsuario } from '@/features/departamentos/models/departamentoUsuarioModel';
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { format } from "date-fns";
 import { toast } from "sonner";
 import { useAuth } from "@/auth/AuthContext";
 import { vistoriasService } from "../services/vistoriasService";
@@ -30,7 +29,7 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
   // Form state
   const [selectedDepartamento, setSelectedDepartamento] = useState<string>(departamentoId || "");
   const [selectUserSetor, setSelectUserSetor] = useState<string>("");
-  const [dataVistoria, setDataVistoria] = useState<Date | undefined>(undefined);
+  const [dataVistoria, setDataVistoria] = useState<string>("");
 
   // Checklist selecionado
   const [selectedChecklistId, setSelectedChecklistId] = useState<string>("");
@@ -40,6 +39,7 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
   const departamentoUsuarioLogadoId = user?.departamentos?.[0]?.departamento?.id;
   const departamentoUsuarioLogadoName = user?.departamentos?.[0]?.departamento?.name;
 
+  const [itensSelecionados, setItensChecklist] = useState<{ checklistItemId: string; checked: boolean; observacao: string }[]>([]);
 
   // Carregar departamentos se necessário
   useEffect(() => {
@@ -85,21 +85,42 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
         return;
       }
 
+
+      const dataISO = new Date(dataVistoria + 'T00:00:00').toISOString();
       const response = await vistoriasService.createVistoria(
         departamentoId || selectedDepartamento,
         selectUserSetor,
-        dataVistoria.toISOString()
+        dataISO
       );
 
-      const vistoriaId = response.data?.id;
-
+      // Espera o ID da vistoria criada
+      const vistoriaId = response.id;
       console.log("Vistoria criada, id:", vistoriaId);
+
+      // Verifica se o ID da vistoria foi retornado
+      if (!vistoriaId) {
+        setError("Erro ao criar vistoria: id não retornado.");
+        setLoading(false);
+        return;
+      }
+
+      // Valida se há itens selecionados
+      console.log("Itens selecionados para o checklist:", itensSelecionados);
+      // Criando o vinculo de Checklist com a Vistoria
+      const vistoriaChecklist = await vistoriasService.createVistoriaWithChecklist(
+        vistoriaId,
+        selectedChecklistId,
+        itensSelecionados
+      );
+
+      console.log("Checklist da Vistoria criado:", vistoriaChecklist);
+
       // Agora você pode usar o retorno em `response`
-      toast.success("Vistoria criada com sucesso!");
+      toast.success("Vistoria criada com sucesso!" + (vistoriaId ? `ID: ${vistoriaId}` : ""));
 
       setOpen(false);
       setSelectUserSetor("");
-      setDataVistoria(undefined);
+      setDataVistoria("");
       if (!departamentoId) setSelectedDepartamento("");
     } catch (error) {
       setError("Erro ao criar vistoria." + (error instanceof Error ? error.message : ""));
@@ -117,15 +138,14 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
       <DialogContent
         className="max-w-2xl w-full p-4 px-8 rounded-lg sm:rounded-lg"
         style={{
-          maxHeight: '100dvh',
-          height: '100dvh',
-          width: '100vw',
+          maxHeight: '70dvh',
+          width: '90vw',
           borderRadius: 0,
           padding: 0,
           overflow: 'auto',
         }}
       >
-        <DialogHeader>
+        <DialogHeader className="p-4 border-b">
           <DialogTitle>Criar nova Vistoria</DialogTitle>
           Seu departamento: {departamentoUsuarioLogadoName}
         </DialogHeader>
@@ -162,42 +182,39 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
               </SelectContent>
             </Select>
           </div>
-            <div>
+          <div>
             <Label htmlFor="data_vistoria">Data da Vistoria</Label>
             <div className="relative flex items-center">
               <input
-              id="data_vistoria"
-              type="date"
-              className="border rounded-md px-2 py-2 w-full mt-1 pr-10"
-              value={dataVistoria ? format(dataVistoria, 'yyyy-MM-dd') : ''}
-              onChange={e => {
-                const val = e.target.value;
-                setDataVistoria(val ? new Date(val) : undefined);
-              }}
-              required
+                id="data_vistoria"
+                type="date"
+                className="border rounded-md px-2 py-2 w-full mt-1 pr-10"
+                value={dataVistoria}
+                onChange={e => setDataVistoria(e.target.value)}
+                required
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-              {/* Lucide Calendar Icon */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width={20}
-                height={20}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="lucide lucide-calendar"
-              >
-                <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-                <line x1="16" x2="16" y1="2" y2="6" />
-                <line x1="8" x2="8" y1="2" y2="6" />
-                <line x1="3" x2="21" y1="10" y2="10" />
-              </svg>
+                {/* Lucide Calendar Icon */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={20}
+                  height={20}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-calendar"
+                >
+                  <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                  <line x1="16" x2="16" y1="2" y2="6" />
+                  <line x1="8" x2="8" y1="2" y2="6" />
+                  <line x1="3" x2="21" y1="10" y2="10" />
+                </svg>
               </span>
             </div>
-            </div>
+          </div>
           <Label htmlFor="checklistModelo">Checklist:
             <ListChecklists
               selectedChecklistId={selectedChecklistId}
@@ -210,7 +227,10 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
           {selectedChecklistId && (
             <div className="mt-4">
               <h4 className="font-semibold mb-2">Itens do Checklist</h4>
-              <CheckboxModeloVistoria selectedChecklistId={selectedChecklistId} />
+              <CheckboxModeloVistoria
+                selectedChecklistId={selectedChecklistId}
+                onChangeItens={setItensChecklist}
+              />
             </div>
           )}
           <div className="flex justify-end">

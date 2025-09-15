@@ -7,16 +7,19 @@ import { Label } from "@/components/ui/label"
 
 type Props = {
     selectedChecklistId: string;
-    // setSelectedChecklistId: (id: string) => void;
+    onChangeItens: (itens: { checklistItemId: string; checked: boolean; observacao: string }[]) => void;
 };
 
-export default function CheckboxModeloVistoria({ selectedChecklistId }: Props) {
+export default function CheckboxModeloVistoria({ selectedChecklistId, onChangeItens }: Props) {
     const [checklist, setChecklist] = useState<ChecklistModelo[]>([]);
+   
+    // Agora o estado guarda checklistItemId (id do item real)
+    const [itens, setItens] = useState<{ checklistItemId: string; checked: boolean; observacao: string }[]>([]);
 
     useEffect(() => {
         const fetchChecklists = async () => {
             const response = await vistoriasService.getChecklistByModeloId(selectedChecklistId);
-            const data = response; // Ajuste conforme a estrutura real do retorno
+            const data = response;
             setChecklist([
                 {
                     id: data.id,
@@ -31,6 +34,33 @@ export default function CheckboxModeloVistoria({ selectedChecklistId }: Props) {
         fetchChecklists();
     }, [selectedChecklistId]);
 
+    useEffect(() => {
+        // Quando checklist mudar, reseta os itens
+        setItens(
+            checklist[0]?.itens.map(item => ({
+                checklistItemId: item.checklistItem?.id || item.checklistItemId, // pega o id do item real
+                checked: false,
+                observacao: ""
+            })) || []
+        );
+    }, [checklist]);
+
+    const handleCheck = (checklistItemId: string, checked: boolean) => {
+        setItens(prev =>
+            prev.map(item => item.checklistItemId === checklistItemId ? { ...item, checked } : item)
+        );
+    };
+
+    const handleObs = (checklistItemId: string, observacao: string) => {
+        setItens(prev =>
+            prev.map(item => item.checklistItemId === checklistItemId ? { ...item, observacao } : item)
+        );
+    };
+
+    useEffect(() => {
+        onChangeItens(itens);
+    }, [itens, onChangeItens]);
+
     return (
         <div>
             <div className="flex flex-col gap-6">
@@ -42,8 +72,18 @@ export default function CheckboxModeloVistoria({ selectedChecklistId }: Props) {
                         <div className="flex flex-col gap-2 mt-2">
                             {checklist.itens.map((item) => (
                                 <div key={item.id} className="flex items-center gap-2">
-                                    <Checkbox id={`item-${item.id}`} />
+                                    <Checkbox
+                                        id={`item-${item.id}`}
+                                        checked={itens.find(i => i.checklistItemId === (item.checklistItem?.id || item.checklistItemId))?.checked || false}
+                                        onCheckedChange={checked => handleCheck(item.checklistItem?.id || item.checklistItemId, !!checked)}
+                                    />
                                     <Label htmlFor={`item-${item.id}`}>{item.checklistItem.descricao}</Label>
+                                    <input
+                                        type="text"
+                                        placeholder="Observação"
+                                        value={itens.find(i => i.checklistItemId === (item.checklistItem?.id || item.checklistItemId))?.observacao || ""}
+                                        onChange={e => handleObs(item.checklistItem?.id || item.checklistItemId, e.target.value)}
+                                    />
                                 </div>
                             ))}
                         </div>

@@ -9,7 +9,7 @@ export const vistoriaRepository = {
             data: {
                 departamento_id: data.departamento_id,
                 responsavel_id: data.responsavel_id,
-                data_vistoria: data.data_vistoria, // string ISO
+                data_vistoria: data.data_vistoria, 
             }
         });
     },
