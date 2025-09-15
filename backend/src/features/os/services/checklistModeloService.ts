@@ -4,14 +4,13 @@ import { checklistModeloRepository } from "../repositories/checklistModeloReposi
 const prisma = new PrismaClient();
 
 export const checklistModeloService = {
-    create: async (data: { nome: string; departamento_id: string; itens: string[] }) => {
+    create: async (data: { nome: string; itens: string[]; departamento_id?: string }) => {
         return await checklistModeloRepository.create({
             nome: data.nome,
             departamento_id: data.departamento_id,
             itens: data.itens,
         });
     },
-
     findAll: async () => {
         return await checklistModeloRepository.findAll();
     },

@@ -257,8 +257,8 @@ model ChecklistModelo {
   id              String                @id @default(uuid())
   nome            String
   createdAt       DateTime              @default(now())
-  departamento_id String
-  departamento    Departamento          @relation(fields: [departamento_id], references: [id])
+  departamento_id String?
+  departamento    Departamento?          @relation(fields: [departamento_id], references: [id])
   itens           ChecklistModeloItem[]
   vistorias       ChecklistVistoria[]
 }

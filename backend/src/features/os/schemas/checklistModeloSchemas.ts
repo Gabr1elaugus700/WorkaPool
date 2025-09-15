@@ -3,7 +3,7 @@ import { z } from "zod";
 export const createChecklistModeloSchema = z.object({
   body: z.object({
     nome: z.string().min(3, "Nome do Modelo é Obrigatório!"),
-    departamento_id: z.string().min(3, "Departamento é Obrigatório!"),
+    departamento_id: z.string().min(3, "Departamento é Obrigatório!").optional(),
     itens: z.array(z.string().min(3, "Nome do Item é Obrigatório!")).min(1, "Pelo menos um item é obrigatório!"),
   }),
 });

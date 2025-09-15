@@ -5,7 +5,7 @@ export const checklistModeloController = {
   create: async (req: Request, res: Response) => {
     try {
       const { nome, departamento_id, itens } = req.body;
-      const createdItem = await checklistModeloService.create({ nome, departamento_id, itens });
+      const createdItem = await checklistModeloService.create({ nome, itens, ...(departamento_id && { departamento_id }) });
       return res.status(201).json(createdItem);
     } catch (error: any) {
       return res.status(400).json({ message: error.message });

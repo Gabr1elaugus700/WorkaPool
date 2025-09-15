@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { useAuth } from "@/auth/AuthContext";
 import DefaultLayout from "@/layout/DefaultLayout";
-import { Button } from "@/components/ui/button";
 import VistoriasList from "../components/obtemVistorias";
 import ButtonRegistrarVistoria from "../components/botaoRegistrarVistoria";
+import ButtonCriarChecklist from "../components/botaoCriarChecklist";
 
 export const OsListView = () => {
   // const [error, setError] = useState<string | null>(null);
@@ -25,27 +25,16 @@ export const OsListView = () => {
 
     <DefaultLayout>
       <div>
-        <div className="mb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="font-semibold text-lg mb-1 text-center sm:text-left">Ações</h2>
-            <div className="flex gap-2 justify-center p-2 rounded">
-              <Button variant="mobile" onClick={() => {/* Navegar para criar vistoria */ }}>
-                Agendar
-              </Button>
-              <ButtonRegistrarVistoria descricao="Registrar"/>
-              <Button variant="mobile" onClick={() => {/* Navegar para criar vistoria */ }}>
-                Criar
-              </Button>
-            </div>
-            {/* {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center sm:text-left">
-                {error}
-              </div>
-            )} */}
+        <div className="mb-4 w-full max-w-3xl mx-auto">
+          <h2 className="font-semibold text-lg mb-4 text-center">Ações</h2>
+          <div className="flex flex-row gap-2 justify-center mb-6">
+            <ButtonRegistrarVistoria descricao="Registrar Vistoria"/>
+            <ButtonCriarChecklist descricao="Criar Checklist"/>
+          </div>
+          <div className="w-full">
             <VistoriasList />
           </div>
         </div>
-
       </div>
     </DefaultLayout>
   );

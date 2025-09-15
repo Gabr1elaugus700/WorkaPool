@@ -4,11 +4,13 @@ const prisma = new PrismaClient();
 
 
 export const checklistModeloRepository = {
-    create: async (data: { nome: string; departamento_id: string; itens: string[] }) => {
+    create: async (data: { nome: string; departamento_id?: string; itens: string[] }) => {
         return await prisma.checklistModelo.create({
             data: {
                 nome: data.nome,
-                departamento: { connect: { id: data.departamento_id } },
+                ...(data.departamento_id && {
+                    departamento: { connect: { id: data.departamento_id } }
+                }),
                 itens: {
                     create: data.itens.map(itemId => ({
                         checklistItem: { connect: { id: itemId } }
