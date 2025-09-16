@@ -8,6 +8,7 @@ import { ItemChecklist } from "../models/itemChecklistModel";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { checklistModeloService } from "../services/checklistModeloService";
+import CriarItemChecklist from "./criarItemChecklist";
 
 interface ButtonCriarChecklistProps {
   descricao?: string;
@@ -81,6 +82,12 @@ export default function ButtonCriarChecklist({ descricao }: ButtonCriarChecklist
     .filter(item => selectedItens.includes(item.id))
     .map(item => ({ id: item.id, descricao: item.descricao }));
 
+  const atualizarItens = async () => {
+    const novosItens = await itemChecklistService.getAll();
+    setItens(novosItens);
+  };
+
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -138,7 +145,7 @@ export default function ButtonCriarChecklist({ descricao }: ButtonCriarChecklist
                       </div>
                     ))
                   ) : (
-                    <span className="text-gray-400 text-sm">Nenhum item encontrado</span>
+                    <CriarItemChecklist onItemCreated={atualizarItens} />
                   );
                 })()}
               </div>

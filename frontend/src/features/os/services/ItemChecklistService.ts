@@ -13,13 +13,13 @@ export const itemChecklistService = {
     return data;
   },
 
-  create: async (payload: Omit<ItemChecklist, "descricao">) => {
+  create: async ( descricao: string) => {
     const response = await fetch(`${getBaseUrl()}/api/item-checklist`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ descricao }),
     });
     const data = await response.json();
     return data;
