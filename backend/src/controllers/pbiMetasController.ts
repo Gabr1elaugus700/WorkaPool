@@ -3,7 +3,6 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// 👉 GET: Exportar todas as metas
 export const pbiMetasController = async (req: Request, res: Response): Promise<any> => {
   try {
     const metas = await prisma.metas.findMany();
@@ -17,6 +16,7 @@ export const pbiMetasController = async (req: Request, res: Response): Promise<a
       precoMedio: m.precoMedio,
       totalVendas: m.totalVendas,
       criadoEm: m.createdAt,
+      codGrp: m.cod_grp,
     }));
 
     res.json(resultado);
@@ -26,7 +26,6 @@ export const pbiMetasController = async (req: Request, res: Response): Promise<a
   }
 };
 
-// 👉 POST: Salvar uma única meta simples
 export const salvarMetaSimples = async (req: Request, res: Response): Promise<any> => {
   const { codRep, mesMeta, anoMeta, produto, metaProduto, precoMedio, totalVendas, cod_grp } = req.body;
 

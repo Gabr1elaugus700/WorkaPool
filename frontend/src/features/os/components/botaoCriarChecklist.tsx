@@ -77,11 +77,13 @@ export default function ButtonCriarChecklist({ descricao }: ButtonCriarChecklist
       setLoading(false);
     }
   };
-  // Armazena também a descrição dos itens selecionados
+
+  // Armazena a descrição dos itens selecionados
   const selectedItensWithDescricao = itens
     .filter(item => selectedItens.includes(item.id))
     .map(item => ({ id: item.id, descricao: item.descricao }));
 
+  // Atualiza a lista de itens após criar um novo item
   const atualizarItens = async () => {
     const novosItens = await itemChecklistService.getAll();
     setItens(novosItens);

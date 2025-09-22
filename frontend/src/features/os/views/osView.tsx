@@ -35,34 +35,32 @@ export const OsListView = () => {
   return (
 
     <DefaultLayout>
-      <div>
+      <div className="w-full max-w-4xl mx-auto px-2 sm:px-4">
         <div className="mb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <h2 className="font-semibold text-lg mb-2 text-center sm:text-left">Ordens de Serviço</h2>
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center sm:text-left">
-                {error}
-              </div>
-            )}
-          </div>
-          
+          <h2 className="font-semibold text-lg mb-4 text-center">Ordens de Serviço</h2>
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center">
+              {error}
+            </div>
+          )}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
           {ordens.length > 0 ? (
             ordens.map((os) => (
-              <OsCard
-                key={os.id}
-                id={os.id}
-                descricao={os.descricao}
-                prioridade={os.prioridade}
-                status={os.status}
-                solicitante={os.solicitante}
-                data_criacao={os.data_criacao}
-              />
+              <div key={os.id} className="w-full">
+                <OsCard
+                  id={os.id}
+                  descricao={os.descricao}
+                  prioridade={os.prioridade}
+                  status={os.status}
+                  solicitante={os.solicitante}
+                  data_criacao={os.data_criacao}
+                />
+              </div>
             ))
           ) : (
             <div className="col-span-full text-center text-gray-500 py-8">
-              Nenhuma ordem de serviço encontrada
+              Tudo Livre por aqui! Sem ordens de serviço no momento.
             </div>
           )}
         </div>

@@ -17,7 +17,6 @@ const criarItemChecklistService = async (itemName: string) => {
     } else{
         toast.success('Item de checklist criado com sucesso');
     }
-
     return response;
 
 };
