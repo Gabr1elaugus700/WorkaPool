@@ -13,7 +13,7 @@ export const checklistModeloService = {
     return data;
   },
 
-  create: async ( nome: string, itens: { id: string }[] ) => {
+  create: async ( nome: string, itens: string[] ) => {
     const response = await fetch(`${getBaseUrl()}/api/checklist-modelo`, {
         method: "POST",
         headers: {

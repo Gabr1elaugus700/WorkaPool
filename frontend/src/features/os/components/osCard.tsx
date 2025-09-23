@@ -14,7 +14,7 @@ export const OsCard = ({ descricao, status, prioridade, solicitante, data_criaca
   const getStatusColor = (status: StatusType) => {
     switch (status) {
       case "ABERTA":
-        return "bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100";
+        return "bg-blue-50 text-blue-700 order-blue-300 hover:bg-blue-100";
       case "EM_ANDAMENTO":
         return "bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100";
       case "FINALIZADA":
@@ -51,7 +51,7 @@ export const OsCard = ({ descricao, status, prioridade, solicitante, data_criaca
     )}>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start gap-2">
-          <CardTitle className="text-lg font-semibold text-gray-900 line-clamp-2">
+          <CardTitle className="text-sm font-semibold text-gray-900 line-clamp-2 ">
             {descricao}
           </CardTitle>
           <div className="flex gap-2 flex-shrink-0">

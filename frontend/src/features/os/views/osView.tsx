@@ -5,6 +5,7 @@ import { OsViewModel } from "../types/osType";
 import { useAuth } from "@/auth/AuthContext";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { OsCard } from "../components/osCard";
+// import ReducerExemple from "../components/criarChecklist";
 
 export const OsListView = () => {
   const [ordens, setOrdens] = useState<OsViewModel[]>([]);
@@ -35,7 +36,9 @@ export const OsListView = () => {
   return (
 
     <DefaultLayout>
-      <div className="w-full max-w-4xl mx-auto px-2 sm:px-4">
+      
+      <div className="w-full mx-auto px-2 sm:px-4">
+        {/* <ReducerExemple /> */}
         <div className="mb-4">
           <h2 className="font-semibold text-lg mb-4 text-center">Ordens de Serviço</h2>
           {error && (
@@ -44,7 +47,7 @@ export const OsListView = () => {
             </div>
           )}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  xl:grid-cols-4 gap-4 mb-4">
           {ordens.length > 0 ? (
             ordens.map((os) => (
               <div key={os.id} className="w-full">

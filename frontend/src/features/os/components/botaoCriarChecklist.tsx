@@ -61,7 +61,7 @@ export default function ButtonCriarChecklist({ descricao }: ButtonCriarChecklist
 
       const response = await checklistModeloService.create(
         nomeModelo,
-        selectedItens.map(id => ({ id })),
+        selectedItens,
       );
 
       if (response) {
