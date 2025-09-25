@@ -11,14 +11,14 @@ import { useAuth } from "@/auth/AuthContext";
 import { vistoriasService } from "../services/vistoriasService";
 import ListChecklists from "./listarChecklists";
 import CheckboxModeloVistoria from "./checklistSelecionado";
+import { PlusCircle } from "lucide-react";
 
 
 interface ButtonRegistrarVistoriaProps {
   departamentoId?: string;
-  descricao?: string;
 }
 
-export default function ButtonRegistrarVistoria({ departamentoId, descricao }: ButtonRegistrarVistoriaProps) {
+export default function ButtonRegistrarVistoria({ departamentoId }: ButtonRegistrarVistoriaProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,7 +117,7 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
       console.log("Checklist da Vistoria criado:", vistoriaChecklist);
 
       // Agora você pode usar o retorno em `response`
-      toast.success("Vistoria criada com sucesso!" + (vistoriaId ? `ID: ${vistoriaId}` : ""));
+      toast.success("Vistoria criada com sucesso!");
 
       setOpen(false);
       setSelectUserSetor("");
@@ -134,7 +134,10 @@ export default function ButtonRegistrarVistoria({ departamentoId, descricao }: B
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full">{descricao || "Registrar Vistoria"}</Button>
+        <Button className="flex items-center gap-1 rounded-md bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 hover:dark:bg-primary/30 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none transition-all"> 
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Nova Vistoria 
+        </Button>
       </DialogTrigger>
       <DialogContent
         className="max-w-2xl w-full p-4 px-8 rounded-lg sm:rounded-lg sm:p-8"

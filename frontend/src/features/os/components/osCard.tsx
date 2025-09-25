@@ -1,108 +1,100 @@
-import { Card, CardTitle, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardTitle, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Clock, User, AlertCircle } from "lucide-react";
-import { OsViewModel, StatusType, PrioridadeType } from "../types/osType";
 import clsx from "clsx";
+import { OsViewModel, StatusType, PrioridadeType } from "../types/osType";
 
-export const OsCard = ({ descricao, status, prioridade, solicitante, data_criacao }: OsViewModel) => {
+type StatusInfo = {
+  label: string;
+  classes: string; // bg + text (pill cheio)
+};
 
-  // Debug: log dos valores recebidos
-  console.log('OsCard props:', { prioridade, status });
+const STATUS_STYLES: Record<StatusType, StatusInfo> = {
+  ABERTA: {
+    // no layout de referência o “pendente” é vermelho claro
+    label: "Pendente",
+    classes: "bg-red-100 text-red-800",
+  },
+  EM_ANDAMENTO: {
+    label: "Em andamento",
+    classes: "bg-yellow-200 text-yellow-800",
+  },
+  FINALIZADA: {
+    label: "Concluído",
+    classes: "bg-green-100 text-green-800",
+  },
+  CANCELADA: {
+    label: "Cancelada",
+    classes: "bg-rose-100 text-rose-800",
+  },
+};
 
-  // Cores para Status
-  const getStatusColor = (status: StatusType) => {
-    switch (status) {
-      case "ABERTA":
-        return "bg-blue-50 text-blue-700 order-blue-300 hover:bg-blue-100";
-      case "EM_ANDAMENTO":
-        return "bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100";
-      case "FINALIZADA":
-        return "bg-green-50 text-green-700 border-green-300 hover:bg-green-100";
-      case "CANCELADA":
-        return "bg-red-50 text-red-700 border-red-300 hover:bg-red-100";
-      default:
-        return "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100";
-    }
-  };
+const PRIORIDADE_COLOR: Record<PrioridadeType, string> = {
+  ALTA: "text-red-500",
+  MEDIA: "text-orange-500",
+  BAIXA: "text-green-500",
+};
 
-  // Cores para Prioridade (baseado no texto)
-  const getPrioridadeColor = (prioridade: PrioridadeType) => {
-    switch (prioridade) {
-      case "BAIXA":
-        return "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100";
-      case "MEDIA":
-        return "bg-orange-50 text-orange-700 border-orange-300 hover:bg-orange-100";
-      case "ALTA":
-        return "bg-red-50 text-red-700 border-red-300 hover:bg-red-100";
-      default:
-        return "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100";
-    }
-  };
+export const OsCard = ({
+  descricao,
+  problema,
+  status,
+  prioridade,
+  solicitante,
+  data_criacao,
+}: OsViewModel) => {
+  const statusInfo = STATUS_STYLES[status];
 
   return (
-    <Card className={clsx(
-      "relative overflow-hidden hover:shadow-lg transition-all duration-200 hover:-translate-y-1 cursor-pointer border-l-4",
-      {
-      "border-l-gray-400": prioridade === "BAIXA",
-      "border-l-yellow-500": prioridade === "MEDIA", 
-      "border-l-red-500": prioridade === "ALTA"
-      }
-    )}>
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start gap-2">
-          <CardTitle className="text-sm font-semibold text-gray-900 line-clamp-2 ">
-            {descricao}
+    <Card
+      className={clsx(
+        // container do card = vidro claro, bordas arredondadas, sombra suave + hover
+        "bg-white/50 dark:bg-black/20 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-300",
+        "border-x-2 border-y-2 border-gray-200 dark:border-gray-700"
+      )}
+    >
+      <CardHeader className="p-0">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-lg font-bold text-gray-900 dark:text-gray-100 leading-snug">
+            {problema}
           </CardTitle>
-          <div className="flex gap-2 flex-shrink-0">
-            <Badge 
-              className={`text-xs font-semibold px-3 py-1 ${getPrioridadeColor(prioridade)}`}
-              variant="outline"
-            >
-              {prioridade === "ALTA" && <AlertCircle className="w-3 h-3 mr-1" />}
-              {prioridade === "ALTA" && "ALTA"}
-              {prioridade === "MEDIA" && "MÉDIA"}
-              {prioridade === "BAIXA" && "BAIXA"}
-            </Badge>
-          </div>
+
+          {/* Data no canto direito, discreta */}
+          <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-3">
+            {data_criacao}
+          </span>
         </div>
       </CardHeader>
-      
-      <CardContent className="pt-0">
-        <Separator className="mb-3" />
-        
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Badge 
-              className={`text-sm font-semibold px-3 py-1 ${getStatusColor(status)}`}
-              variant="outline"
-            >
-              <div className={`w-2 h-2 rounded-full mr-2 ${
-                status === "ABERTA" ? "bg-blue-600" :
-                status === "EM_ANDAMENTO" ? "bg-yellow-500" :
-                status === "FINALIZADA" ? "bg-green-600" :
-                "bg-red-600"
-              }`} />
-              {status === "ABERTA" && "ABERTA"}
-              {status === "EM_ANDAMENTO" && "EM ANDAMENTO"}
-              {status === "FINALIZADA" && "FINALIZADA"}
-              {status === "CANCELADA" && "CANCELADA"}
-            </Badge>
-          </div>
-          
-          <div className="flex items-center text-sm text-gray-600 gap-4">
-            <div className="flex items-center gap-1">
-              <User className="w-4 h-4" />
-              <span>{solicitante}</span>
-            </div>
-            
-            {data_criacao && (
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                <span>{new Date(data_criacao).toLocaleDateString('pt-BR')}</span>
-              </div>
+
+      <CardContent className="p-0 mt-2">
+        <div className="mt-1">
+          <p className="text-sm text-gray- dark:text-gray-300 mb-4">
+            {solicitante}
+          </p>
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+            {descricao}
+          </p>
+        </div>
+        <div className="flex items-center space-x-4">
+
+          <span className={clsx("flex items-center text-sm font-medium", PRIORIDADE_COLOR[prioridade])}>
+            Prioridade:
+            <span className={clsx("ml-1 font-semibold", PRIORIDADE_COLOR[prioridade])}>
+              {prioridade === "ALTA" ? "Alta" : prioridade === "MEDIA" ? "Média" : "Baixa"}
+            </span>
+          </span>
+
+          {/* Pill de status preenchido */}
+          <Badge
+            variant="secondary"
+            className={clsx(
+              "status-badge rounded-full px-2.5 py-0.5 text-xs font-medium",
+              statusInfo.classes,
+              // remove estilos default do shadcn p/ manter o “pill cheio”
+              "border-0"
             )}
-          </div>
+          >
+            {statusInfo.label}
+          </Badge>
         </div>
       </CardContent>
     </Card>

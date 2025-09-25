@@ -41,7 +41,7 @@ export default function VistoriasDepartamentoModal({ departamentoId, onClose }: 
                                 <ul>
                                     {[...vistorias]
                                         .sort((a, b) => new Date(b.data_vistoria).getTime() - new Date(a.data_vistoria).getTime())
-                                        .slice(0, 5)
+                                        .slice(0, 3)
                                         .map((v) => (
                                             <li key={v.id}>
                                                 Responsável: {v.responsavel?.name} | Data: {new Date(v.data_vistoria).toLocaleDateString()}
@@ -52,7 +52,7 @@ export default function VistoriasDepartamentoModal({ departamentoId, onClose }: 
                             </>
                         )}
                         <div className="mt-4">
-                            <ButtonRegistrarVistoria departamentoId={departamentoId} descricao="Criar nova Vistoria" />
+                            <ButtonRegistrarVistoria departamentoId={departamentoId}/>
                         </div>
                     </DialogDescription>
                 </DialogHeader>

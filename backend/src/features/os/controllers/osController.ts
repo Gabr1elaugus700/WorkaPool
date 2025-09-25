@@ -14,6 +14,7 @@ export const osController = {
     try {
       const ordem = await osService.create({ 
         descricao: req.body.descricao,
+        problema: req.body.problema || "",
         status: req.body.status ? StatusOrdemServico[req.body.status as keyof typeof StatusOrdemServico] : StatusOrdemServico.ABERTA,
         prioridade: req.body.prioridade ? Prioridade[req.body.prioridade as keyof typeof Prioridade] : Prioridade.BAIXA,
         email_solicitante: req.body.email_solicitante,

@@ -14,7 +14,7 @@ export default function ListChecklists({ selectedChecklistId, setSelectedCheckli
     useEffect(() => {
         const fetchChecklists = async () => {
             const response = await vistoriasService.getChecklist();
-            const data = response; // Ajuste conforme a estrutura real do retorno
+            const data = response; 
             setChecklists(data);
         };
         fetchChecklists();

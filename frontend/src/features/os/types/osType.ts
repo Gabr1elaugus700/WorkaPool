@@ -4,6 +4,7 @@ export type PrioridadeType = "BAIXA" | "MEDIA" | "ALTA";
 export interface OsViewModel {
   id: string;
   descricao: string;
+  problema: string;
   status: StatusType;
   prioridade: PrioridadeType;
   solicitante: string;

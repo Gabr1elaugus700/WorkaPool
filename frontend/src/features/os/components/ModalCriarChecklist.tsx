@@ -10,12 +10,20 @@ import { toast } from "sonner";
 import { checklistModeloService } from "../services/checklistModeloService";
 import CriarItemChecklist from "./criarItemChecklist";
 
-interface ButtonCriarChecklistProps {
+interface ModalCriarChecklistProps {
   descricao?: string;
+  open?: boolean;
+  setOpen?: (open: boolean) => void;
 }
 
-export default function ButtonCriarChecklist({ descricao }: ButtonCriarChecklistProps) {
-  const [open, setOpen] = useState(false);
+export default function ModalCriarChecklist({ 
+  descricao, 
+  open, 
+  setOpen 
+}: ModalCriarChecklistProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = open !== undefined ? open : internalOpen;
+  const handleOpenChange = setOpen || setInternalOpen;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [itens, setItens] = useState<ItemChecklist[]>([]);
@@ -66,7 +74,7 @@ export default function ButtonCriarChecklist({ descricao }: ButtonCriarChecklist
 
       if (response) {
         toast.success("Checklist criado com sucesso!");
-        setOpen(false);
+        if (setOpen) setOpen(false);
         setNomeModelo("");
         setSelectedItens([]);
       }
@@ -91,10 +99,13 @@ export default function ButtonCriarChecklist({ descricao }: ButtonCriarChecklist
 
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="w-full">{descricao || "Criar Checklist"}</Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      {/* Só mostra o DialogTrigger se não estiver usando controle externo */}
+      {open === undefined && (
+        <DialogTrigger asChild>
+          <Button className="w-full">{descricao || "Criar Checklist"}</Button>
+        </DialogTrigger>
+      )}
       <DialogContent
         className="max-w-2xl w-full p-4 px-8 rounded-lg sm:rounded-lg"
         style={{
@@ -140,6 +151,7 @@ export default function ButtonCriarChecklist({ descricao }: ButtonCriarChecklist
                           checked={selectedItens.includes(item.id)}
                           onCheckedChange={() => handleCheckboxChange(item.id)}
                           id={`item-${item.id}`}
+                          className="h-6 w-6"
                         />
                         <label htmlFor={`item-${item.id}`} className="ml-2 cursor-pointer">
                           {item.descricao}
@@ -158,7 +170,7 @@ export default function ButtonCriarChecklist({ descricao }: ButtonCriarChecklist
                   <ul className="flex flex-wrap gap-2 mt-1">
                     {selectedItensWithDescricao.map(item => (
                       <li key={item.id} className="flex items-center bg-gray-100 rounded px-2 py-1">
-                        <Checkbox checked className="mr-1" />
+                        <Checkbox checked className="mr-1 h-6 w-6" />
                         <span className="mr-2">{item.descricao}</span>
                         <Button type="button" size="icon" variant="ghost" onClick={() => handleCheckboxChange(item.id)} className="text-red-500 p-0 h-5 w-5">
                           ×
@@ -175,7 +187,14 @@ export default function ButtonCriarChecklist({ descricao }: ButtonCriarChecklist
             toast.error(error)
           )}
           <div className="flex justify-end space-x-2 pt-4 border-t">
-            <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (setOpen) setOpen(false);
+                else setInternalOpen(false);
+              }}
+              disabled={loading}
+            >
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>

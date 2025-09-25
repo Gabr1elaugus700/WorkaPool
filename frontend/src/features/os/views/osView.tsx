@@ -5,11 +5,16 @@ import { OsViewModel } from "../types/osType";
 import { useAuth } from "@/auth/AuthContext";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { OsCard } from "../components/osCard";
+import { FloatingActionButton } from "../components/FloatingActionButton";
 // import ReducerExemple from "../components/criarChecklist";
 
 export const OsListView = () => {
   const [ordens, setOrdens] = useState<OsViewModel[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [modalCriarOsOpen, setModalCriarOsOpen] = useState(false);
+
 
   useEffect(() => {
     osService.getAll()
@@ -37,23 +42,24 @@ export const OsListView = () => {
 
     <DefaultLayout>
       
-      <div className="w-full mx-auto px-2 sm:px-4">
+      <div className="w-full mx-auto px-2 sm:px-4 bg-white/50">
         {/* <ReducerExemple /> */}
         <div className="mb-4">
-          <h2 className="font-semibold text-lg mb-4 text-center">Ordens de Serviço</h2>
+          <h2 className="text-2xl font-bold text-content-light dark:text-content-dark text-center">Ordens de Serviço</h2>
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center">
               {error}
             </div>
           )}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  xl:grid-cols-4 gap-4 mb-4">
+        <div className="container mx-auto pb-28 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {ordens.length > 0 ? (
             ordens.map((os) => (
               <div key={os.id} className="w-full">
                 <OsCard
                   id={os.id}
                   descricao={os.descricao}
+                  problema={os.problema}
                   prioridade={os.prioridade}
                   status={os.status}
                   solicitante={os.solicitante}
@@ -67,6 +73,7 @@ export const OsListView = () => {
             </div>
           )}
         </div>
+        <FloatingActionButton onClick={() => setModalCriarOsOpen(true)} ariaLabel="Criar OS" />
       </div>
     </DefaultLayout>
   );

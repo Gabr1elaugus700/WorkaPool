@@ -209,6 +209,7 @@ enum Prioridade {
 model OrdemServico {
   id                String             @id @default(uuid())
   descricao         String             @default("")
+  problema          String             @default("")
   status            StatusOrdemServico @default(ABERTA)
   prioridade        Prioridade         @default(BAIXA)
   data_criacao      DateTime           @default(now())

@@ -20,7 +20,7 @@ export default function CriarItensChecklist() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await itemChecklistService.create({ descricao: descricaoItem });
+            await itemChecklistService.create(descricaoItem);
             toast.success("Item de checklist criado com sucesso!");
             setDescricaoItem("");
         } catch (error) {

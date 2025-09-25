@@ -1,6 +1,7 @@
 export interface OrdemServico {
   id: string;
   descricao: string;
+  problema: string;
   status: "ABERTA" | "EM_ANDAMENTO" | "FINALIZADA" | "CANCELADA";
   prioridade: "BAIXA" | "MEDIA" | "ALTA";
   data_criacao: string;

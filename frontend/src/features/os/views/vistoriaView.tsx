@@ -1,12 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/auth/AuthContext";
 import DefaultLayout from "@/layout/DefaultLayout";
-import VistoriasList from "../components/obtemVistorias";
-import ButtonRegistrarVistoria from "../components/botaoRegistrarVistoria";
-import ButtonCriarChecklist from "../components/botaoCriarChecklist";
+// import ButtonCriarChecklist from "../components/ModalCriarChecklist";
+import { FloatingActionButton } from "../components/FloatingActionButton";
+import { Separator } from "@/components/ui/separator"
+import ModalCriarVistoria from "../components/ModalCriarChecklist";
+import VistoriasPorDepartamento from "../components/VistoriasPorDepartamento";
 
-export const OsListView = () => {
-  // const [error, setError] = useState<string | null>(null);
+
+export const VistoriaView = () => {
+  const [modalCriarVistoriaOpen, setModalCriarVistoriaOpen] = useState(false);
 
   useEffect(() => {
     // Carregar dados de vistorias
@@ -24,20 +27,27 @@ export const OsListView = () => {
   return (
 
     <DefaultLayout>
-      <div>
-        <div className="mb-4 w-full max-w-3xl mx-auto">
-          <h2 className="font-semibold text-lg mb-4 text-center">Ações</h2>
-          <div className="flex flex-row gap-2 justify-center mb-6">
-            <ButtonRegistrarVistoria descricao="Registrar Vistoria"/>
-            <ButtonCriarChecklist descricao="Criar Checklist"/>
+      <div className="w-full min-h-screen flex flex-col items-center justify-start px-2 md:px-8 lg:px-24">
+        <div className="w-full max-w-6xl  mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-content-light dark:text-content-dark text-center">Vistorias Por Departamentos</h2>
+          <Separator className="my-4 bg-[#17cf54]" />
+          <div className="flex flex-col md:flex-row gap-2 justify-center mb-6 w-full">
+            {/* <ButtonRegistrarVistoria descricao="Registrar Vistoria"/> */}
+            {/* <ButtonCriarChecklist descricao="Criar Checklist"/> */}
           </div>
           <div className="w-full">
-            <VistoriasList />
+            <VistoriasPorDepartamento />
           </div>
         </div>
+        <FloatingActionButton onClick={() => setModalCriarVistoriaOpen(true)} ariaLabel="Criar Vistoria" />
+        <ModalCriarVistoria
+          descricao="Criar Checklist"
+          open={modalCriarVistoriaOpen}
+          setOpen={setModalCriarVistoriaOpen}
+        />
       </div>
     </DefaultLayout>
   );
 };
 
-export default OsListView;
+export default VistoriaView;
