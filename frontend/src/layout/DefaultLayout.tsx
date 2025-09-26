@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import { ClipboardList, FileText, LogOutIcon,  Home } from "lucide-react";
 
 import ButtonLink from "@/components/navBar/ButtonLink";
-// ...existing code...
-
 
 type Props = {
   children: React.ReactNode;
@@ -119,6 +117,8 @@ export default function DefaultLayout({ children }: Props) {
           </div>
         </div>
       </nav>
+
+      
       {/* Bottom Navigation (somente mobile) */}
       <nav className="fixed bottom-0 left-0 right-0 border-t border-primary/20 bg-white px-4 pt-2 pb-5 md:hidden">
         <div className="flex justify-around">
@@ -154,7 +154,7 @@ export default function DefaultLayout({ children }: Props) {
       </nav>
 
       {/* Conteúdo principal */}
-      <main className="flex-1 container mx-auto p-4">{children}</main>
+      <main className="flex-1 container mx-auto p-4 pb-24 md:pb-4">{children}</main>
 
       {/* Toaster do Sonner */}
       <Toaster richColors position="top-center" />
