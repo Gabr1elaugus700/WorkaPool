@@ -92,5 +92,16 @@ export const vistoriasService = {
     });
     const data = await response.json();
     return data;
+  },
+
+  getVistoriaById: async (id: string): Promise<Vistoria> => {
+    const response = await fetch(`${getBaseUrl()}/api/vistoria/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
+    return data;
   }
 };

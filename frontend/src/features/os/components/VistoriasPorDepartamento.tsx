@@ -7,16 +7,16 @@ import { Vistoria } from "../models/vistoriasModel";
 import { vistoriasService } from "../services/vistoriasService";
 import ButtonRegistrarVistoria from "./botaoRegistrarVistoria";
 import { Card, CardTitle } from "@/components/ui/card";
+import ModalVisualizarVistoria from "./modalVisualizarVistoria";
 
 export interface VistoriasDepartamentoProps {
     onClose: () => void;
 }
 
-export default function VistoriasPorDepartamento() {
+const VistoriasPorDepartamento: React.FC<VistoriasDepartamentoProps> = () => {
     const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
-    // const [modalDepartamentoId, setModalDepartamentoId] = useState<string | null>(null);
-
     const [vistorias, setVistorias] = useState<Vistoria[]>([]);
+    const [modalVistoriaId, setModalVistoriaId] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchDepartamentos = async () => {
@@ -33,6 +33,10 @@ export default function VistoriasPorDepartamento() {
         fetchVistoriasDepartamento();
     }, []);
 
+    const atualizarVistorias = async () => {
+        const todasVistorias = await vistoriasService.getAll();
+        setVistorias(todasVistorias);
+    };
     return (
         <div className="p-2">
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -52,17 +56,32 @@ export default function VistoriasPorDepartamento() {
 
                                 <ButtonRegistrarVistoria
                                     departamentoId={departamento.id?.toString()}
+                                    onVistoriaCriada={atualizarVistorias}
                                 />
                             </CardTitle>
-                            
+
                             <div>
                                 {vistoriasDoDepartamento.length > 0 ? (
                                     vistoriasDoDepartamento
                                         .slice(0, 3)
                                         .map((v) => (
-                                            <Card key={v.id} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-md">
-                                                Responsável: {v.responsavel?.name} | Data: {new Date(v.data_vistoria).toLocaleDateString()}
-                                            </Card>
+
+                                            <>
+                                                <Card
+                                                    key={v.id}
+                                                    className="p-2 bg-gray-100 rounded-md lg:text-sm cursor-pointer hover:bg-gray-200 transition"
+                                                    onClick={() => setModalVistoriaId(v.id)}
+                                                >
+                                                    Realizado por: {v.responsavel?.name} | Data: {new Date(v.data_vistoria).toLocaleDateString()}
+                                                </Card>
+                                                {modalVistoriaId === v.id && (
+                                                    <ModalVisualizarVistoria
+                                                        open={!!modalVistoriaId}
+                                                        onOpenChange={(open) => open ? setModalVistoriaId(v.id) : setModalVistoriaId(null)}
+                                                        vistoriaId={v.id}
+                                                    />
+                                                )}
+                                            </>
                                         ))
                                 ) : (
                                     <li className="text-sm ">
@@ -77,5 +96,7 @@ export default function VistoriasPorDepartamento() {
 
         </div>
     );
-}
+};
+
+export default VistoriasPorDepartamento;
 

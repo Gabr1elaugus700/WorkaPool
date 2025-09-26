@@ -16,9 +16,10 @@ import { PlusCircle } from "lucide-react";
 
 interface ButtonRegistrarVistoriaProps {
   departamentoId?: string;
+  onVistoriaCriada?: () => void;
 }
 
-export default function ButtonRegistrarVistoria({ departamentoId }: ButtonRegistrarVistoriaProps) {
+export default function ButtonRegistrarVistoria({ departamentoId, onVistoriaCriada }: ButtonRegistrarVistoriaProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -118,6 +119,7 @@ export default function ButtonRegistrarVistoria({ departamentoId }: ButtonRegist
 
       // Agora você pode usar o retorno em `response`
       toast.success("Vistoria criada com sucesso!");
+      if (onVistoriaCriada) onVistoriaCriada();
 
       setOpen(false);
       setSelectUserSetor("");

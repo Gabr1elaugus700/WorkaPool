@@ -40,7 +40,17 @@ export const vistoriaRepository = {
                         name: true,
                     }
                 },
-                checklistVistoria: true
+                checklistVistoria: { 
+                    include: {
+                        checklistItem: {
+                            select: {
+                                id: true,
+                                descricao: true,
+                            }                            
+                        },
+                        
+                    }
+                }
             }
         });
     },

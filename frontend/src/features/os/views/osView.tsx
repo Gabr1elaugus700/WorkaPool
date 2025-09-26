@@ -6,6 +6,7 @@ import { useAuth } from "@/auth/AuthContext";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { OsCard } from "../components/osCard";
 import { FloatingActionButton } from "../components/FloatingActionButton";
+import { Separator } from "@/components/ui/separator";
 // import ReducerExemple from "../components/criarChecklist";
 
 export const OsListView = () => {
@@ -52,6 +53,7 @@ export const OsListView = () => {
             </div>
           )}
         </div>
+        <Separator className="my-4 bg-[#17cf54]" />
         <div className="container mx-auto pb-28 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {ordens.length > 0 ? (
             ordens.map((os) => (
