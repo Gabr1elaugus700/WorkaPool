@@ -12,7 +12,7 @@ type Props = {
 
 export default function CheckboxModeloVistoria({ selectedChecklistId, onChangeItens }: Props) {
     const [checklist, setChecklist] = useState<ChecklistModelo[]>([]);
-   
+
     // Agora o estado guarda checklistItemId (id do item real)
     const [itens, setItens] = useState<{ checklistItemId: string; checked: boolean; observacao: string }[]>([]);
 
@@ -67,23 +67,29 @@ export default function CheckboxModeloVistoria({ selectedChecklistId, onChangeIt
                 {checklist.length === 0 && (<p className="text-sm text-gray-500">Nenhum checklist selecionado.</p>)}
                 {checklist.map((checklist) => (
                     <div key={checklist.id} className="border rounded-lg p-4">
-                        <h3 className="font-semibold">{checklist.nome}</h3>
+                        <h3 className="font-semibold">Checklist Selecionado: {checklist.nome}</h3>
                         <p className="text-sm text-gray-500">{checklist.descricao}</p>
                         <div className="flex flex-col gap-2 mt-2">
                             {checklist.itens.map((item) => (
-                                <div key={item.id} className="flex items-center gap-2">
-                                    <Checkbox
-                                        id={`item-${item.id}`}
-                                        checked={itens.find(i => i.checklistItemId === (item.checklistItem?.id || item.checklistItemId))?.checked || false}
-                                        onCheckedChange={checked => handleCheck(item.checklistItem?.id || item.checklistItemId, !!checked)}
-                                    />
-                                    <Label htmlFor={`item-${item.id}`}>{item.checklistItem.descricao}</Label>
-                                    <input
-                                        type="text"
-                                        placeholder="Observação"
-                                        value={itens.find(i => i.checklistItemId === (item.checklistItem?.id || item.checklistItemId))?.observacao || ""}
-                                        onChange={e => handleObs(item.checklistItem?.id || item.checklistItemId, e.target.value)}
-                                    />
+                                <div key={item.id} className="flex gap-2 flex-col g-gray-50 p-2 rounded">
+                                    <div className="flex items-center gap-2">
+                                        <Checkbox
+                                            id={`item-${item.id}`}
+                                            checked={itens.find(i => i.checklistItemId === (item.checklistItem?.id || item.checklistItemId))?.checked || false}
+                                            onCheckedChange={checked => handleCheck(item.checklistItem?.id || item.checklistItemId, !!checked)}
+                                            className="h-6 w-6"
+                                        />
+                                        <Label htmlFor={`item-${item.id}`}>{item.checklistItem.descricao}</Label>
+                                    </div>
+                                    <div className="flex">
+                                        <input
+                                            type="text"
+                                            placeholder="Observação"
+                                            className="ml-4 flex-1 border rounded px-2 py-1 text-sm"
+                                            value={itens.find(i => i.checklistItemId === (item.checklistItem?.id || item.checklistItemId))?.observacao || ""}
+                                            onChange={e => handleObs(item.checklistItem?.id || item.checklistItemId, e.target.value)}
+                                        />
+                                    </div>
                                 </div>
                             ))}
                         </div>

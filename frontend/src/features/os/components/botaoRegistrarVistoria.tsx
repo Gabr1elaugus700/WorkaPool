@@ -136,117 +136,105 @@ export default function ButtonRegistrarVistoria({ departamentoId, onVistoriaCria
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="flex items-center gap-1 rounded-md bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 hover:dark:bg-primary/30 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none transition-all"> 
+        <Button className="flex items-center gap-1 rounded-md bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 hover:dark:bg-primary/30 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none transition-all">
           <PlusCircle className="mr-2 h-4 w-4" />
-          Nova Vistoria 
+          Nova Vistoria
         </Button>
       </DialogTrigger>
       <DialogContent
-        className="max-w-2xl w-full p-4 px-8 rounded-lg sm:rounded-lg sm:p-8"
+        className="max-w-2xl w-full p-4 px-8 rounded-lg sm:rounded-lg sm:p-6"
         style={{
-          maxHeight: '70dvh',
           width: '90vw',
           borderRadius: 10,
           padding: 0,
           overflow: 'auto',
         }}
       >
-        <DialogHeader className="p-4 border-b">
-          <DialogTitle>Criar nova Vistoria</DialogTitle>
+        <DialogHeader className="p-4 border-b flex items-center gap-2">
+          <DialogTitle className="text-2xl font-bold">Detalhes do Checklist</DialogTitle>
+
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-2 px-4 py-2 sm:px-8" style={{ maxHeight: 'calc(100dvh - 80px)', overflowY: 'auto' }}>
-          <div className="flex flex-col gap-4 md:flex-row md:gap-6">
-            {/* Departamento (se não vier por prop) */}
-            {!departamentoId && (
+        <main className="overflow-y-auto px-4 py-4 space-y-4 ">
+          <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-4 ">
+            <div className="flex flex-col gap-4 md:flex-col md:gap-6 ">
+              {/* Departamento (se não vier por prop) */}
+              {!departamentoId && (
+                <div className="flex-1 min-w-[180px]">
+                  <Label htmlFor="departamento">Departamento dessa Vistoria:</Label>
+                  <Select value={selectedDepartamento} onValueChange={setSelectedDepartamento} required>
+                    <SelectTrigger id="departamento">
+                      <SelectValue placeholder="Selecione o departamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departamentos.map((d) => (
+                        <SelectItem className="cursor-pointer" key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {/* Funcionário */}
               <div className="flex-1 min-w-[180px]">
-                <Label htmlFor="departamento">Departamento dessa Vistoria:</Label>
-                <Select value={selectedDepartamento} onValueChange={setSelectedDepartamento} required>
-                  <SelectTrigger id="departamento">
-                    <SelectValue placeholder="Selecione o departamento" />
+                <Label htmlFor="funcionario">Funcionário responsável:</Label>
+                <Select value={selectUserSetor} onValueChange={setSelectUserSetor} disabled={users.length === 0}>
+                  <SelectTrigger id="funcionario">
+                    <SelectValue placeholder={users.length ? "Selecione o funcionário" : "Nenhum colaborador disponível no seu setor"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {departamentos.map((d) => (
-                      <SelectItem className="cursor-pointer" key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                    {users.map((item) => (
+                      <SelectItem className="cursor-pointer" key={item.usuario.id} value={item.usuario.id}>
+                        {item.usuario.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-            )}
-            {/* Funcionário */}
-            <div className="flex-1 min-w-[180px]">
-              <Label htmlFor="funcionario">Funcionário responsável:</Label>
-              <Select value={selectUserSetor} onValueChange={setSelectUserSetor} disabled={users.length === 0}>
-                <SelectTrigger id="funcionario">
-                  <SelectValue placeholder={users.length ? "Selecione o funcionário" : "Nenhum colaborador disponível no seu setor"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {users.map((item) => (
-                    <SelectItem className="cursor-pointer" key={item.usuario.id} value={item.usuario.id}>
-                      {item.usuario.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Data */}
-            <div className="flex-1 min-w-[180px]">
-              <Label htmlFor="data_vistoria">Data da Vistoria</Label>
-              <div className="relative flex items-center">
-                <input
-                  id="data_vistoria"
-                  type="date"
-                  className="border rounded-md px-2 py-2 w-full mt-1 pr-10"
-                  value={dataVistoria}
-                  onChange={e => setDataVistoria(e.target.value)}
-                  required
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                  {/* Lucide Calendar Icon */}
-                  <svg  
-                    xmlns="http://www.w3.org/2000/svg"
-                    width={20}
-                    height={20}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-calendar"
-                  >
-                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-                    <line x1="16" x2="16" y1="2" y2="6" />
-                    <line x1="8" x2="8" y1="2" y2="6" />
-                    <line x1="3" x2="21" y1="10" y2="10" />
-                  </svg>
-                </span>
+              {/* Data */}
+              <div className="flex-1 min-w-[180px]">
+                <Label htmlFor="data_vistoria">Data da Vistoria</Label>
+                <div className="relative flex items-center">
+                  <input
+                    id="data_vistoria"
+                    type="date"
+                    className={
+                      `mt-1 w-full rounded-lg border-gray-300 bg-gray-100 p-2 text-gray-700 ` +
+                      (!dataVistoria ? "text-gray-400" : "")
+                    }
+                    value={dataVistoria}
+                    onChange={e => setDataVistoria(e.target.value)}
+                    required
+                    onFocus={e => e.target.classList.remove("text-gray-400")}
+                    onBlur={e => !e.target.value && e.target.classList.add("text-gray-400")}
+                  />
+                </div>
               </div>
+
+              <Label htmlFor="checklistModelo">Checklist:
+                <ListChecklists
+                  selectedChecklistId={selectedChecklistId}
+                  setSelectedChecklistId={setSelectedChecklistId}
+                />
+              </Label>
             </div>
-          </div>
-          <Label htmlFor="checklistModelo">Checklist:
-            <ListChecklists
-              selectedChecklistId={selectedChecklistId}
-              setSelectedChecklistId={setSelectedChecklistId}
-            />
-          </Label>
-          {/* {selectedChecklistId !== "" && (<div>Checklist selecionado: {selectedChecklistId}</div>
+            {/* {selectedChecklistId !== "" && (<div>Checklist selecionado: {selectedChecklistId}</div>
           )} */}
-          {error && <div className="text-red-600 text-sm">{error}</div>}
-          {selectedChecklistId && (
-            <div className="mt-4">
-              <h4 className="font-semibold mb-2">Itens do Checklist</h4>
-              <CheckboxModeloVistoria
-                selectedChecklistId={selectedChecklistId}
-                onChangeItens={setItensChecklist}
-              />
+            {error && <div className="text-red-600 text-sm">{error}</div>}
+            {selectedChecklistId && (
+              <div className="mt-4">
+                <h4 className="font-semibold mb-2">Itens do Checklist</h4>
+                <CheckboxModeloVistoria
+                  selectedChecklistId={selectedChecklistId}
+                  onChangeItens={setItensChecklist}
+                />
+              </div>
+            )}
+            <div className="flex">
+              <Button type="submit" disabled={loading} className="w-full font-semibold">
+                {loading ? "Salvando..." : "Salvar Vistoria"}
+              </Button>
             </div>
-          )}
-          <div className="flex justify-end">
-            <Button type="submit" disabled={loading}>
-              {loading ? "Salvando..." : "Salvar Vistoria"}
-            </Button>
-          </div>
-        </form>
+          </form>
+        </main>
       </DialogContent>
     </Dialog>
   );
