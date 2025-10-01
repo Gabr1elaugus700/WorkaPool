@@ -1,8 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
 
 @layer base {
+  body {
+    font-family: 'Inter', sans-serif;
+  }
   :root {
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
@@ -31,7 +35,7 @@
     --chart-5: 140 55% 25%;  /* verde escuro profundo */
     --background-light: 140 0% 100%;
     --background-dark: 240 10% 3.9%;
-    --subtle-gray: 150 14% 96%
+    --subtle-gray: 150 14% 96%;
   }
 
   .dark {

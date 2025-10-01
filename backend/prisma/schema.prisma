@@ -216,7 +216,7 @@ model OrdemServico {
   data_conclusao    DateTime?
   email_solicitante String?
   localizacao       String?
-  imagens          OsImagens[]
+  imagens           OsImagens[]
 
   // Solicitante
   id_solicitante String?
@@ -270,7 +270,7 @@ model ChecklistModelo {
   nome            String
   createdAt       DateTime              @default(now())
   departamento_id String?
-  departamento    Departamento?          @relation(fields: [departamento_id], references: [id])
+  departamento    Departamento?         @relation(fields: [departamento_id], references: [id])
   itens           ChecklistModeloItem[]
   vistorias       ChecklistVistoria[]
 }

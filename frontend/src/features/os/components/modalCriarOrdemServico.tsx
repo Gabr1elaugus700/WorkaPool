@@ -4,6 +4,8 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, MapPinCheck } from "lucide-react";
+import { osService } from "../services/osService";
+import { toast } from "sonner";
 
 type Status = "ABERTA" | "EM_ANDAMENTO" | "FINALIZADA" | "CANCELADA";
 type Prioridade = "BAIXA" | "MEDIA" | "ALTA";
@@ -11,11 +13,13 @@ type Prioridade = "BAIXA" | "MEDIA" | "ALTA";
 interface ModalCriarOrdemServicoProps {
   open?: boolean;
   setOpen?: (open: boolean) => void;
+  onOsCreated?: () => void;
 }
 
 export default function ModalCriarOrdemServico({
   open,
-  setOpen
+  setOpen,
+  onOsCreated
 }: ModalCriarOrdemServicoProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open !== undefined ? open : internalOpen;
@@ -24,48 +28,98 @@ export default function ModalCriarOrdemServico({
   // Form state
   const [problema, setProblema] = useState("");
   const [descricao, setDescricaoItem] = useState("");
-  const [status, setStatus] = useState<Status | "">("");
+  const [status, setStatus] = useState<Status>("ABERTA");
   const [localizacao, setLocalizacao] = useState("");
   const [prioridade, setPrioridade] = useState<Prioridade>("BAIXA");
   const [dataVencimento, setDataVencimento] = useState("");
-  const [responsavel, setResponsavel] = useState("");
+  const [emailSolicitante, setEmailSolicitante] = useState("");
+  const [fotos, setFotos] = useState<File[]>([]);
 
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // lógica aqui
+    setLoading(true);
+
+    console.log({
+      problema,
+      descricao,
+      localizacao,
+      status,
+      prioridade,
+      imagens: fotos,
+      email_solicitante: emailSolicitante
+    });
+
+    try {
+      if (!problema || !descricao || !emailSolicitante) {
+        toast.error("Por favor, preencha todos os campos obrigatórios.");
+        setLoading(false);
+        return;
+      }
+      const response = await osService.create({
+        data_criacao: new Date().toISOString(), 
+        problema,
+        descricao,
+        localizacao,
+        status,
+        prioridade,
+        email_solicitante: emailSolicitante,
+        imagens: fotos,
+      });
+      console.log("Ordem de Serviço criada:", response);
+      if (response) {
+        toast.success("Ordem de Serviço criada com sucesso!");
+        // Reset form
+        setProblema("");
+        setDescricaoItem("");
+        setLocalizacao("");
+        setStatus("ABERTA");
+        setPrioridade("BAIXA");
+        setDataVencimento("");
+        setEmailSolicitante("");
+        setFotos([]);
+        handleOpenChange(false); // Close modal
+
+        
+      }
+      if (onOsCreated) onOsCreated();
+
+    } catch (error) {
+      setError("Erro ao criar Ordem De serviço");
+      toast.error("Erro ao criar Ordem De serviço" + error);
+    } finally {
+      setLoading(false);
+    }
+
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="p-0 max-w-md w-full h-[100dvh] sm:rounded-lg flex flex-col  dark:bg-background-dark"
+        className="max-w-2xl w-full p-4 px-8 rounded-lg sm:rounded-lg"
+        style={{
+          maxHeight: '90dvh',
+          width: '90vw',
+          borderRadius: 10,
+          padding: 0,
+          overflow: 'auto',
+        }}
       >
         {/* Header fixo */}
-        <DialogHeader className="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm border-b">
-          <div className="flex items-center justify-between p-4">
-            <button
-              type="button"
-              onClick={() => handleOpenChange(false)}
-              className="text-content-light  dark:text-content-dark"
-            >
-              ✕
-            </button>
-            <DialogTitle className="text-lg font-bold flex-1 text-center -ml-6">
-              Nova Ordem de Serviço
-            </DialogTitle>
-            <div className="w-6" />
-          </div>
+        <DialogHeader className="p-4 border-b">
+          <DialogTitle>Criar Ordem de Serviço</DialogTitle>
         </DialogHeader>
 
         {/* Formulário rolável */}
         <form
           onSubmit={handleSubmit}
-          className="flex-1 overflow-y-auto p-4 space-y-4"
+          className="space-y-4 px-4 py-2 sm:px-8" style={{ maxHeight: 'calc(100dvh - 80px)', overflowY: 'auto' }}
         >
           <div className="space-y-1">
-            <Label htmlFor="problema">Título da Ordem</Label>
+            <Label className="font-display" htmlFor="problema" >Título da Ordem</Label>
             <Input
               id="problema"
               placeholder="Ex: Conserto de vazamento"
@@ -76,18 +130,18 @@ export default function ModalCriarOrdemServico({
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="descricao">Descrição Detalhada do Problema</Label>
+            <Label className="font-display" htmlFor="descricao">Descrição Detalhada do Problema</Label>
             <textarea
               id="descricao"
               placeholder="Descreva o problema com o máximo de detalhes possível..."
               value={descricao}
               onChange={e => setDescricaoItem(e.target.value)}
-              className="w-full h-36 resize-none rounded-lg bg-subtleGray dark:bg-subtle-dark placeholder:text-placeholder-light dark:placeholder:text-placeholder-dark border-none focus:ring-2 focus:ring-primary p-4 text-sm"
+              className="w-full h-36 resize-none rounded-lg bg-subtleGray dark:bg-subtle-dark placeholder:text-placeholder-light dark:placeholder:text-placeholder-dark border-none focus:ring-2 focus:ring-green-500 p-4 text-sm"
             />
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="localizacao">Localização</Label>
+            <Label className="font-display" htmlFor="localizacao">Localização</Label>
             <div className="relative">
               <Input
                 id="localizacao"
@@ -101,8 +155,8 @@ export default function ModalCriarOrdemServico({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="prioridade">Prioridade</Label>
+            <div className="space-y-1 flex-col flex">
+              <Label className="font-display" htmlFor="prioridade">Prioridade</Label>
               <select
                 id="prioridade"
                 value={prioridade}
@@ -115,8 +169,8 @@ export default function ModalCriarOrdemServico({
               </select>
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="data_vencimento">Data de Vencimento</Label>
+            <div className="space-y-1 flex-col flex">
+              <Label className="font-display" htmlFor="data_vencimento">Data de Vencimento</Label>
               <Input
                 id="data_vencimento"
                 type="date"
@@ -128,16 +182,29 @@ export default function ModalCriarOrdemServico({
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="responsavel">Responsável</Label>
+            <Label className="font-display" htmlFor="emailSolicitante">Solicitante:</Label>
+            <Input
+              id="emailSolicitante"
+              value={emailSolicitante}
+              placeholder="Ex: joao.silva@email.com"
+              onChange={e => setEmailSolicitante(e.target.value)}
+              className="h-12 rounded-lg bg-subtleGray dark:bg-subtle-dark border-none focus:ring-2 focus:ring-primary px-4"
+            />
+          </div>
+          {/* Só aparecer para quem é do departamento de manutenção */}
+          <div className="space-y-1 flex-col flex">
+            <Label className="font-display" htmlFor="status">Status da Ordem de Serviço:</Label>
             <select
-              id="responsavel"
-              value={responsavel}
-              onChange={e => setResponsavel(e.target.value)}
+              id="status"
+              value={status}
+              onChange={e => setStatus(e.target.value as Status)}
               className="form-select h-12 rounded-lg bg-subtleGray dark:bg-subtle-dark border-none focus:ring-2 focus:ring-primary px-4 appearance-none"
             >
-              <option value="">Selecionar usuário</option>
-              <option value="1">João da Silva</option>
-              <option value="2">Maria Oliveira</option>
+              <option value="">Selecionar status</option>
+              <option value="ABERTA">Aberta</option>
+              <option value="EM_ANDAMENTO">Em Andamento</option>
+              <option value="FINALIZADA">Finalizada</option>
+              <option value="CANCELADA">Cancelada</option>
             </select>
           </div>
 
@@ -149,21 +216,44 @@ export default function ModalCriarOrdemServico({
               <Camera />
               Anexar Foto
             </label>
-            <input id="foto" type="file" className="hidden" />
+            <input
+              id="foto"
+              type="file"
+              className="hidden"
+              multiple
+              onChange={e => {
+                // Permite selecionar várias imagens, inclusive em múltiplas seleções
+                setFotos(prev => {
+                  const files = Array.from(e.target.files || []);
+                  // Junta os arquivos já selecionados com os novos, sem duplicar
+                  const allFiles = [...prev, ...files].filter((file, idx, arr) =>
+                    arr.findIndex(f => f.name === file.name && f.lastModified === file.lastModified) === idx
+                  );
+                  return allFiles;
+                });
+              }}
+            />
+            {fotos.length > 0 && (
+              <div className="mt-2 text-sm text-primary font-bold">
+                {fotos.length} foto(s) selecionada(s)
+              </div>
+            )}
+          </div>
+            {error && (
+              toast.error(error)
+            )}
+
+          <div>
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full h-12 rounded-lg bg-primary text-background-dark font-bold hover:bg-primary/90"
+            >
+              {loading ? "Salvando..." : "Criar Ordem de Serviço"}
+            </Button>
           </div>
         </form>
-
-        {/* Footer fixo */}
-        <footer className="p-4 border-t bg-background-light dark:bg-background-dark">
-          <Button
-            type="submit"
-            form="form" 
-            disabled={loading}
-            className="w-full h-12 rounded-lg bg-primary text-background-dark font-bold hover:bg-primary/90"
-          >
-            {loading ? "Salvando..." : "Criar Ordem de Serviço"}
-          </Button>
-        </footer>
       </DialogContent>
     </Dialog>
   );

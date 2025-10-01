@@ -1,5 +1,5 @@
 export interface OrdemServico {
-  id: string;
+  id?: string;
   descricao: string;
   problema: string;
   status: "ABERTA" | "EM_ANDAMENTO" | "FINALIZADA" | "CANCELADA";
@@ -11,6 +11,6 @@ export interface OrdemServico {
   id_vistoria?: string | null;
   id_departamento?: string | null;
   localizacao?: string | null;
-  imagens?: { imagem_url: string }[];
+  imagens?: File[];
 }
 

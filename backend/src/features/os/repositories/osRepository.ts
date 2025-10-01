@@ -4,10 +4,9 @@ const prisma = new PrismaClient();
 
 
 export const osRepository = {
-    create: async (data: Prisma.OrdemServicoCreateInput) => {
-        return await prisma.ordemServico.create({ data });
-    },
-
+    create: async (data: Prisma.OrdemServicoCreateInput, include?: Prisma.OrdemServicoInclude) => {
+    return await prisma.ordemServico.create({ data, include });
+},
     findAll: async () => {
         return await prisma.ordemServico.findMany();
     },

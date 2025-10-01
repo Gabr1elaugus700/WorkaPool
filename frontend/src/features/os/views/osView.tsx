@@ -38,6 +38,11 @@ export const OsListView = () => {
       </DefaultLayout>
     );
   }
+  const atualizarOrdens = async () => {
+    const todasOrdens = await osService.getAll();
+    const mappedOrdens = todasOrdens.map(mapToOsViewModel) as OsViewModel[];
+    setOrdens(mappedOrdens);
+  };
 
   return (
 
@@ -79,6 +84,7 @@ export const OsListView = () => {
         <ModalCriarOrdemServico
           open={modalCriarOsOpen}
           setOpen={setModalCriarOsOpen}
+          onOsCreated={atualizarOrdens}
         />
       </div>
     </DefaultLayout>

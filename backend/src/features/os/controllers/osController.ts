@@ -1,32 +1,37 @@
-import { Request, Response } from "express";
+
 import { osService } from "../services/osService";
 import { StatusOrdemServico, Prioridade } from "@prisma/client";
+import { Request, Response } from "express";
+
+interface MulterRequest extends Request {
+  files: Express.Multer.File[];
+}
 
 export const osController = {
   create: async (req: Request, res: Response) => {
-    if(!req.body.descricao) {
-      return res.status(400).json({ message: "Descrição do serviço é obrigatória!" });
-    }
-    if(!req.body.id_departamento) {
-      return res.status(400).json({ message: "ID do departamento é obrigatório!" });
+
+    if (!req.body.descricao) {
+      return res.status(400).json({ message: "Campos obrigatórios faltando!" });
     }
 
+    const imagens = Array.isArray((req as MulterRequest).files) ? (req as MulterRequest).files.map(file => `/uploads/${file.filename}`) : [];
     try {
-      const ordem = await osService.create({ 
+      const ordem = await osService.create({
         descricao: req.body.descricao,
         problema: req.body.problema || "",
         status: req.body.status ? StatusOrdemServico[req.body.status as keyof typeof StatusOrdemServico] : StatusOrdemServico.ABERTA,
         prioridade: req.body.prioridade ? Prioridade[req.body.prioridade as keyof typeof Prioridade] : Prioridade.BAIXA,
         email_solicitante: req.body.email_solicitante,
         solicitante: req.body.id_solicitante ? { connect: { user: req.body.id_solicitante } } : undefined,
-        departamento_os: {
-          connect: { id: req.body.id_departamento }
-        },
+        departamento_os: req.body.id_departamento
+          ? { connect: { id: req.body.id_departamento } }
+          : undefined,
         localizacao: req.body.localizacao,
-        imagens: req.body.imagens ? {
-          create: req.body.imagens.map((url: string) => ({ imagem_url: url }))
+        imagens: imagens.length > 0 ? {
+          create: imagens.map((url: string) => ({ imagem_url: url }))
         } : undefined
       });
+      console.log("Ordem de Serviço criada:", ordem);
       return res.status(201).json(ordem);
     } catch (error: any) {
       return res.status(400).json({ message: error.message });

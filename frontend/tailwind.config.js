@@ -62,7 +62,10 @@ module.exports = {
 				backgroundDark: 'hsl(var(--background-dark))',
 				backgroundLight: 'hsl(var(--background-light))',
 				subtleGray: 'hsl(var(--subtle-gray))',
-			}
+			},
+			fontFamily: {
+				"display": ["Inter", "sans-serif"]
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
