@@ -2,6 +2,7 @@ import { Card, CardTitle, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import clsx from "clsx";
 import { OsViewModel, StatusType, PrioridadeType } from "../types/osType";
+import { EditarOs } from "./editarOs";
 
 type StatusInfo = {
   label: string;
@@ -41,6 +42,7 @@ export const OsCard = ({
   prioridade,
   solicitante,
   data_criacao,
+  id
 }: OsViewModel) => {
   const statusInfo = STATUS_STYLES[status];
 
@@ -52,23 +54,32 @@ export const OsCard = ({
         "border-x-2 border-y-2 border-gray-200 dark:border-gray-700"
       )}
     >
-      <CardHeader className="p-0">
-        <div className="flex justify-between items-start">
+      <CardHeader className="p-0 mb-2 flex justify-between items-start flex-row">
+        <div className="flex justify-between items-start flex-col">
           <CardTitle className="text-lg font-bold text-gray-900 dark:text-gray-100 leading-snug">
             {problema}
           </CardTitle>
 
-          {/* Data no canto direito, discreta */}
-          <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-3">
-            {data_criacao}
-          </span>
+          <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-wrap">
+            <span >
+              {data_criacao}
+            </span>
+            <span> | </span>
+            <span>
+              {solicitante}
+            </span>
+          </div>
         </div>
+
+        <EditarOs 
+          idOs={id}
+        />
       </CardHeader>
 
       <CardContent className="p-0 mt-2">
         <div className="mt-1">
           <p className="text-sm text-gray- dark:text-gray-300 mb-4">
-            {solicitante}
+
           </p>
           <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
             {descricao}
