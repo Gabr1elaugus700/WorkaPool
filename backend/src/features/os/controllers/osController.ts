@@ -21,7 +21,11 @@ export const osController = {
         solicitante: req.body.id_solicitante ? { connect: { user: req.body.id_solicitante } } : undefined,
         departamento_os: {
           connect: { id: req.body.id_departamento }
-        }
+        },
+        localizacao: req.body.localizacao,
+        imagens: req.body.imagens ? {
+          create: req.body.imagens.map((url: string) => ({ imagem_url: url }))
+        } : undefined
       });
       return res.status(201).json(ordem);
     } catch (error: any) {

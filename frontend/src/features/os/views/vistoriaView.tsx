@@ -5,7 +5,7 @@ import DefaultLayout from "@/layout/DefaultLayout";
 import { FloatingActionButton } from "../components/FloatingActionButton";
 import { Separator } from "@/components/ui/separator"
 import ModalCriarVistoria from "../components/ModalCriarChecklist";
-import VistoriasPorDepartamento from "../components/VistoriasPorDepartamento";
+import { VistoriasPorDepartamento } from "../components/VistoriasPorDepartamento";
 
 
 export const VistoriaView = () => {

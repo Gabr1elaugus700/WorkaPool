@@ -10,5 +10,7 @@ export interface OrdemServico {
   id_solicitante?: string | null;
   id_vistoria?: string | null;
   id_departamento?: string | null;
+  localizacao?: string | null;
+  imagens?: { imagem_url: string }[];
 }
 

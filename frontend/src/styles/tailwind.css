@@ -29,6 +29,9 @@
     --chart-3: 140 65% 40%;  /* verde médio escuro */
     --chart-4: 140 55% 35%;  /* verde mais escuro */
     --chart-5: 140 55% 25%;  /* verde escuro profundo */
+    --background-light: 140 0% 100%;
+    --background-dark: 240 10% 3.9%;
+    --subtle-gray: 150 14% 96%
   }
 
   .dark {

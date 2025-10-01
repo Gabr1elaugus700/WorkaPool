@@ -9,11 +9,8 @@ import ButtonRegistrarVistoria from "./botaoRegistrarVistoria";
 import { Card, CardTitle } from "@/components/ui/card";
 import ModalVisualizarVistoria from "./modalVisualizarVistoria";
 
-export interface VistoriasDepartamentoProps {
-    onClose: () => void;
-}
 
-const VistoriasPorDepartamento: React.FC<VistoriasDepartamentoProps> = () => {
+export function VistoriasPorDepartamento() {
     const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
     const [vistorias, setVistorias] = useState<Vistoria[]>([]);
     const [modalVistoriaId, setModalVistoriaId] = useState<string | null>(null);
@@ -37,6 +34,7 @@ const VistoriasPorDepartamento: React.FC<VistoriasDepartamentoProps> = () => {
         const todasVistorias = await vistoriasService.getAll();
         setVistorias(todasVistorias);
     };
+
     return (
         <div className="p-2">
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">

@@ -215,6 +215,8 @@ model OrdemServico {
   data_criacao      DateTime           @default(now())
   data_conclusao    DateTime?
   email_solicitante String?
+  localizacao       String?
+  imagens          OsImagens[]
 
   // Solicitante
   id_solicitante String?
@@ -235,6 +237,15 @@ model OrdemServico {
 
   id_vistoria       String?
   ChecklistVistoria ChecklistVistoria[]
+}
+
+model OsImagens {
+  id         String   @id @default(uuid())
+  ordem_id   String
+  imagem_url String
+  createdAt  DateTime @default(now())
+
+  ordemServico OrdemServico @relation(fields: [ordem_id], references: [id])
 }
 
 model Vistoria {

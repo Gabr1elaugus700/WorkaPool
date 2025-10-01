@@ -17,7 +17,12 @@ export const osService = {
                 throw new Error(`O departamento ${departamento.name} não recebe ordens de serviço`);
             }
         }
-        return await osRepository.create(data);
+            return await prisma.ordemServico.create({
+                data,   
+                include: {
+                    imagens: true
+                }
+            });
     },
 
     findAll: async () => {

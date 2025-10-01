@@ -7,13 +7,13 @@ import DefaultLayout from "@/layout/DefaultLayout";
 import { OsCard } from "../components/osCard";
 import { FloatingActionButton } from "../components/FloatingActionButton";
 import { Separator } from "@/components/ui/separator";
+import ModalCriarOrdemServico from "../components/modalCriarOrdemServico";
 // import ReducerExemple from "../components/criarChecklist";
 
 export const OsListView = () => {
   const [ordens, setOrdens] = useState<OsViewModel[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [modalCriarOsOpen, setModalCriarOsOpen] = useState(false);
 
 
@@ -76,6 +76,10 @@ export const OsListView = () => {
           )}
         </div>
         <FloatingActionButton onClick={() => setModalCriarOsOpen(true)} ariaLabel="Criar OS" />
+        <ModalCriarOrdemServico
+          open={modalCriarOsOpen}
+          setOpen={setModalCriarOsOpen}
+        />
       </div>
     </DefaultLayout>
   );
