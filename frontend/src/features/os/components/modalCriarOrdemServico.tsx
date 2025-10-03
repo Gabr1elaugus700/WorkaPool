@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Camera, MapPinCheck } from "lucide-react";
 import { osService } from "../services/osService";
 import { toast } from "sonner";
+import FormField from "@/components/ui/FormField";
 
 type Status = "ABERTA" | "EM_ANDAMENTO" | "FINALIZADA" | "CANCELADA";
 type Prioridade = "BAIXA" | "MEDIA" | "ALTA";
@@ -118,18 +119,33 @@ export default function ModalCriarOrdemServico({
           onSubmit={handleSubmit}
           className="space-y-4 px-4 py-2 sm:px-8" style={{ maxHeight: 'calc(100dvh - 80px)', overflowY: 'auto' }}
         >
-          <div className="space-y-1">
-            <Label className="font-display" htmlFor="problema" >Título da Ordem</Label>
+
+          <FormField
+            id="problema"
+            label="Título da Ordem"
+            value={problema}
+            onChange={setProblema}
+            placeholder="Ex: Conserto de vazamento"
+          />
+          {/* <div className="space-y-1">
+            <Label className="font-display" htmlFor="problema">Título da Ordem</Label>
             <Input
               id="problema"
-              placeholder="Ex: Conserto de vazamento"
               value={problema}
               onChange={e => setProblema(e.target.value)}
+              placeholder="Ex: Conserto de vazamento"
               className="h-12 rounded-lg bg-subtleGray dark:bg-subtle-dark placeholder:text-placeholder-light dark:placeholder:text-placeholder-dark border-none focus:ring-2 focus:ring-primary px-4"
             />
-          </div>
-
-          <div className="space-y-1">
+          </div> */}
+          <FormField
+            id="descricao"
+            label="Descrição Detalhada do Problema"
+            value={descricao}
+            onChange={setDescricaoItem}
+            placeholder="Descreva o problema com o máximo de detalhes possível..."
+            type="textarea"
+          />
+          {/* <div className="space-y-1">
             <Label className="font-display" htmlFor="descricao">Descrição Detalhada do Problema</Label>
             <textarea
               id="descricao"
@@ -138,7 +154,7 @@ export default function ModalCriarOrdemServico({
               onChange={e => setDescricaoItem(e.target.value)}
               className="w-full h-36 resize-none rounded-lg bg-subtleGray dark:bg-subtle-dark placeholder:text-placeholder-light dark:placeholder:text-placeholder-dark border-none focus:ring-2 focus:ring-green-500 p-4 text-sm"
             />
-          </div>
+          </div> */}
 
           <div className="space-y-1">
             <Label className="font-display" htmlFor="localizacao">Localização</Label>

@@ -4,10 +4,10 @@ import { OrdemServico } from "../models/osModel";
 export const osService = {
   getAll: async (): Promise<OrdemServico[]> => {
     const response = await fetch(`${getBaseUrl()}/api/os`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-        },
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     const data = await response.json();
     return data;
@@ -28,15 +28,38 @@ export const osService = {
     if (data.status) formData.append('status', data.status);
     if (data.prioridade) formData.append('prioridade', data.prioridade);
     if (data.imagens) {
-        data.imagens.forEach(file => {
-            formData.append('imagens', file);
-        });
+      data.imagens.forEach(file => {
+        formData.append('imagens', file);
+      });
     }
     const response = await fetch(`${getBaseUrl()}/api/os`, {
-        method: "POST",
-        body: formData,
+      method: "POST",
+      body: formData,
     });
     const responseData = await response.json();
     return responseData;
   },
+
+  getById: async (id: string): Promise<OrdemServico> => {
+    const response = await fetch(`${getBaseUrl()}/api/os/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
+    return data;
+  },
+
+  update: async (id: string, data: Partial<OrdemServico>) => {
+    const response = await fetch(`${getBaseUrl()}/api/os/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    const responseData = await response.json();
+    return responseData;
+  }
 };

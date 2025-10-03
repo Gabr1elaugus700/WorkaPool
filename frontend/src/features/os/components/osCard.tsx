@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import clsx from "clsx";
 import { OsViewModel, StatusType, PrioridadeType } from "../types/osType";
 import { EditarOs } from "./editarOs";
+import { useState } from "react";
 
 type StatusInfo = {
   label: string;
@@ -11,7 +12,6 @@ type StatusInfo = {
 
 const STATUS_STYLES: Record<StatusType, StatusInfo> = {
   ABERTA: {
-    // no layout de referência o “pendente” é vermelho claro
     label: "Pendente",
     classes: "bg-red-100 text-red-800",
   },
@@ -45,6 +45,7 @@ export const OsCard = ({
   id
 }: OsViewModel) => {
   const statusInfo = STATUS_STYLES[status];
+  const [openEditar, setOpenEditar] = useState(false);
 
   return (
     <Card
@@ -73,6 +74,8 @@ export const OsCard = ({
 
         <EditarOs 
           idOs={id}
+          open={openEditar}
+          setOpen={setOpenEditar}
         />
       </CardHeader>
 

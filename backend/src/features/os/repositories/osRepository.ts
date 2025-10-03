@@ -14,6 +14,7 @@ export const osRepository = {
     findById: async (id: string) => {
         return await prisma.ordemServico.findUnique({
             where: { id },
+            include: { imagens: true, solicitante: true, departamento_os: true }
         });
     },
 

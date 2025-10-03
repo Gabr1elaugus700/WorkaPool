@@ -122,7 +122,8 @@ app.use('/api/checklist-vistoria', checklistVistoria);
 app.use('/api/departamentos', departamentos);
 app.use('/api/users', userRoutes);
 
-
+// Imagens Uploads
+app.use("/uploads", express.static("uploads"));
 // Metas
 app.use('/api/metas', metasRoutes)  
 

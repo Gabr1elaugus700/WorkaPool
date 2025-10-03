@@ -63,7 +63,6 @@ export function VistoriasPorDepartamento() {
                                     vistoriasDoDepartamento
                                         .slice(0, 3)
                                         .map((v) => (
-
                                             <>
                                                 <Card
                                                     key={v.id}
@@ -76,7 +75,7 @@ export function VistoriasPorDepartamento() {
                                                     <ModalVisualizarVistoria
                                                         open={!!modalVistoriaId}
                                                         onOpenChange={(open) => open ? setModalVistoriaId(v.id) : setModalVistoriaId(null)}
-                                                        vistoriaId={v.id}
+                                                        vistoriaId={v.id}   
                                                     />
                                                 )}
                                             </>
