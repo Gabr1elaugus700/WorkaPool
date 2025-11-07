@@ -5,7 +5,7 @@ import { Departamento } from "@/features/departamentos/models/departamentosModel
 import { clsx } from "clsx";
 import { Vistoria } from "../models/vistoriasModel";
 import { vistoriasService } from "../services/vistoriasService";
-import ButtonRegistrarVistoria from "./botaoRegistrarVistoria";
+import NewSurveyButton from "./newSurveyButton";
 import { Card, CardTitle } from "@/components/ui/card";
 import ModalVisualizarVistoria from "./modalVisualizarVistoria";
 
@@ -16,20 +16,20 @@ export function VistoriasPorDepartamento() {
     const [modalVistoriaId, setModalVistoriaId] = useState<string | null>(null);
 
     useEffect(() => {
+        // Busca departamentos e vistorias ao carregar o componente
         const fetchDepartamentos = async () => {
             const departamentos = await departamentosService.getAll();
             setDepartamentos(departamentos);
         };
         fetchDepartamentos();
         const fetchVistoriasDepartamento = async () => {
-
             const todasVistorias = await vistoriasService.getAll();
             setVistorias(todasVistorias);
-
         };
         fetchVistoriasDepartamento();
     }, []);
 
+    // Atualiza a lista de vistorias após o registro de uma nova vistoria
     const atualizarVistorias = async () => {
         const todasVistorias = await vistoriasService.getAll();
         setVistorias(todasVistorias);
@@ -52,7 +52,7 @@ export function VistoriasPorDepartamento() {
                                     {departamento.name.charAt(0).toUpperCase() + departamento.name.slice(1).toLowerCase()}
                                 </span>
 
-                                <ButtonRegistrarVistoria
+                                <NewSurveyButton
                                     departamentoId={departamento.id?.toString()}
                                     onVistoriaCriada={atualizarVistorias}
                                 />

@@ -3,14 +3,15 @@ import { useState, useEffect } from "react";
 import { vistoriasService } from "../services/vistoriasService";
 import { ChecklistModelo } from "../models/checklistModel";
 
-type Props = {
+type ListChecklistProps = {
     selectedChecklistId: string;
     setSelectedChecklistId: (id: string) => void;
 };
 
-export default function ListChecklists({ selectedChecklistId, setSelectedChecklistId }: Props) {
+export default function ListChecklists({ selectedChecklistId, setSelectedChecklistId }: ListChecklistProps) {
     const [checklists, setChecklists] = useState<ChecklistModelo[]>([]);
 
+    // Carrega os checklists ao montar o componente
     useEffect(() => {
         const fetchChecklists = async () => {
             const response = await vistoriasService.getChecklist();

@@ -8,7 +8,7 @@ import {
 import { vistoriasService } from "../services/vistoriasService";
 import { useEffect, useState } from "react";
 import { Vistoria } from "../models/vistoriasModel";
-import ButtonRegistrarVistoria from "./botaoRegistrarVistoria";
+import ButtonRegistrarVistoria from "./newSurveyButton";
 
 export interface VistoriasDepartamentoProps {
     departamentoId: string;
