@@ -18,10 +18,9 @@ const criarItemChecklistService = async (itemName: string) => {
         toast.success('Item de checklist criado com sucesso');
     }
     return response;
-
 };
 
-const CriarItemChecklist: React.FC<Props> = ({ onItemCreated }) => {
+const CreateChecklistItem: React.FC<Props> = ({ onItemCreated }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [itemName, setItemName] = useState('');
     const [loading, setLoading] = useState(false);
@@ -86,4 +85,4 @@ const CriarItemChecklist: React.FC<Props> = ({ onItemCreated }) => {
     );
 };
 
-export default CriarItemChecklist;
+export default CreateChecklistItem;

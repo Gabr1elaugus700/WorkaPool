@@ -5,9 +5,9 @@ import { Departamento } from "@/features/departamentos/models/departamentosModel
 import { clsx } from "clsx";
 import { Vistoria } from "../models/vistoriasModel";
 import { vistoriasService } from "../services/vistoriasService";
-import NewSurveyButton from "./newSurveyButton";
+import NewSurveyButton from "./NewInspectionButton";
 import { Card, CardTitle } from "@/components/ui/card";
-import ModalVisualizarVistoria from "./modalVisualizarVistoria";
+import ModalVisualizarVistoria from "./ModalViewInspection";
 
 
 export function VistoriasPorDepartamento() {

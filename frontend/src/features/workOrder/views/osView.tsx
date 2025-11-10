@@ -4,10 +4,10 @@ import { mapToOsViewModel } from "../viewmodels/osViewModel";
 import { OsViewModel } from "../types/osType";
 import { useAuth } from "@/auth/AuthContext";
 import DefaultLayout from "@/layout/DefaultLayout";
-import { OsCard } from "../components/osCard";
+import { WorkOrderCard } from "../components/WorkOrderCard";
 import { FloatingActionButton } from "../components/FloatingActionButton";
 import { Separator } from "@/components/ui/separator";
-import ModalCriarOrdemServico from "../components/modalCriarOrdemServico";
+import ModalCriarOrdemServico from "../components/ModalCreateWorkOrder";
 // import ReducerExemple from "../components/criarChecklist";
 
 export const OsListView = () => {
@@ -63,7 +63,7 @@ export const OsListView = () => {
           {ordens.length > 0 ? (
             ordens.map((os) => (
               <div key={os.id} className="w-full">
-                <OsCard
+                <WorkOrderCard
                   id={os.id}
                   descricao={os.descricao}
                   problema={os.problema}

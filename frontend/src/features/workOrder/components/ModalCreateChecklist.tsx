@@ -8,19 +8,19 @@ import { ItemChecklist } from "../models/itemChecklistModel";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { checklistModeloService } from "../services/checklistModeloService";
-import CriarItemChecklist from "./criarItemChecklist";
+import CreateItemChecklist from "./CreateChecklistItem";
 
-interface ModalCriarChecklistProps {
+interface ModalCreateChecklistProps {
   descricao?: string;
   open?: boolean;
   setOpen?: (open: boolean) => void;
 }
 
-export default function ModalCriarChecklist({ 
+export default function ModalCreateChecklist({ 
   descricao, 
   open, 
   setOpen 
-}: ModalCriarChecklistProps) {
+}: ModalCreateChecklistProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open !== undefined ? open : internalOpen;
   const handleOpenChange = setOpen || setInternalOpen;
@@ -159,7 +159,7 @@ export default function ModalCriarChecklist({
                       </div>
                     ))
                   ) : (
-                    <CriarItemChecklist onItemCreated={atualizarItens} />
+                    <CreateItemChecklist onItemCreated={atualizarItens} />
                   );
                 })()}
               </div>

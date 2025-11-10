@@ -8,14 +8,14 @@ import {
 import { vistoriasService } from "../services/vistoriasService";
 import { useEffect, useState } from "react";
 import { Vistoria } from "../models/vistoriasModel";
-import ButtonRegistrarVistoria from "./newSurveyButton";
+import ButtonRegistrarVistoria from "./NewInspectionButton";
 
-export interface VistoriasDepartamentoProps {
+export interface ModalDepartmentInspectionsProps {
     departamentoId: string;
     onClose: () => void;
 }
 
-export default function VistoriasDepartamentoModal({ departamentoId, onClose }: VistoriasDepartamentoProps) {
+export default function ModalDepartmentInspections({ departamentoId, onClose }: ModalDepartmentInspectionsProps) {
     const [vistorias, setVistorias] = useState<Vistoria[]>([]);
 
     useEffect(() => {

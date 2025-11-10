@@ -2,7 +2,7 @@ import { Card, CardTitle, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import clsx from "clsx";
 import { OsViewModel, StatusType, PrioridadeType } from "../types/osType";
-import { EditarOs } from "./editarOs";
+import { EditOsButton } from "./EditOsButton";
 import { useState } from "react";
 
 type StatusInfo = {
@@ -35,7 +35,7 @@ const PRIORIDADE_COLOR: Record<PrioridadeType, string> = {
   BAIXA: "text-green-500",
 };
 
-export const OsCard = ({
+export const WorkOrderCard = ({
   descricao,
   problema,
   status,
@@ -72,7 +72,7 @@ export const OsCard = ({
           </div>
         </div>
 
-        <EditarOs 
+        <EditOsButton 
           idOs={id}
           open={openEditar}
           setOpen={setOpenEditar}

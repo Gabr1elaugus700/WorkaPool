@@ -4,8 +4,8 @@ import DefaultLayout from "@/layout/DefaultLayout";
 // import ButtonCriarChecklist from "../components/ModalCriarChecklist";
 import { FloatingActionButton } from "../components/FloatingActionButton";
 import { Separator } from "@/components/ui/separator"
-import ModalCriarVistoria from "../components/ModalCriarChecklist";
-import { VistoriasPorDepartamento } from "../components/VistoriasPorDepartamento";
+import ModalCreateChecklist from "../components/ModalCreateChecklist";
+import { VistoriasPorDepartamento } from "../components/InspectionsByDepartment";
 
 
 export const VistoriaView = () => {
@@ -40,7 +40,7 @@ export const VistoriaView = () => {
           </div>
         </div>
         <FloatingActionButton onClick={() => setModalCriarVistoriaOpen(true)} ariaLabel="Criar Vistoria" />
-        <ModalCriarVistoria
+        <ModalCreateChecklist
           descricao="Criar Checklist"
           open={modalCriarVistoriaOpen}
           setOpen={setModalCriarVistoriaOpen}

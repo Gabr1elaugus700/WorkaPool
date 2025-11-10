@@ -11,7 +11,7 @@ type CheckboxSurveyProps = {
   ) => void;
 };
 
-export default function CheckboxSurvey({
+export default function SelectedChecklist({
   selectedChecklistId,
   onChangeItens,
 }: CheckboxSurveyProps) {

@@ -11,17 +11,17 @@ import FormField from "@/components/ui/FormField";
 type Status = "ABERTA" | "EM_ANDAMENTO" | "FINALIZADA" | "CANCELADA";
 type Prioridade = "BAIXA" | "MEDIA" | "ALTA";
 
-interface ModalCriarOrdemServicoProps {
+interface ModalCreateWorkOrderProps {
   open?: boolean;
   setOpen?: (open: boolean) => void;
   onOsCreated?: () => void;
 }
 
-export default function ModalCriarOrdemServico({
+export default function ModalCreateWorkOrder({
   open,
   setOpen,
   onOsCreated
-}: ModalCriarOrdemServicoProps) {
+}: ModalCreateWorkOrderProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open !== undefined ? open : internalOpen;
   const handleOpenChange = setOpen || setInternalOpen;

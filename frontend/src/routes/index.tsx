@@ -13,8 +13,8 @@ import MontagemDeCargas from '../pages/controleDeCargas';
 import ClientesInativos from '../pages/ClientesInativos';
 import Login from "@/auth/Login";
 import FretesPage from "@/pages/FretesPage";
-import OsListView from "@/features/os/views/osView";
-import VistoriaView from "@/features/os/views/vistoriaView";
+import OsListView from "@/features/workOrder/views/osView";
+import VistoriaView from "@/features/workOrder/views/vistoriaView";
 import UsersView from "@/features/users/views/usersView";
 
 

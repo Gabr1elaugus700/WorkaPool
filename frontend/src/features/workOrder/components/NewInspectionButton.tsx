@@ -21,21 +21,21 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/auth/AuthContext";
 import { vistoriasService } from "../services/vistoriasService";
-import ListChecklists from "./listarChecklists";
-import CheckboxModeloVistoria from "./checklistSelecionado";
+import ListChecklists from "./ListChecklists";
+import CheckboxModeloVistoria from "./SelectedChecklist";
 import { PlusCircle } from "lucide-react";
-import ModalCriarOrdemServico from "./modalCriarOrdemServico";
-import ModalConfirmCreateOs from "./modalConfirmCreateOs";
+import ModalCriarOrdemServico from "./ModalCreateWorkOrder";
+import ModalConfirmCreateOs from "./ModalConfirmWorkOrderCreation";
 
-interface newSurveyButtonProps {
+interface NewInspectionButtonProps {
   departamentoId?: string;
   onVistoriaCriada?: () => void;
 }
 
-export default function NewSurveyButton({
+export default function NewInspectionButton({
   departamentoId,
   onVistoriaCriada,
-}: newSurveyButtonProps) {
+}: NewInspectionButtonProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

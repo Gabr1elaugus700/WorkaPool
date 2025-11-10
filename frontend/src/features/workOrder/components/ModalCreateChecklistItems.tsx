@@ -11,12 +11,12 @@ import {
 } from "@/components/ui/dialog"
 import { useState } from "react";
 
-export interface CriarItensChecklistProps {
+export interface CreateChecklistItemsProps {
     descricao: string;
     onCreate: (descricao: string) => void;
 }
 
-export default function ModalCriarItensChecklist({ descricao, onCreate }: CriarItensChecklistProps) {
+export default function ModalCreateChecklistItems({ descricao, onCreate }: CreateChecklistItemsProps) {
   const [descricaoItem, setDescricaoItem] = useState("");
   const handleClick = () => {
     onCreate(descricaoItem);

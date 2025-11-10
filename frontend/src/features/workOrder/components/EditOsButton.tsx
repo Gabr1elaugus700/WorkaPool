@@ -50,7 +50,7 @@ interface EditarOsProps {
     setOpen?: (open: boolean) => void;
 }
 
-export const EditarOs = ({ idOs, open, setOpen }: EditarOsProps) => {
+export const EditOsButton = ({ idOs, open, setOpen }: EditarOsProps) => {
     const [osData, setOsData] = useState<OrdemServico | null>(null);
     const [newStatus, setNewStatus] = useState<StatusType | "">("");
     const [newCompletionDate, setNewCompletionDate] = useState<string>("");
