@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { osController } from "../controllers/osController";
 import { validate } from "../../../middlewares/validate";
-import { createOSSchema, updateOSSchema } from "../schemas/osSchemas";
+import { createOSSchema, updateOSSchema } from "../validations/osSchemas";
 
 const multer = require("multer");
 const storage = multer.diskStorage({

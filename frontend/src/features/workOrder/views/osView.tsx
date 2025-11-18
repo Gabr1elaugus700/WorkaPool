@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { osService } from "../services/osService";
+import { osService } from "../services/workOrder.service";
 import { mapToOsViewModel } from "../viewmodels/osViewModel";
-import { OsViewModel } from "../types/osType";
+import { OsViewModel } from "../types/workOrder.types";
 import { useAuth } from "@/auth/AuthContext";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { WorkOrderCard } from "../components/WorkOrderCard";

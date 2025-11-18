@@ -2,9 +2,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Calendar, Pencil, MapPin, User, CircleAlert, Activity, Plus, CircleCheckBig } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { osService } from "../services/osService";
-import { OrdemServico } from "../models/osModel";
-import { StatusType, PrioridadeType } from "../types/osType";
+import { osService } from "../services/workOrder.service";
+import { OrdemServico } from "../models/workOrder.model";
+import { StatusType, PrioridadeType } from "../types/workOrder.types";
 import FormField from "@/components/ui/FormField";
 import { Separator } from "@/components/ui/separator";
 import clsx from "clsx";
@@ -44,13 +44,13 @@ const PRIORIDADE_COLOR: Record<PrioridadeType, string> = {
     BAIXA: "text-green-500",
 };
 
-interface EditarOsProps {
+interface EditWorkOrderButtonProps {
     idOs?: string;
     open: boolean;
     setOpen?: (open: boolean) => void;
 }
 
-export const EditOsButton = ({ idOs, open, setOpen }: EditarOsProps) => {
+export const EditWorkOrderButton = ({ idOs, open, setOpen }: EditWorkOrderButtonProps) => {
     const [osData, setOsData] = useState<OrdemServico | null>(null);
     const [newStatus, setNewStatus] = useState<StatusType | "">("");
     const [newCompletionDate, setNewCompletionDate] = useState<string>("");

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { itemChecklistController } from "../controllers/itemChecklistController";
 import { validate } from "../../../middlewares/validate";
-import { createItemChecklistSchema, updateItemChecklistSchema } from "../schemas/ItemChecklistSchemas";
+import { createItemChecklistSchema, updateItemChecklistSchema } from "../validations/ItemChecklistSchemas";
 
 const router = Router();
 

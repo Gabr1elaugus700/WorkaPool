@@ -2,8 +2,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Eye } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Vistoria } from "../models/vistoriasModel";
-import { vistoriasService } from "../services/vistoriasService";
+import { Vistoria } from "../models/inspection.model";
+import { vistoriasService } from "../services/inspection.service";
 
 interface ModalVisualizarVistoriaProps {
     open: boolean;

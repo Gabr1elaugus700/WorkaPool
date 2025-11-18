@@ -1,7 +1,7 @@
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import { vistoriasService } from "../services/vistoriasService";
-import { ChecklistModelo } from "../models/checklistModel";
+import { vistoriasService } from "../services/inspection.service";
+import { ChecklistModelo } from "../models/checklist.model";
 
 type ListChecklistProps = {
     selectedChecklistId: string;

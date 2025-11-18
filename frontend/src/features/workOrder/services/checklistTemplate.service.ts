@@ -1,5 +1,5 @@
 import { getBaseUrl } from "@/lib/apiBase";
-import { ModeloChecklist } from "../models/modeloChecklistModel";
+import { ModeloChecklist } from "../models/checklistTemplate.model";
 
 export const checklistModeloService = {
   getAll: async (): Promise<ModeloChecklist[]> => {

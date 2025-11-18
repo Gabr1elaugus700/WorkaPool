@@ -1,6 +1,6 @@
 import { getBaseUrl } from "@/lib/apiBase";
-import { Vistoria } from "../models/vistoriasModel";
-import { ChecklistModelo } from "../models/checklistModel";
+import { Vistoria } from "../models/inspection.model";
+import { ChecklistModelo } from "../models/checklist.model";
 
 export const vistoriasService = {
   getAll: async (): Promise<Vistoria[]> => {

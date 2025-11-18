@@ -5,9 +5,9 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { vistoriasService } from "../services/vistoriasService";
+import { vistoriasService } from "../services/inspection.service";
 import { useEffect, useState } from "react";
-import { Vistoria } from "../models/vistoriasModel";
+import { Vistoria } from "../models/inspection.model";
 import ButtonRegistrarVistoria from "./NewInspectionButton";
 
 export interface ModalDepartmentInspectionsProps {

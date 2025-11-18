@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { vistoriaController } from "../controllers/vistoriaController";
 import { validate } from "../../../middlewares/validate";
-import { CreateVistoriaSchema, updateVistoriaSchema } from "../schemas/vistoriaSchemas";
+import { CreateVistoriaSchema, updateVistoriaSchema } from "../validations/vistoriaSchemas";
 
 const router = Router();
 

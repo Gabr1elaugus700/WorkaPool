@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/auth/AuthContext";
-import { vistoriasService } from "../services/vistoriasService";
+import { vistoriasService } from "../services/inspection.service";
 import ListChecklists from "./ListChecklists";
 import CheckboxModeloVistoria from "./SelectedChecklist";
 import { PlusCircle } from "lucide-react";

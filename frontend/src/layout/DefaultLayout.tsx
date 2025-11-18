@@ -71,7 +71,7 @@ export default function DefaultLayout({ children }: Props) {
               Vistorias
             </ButtonLink>
 
-            {/* <ButtonLink
+            <ButtonLink
               to="/fretes"
               allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
             >
@@ -97,14 +97,14 @@ export default function DefaultLayout({ children }: Props) {
               allowedRoles={["ADMIN"]}
             >
               Dashboards
-            </ButtonLink> */}
+            </ButtonLink>
 
-            {/* <ButtonLink
+            <ButtonLink
               to="/dashboardTest"
               allowedRoles={["ADMIN"]}
             >
               DashBoardTeste
-            </ButtonLink> */}
+            </ButtonLink>
             <Button
               variant="ghost"
               onClick={handleLogout}

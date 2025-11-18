@@ -1,5 +1,5 @@
 import { getBaseUrl } from "@/lib/apiBase";
-import { OrdemServico } from "../models/osModel";
+import { OrdemServico } from "../models/workOrder.model";
 
 export const osService = {
   getAll: async (): Promise<OrdemServico[]> => {

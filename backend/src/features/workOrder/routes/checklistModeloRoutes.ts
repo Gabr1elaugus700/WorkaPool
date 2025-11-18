@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { checklistModeloController } from "../controllers/checklistModeloController";
+import { checklistModeloController } from "../controllers/inpectionModelController";
 import { validate } from "../../../middlewares/validate";
-import { createChecklistModeloSchema, updateChecklistModeloSchema } from "../schemas/checklistModeloSchemas";
+import { createChecklistModeloSchema, updateChecklistModeloSchema } from "../validations/checklistModeloSchemas";
 
 const router = Router();
 

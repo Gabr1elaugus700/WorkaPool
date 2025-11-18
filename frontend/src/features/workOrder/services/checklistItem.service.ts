@@ -1,5 +1,5 @@
 import { getBaseUrl } from "@/lib/apiBase";
-import { ItemChecklist } from "../models/itemChecklistModel";
+import { ItemChecklist } from "../models/checklistItem.model";
 
 export const itemChecklistService = {
   getAll: async (): Promise<ItemChecklist[]> => {
@@ -10,7 +10,7 @@ export const itemChecklistService = {
         },
     });
     const data = await response.json();
-    return data;
+    return data; 
   },
 
   create: async ( descricao: string) => {

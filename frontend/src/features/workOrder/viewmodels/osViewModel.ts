@@ -1,4 +1,4 @@
-import { OrdemServico } from "../models/osModel";
+import { OrdemServico } from "../models/workOrder.model";
 
 export const mapToOsViewModel = (os: OrdemServico) => ({
   id: os.id,

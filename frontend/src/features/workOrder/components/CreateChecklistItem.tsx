@@ -2,7 +2,7 @@ import { PlusIcon } from 'lucide-react';
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { itemChecklistService } from '../services/ItemChecklistService';
+import { itemChecklistService } from '../services/checklistItem.service';
 import { toast } from 'sonner';
 
 type Props = {

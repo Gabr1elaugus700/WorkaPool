@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { vistoriasService } from "../services/vistoriasService";
-import { ChecklistModelo } from "../models/checklistModel";
+import { vistoriasService } from "../services/inspection.service";
+import { ChecklistModelo } from "../models/checklist.model";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 

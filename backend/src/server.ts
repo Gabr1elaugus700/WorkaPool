@@ -28,12 +28,12 @@ import caminhoes from './routes/caminhoesRoutes';
 import parametrosGlobaisFretes from './routes/parametrosFretesRoutes';
 import fretesRoutes from './routes/fretesRoutes';
 
-import ordemServico from './features/os/routes/osRoutes';
-import itemChecklist from './features/os/routes/itemChecklistRoutes';
+import ordemServico from './features/workOrder/routes/osRoutes';
+import itemChecklist from './features/workOrder/routes/itemChecklistRoutes';
 import departamentos from './features/departamentos/routes/departamentosRoutes';
-import checklistModelo from './features/os/routes/checklistModeloRoutes';
-import vistoriaRoutes from './features/os/routes/vistoriaRoutes'
-import checklistVistoria from './features/os/routes/chacklilstVistoriaRoutes'
+import checklistModelo from './features/workOrder/routes/checklistModeloRoutes';
+import vistoriaRoutes from './features/workOrder/routes/vistoriaRoutes'
+import checklistVistoria from './features/workOrder/routes/chacklilstVistoriaRoutes'
 
 import userRoutes from './features/users/routes/userRoutes';
 

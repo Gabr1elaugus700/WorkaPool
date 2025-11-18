@@ -3,11 +3,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { itemChecklistService } from "../services/ItemChecklistService";
-import { ItemChecklist } from "../models/itemChecklistModel";
+import { itemChecklistService } from "../services/checklistItem.service";
+import { ItemChecklist } from "../models/checklistItem.model";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { checklistModeloService } from "../services/checklistModeloService";
+import { checklistModeloService } from "../services/checklistTemplate.service";
 import CreateItemChecklist from "./CreateChecklistItem";
 
 interface ModalCreateChecklistProps {

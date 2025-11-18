@@ -1,8 +1,8 @@
 import { Card, CardTitle, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import clsx from "clsx";
-import { OsViewModel, StatusType, PrioridadeType } from "../types/osType";
-import { EditOsButton } from "./EditOsButton";
+import { OsViewModel, StatusType, PrioridadeType } from "../types/workOrder.types";
+import { EditWorkOrderButton } from "./EditWorkOrderButton";
 import { useState } from "react";
 
 type StatusInfo = {
@@ -72,7 +72,7 @@ export const WorkOrderCard = ({
           </div>
         </div>
 
-        <EditOsButton 
+        <EditWorkOrderButton 
           idOs={id}
           open={openEditar}
           setOpen={setOpenEditar}

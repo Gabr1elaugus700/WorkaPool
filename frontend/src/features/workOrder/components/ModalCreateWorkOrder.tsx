@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, MapPinCheck } from "lucide-react";
-import { osService } from "../services/osService";
+import { osService } from "../services/workOrder.service";
 import { toast } from "sonner";
 import FormField from "@/components/ui/FormField";
 

@@ -3,8 +3,8 @@ import { departamentosService } from '@/features/departamentos/services/departam
 // import { Card } from "@/components/ui/card";
 import { Departamento } from "@/features/departamentos/models/departamentosModel";
 import { clsx } from "clsx";
-import { Vistoria } from "../models/vistoriasModel";
-import { vistoriasService } from "../services/vistoriasService";
+import { Vistoria } from "../models/inspection.model";
+import { vistoriasService } from "../services/inspection.service";
 import NewSurveyButton from "./NewInspectionButton";
 import { Card, CardTitle } from "@/components/ui/card";
 import ModalVisualizarVistoria from "./ModalViewInspection";

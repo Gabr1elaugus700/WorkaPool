@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { checklistVistoriaController } from "../controllers/checklistVistoriaController";
 import { validate } from "../../../middlewares/validate";
-import { createChecklistVistoriaSchema, updateChecklistVistoriaSchema } from "../schemas/checklistVistoriaSchemas";
+import { createChecklistVistoriaSchema, updateChecklistVistoriaSchema } from "../validations/checklistVistoriaSchemas";
 
 const router = Router();
 
