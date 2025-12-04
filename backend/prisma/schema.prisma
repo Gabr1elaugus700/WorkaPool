@@ -90,6 +90,7 @@ enum Meses {
   DEZEMBRO
 }
 
+// DEPRECATED - usar model Goals
 model Metas {
   id          String   @id @default(uuid())
   produto     String   @default("")
@@ -101,6 +102,19 @@ model Metas {
   precoMedio  Float    @default(0.0)
   totalVendas Float    @default(0.0)
   cod_grp     String?  @default("")
+}
+
+model Goals {
+  id           String   @id @default(uuid())
+  product      String   @default("")
+  productGoal  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  codRep       Int      @default(0)
+  monthGoal    Int      @default(0)
+  yearGoal     Int      @default(0)
+  averagePrice Float    @default(0.0)
+  cod_grp      String?  @default("") // Internal Code to seller
 }
 
 model CalendarioMetas {
