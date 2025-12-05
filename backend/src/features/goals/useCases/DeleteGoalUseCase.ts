@@ -6,15 +6,15 @@ export type DeleteGoalDTO = {
     id: string;
 };
 
-export class DeleteGoalService {
+export class DeleteGoalUseCase {
     constructor(
       private readonly goalsRepository: IGoalsRepository = new PrismaGoalsRepository()
     ) {}
 
     async execute({ id }: DeleteGoalDTO): Promise<void> {
-        const existing = await this.goalsRepository.findById(id);
+        const existingGoal = await this.goalsRepository.findById(id);
         
-        if (!existing) {
+        if (!existingGoal) {
             throw new Error("Meta não encontrada.");
         }
 

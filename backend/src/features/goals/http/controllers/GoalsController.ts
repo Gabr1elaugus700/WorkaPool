@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
-import { CreateGoalService } from "../../services/CreateGoalService";
+import { CreateGoalUseCase } from "../../useCases/CreateGoalUseCase";
 import { CreateGoalSchema } from "../schemas/goalSchemas";
-import { DeleteGoalService } from "../../services/DeleteGoalService";
+import { DeleteGoalUseCase } from "../../useCases/DeleteGoalUseCase";
+import { GetAllGoalsUseCase } from "../../useCases/GetAllGoalUseCase";
+import { FindByIdUseCase } from "../../useCases/FindByIdUseCase";
 
 export class GoalsController {
   static async create(req: Request, res: Response): Promise<Response> {
@@ -15,7 +17,7 @@ export class GoalsController {
         });
       }
 
-      const service = new CreateGoalService();
+      const service = new CreateGoalUseCase();
       const goal = await service.execute(parsed.data);
 
       return res.status(201).json({
@@ -44,12 +46,38 @@ export class GoalsController {
         return res.status(400).json({ error: "ID da meta é obrigatório." });
       }
 
-      const service = new DeleteGoalService();
+      const service = new DeleteGoalUseCase();
       await service.execute({ id });
       return res.status(204).send();
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Erro Interno ao deletar meta';
         return res.status(500).json({ error: message });
+    }
+  }
+
+  static async getAll(req: Request, res: Response): Promise<Response> {
+    try {
+      const service = new GetAllGoalsUseCase();
+      const goals = await service.execute();
+      return res.status(200).json(goals);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro Interno ao buscar metas';
+      return res.status(500).json({ error: message });
+    }
+  }
+
+  static async findById(req: Request, res: Response): Promise<Response> {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return res.status(400).json({ error: "ID da meta é obrigatório." });
+      }
+      const service = new FindByIdUseCase();
+      const goal = await service.execute({ id });
+      return res.status(200).json(goal);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro Interno ao buscar meta';
+      return res.status(500).json({ error: message });
     }
   }
 }

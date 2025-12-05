@@ -38,7 +38,7 @@ export class Goal {
     updatedAt = new Date(),
   }: GoalProps) {
     this.id = uuid();
-    this.product = product;
+    this.product = product.toUpperCase();
     this.productGoal = productGoal;
     this.codRep = codRep;
     this.monthGoal = monthGoal;

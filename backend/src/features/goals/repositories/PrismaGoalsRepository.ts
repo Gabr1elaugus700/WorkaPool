@@ -43,6 +43,11 @@ export class PrismaGoalsRepository implements IGoalsRepository {
     });
   }
 
+  async getAll(): Promise<Goal[]> {
+    const records = await prisma.goals.findMany();
+    return records.map(GoalMapper.toDomain);
+  }
+
   async findById(id: string): Promise<Goal | null> {
     const record = await prisma.goals.findUnique({
       where: { id },

@@ -3,7 +3,7 @@ import { IGoalsRepository } from "../repositories/IGoalsRepository";
 import { PrismaGoalsRepository } from "../repositories/PrismaGoalsRepository";
 import { CreateGoalDTO } from "../http/schemas/goalSchemas";
 
-export class CreateGoalService {
+export class CreateGoalUseCase {
     constructor(
       private readonly goalsRepository: IGoalsRepository = new PrismaGoalsRepository()
     ) {}

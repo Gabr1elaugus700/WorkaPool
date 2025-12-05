@@ -5,9 +5,8 @@ import { GoalsController } from "../controllers/GoalsController";
 const router = Router();
 
 router.post("/", GoalsController.create);
-router.get("/", (_req, res) => {
-    res.status(200).json({ message: "GET funcionando — teste OK" });
-});
+router.get("/", GoalsController.getAll)
 router.delete("/:id", GoalsController.delete);
+router.get("/:id", GoalsController.findById);
 
 export default router;

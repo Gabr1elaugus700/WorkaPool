@@ -4,6 +4,7 @@ export interface IGoalsRepository {
   create(goal: Goal): Promise<void>;
   update(goal: Goal): Promise<void>;
   delete(id: string): Promise<void>;
+  getAll(): Promise<Goal[]>;
   findById(id: string): Promise<Goal | null>;
   findByRepMonthProduct(params:{
     codRep: number;
