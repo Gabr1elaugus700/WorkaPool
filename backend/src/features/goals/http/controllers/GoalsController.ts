@@ -4,6 +4,7 @@ import { CreateGoalSchema } from "../schemas/goalSchemas";
 import { DeleteGoalUseCase } from "../../useCases/DeleteGoalUseCase";
 import { GetAllGoalsUseCase } from "../../useCases/GetAllGoalUseCase";
 import { FindByIdUseCase } from "../../useCases/FindByIdUseCase";
+import { FindByRepMonthProductUseCase } from "../../useCases/FindByRepMonthProductUseCase";
 
 export class GoalsController {
   static async create(req: Request, res: Response): Promise<Response> {
@@ -74,6 +75,28 @@ export class GoalsController {
       }
       const service = new FindByIdUseCase();
       const goal = await service.execute({ id });
+      return res.status(200).json(goal);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro Interno ao buscar meta';
+      return res.status(500).json({ error: message });
+    }
+  }
+
+  static async findByRepMonthProduct(req: Request, res: Response): Promise<Response> {
+    try {
+      const { codRep, monthGoal, cod_grp } = req.query;
+
+      if (!codRep || !monthGoal || !cod_grp) {
+        return res.status(400).json({ error: "Parâmetros codRep, monthGoal e cod_grp são obrigatórios." });
+      }
+
+      const service = new FindByRepMonthProductUseCase();
+      const goal = await service.execute({
+        codRep: Number(codRep),
+        monthGoal: Number(monthGoal),
+        cod_grp: String(cod_grp),
+      });
+
       return res.status(200).json(goal);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro Interno ao buscar meta';
