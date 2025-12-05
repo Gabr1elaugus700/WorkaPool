@@ -11,9 +11,9 @@ export interface IGoalsRepository {
     monthGoal: number;
     cod_grp?: string;
   }): Promise<Goal | null>;
-  findByRepAndMonthAndYear(
+  findByRepAndMonthAndYear(params: {
     codRep: number,
     monthGoal: number,
-    yearGoal: number
-  ): Promise<Goal | null>;
+    yearGoal: number,
+  }): Promise<Goal[] | null>;
 }

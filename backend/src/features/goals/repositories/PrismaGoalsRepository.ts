@@ -80,22 +80,23 @@ export class PrismaGoalsRepository implements IGoalsRepository {
     return GoalMapper.toDomain(record);
   }
 
-  async findByRepAndMonthAndYear(
+  async findByRepAndMonthAndYear(params: {
     codRep: number,
     monthGoal: number,
     yearGoal: number
-  ): Promise<Goal | null> {
-    const record = await prisma.goals.findFirst({
+  }): Promise<Goal[] | null> {
+    const record = await prisma.goals.findMany({
       where: {
-        codRep,
-        monthGoal,
-        yearGoal,
+        codRep: params.codRep,
+        monthGoal: params.monthGoal,
+        yearGoal: params.yearGoal,
       },
     });
-
+    
     if (!record) {
       return null;
     }
-    return GoalMapper.toDomain(record);
+
+    return record.map(GoalMapper.toDomain);
   }
 }
