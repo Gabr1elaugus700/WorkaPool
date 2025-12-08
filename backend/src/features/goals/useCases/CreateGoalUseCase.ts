@@ -10,13 +10,15 @@ export class CreateGoalUseCase {
 
     async execute(data: CreateGoalDTO): Promise<Goal> {
         
-        const existing = await this.goalsRepository.findByRepMonthProduct({
+        const existing = await this.goalsRepository.findByRepAndMonthAndYearAndCodGrp({
             codRep: data.codRep,
             monthGoal: data.monthGoal,
+            yearGoal: data.yearGoal,
             cod_grp: data.cod_grp,
         });
 
         if (existing) {
+            console.log("Existing goal found:", existing);
             throw new Error("Meta já existe para este vendedor, esse mês e produto.");
         }
 

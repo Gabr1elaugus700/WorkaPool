@@ -5,7 +5,7 @@ import { DeleteGoalUseCase } from "../../useCases/DeleteGoalUseCase";
 import { GetAllGoalsUseCase } from "../../useCases/GetAllGoalUseCase";
 import { FindByIdUseCase } from "../../useCases/FindByIdUseCase";
 import { FindByRepMonthProductUseCase } from "../../useCases/FindByRepMonthProductUseCase";
-import { FindByRepMonthYearUseCase } from "../../useCases/FindByRepMonthYearUseCase";
+import { FindByRepMonthYearCodGrpUseCase } from "../../useCases/FindByRepMonthYearCodGrpUseCase";
 
 export class GoalsController {
   static async create(req: Request, res: Response): Promise<Response> {
@@ -19,6 +19,7 @@ export class GoalsController {
         });
       }
 
+      console.log("Parsed data:", parsed.data);
       const service = new CreateGoalUseCase();
       const goal = await service.execute(parsed.data);
 
@@ -37,7 +38,7 @@ export class GoalsController {
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Erro Interno ao criar meta';
         return res.status(500).json({ error: message });
-    }
+    } 
   }
 
   static async delete(req: Request, res: Response): Promise<Response> {
@@ -113,7 +114,7 @@ export class GoalsController {
         return res.status(400).json({ error: "Parâmetros codRep, monthGoal e yearGoal são obrigatórios." });
       }
 
-      const service = new FindByRepMonthYearUseCase();
+      const service = new FindByRepMonthYearCodGrpUseCase();
       const goal = await service.execute({
         codRep: Number(codRep),
         monthGoal: Number(monthGoal),

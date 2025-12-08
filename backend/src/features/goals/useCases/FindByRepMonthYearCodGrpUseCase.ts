@@ -8,13 +8,13 @@ export type FindByRepMonthYearDTO = {
   yearGoal: number;
 };
 
-export class FindByRepMonthYearUseCase {
+export class FindByRepMonthYearCodGrpUseCase {
   constructor(
     private readonly goalsRepository: IGoalsRepository = new PrismaGoalsRepository()
   ) {}
 
-  async execute({ codRep, monthGoal, yearGoal }: FindByRepMonthYearDTO): Promise<Goal[]> {
-    const existingGoal = await this.goalsRepository.findByRepAndMonthAndYear({
+  async execute({ codRep, monthGoal, yearGoal }: FindByRepMonthYearDTO): Promise<Goal> {
+    const existingGoal = await this.goalsRepository.findByRepAndMonthAndYearAndCodGrp({
       codRep,
       monthGoal,
       yearGoal,
@@ -24,6 +24,6 @@ export class FindByRepMonthYearUseCase {
       throw new Error("Meta não encontrada.");
     }
 
-    return existingGoal.sort((a, b) => b.productGoal.valueOf() - a.productGoal.valueOf());
+    return existingGoal;
   }
 }
