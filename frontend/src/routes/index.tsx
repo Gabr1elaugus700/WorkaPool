@@ -11,6 +11,7 @@ import Dashboard from '../pages/dashboardVendas';
 import DashboardTest from '../pages/dashboard'
 import MontagemDeCargas from '../pages/controleDeCargas';
 import ClientesInativos from '../pages/ClientesInativos';
+import { OrderLossView } from '@/features/orderLoss';
 import Login from "@/auth/Login";
 import FretesPage from "@/pages/FretesPage";
 import OsListView from "@/features/workOrder/views/osView";
@@ -33,6 +34,7 @@ const AppRoutes = () => {
             }
           />
 
+            <Route path="/order-loss" element={<OrderLossView />} />
           <Route
             path="/Os"
             element={
