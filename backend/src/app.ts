@@ -134,7 +134,7 @@ app.use("/api/pbi-Metas", pbiMetasRoutes);
 // Iniciar servidor
 app.use(
   (
-    error: Error,
+  error: Error,
     req: express.Request,
     res: express.Response,
     next: express.NextFunction
