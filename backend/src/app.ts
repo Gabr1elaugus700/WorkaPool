@@ -128,6 +128,9 @@ app.use("/api/metas", metasRoutes);
 // Declare new Goals routes
 app.use("/api/goals", goals);
 
+// Order Loss - Pedidos Perdidos e em Negociação
+// app.use("/api/order-loss", orderLossRoutes);
+
 // Rotas Power BI
 import pbiMetasRoutes from "./routes/pbiMetasRoutes";
 app.use("/api/pbi-Metas", pbiMetasRoutes);

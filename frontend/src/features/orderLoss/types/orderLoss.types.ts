@@ -1,5 +1,21 @@
 export type OrderStatus = 'negotiating' | 'lost';
 
+export type LossReasonCode = 'freight' | 'price' | 'margin' | 'stock' | 'other';
+
+export interface LossReasonDetail {
+  code: LossReasonCode;
+  description: string;
+  submittedAt: Date;
+}
+
+export const lossReasonLabels: Record<LossReasonCode, string> = {
+  freight: 'Frete',
+  price: 'Preço',
+  margin: 'Margem',
+  stock: 'Estoque',
+  other: 'Outro',
+};
+
 export interface Product {
   id: string;
   name: string;
@@ -24,7 +40,8 @@ export interface Order {
   createdAt: Date;
   updatedAt: Date;
   products: Product[];
-  lossReason?: string; // Apenas para pedidos perdidos
+  lossReason?: string; // Apenas para pedidos perdidos (versão simplificada)
+  lossReasonDetail?: LossReasonDetail; // Estrutura completa com código e justificativa
 }
 
 export interface Seller {
