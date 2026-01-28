@@ -31,6 +31,8 @@ model User {
   codRep             Int      @default(0)
   mustChangePassword Boolean  @default(true)
 
+  orders          Order[]
+
   WorkOrders      WorkOrder[]
   solicitacaoRota SolicitacaoRota[]
   OrdemServico    OrdemServico[]
@@ -467,4 +469,77 @@ model UsuarioDepartamento {
   departamento Departamento @relation(fields: [departamento_id], references: [id])
 
   @@unique([user_id, departamento_id])
+}
+
+enum OrderStatus {
+  NEGOTIATING  // Em **negociação**
+  LOST         // Perdido
+  WON          // Ganho (futuro)
+  CANCELLED    // Cancelado (futuro)
+}
+
+enum LossReasonCode {
+  FREIGHT      // Frete
+  PRICE        // Preço
+  MARGIN       // Margem
+  STOCK        // Estoque
+  OTHER        // Outro
+}
+
+// ==================== MODELS ====================
+
+model Order {
+  id              String        @id @default(uuid())
+  orderNumber     String        @default("1") //Id externo do pedido (SAPINS)
+  status          OrderStatus   @default(NEGOTIATING)
+  sellerId        String
+  seller          User          @relation(fields: [sellerId], references: [id])
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relacionamentos
+  products        OrderProduct[]
+  lossReason      LossReason?
+  
+  @@index([sellerId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderProduct {
+  id              String   @id @default(uuid())
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  codprod        String // add Relation with Product model next step
+  description    String?
+  // productId       String?  // FK opcional para catálogo
+  // name            String
+  // quantity        Int
+  // weight          Decimal  // kg unitário
+  // margin          Decimal  // %
+  // freight         Decimal  // R$
+  // unitPrice       Decimal  // R$
+  // totalPrice      Decimal  // R$ (quantity * unitPrice)
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([orderId])
+  @@map("order_products")
+}
+
+model LossReason {
+  id              String          @id @default(uuid())
+  orderId         String          @unique
+  order           Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  code            LossReasonCode
+  description     String          @db.Text
+  submittedAt     DateTime        @default(now())
+  submittedBy     String          // sellerId
+  
+  @@index([code])
+  @@map("loss_reasons")
 }

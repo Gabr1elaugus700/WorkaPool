@@ -56,14 +56,16 @@ export default function DefaultLayout({ children }: Props) {
             >
               Meus Pedidos
             </ButtonLink>
-            {/* <ButtonLink to="/">Início</ButtonLink>
-
             <ButtonLink
               to="/cargas"
               allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
             >
               Cargas
             </ButtonLink>
+            
+            {/* <ButtonLink to="/">Início</ButtonLink>
+
+            
             <ButtonLink
               to="/users"
               allowedRoles={["ADMIN"]}
