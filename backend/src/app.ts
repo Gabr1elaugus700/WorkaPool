@@ -36,6 +36,7 @@ import userRoutes from "./features/users/routes/userRoutes";
 
 // New Routes After Refactor
 import goals from "./features/goals/http/routes/goalsRoutes";
+import ordersRoutes from "./features/orderLoss/http/routes/ordersRoutes";
 
 const app = express();
 
@@ -129,7 +130,7 @@ app.use("/api/metas", metasRoutes);
 app.use("/api/goals", goals);
 
 // Order Loss - Pedidos Perdidos e em Negociação
-// app.use("/api/order-loss", orderLossRoutes);
+app.use("/api/orders", ordersRoutes);
 
 // Rotas Power BI
 import pbiMetasRoutes from "./routes/pbiMetasRoutes";
