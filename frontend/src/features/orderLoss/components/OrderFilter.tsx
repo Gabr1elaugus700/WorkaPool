@@ -1,11 +1,10 @@
-import { OrderStatus } from "../types/orderLoss.types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Clock, XCircle, List } from "lucide-react";
 
 interface OrderFilterProps {
-  activeFilter: OrderStatus | 'all';
-  onFilterChange: (filter: OrderStatus | 'all') => void;
+  activeFilter: 'all' | 'NEGOTIATING' | 'LOST';
+  onFilterChange: (filter: 'all' | 'NEGOTIATING' | 'LOST') => void;
   counts: {
     all: number;
     negotiating: number;
@@ -42,19 +41,19 @@ export const OrderFilter: React.FC<OrderFilterProps> = ({
       </Button>
 
       <Button
-        variant={activeFilter === 'negotiating' ? 'default' : 'outline'}
+        variant={activeFilter === 'NEGOTIATING' ? 'default' : 'outline'}
         size="sm"
-        onClick={() => onFilterChange('negotiating')}
+        onClick={() => onFilterChange('NEGOTIATING')}
         className={cn(
           "flex items-center gap-2",
-          activeFilter === 'negotiating' && "bg-yellow-600 hover:bg-yellow-700"
+          activeFilter === 'NEGOTIATING' && "bg-yellow-600 hover:bg-yellow-700"
         )}
       >
         <Clock className="h-4 w-4" />
         Em Negociação
         <span className={cn(
           "ml-1 px-2 py-0.5 rounded-full text-xs font-semibold",
-          activeFilter === 'negotiating' 
+          activeFilter === 'NEGOTIATING' 
             ? "bg-white/20 text-white" 
             : "bg-gray-100 text-gray-700"
         )}>
@@ -63,19 +62,19 @@ export const OrderFilter: React.FC<OrderFilterProps> = ({
       </Button>
 
       <Button
-        variant={activeFilter === 'lost' ? 'default' : 'outline'}
+        variant={activeFilter === 'LOST' ? 'default' : 'outline'}
         size="sm"
-        onClick={() => onFilterChange('lost')}
+        onClick={() => onFilterChange('LOST')}
         className={cn(
           "flex items-center gap-2",
-          activeFilter === 'lost' && "bg-red-600 hover:bg-red-700"
+          activeFilter === 'LOST' && "bg-red-600 hover:bg-red-700"
         )}
       >
         <XCircle className="h-4 w-4" />
         Perdidos
         <span className={cn(
           "ml-1 px-2 py-0.5 rounded-full text-xs font-semibold",
-          activeFilter === 'lost' 
+          activeFilter === 'LOST' 
             ? "bg-white/20 text-white" 
             : "bg-gray-100 text-gray-700"
         )}>

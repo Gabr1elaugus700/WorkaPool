@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert";
 import request from "supertest";
 import express, { Express } from "express";
-import goalsRoutes from "../../../src/features/goals/http/routes/goalsRoutes";
+import goalsRoutes from "../../../features/goals/http/routes/goalsRoutes";
 
 // Configuração da aplicação de teste
 function createTestApp(): Express {

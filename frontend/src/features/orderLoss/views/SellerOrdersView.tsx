@@ -7,7 +7,7 @@ import { SellerOrdersList } from "../components/SellerOrdersList";
 import { OrderFilter } from "../components/OrderFilter";
 import { useLostOrdersFromSapiens, useOrders } from "../hooks/useOrders";
 import { useAuth } from "@/auth/AuthContext";
-import { LostOrderFromSapiens, LossReasonCode, OrderStatus } from "../types/orderLoss.types";
+import { LostOrderFromSapiens, LossReasonCode } from "../types/orderLoss.types";
 import { OrderService } from "../services/ordersServices";
 import { 
   AlertCircle, 
@@ -41,7 +41,7 @@ const groupOrdersByNumber = (orders: LostOrderFromSapiens[]) => {
 export const SellerOrdersView = () => {
   const { user } = useAuth();
   console.log('📍 Usuário:', user);
-  const [activeFilter, setActiveFilter] = useState<OrderStatus | 'all'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'NEGOTIATING' | 'LOST'>('all');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // console.log('🚀 SellerOrdersView montado - user:', user);
