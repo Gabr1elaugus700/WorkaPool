@@ -108,6 +108,24 @@ export class OrdersController {
     }
   }
 
+  static async getPerSellerOrders(req: Request, res: Response): Promise<Response> {
+
+    try {
+      const { codRep } = req.params;
+
+      if (!codRep) {
+        return res.status(400).json({ error: "Código do Vendedor é obrigatório." });
+      }
+
+      const useCase = new GetLostOrdersUseCase();
+      const lostOrders = await useCase.execute({ codRep });
+
+      return res.status(200).json(lostOrders);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Erro ao buscar pedidos do vendedor";
+      return res.status(500).json({ error: message });
+    }
+  }
   /**
    * PATCH /api/orders/:id/status
    * Atualiza o status de um pedido

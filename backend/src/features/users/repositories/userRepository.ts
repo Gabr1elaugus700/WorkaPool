@@ -5,21 +5,27 @@ const prisma = new PrismaClient();
 export const userRepository = {
     create: async (data: Prisma.UserCreateInput) => {
         return await prisma.user.create({ data });
-    },
+        },
 
-    findAll: async () => {
+        findAll: async () => {
         return await prisma.user.findMany({
-            include: {
-                departamentos: {
-                    include: {
-                        departamento: { select: { id: true, name: true } }
-                    }
+            select: {
+            id: true,
+            name: true,
+            user: true,
+            role: true,
+            createdAt: true,
+            departamentos: {
+                include: {
+                departamento: { select: { id: true, name: true } }
                 }
-            }
+            },
+            },
+            
         });
-    },
+        },
 
-    findById: async (id: string) => {
+        findById: async (id: string) => {
         return await prisma.user.findUnique({
             where: { id },
         });

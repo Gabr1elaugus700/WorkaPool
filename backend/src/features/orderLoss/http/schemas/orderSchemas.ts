@@ -41,8 +41,6 @@ export type CreateOrderProductDTO = z.infer<typeof CreateOrderProductSchema>;
 
 // Query Filters for Lost Orders
 export const GetLostOrdersFiltersSchema = z.object({
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
   codRep: z.string().optional(),
 });
 

@@ -52,7 +52,7 @@ export default function DefaultLayout({ children }: Props) {
             </ButtonLink>
             <ButtonLink
               to="/my-orders"
-              allowedRoles={["ADMIN"]}
+              allowedRoles={["ADMIN", "VENDAS"]}
             >
               Meus Pedidos
             </ButtonLink>
@@ -170,7 +170,7 @@ export default function DefaultLayout({ children }: Props) {
       </nav>
 
       {/* Conteúdo principal */}
-      <main className="flex-1 container mx-auto p-4 pb-24 md:pb-4">{children}</main>
+      <main className="flex-1 container mx-auto p-4 pb-24 md:pb-4 bg-background/50">{children}</main>
 
       {/* Toaster do Sonner */}
       <Toaster richColors position="top-center" />

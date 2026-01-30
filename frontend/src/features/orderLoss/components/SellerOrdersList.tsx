@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Order, LossReasonCode, lossReasonLabels } from "../types/orderLoss.types";
+import { LegacyOrder, LossReasonCode, lossReasonLabels } from "../types/orderLoss.types";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 interface SellerOrdersListProps {
-  orders: Order[];
+  orders: LegacyOrder[];
   onUpdateLossReason: (orderId: string, code: LossReasonCode, description: string) => void;
 }
 
@@ -26,7 +26,7 @@ export const SellerOrdersList: React.FC<SellerOrdersListProps> = ({
   onUpdateLossReason,
 }) => {
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<LegacyOrder | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const formatCurrency = (value: number) => {
@@ -45,7 +45,7 @@ export const SellerOrdersList: React.FC<SellerOrdersListProps> = ({
     setExpandedOrderId(null);
   };
 
-  const handleViewDetails = (order: Order) => {
+  const handleViewDetails = (order: LegacyOrder) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
   };

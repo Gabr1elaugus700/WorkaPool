@@ -10,7 +10,9 @@ router.get("/lost-sapiens", OrdersController.getLostOrdersFromSapiens);
 router.post("/", OrdersController.create);
 router.get("/", OrdersController.getAll);
 router.get("/:id", OrdersController.getById);
+router.get("/seller/:codRep", OrdersController.getPerSellerOrders);
 router.patch("/:id/status", OrdersController.updateStatus);
+
 
 // Adicionar motivo de perda
 router.post("/loss-reason", OrdersController.addLossReason);

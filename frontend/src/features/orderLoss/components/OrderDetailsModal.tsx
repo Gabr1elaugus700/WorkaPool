@@ -5,14 +5,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Order } from "../types/orderLoss.types";
+import { LegacyOrder } from "../types/orderLoss.types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Package, TrendingUp, Truck, DollarSign } from "lucide-react";
 
 interface OrderDetailsModalProps {
-  order: Order;
+  order: LegacyOrder;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -195,15 +195,11 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
             {/* Datas */}
             <Separator />
-            <div className="flex justify-between text-sm text-gray-500">
-              <div>
-                <span className="font-medium">Criado em:</span>{' '}
-                {new Date(order.createdAt).toLocaleString('pt-BR')}
-              </div>
-              <div>
-                <span className="font-medium">Atualizado em:</span>{' '}
-                {new Date(order.updatedAt).toLocaleString('pt-BR')}
-              </div>
+            <div className="flex justify-end text-sm text-gray-500">
+                <div>
+                <span className="font-medium">Data do Pedido:</span>{' '}
+                {new Date(order.createdAt).toLocaleDateString('pt-BR')}
+                </div>
             </div>
           </div>
         </ScrollArea>
