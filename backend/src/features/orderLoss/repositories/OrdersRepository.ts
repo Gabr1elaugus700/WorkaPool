@@ -57,7 +57,7 @@ export class OrdersRepository implements IOrdersRepository {
     });
   }
 
-  async findByOrderNumber(orderNumber: string): Promise<Order | null> {
+  async findByOrderNumber(orderNumber: number): Promise<Order | null> {
     const order = await this.prisma.order.findFirst({
       where: { orderNumber },
     });

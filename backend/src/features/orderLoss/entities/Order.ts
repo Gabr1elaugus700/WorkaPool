@@ -17,7 +17,7 @@ export enum LossReasonCode {
 
 export interface OrderProps {
   id?: string;
-  orderNumber: string;
+  orderNumber: number;
   status: OrderStatus;
   codRep: string;
   createdAt?: Date;
@@ -26,7 +26,7 @@ export interface OrderProps {
 
 export class Order {
   public readonly id: string;
-  public orderNumber: string;
+  public orderNumber: number;
   public status: OrderStatus;
   public codRep: string;
   public readonly createdAt: Date;

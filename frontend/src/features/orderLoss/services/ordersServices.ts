@@ -23,7 +23,7 @@ export const OrderService = {
     },
 
     create: async (data: CreateOrderDTO): Promise<Order> => {
-        console.log('📤 [OrderService.create] URL:', `${getBaseUrl()}/api/orders/loss-reason`);
+        console.log('📤 [OrderService.create] URL:', `${getBaseUrl()}/api/orders`);
         console.log('📤 [OrderService.create] Payload sendo enviado:', JSON.stringify(data, null, 2));
         console.log('📤 [OrderService.create] Tipo de cada campo:', {
             orderNumber: typeof data.orderNumber,
@@ -31,7 +31,7 @@ export const OrderService = {
             status: typeof data.status,
         });
         
-        const response = await fetch(`${getBaseUrl()}/api/orders/loss-reason`, {
+        const response = await fetch(`${getBaseUrl()}/api/orders`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -64,17 +64,17 @@ export const OrderService = {
             orderId, 
             code, 
             description,
-            submittedBy 
+            submittedBy
         };
         
-        console.log('📤 [OrderService.addLossReason] URL:', `${getBaseUrl()}/api/orders/loss-reason`);
-        console.log('📤 [OrderService.addLossReason] Payload sendo enviado:', JSON.stringify(payload, null, 2));
-        console.log('📤 [OrderService.addLossReason] Tipo de cada campo:', {
-            orderId: typeof orderId,
-            code: typeof code,
-            description: typeof description,
-            submittedBy: typeof submittedBy,
-        });
+        // console.log('📤 [OrderService.addLossReason] URL:', `${getBaseUrl()}/api/orders/loss-reason`);
+        // console.log('📤 [OrderService.addLossReason] Payload sendo enviado:', JSON.stringify(payload, null, 2));
+        // console.log('📤 [OrderService.addLossReason] Tipo de cada campo:', {
+        //     orderId: typeof orderId,
+        //     code: typeof code,
+        //     description: typeof description,
+        //     submittedBy: typeof submittedBy,
+        // });
         
         const response = await fetch(`${getBaseUrl()}/api/orders/loss-reason`, {
             method: "POST",
@@ -113,7 +113,7 @@ export const OrderService = {
             console.log('🔧 [OrderService] Passo 1: Criando pedido...');
             const orderData = {
                 orderNumber,
-                codRep: codRep,
+                codRep,
                 status: "LOST" as const,
             };
             console.log('🔧 [OrderService] Dados do pedido:', orderData);

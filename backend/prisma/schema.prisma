@@ -490,7 +490,7 @@ enum LossReasonCode {
 
 model Order {
   id              String        @id @default(uuid())
-  orderNumber     String        @default("1") //Id externo do pedido (SAPIENS)
+  orderNumber     Int        @default(1) //Id externo do pedido (SAPIENS)
   status          OrderStatus   @default(NEGOTIATING)
   codRep          String
   seller          User          @relation(fields: [codRep], references: [id])

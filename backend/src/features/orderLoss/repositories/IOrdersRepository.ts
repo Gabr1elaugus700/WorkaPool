@@ -34,7 +34,7 @@ export interface IOrdersRepository {
   update(order: Order): Promise<void>;
   delete(id: string): Promise<void>;
   findById(id: string): Promise<Order | null>;
-  findByOrderNumber(orderNumber: string): Promise<Order | null>;
+  findByOrderNumber(orderNumber: number): Promise<Order | null>;
   getAll(): Promise<Order[]>;
   
   // Buscar pedidos perdidos do SAPIENS

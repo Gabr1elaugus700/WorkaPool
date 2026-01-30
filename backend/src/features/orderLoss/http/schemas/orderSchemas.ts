@@ -6,7 +6,7 @@ export const LossReasonCodeEnum = z.enum(["FREIGHT", "PRICE", "MARGIN", "STOCK",
 
 // Create Order Schema
 export const CreateOrderSchema = z.object({
-  orderNumber: z.string().min(1, "O número do pedido é obrigatório"),
+  orderNumber: z.number().min(1, "O número do pedido é obrigatório"),
   status: OrderStatusEnum.default("NEGOTIATING"),
   codRep: z.string().min(1, "O ID do vendedor é obrigatório"),
 });
@@ -22,7 +22,7 @@ export type UpdateOrderStatusDTO = z.infer<typeof UpdateOrderStatusSchema>;
 
 // Add Loss Reason Schema
 export const AddLossReasonSchema = z.object({
-  orderNumber: z.string().min(1, "O Numero do pedido é obrigatório"),
+  orderNumber: z.number().min(1, "O Numero do pedido é obrigatório"),
   code: LossReasonCodeEnum,
   description: z.string().min(1, "A descrição é obrigatória"),
 });
@@ -31,7 +31,7 @@ export type AddLossReasonDTO = z.infer<typeof AddLossReasonSchema>;
 
 // Create Order Product Schema
 export const CreateOrderProductSchema = z.object({
-  orderNumber: z.string().min(1, "O Numero do pedido é obrigatório"),
+  orderNumber: z.number().min(1, "O Numero do pedido é obrigatório"),
   codprod: z.string().min(1, "O código do produto é obrigatório"),
   description: z.string().optional(),
 });
