@@ -2,10 +2,10 @@ import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { Separator } from "@/components/ui/separator";
-import { Card, CardContent } from "@/components/ui/card";
+// import { Card, CardContent } from "@/components/ui/card";
 import { SellerOrdersList } from "../components/SellerOrdersList";
 import { OrderFilter } from "../components/OrderFilter";
-import { useLostOrdersFromSapiens } from "../hooks/useOrders";
+import { useLostOrdersFromSapiens, useOrders } from "../hooks/useOrders";
 import { useAuth } from "@/auth/AuthContext";
 import { LostOrderFromSapiens, LossReasonCode, OrderStatus } from "../types/orderLoss.types";
 import { OrderService } from "../services/ordersServices";
@@ -48,17 +48,35 @@ export const SellerOrdersView = () => {
   console.log('📍 codRep do usuário:', user?.codRep);
 
   // Buscar pedidos do SAPIENS filtrados por codRep do usuário logado
-  const { data: sapiensOrders, isLoading, error, refetch } = useLostOrdersFromSapiens({
+  const { data: sapiensOrders, isLoading, error, refetch: refetchSapiens } = useLostOrdersFromSapiens({
     codRep: user?.codRep?.toString(),
   });
 
+  // Buscar pedidos locais já justificados
+  const { data: localOrders, refetch: refetchLocal } = useOrders();
+
   console.log('📊 Estado da query:', { sapiensOrders, isLoading, error });
 
-  // Agrupar pedidos por número
+  // Filtrar pedidos do SAPIENS removendo os já justificados
+  const unjustifiedSapiensOrders = useMemo(() => {
+    if (!sapiensOrders || !localOrders) return sapiensOrders || [];
+    
+    // Pegar números de pedidos que já foram justificados
+    const justifiedOrderNumbers = new Set(
+      localOrders
+        .filter(order => order.lossReason !== null && order.order.codRep === user?.codRep?.toString())
+        .map(order => order.order.orderNumber)
+    );
+    
+    // Filtrar pedidos do SAPIENS que NÃO estão justificados
+    return sapiensOrders.filter(order => !justifiedOrderNumbers.has(order.NUMPED));
+  }, [sapiensOrders, localOrders, user?.codRep]);
+
+  // Agrupar pedidos por número (apenas os não justificados)
   const groupedOrders = useMemo(() => {
-    if (!sapiensOrders) return [];
-    return groupOrdersByNumber(sapiensOrders);
-  }, [sapiensOrders]);
+    if (!unjustifiedSapiensOrders) return [];
+    return groupOrdersByNumber(unjustifiedSapiensOrders);
+  }, [unjustifiedSapiensOrders]);
 
   // Calcular estatísticas
   const stats = useMemo(() => {
@@ -131,7 +149,8 @@ export const SellerOrdersView = () => {
       toast.success("Justificativa registrada com sucesso!");
       
       // Recarregar dados
-      refetch();
+      refetchSapiens();
+      refetchLocal();
     } catch (err) {
       // console.error('❌ [SellerOrdersView] Erro completo:', err);
       // console.error('❌ [SellerOrdersView] Erro message:', err instanceof Error ? err.message : 'Erro desconhecido');
@@ -225,7 +244,7 @@ export const SellerOrdersView = () => {
         </div>
 
         {/* Alerta de Pedidos Pendentes */}
-        {stats.lostWithoutReason > 0 && (
+        {/* {stats.lostWithoutReason > 0 && (
           <Card className="mb-6 border-yellow-300 bg-yellow-50">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
@@ -244,10 +263,10 @@ export const SellerOrdersView = () => {
               </div>
             </CardContent>
           </Card>
-        )}
+        )} */}
 
         {/* Lista de Pedidos */}
-        <div className="mb-6">
+        <div className="mb-6 p-3 rounded-lg bg-white">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
             <h2 className="text-xl font-semibold text-gray-800">
               Histórico de Pedidos

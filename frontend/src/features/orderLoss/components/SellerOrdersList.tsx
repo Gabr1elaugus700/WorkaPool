@@ -43,10 +43,10 @@ export const SellerOrdersList: React.FC<SellerOrdersListProps> = ({
   };
 
   const handleLossReasonSubmit = (orderNumber: string, code: LossReasonCode, description: string) => {
-    console.log('📋 [SellerOrdersList] handleLossReasonSubmit chamado');
-    console.log('📋 [SellerOrdersList] orderNumber:', orderNumber);
-    console.log('📋 [SellerOrdersList] code:', code);
-    console.log('📋 [SellerOrdersList] description:', description);
+    // console.log('📋 [SellerOrdersList] handleLossReasonSubmit chamado');
+    // console.log('📋 [SellerOrdersList] orderNumber:', orderNumber);
+    // console.log('📋 [SellerOrdersList] code:', code);
+    // console.log('📋 [SellerOrdersList] description:', description);
     
     onUpdateLossReason(orderNumber, code, description);
     setExpandedOrderId(null);
@@ -81,7 +81,7 @@ export const SellerOrdersList: React.FC<SellerOrdersListProps> = ({
               key={order.id}
               className={cn(
                 "overflow-hidden transition-all",
-                needsLossReason && "border-red-300 border-2"
+                needsLossReason && "border-2"
               )}
             >
               <CardContent className="p-0">
@@ -204,27 +204,28 @@ export const SellerOrdersList: React.FC<SellerOrdersListProps> = ({
                   {/* Botões */}
                   <div className="flex gap-2">
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={() => handleViewDetails(order)}
-                      className="flex-1"
+                      className="flex-1 text-xs font-medium h-8 text-muted-foreground hover:text-foreground"
                     >
                       Ver Detalhes
                     </Button>
                     
                     {needsLossReason && (
                       <Button
-                        size="sm"
-                        onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
-                        disabled={isSubmitting}
-                        className={cn(
-                          "flex-1",
-                          isExpanded 
-                            ? "bg-gray-600 hover:bg-gray-700" 
-                            : "bg-red-600 hover:bg-red-700"
-                        )}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
+                      disabled={isSubmitting}
+                      className={cn(
+                        "flex-1 text-xs font-medium h-8",
+                        isExpanded 
+                        ? "border-gray-600/30 text-gray-700 hover:bg-gray-600/10 hover:text-gray-700" 
+                        : "border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      )}
                       >
-                        {isExpanded ? "Cancelar" : "Informar Motivo"}
+                      {isExpanded ? "Cancelar" : "Informar Motivo"}
                       </Button>
                     )}
                   </div>
