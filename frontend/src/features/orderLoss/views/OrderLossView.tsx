@@ -1,19 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { KPICards } from "../components/KPICards";
-// import { KanbanBoard } from "../components/KanbanBoard";
+import { KanbanBoard } from "../components/KanbanBoard";
 import { Separator } from "@/components/ui/separator";
 import { OrderService } from "../services/ordersServices";
-import { SellerWithOrders, KPIData, LostOrderFromSapiens } from "../types/orderLoss.types";
+import { Seller, KPIData, LostOrderFromSapiens, OrderWithLossReason, LegacyOrder } from "../types/orderLoss.types";
 import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
+type FilterType = 'all' | 'pending' | 'justified';
+
 export const OrderLossView = () => {
-  // const [sellers, setSellers] = useState<SellerWithOrders[]>([]);
+  const [sapiensOrders, setSapiensOrders] = useState<LostOrderFromSapiens[]>([]);
+  const [localOrders, setLocalOrders] = useState<OrderWithLossReason[]>([]);
   const [kpis, setKpis] = useState<KPIData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   useEffect(() => {
     loadOrders();
@@ -24,50 +28,25 @@ export const OrderLossView = () => {
       setLoading(true);
       setError(null);
       
-      const data: LostOrderFromSapiens[] = await OrderService.getLost();
+      // Buscar pedidos do SAPIENS (perdidos)
+      const sapiensData = await OrderService.getLost();
+      setSapiensOrders(sapiensData);
 
-      // Agrupar pedidos por vendedor
-      const sellerMap = new Map<number, SellerWithOrders>();
-
-      data.forEach((order) => {
-        const sellerId = order.CODREP;
-        
-        if (!sellerMap.has(sellerId)) {
-          sellerMap.set(sellerId, {
-            sellerId: String(sellerId),
-            sellerName: order.APEREP,
-            sellerCode: sellerId,
-            orders: [],
-            stats: {
-              totalOrders: 0,
-              negotiatingOrders: 0,
-              lostOrders: 0,
-              totalWeight: 0,
-              totalValue: 0,
-              averageMargin: 0,
-              lostWithoutReason: 0,
-              negotiatingValue: 0,
-            },
-          });
-        }
-
-        const seller = sellerMap.get(sellerId)!;
-        seller.orders.push(order);
-      });
-
-      // Calcular estatísticas para cada vendedor
-      
+      // Buscar pedidos locais (já justificados)
+      const localData = await OrderService.getAll();
+      setLocalOrders(localData);
 
       // Calcular KPIs globais
-      const totalOrders = data.length;
-      const totalValue = data.reduce((sum, order) => sum + order.VLRFINAL, 0);
-      // const totalWeight = data.reduce((sum, order) => sum + order.QTDPED, 0);
+      const totalOrders = sapiensData.length;
+      const totalValue = sapiensData.reduce((sum, order) => sum + order.VLRFINAL, 0);
       const averageMargin = totalOrders > 0
-        ? data.reduce((sum, order) => sum + order["MARGEM LUCRO"], 0) / totalOrders
+        ? sapiensData.reduce((sum, order) => sum + order["MARGEM LUCRO"], 0) / totalOrders
         : 0;
 
+      const justifiedCount = localData.filter(o => o.lossReason !== null).length;
+
       const kpisData: KPIData = {
-        weightInNegotiation: 0, // SAPIENS só retorna perdidos
+        weightInNegotiation: 0,
         averageMargin,
         activeNegotiations: 0,
         totalOrders,
@@ -75,8 +54,13 @@ export const OrderLossView = () => {
         totalValue,
       };
 
-      // setSellers(sellersData);
       setKpis(kpisData);
+      
+      console.log('📊 Pedidos carregados:', {
+        sapiens: sapiensData.length,
+        local: localData.length,
+        justificados: justifiedCount
+      });
     } catch (err) {
       console.error('Erro ao carregar pedidos:', err);
       setError(err instanceof Error ? err.message : 'Erro ao carregar pedidos');
@@ -84,6 +68,184 @@ export const OrderLossView = () => {
       setLoading(false);
     }
   };
+
+  // Organizar pedidos por vendedor
+  const sellers = useMemo(() => {
+    const sellerMap = new Map<string, Seller>();
+
+    // Criar mapa de pedidos SAPIENS por número para acesso rápido
+    const sapiensOrdersMap = new Map<string, LostOrderFromSapiens[]>();
+    sapiensOrders.forEach(order => {
+      if (!sapiensOrdersMap.has(order.NUMPED)) {
+        sapiensOrdersMap.set(order.NUMPED, []);
+      }
+      sapiensOrdersMap.get(order.NUMPED)!.push(order);
+    });
+
+    // Primeiro, criar conjunto de pedidos já justificados
+    const justifiedOrderNumbers = new Set(
+      localOrders
+        .filter(o => o.lossReason !== null)
+        .map(o => o.order.orderNumber)
+    );
+
+    // Agrupar pedidos do SAPIENS (não justificados) por vendedor
+    sapiensOrders.forEach((sapiensOrder) => {
+      // Pular se já foi justificado
+      if (justifiedOrderNumbers.has(sapiensOrder.NUMPED)) return;
+
+      const sellerId = sapiensOrder.CODREP.toString();
+      
+      if (!sellerMap.has(sellerId)) {
+        sellerMap.set(sellerId, {
+          id: sellerId,
+          name: sapiensOrder.APEREP,
+          orders: [],
+        });
+      }
+
+      const seller = sellerMap.get(sellerId)!;
+      
+      // Converter para LegacyOrder
+      const legacyOrder: LegacyOrder = {
+        id: sapiensOrder.NUMPED,
+        orderNumber: sapiensOrder.NUMPED,
+        clientName: sapiensOrder.FANTASIA,
+        status: 'lost',
+        seller: sapiensOrder.APEREP,
+        sellerId: sapiensOrder.CODREP.toString(),
+        totalWeight: sapiensOrder.QTDPED,
+        averageMargin: sapiensOrder["MARGEM LUCRO"],
+        totalValue: sapiensOrder.VLRFINAL,
+        createdAt: new Date(sapiensOrder.DATA),
+        updatedAt: new Date(sapiensOrder.DATA),
+        products: [{
+          id: `${sapiensOrder.NUMPED}-${sapiensOrder.CODPRO}`,
+          name: sapiensOrder.PRODUTO,
+          quantity: sapiensOrder.QTDPED,
+          weight: 1,
+          margin: sapiensOrder["MARGEM LUCRO"],
+          freight: sapiensOrder.VLRFRETE,
+          unitPrice: sapiensOrder.PREUNI,
+          totalPrice: sapiensOrder.VLRFINAL,
+        }],
+      };
+
+      seller.orders.push(legacyOrder);
+    });
+
+    // Adicionar pedidos locais justificados por vendedor
+    localOrders.forEach((localOrder) => {
+      if (!localOrder.lossReason) return; // Só mostrar os justificados
+
+      const sellerId = localOrder.order.codRep;
+      
+      if (!sellerMap.has(sellerId)) {
+        // Buscar nome do vendedor dos pedidos SAPIENS
+        const sapiensRef = sapiensOrders.find(s => s.CODREP.toString() === sellerId);
+        sellerMap.set(sellerId, {
+          id: sellerId,
+          name: sapiensRef?.APEREP || `Vendedor ${sellerId}`,
+          orders: [],
+        });
+      }
+
+      const seller = sellerMap.get(sellerId)!;
+      
+      // Buscar produtos do SAPIENS para este pedido
+      const sapiensProducts = sapiensOrdersMap.get(localOrder.order.orderNumber) || [];
+      
+      // Pegar informações do primeiro item para dados gerais
+      const firstSapiensItem = sapiensProducts[0];
+      
+      // Converter para LegacyOrder
+      const legacyOrder: LegacyOrder = {
+        id: localOrder.order.id,
+        orderNumber: localOrder.order.orderNumber,
+        clientName: firstSapiensItem?.FANTASIA || 'Cliente',
+        status: 'lost',
+        seller: seller.name,
+        sellerId: localOrder.order.codRep,
+        totalWeight: sapiensProducts.reduce((sum, item) => sum + item.QTDPED, 0),
+        averageMargin: sapiensProducts.length > 0
+          ? sapiensProducts.reduce((sum, item) => sum + item["MARGEM LUCRO"], 0) / sapiensProducts.length
+          : 0,
+        totalValue: sapiensProducts.reduce((sum, item) => sum + item.VLRFINAL, 0),
+        createdAt: new Date(localOrder.order.createdAt),
+        updatedAt: new Date(localOrder.order.updatedAt),
+        products: sapiensProducts.length > 0
+          ? sapiensProducts.map((item, idx) => ({
+              id: `${localOrder.order.orderNumber}-${idx}`,
+              name: item.PRODUTO,
+              quantity: item.QTDPED,
+              weight: 1,
+              margin: item["MARGEM LUCRO"],
+              freight: item.VLRFRETE,
+              unitPrice: item.PREUNI,
+              totalPrice: item.VLRFINAL,
+            }))
+          : localOrder.products.map(p => ({
+              id: p.id,
+              name: p.description || p.codprod,
+              quantity: 0,
+              weight: 0,
+              margin: 0,
+              freight: 0,
+              unitPrice: 0,
+              totalPrice: 0,
+            })),
+        lossReasonDetail: localOrder.lossReason ? {
+          id: localOrder.lossReason.id,
+          orderId: localOrder.lossReason.orderId,
+          code: localOrder.lossReason.code,
+          description: localOrder.lossReason.description,
+          submittedBy: localOrder.lossReason.submittedBy,
+          submittedAt: localOrder.lossReason.submittedAt,
+        } : undefined,
+      };
+
+      seller.orders.push(legacyOrder);
+    });
+
+    return Array.from(sellerMap.values());
+  }, [sapiensOrders, localOrders]);
+
+  // Filtrar sellers baseado no filtro ativo
+  const filteredSellers = useMemo(() => {
+    if (activeFilter === 'all') return sellers;
+
+    return sellers.map(seller => ({
+      ...seller,
+      orders: seller.orders.filter(order => {
+        if (activeFilter === 'pending') {
+          return !order.lossReasonDetail;
+        } else if (activeFilter === 'justified') {
+          return !!order.lossReasonDetail;
+        }
+        return true;
+      })
+    })).filter(seller => seller.orders.length > 0);
+  }, [sellers, activeFilter]);
+
+  // Estatísticas para os filtros
+  const filterStats = useMemo(() => {
+    let totalPending = 0;
+    let totalJustified = 0;
+    let totalAll = 0;
+
+    sellers.forEach(seller => {
+      seller.orders.forEach(order => {
+        totalAll++;
+        if (order.lossReasonDetail) {
+          totalJustified++;
+        } else {
+          totalPending++;
+        }
+      });
+    });
+
+    return { totalAll, totalPending, totalJustified };
+  }, [sellers]);
 
   if (loading) {
     return (
@@ -132,11 +294,53 @@ export const OrderLossView = () => {
 
         {/* Kanban Board */}
         <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">
-            Pedidos por Vendedor
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-800">
+              Pedidos por Vendedor
+            </h2>
+            
+            {/* Filtros */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActiveFilter('all')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeFilter === 'all'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Mostrar Tudo ({filterStats.totalAll})
+              </button>
+              <button
+                onClick={() => setActiveFilter('pending')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeFilter === 'pending'
+                    ? 'bg-red-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Pendentes ({filterStats.totalPending})
+              </button>
+              <button
+                onClick={() => setActiveFilter('justified')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeFilter === 'justified'
+                    ? 'bg-green-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Justificados ({filterStats.totalJustified})
+              </button>
+            </div>
+          </div>
           
-          {/* <KanbanBoard sellers={sellers} /> */}
+          {filteredSellers.length > 0 ? (
+            <KanbanBoard sellers={filteredSellers} />
+          ) : (
+            <div className="text-center py-12 text-gray-500">
+              <p>Nenhum pedido encontrado</p>
+            </div>
+          )}
         </div>
       </div>
     </DefaultLayout>

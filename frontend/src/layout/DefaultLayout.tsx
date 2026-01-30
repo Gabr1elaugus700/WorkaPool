@@ -46,7 +46,7 @@ export default function DefaultLayout({ children }: Props) {
 
             <ButtonLink
               to="/order-loss"
-              allowedRoles={["ADMIN"]}
+              allowedRoles={["ADMIN", "GERENTE_DPTO"]}
             >
               Pedidos
             </ButtonLink>
@@ -58,7 +58,7 @@ export default function DefaultLayout({ children }: Props) {
             </ButtonLink>
             <ButtonLink
               to="/cargas"
-              allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
+              allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX", "GERENTE_DPTO"]}
             >
               Cargas
             </ButtonLink>
@@ -76,20 +76,23 @@ export default function DefaultLayout({ children }: Props) {
             
             <ButtonLink
               to="/os"
-              allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
+              // allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
+              allowedRoles={["ADMIN"]}
             >
               Ordens de Serviço
             </ButtonLink>
             <ButtonLink
               to="/vistoria"
-              allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
+              // allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
+              allowedRoles={["ADMIN"]}
             >
               Vistorias
             </ButtonLink>
 
             <ButtonLink
               to="/fretes"
-              allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
+              // allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
+              allowedRoles={["ADMIN"]}
             >
               Fretes
             </ButtonLink>
@@ -177,7 +180,7 @@ export default function DefaultLayout({ children }: Props) {
 
       {/* Rodapé Desktop*/}
       <footer className="hidden md:block bg-white border-t text-center py-4 text-sm text-gray-500">
-        &copy; 2025 - Feito com 🧠 por Gabriel Garbugio. V 2.0.1
+        &copy; 2025 - Feito com 🧠 por Gabriel Garbugio. V 2.0.5
       </footer>
     </div>
   );

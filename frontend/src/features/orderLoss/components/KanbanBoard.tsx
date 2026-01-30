@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Seller, Order } from "../types/orderLoss.types";
+import { Seller, LegacyOrder } from "../types/orderLoss.types";
 import { OrderCard } from "./OrderCard";
 import { OrderDetailsModal } from "./OrderDetailsModal";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,10 +9,10 @@ interface KanbanBoardProps {
 }
 
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({ sellers }) => {
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<LegacyOrder | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleOrderClick = (order: Order) => {
+  const handleOrderClick = (order: LegacyOrder) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
   };
