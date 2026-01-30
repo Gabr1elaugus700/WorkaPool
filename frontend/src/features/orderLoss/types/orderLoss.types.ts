@@ -54,7 +54,7 @@ export interface Order {
   id: string;
   orderNumber: string;
   status: OrderStatus;
-  sellerId: string;
+  codRep: string;
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
 }
@@ -67,7 +67,7 @@ export interface OrderWithDetails extends Order {
 export interface CreateOrderDTO {
   orderNumber: string;
   status?: OrderStatus;
-  sellerId: string;
+  codRep: string;
 }
 
 export interface UpdateOrderStatusDTO {

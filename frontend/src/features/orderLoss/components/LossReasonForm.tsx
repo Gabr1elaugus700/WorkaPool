@@ -14,34 +14,44 @@ import { AlertCircle } from "lucide-react";
 interface LossReasonFormProps {
   onSubmit: (code: LossReasonCode, description: string) => void;
   onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
 export const LossReasonForm: React.FC<LossReasonFormProps> = ({
   onSubmit,
   onCancel,
+  isSubmitting = false,
 }) => {
   const [selectedCode, setSelectedCode] = useState<LossReasonCode | "">("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = () => {
+    console.log('📝 [LossReasonForm] Iniciando validação...');
+    console.log('📝 [LossReasonForm] selectedCode:', selectedCode);
+    console.log('📝 [LossReasonForm] description:', description);
+    
     // Validações
     if (!selectedCode) {
+      console.warn('⚠️ [LossReasonForm] Erro: Nenhum código selecionado');
       setError("Selecione um motivo");
       return;
     }
 
     if (!description.trim()) {
+      console.warn('⚠️ [LossReasonForm] Erro: Descrição vazia');
       setError("Escreva uma justificativa");
       return;
     }
 
     if (description.trim().length < 10) {
+      console.warn('⚠️ [LossReasonForm] Erro: Descrição muito curta');
       setError("A justificativa deve ter pelo menos 10 caracteres");
       return;
     }
 
     // Submit
+    console.log('✅ [LossReasonForm] Validação OK, enviando:', { selectedCode, description: description.trim() });
     onSubmit(selectedCode as LossReasonCode, description.trim());
   };
 
@@ -117,15 +127,17 @@ export const LossReasonForm: React.FC<LossReasonFormProps> = ({
         <Button
           variant="outline"
           onClick={onCancel}
+          disabled={isSubmitting}
           className="border-red-300 text-red-700 hover:bg-red-100"
         >
           Cancelar
         </Button>
         <Button
           onClick={handleSubmit}
+          disabled={isSubmitting}
           className="bg-red-600 hover:bg-red-700 text-white"
         >
-          Confirmar Perda
+          {isSubmitting ? "Enviando..." : "Confirmar Perda"}
         </Button>
       </div>
     </div>

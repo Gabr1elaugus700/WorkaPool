@@ -18,12 +18,14 @@ import {
 
 interface SellerOrdersListProps {
   orders: LegacyOrder[];
-  onUpdateLossReason: (orderId: string, code: LossReasonCode, description: string) => void;
+  onUpdateLossReason: (orderNumber: string, code: LossReasonCode, description: string) => void;
+  isSubmitting?: boolean;
 }
 
 export const SellerOrdersList: React.FC<SellerOrdersListProps> = ({
   orders,
   onUpdateLossReason,
+  isSubmitting = false,
 }) => {
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<LegacyOrder | null>(null);
@@ -40,8 +42,13 @@ export const SellerOrdersList: React.FC<SellerOrdersListProps> = ({
     return `${weight.toLocaleString('pt-BR', { minimumFractionDigits: 0 })} kg`;
   };
 
-  const handleLossReasonSubmit = (orderId: string, code: LossReasonCode, description: string) => {
-    onUpdateLossReason(orderId, code, description);
+  const handleLossReasonSubmit = (orderNumber: string, code: LossReasonCode, description: string) => {
+    console.log('📋 [SellerOrdersList] handleLossReasonSubmit chamado');
+    console.log('📋 [SellerOrdersList] orderNumber:', orderNumber);
+    console.log('📋 [SellerOrdersList] code:', code);
+    console.log('📋 [SellerOrdersList] description:', description);
+    
+    onUpdateLossReason(orderNumber, code, description);
     setExpandedOrderId(null);
   };
 
@@ -209,6 +216,7 @@ export const SellerOrdersList: React.FC<SellerOrdersListProps> = ({
                       <Button
                         size="sm"
                         onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
+                        disabled={isSubmitting}
                         className={cn(
                           "flex-1",
                           isExpanded 
@@ -227,9 +235,10 @@ export const SellerOrdersList: React.FC<SellerOrdersListProps> = ({
                   <div className="p-4 border-t bg-gray-50">
                     <LossReasonForm
                       onSubmit={(code, description) =>
-                        handleLossReasonSubmit(order.id, code, description)
+                        handleLossReasonSubmit(order.orderNumber, code, description)
                       }
                       onCancel={() => setExpandedOrderId(null)}
+                      isSubmitting={isSubmitting}
                     />
                   </div>
                 )}

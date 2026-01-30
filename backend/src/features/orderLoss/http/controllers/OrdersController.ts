@@ -44,27 +44,41 @@ export class OrdersController {
    */
   static async create(req: Request, res: Response): Promise<Response> {
     try {
+      console.log('🔷 [OrdersController.create] Requisição recebida');
+      console.log('🔷 [OrdersController.create] Body:', JSON.stringify(req.body, null, 2));
+      
       const parsed = CreateOrderSchema.safeParse(req.body);
 
       if (!parsed.success) {
+        console.error('❌ [OrdersController.create] Validação falhou');
+        console.error('❌ [OrdersController.create] Erros:', JSON.stringify(parsed.error.format(), null, 2));
+        console.error('❌ [OrdersController.create] Issues:', JSON.stringify(parsed.error.issues, null, 2));
+        
         return res.status(400).json({
           error: "Dados inválidos",
           details: parsed.error.format(),
+          issues: parsed.error.issues,
         });
       }
 
+      console.log('✅ [OrdersController.create] Validação OK');
+      console.log('✅ [OrdersController.create] Dados validados:', JSON.stringify(parsed.data, null, 2));
+      
       const useCase = new CreateOrderUseCase();
       const order = await useCase.execute(parsed.data);
 
+      console.log('✅ [OrdersController.create] Pedido criado:', order.id);
+      
       return res.status(201).json({
         id: order.id,
         orderNumber: order.orderNumber,
         status: order.status,
-        sellerId: order.sellerId,
+        codRep: order.codRep,
         createdAt: order.createdAt,
         updatedAt: order.updatedAt,
       });
     } catch (err) {
+      console.error('❌ [OrdersController.create] Erro:', err);
       const message = err instanceof Error ? err.message : "Erro interno ao criar pedido";
       return res.status(500).json({ error: message });
     }
@@ -157,7 +171,7 @@ export class OrdersController {
         id: order.id,
         orderNumber: order.orderNumber,
         status: order.status,
-        sellerId: order.sellerId,
+        codRep: order.codRep,
         updatedAt: order.updatedAt,
       });
     } catch (err) {
@@ -171,19 +185,29 @@ export class OrdersController {
    * Adiciona motivo de perda a um pedido e marca como perdido
    */
   static async addLossReason(req: Request, res: Response): Promise<Response> {
-    try {
+    try {  
       const parsed = AddLossReasonSchema.safeParse(req.body);
 
       if (!parsed.success) {
+        console.error('❌ [OrdersController.addLossReason] Validação falhou');
+        console.error('❌ [OrdersController.addLossReason] Erros:', JSON.stringify(parsed.error.format(), null, 2));
+        console.error('❌ [OrdersController.addLossReason] Issues:', JSON.stringify(parsed.error.issues, null, 2));
+        
         return res.status(400).json({
           error: "Dados inválidos",
           details: parsed.error.format(),
+          issues: parsed.error.issues,
         });
       }
 
+      console.log('✅ [OrdersController.addLossReason] Validação OK');
+      console.log('✅ [OrdersController.addLossReason] Dados validados:', JSON.stringify(parsed.data, null, 2));
+      
       const useCase = new AddLossReasonUseCase();
       const lossReason = await useCase.execute(parsed.data);
 
+      console.log('✅ [OrdersController.addLossReason] Motivo de perda adicionado:', lossReason.id);
+      
       return res.status(201).json({
         id: lossReason.id,
         orderId: lossReason.orderId,
@@ -193,6 +217,7 @@ export class OrdersController {
         submittedAt: lossReason.submittedAt,
       });
     } catch (err) {
+      console.error('❌ [OrdersController.addLossReason] Erro:', err);
       const message = err instanceof Error ? err.message : "Erro ao adicionar motivo de perda";
       return res.status(500).json({ error: message });
     }

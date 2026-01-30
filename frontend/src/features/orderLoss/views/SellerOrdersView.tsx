@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-
+import { toast } from "sonner";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { OrderFilter } from "../components/OrderFilter";
 import { useLostOrdersFromSapiens } from "../hooks/useOrders";
 import { useAuth } from "@/auth/AuthContext";
 import { LostOrderFromSapiens, LossReasonCode, OrderStatus } from "../types/orderLoss.types";
+import { OrderService } from "../services/ordersServices";
 import { 
   AlertCircle, 
   FileText,
@@ -40,12 +41,13 @@ const groupOrdersByNumber = (orders: LostOrderFromSapiens[]) => {
 export const SellerOrdersView = () => {
   const { user} = useAuth();
   const [activeFilter, setActiveFilter] = useState<OrderStatus | 'all'>('all');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // console.log('🚀 SellerOrdersView montado - user:', user);
   // console.log('📍 codRep do usuário:', user?.codRep);
 
   // Buscar pedidos do SAPIENS filtrados por codRep do usuário logado
-  const { data: sapiensOrders, isLoading, error } = useLostOrdersFromSapiens({
+  const { data: sapiensOrders, isLoading, error, refetch } = useLostOrdersFromSapiens({
     codRep: user?.codRep?.toString(),
   });
 
@@ -94,13 +96,50 @@ export const SellerOrdersView = () => {
   }), [groupedOrders]);
 
   // Função para atualizar motivo de perda
-  const handleUpdateLossReason = (
-    orderId: string,
+  const handleUpdateLossReason = async (
+    orderNumber: string,
     code: LossReasonCode,
     description: string
   ) => {
-    // TODO: Implementar adição de motivo de perda via API
-    console.log("Adicionar motivo de perda:", { orderId, code, description });
+    console.log('🎯 [SellerOrdersView] handleUpdateLossReason iniciado');
+    console.log('🎯 [SellerOrdersView] Parâmetros:', { orderNumber, code, description });
+    console.log('🎯 [SellerOrdersView] user:', user);
+    console.log('🎯 [SellerOrdersView] user.id:', user?.id);
+    
+    if (!user?.id) {
+      console.error('❌ [SellerOrdersView] Usuário não identificado');
+      toast.error("Erro: Usuário não identificado");
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      console.log('🚀 [SellerOrdersView] Chamando OrderService.createOrderWithLossReason...');
+      
+      // Criar pedido localmente e adicionar motivo de perda
+      const result = await OrderService.createOrderWithLossReason(
+        orderNumber,
+        user.id,
+        code,
+        description
+      );
+
+      console.log('✅ [SellerOrdersView] Sucesso! Resultado:', result);
+      toast.success("Justificativa registrada com sucesso!");
+      
+      // Recarregar dados
+      refetch();
+    } catch (err) {
+      console.error('❌ [SellerOrdersView] Erro completo:', err);
+      console.error('❌ [SellerOrdersView] Erro message:', err instanceof Error ? err.message : 'Erro desconhecido');
+      console.error('❌ [SellerOrdersView] Erro stack:', err instanceof Error ? err.stack : 'N/A');
+      
+      const errorMessage = err instanceof Error ? err.message : "Erro ao registrar justificativa";
+      toast.error(`Erro: ${errorMessage}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const formatCurrency = (value: number) => {
@@ -249,6 +288,7 @@ export const SellerOrdersView = () => {
               })),
             }))}
             onUpdateLossReason={handleUpdateLossReason}
+            isSubmitting={isSubmitting}
           />
         </div>
       </div>

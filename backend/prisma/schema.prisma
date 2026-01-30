@@ -490,10 +490,10 @@ enum LossReasonCode {
 
 model Order {
   id              String        @id @default(uuid())
-  orderNumber     String        @default("1") //Id externo do pedido (SAPINS)
+  orderNumber     String        @default("1") //Id externo do pedido (SAPIENS)
   status          OrderStatus   @default(NEGOTIATING)
-  sellerId        String
-  seller          User          @relation(fields: [sellerId], references: [id])
+  codRep          String
+  seller          User          @relation(fields: [codRep], references: [id])
   
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -502,7 +502,7 @@ model Order {
   products        OrderProduct[]
   lossReason      LossReason?
   
-  @@index([sellerId])
+  @@index([codRep])
   @@index([status])
   @@index([createdAt])
   @@map("orders")

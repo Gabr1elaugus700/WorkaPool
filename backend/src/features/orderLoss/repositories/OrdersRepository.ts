@@ -8,8 +8,6 @@ import {
   LostOrderFromSapiens 
 } from "./IOrdersRepository";
 import { sqlPool } from "../../../database/sqlServer";
-import sql from "mssql";
-
 export class OrdersRepository implements IOrdersRepository {
   constructor(private prisma: PrismaClient = new PrismaClient()) {}
 
@@ -19,7 +17,7 @@ export class OrdersRepository implements IOrdersRepository {
         id: order.id,
         orderNumber: order.orderNumber,
         status: order.status,
-        sellerId: order.sellerId,
+        codRep: order.codRep,
         createdAt: order.createdAt,
         updatedAt: order.updatedAt,
       },
@@ -53,7 +51,7 @@ export class OrdersRepository implements IOrdersRepository {
       id: order.id,
       orderNumber: order.orderNumber,
       status: order.status as OrderStatus,
-      sellerId: order.sellerId,
+      codRep: order.codRep,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
     });
@@ -70,7 +68,7 @@ export class OrdersRepository implements IOrdersRepository {
       id: order.id,
       orderNumber: order.orderNumber,
       status: order.status as OrderStatus,
-      sellerId: order.sellerId,
+      codRep: order.codRep,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
     });
@@ -87,7 +85,7 @@ export class OrdersRepository implements IOrdersRepository {
           id: order.id,
           orderNumber: order.orderNumber,
           status: order.status as OrderStatus,
-          sellerId: order.sellerId,
+          codRep: order.codRep,
           createdAt: order.createdAt,
           updatedAt: order.updatedAt,
         })
