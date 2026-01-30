@@ -28,6 +28,12 @@ export interface LostOrderFromSapiens {
   ICMS: number;
 }
 
+export interface OrderWithLossReason {
+  order: Order;
+  lossReason: LossReason | null;
+  products: OrderProduct[];
+}
+
 export interface IOrdersRepository {
   // CRUD básico
   create(order: Order): Promise<void>;
@@ -36,6 +42,7 @@ export interface IOrdersRepository {
   findById(id: string): Promise<Order | null>;
   findByOrderNumber(orderNumber: number): Promise<Order | null>;
   getAll(): Promise<Order[]>;
+  getAllWithLossReasons(): Promise<OrderWithLossReason[]>;
   
   // Buscar pedidos perdidos do SAPIENS
   getLostOrdersFromSapiens(filters?: GetLostOrdersFilters): Promise<LostOrderFromSapiens[]>;

@@ -1,8 +1,8 @@
 import { getBaseUrl } from "@/lib/apiBase"
-import { Order, LostOrderFromSapiens, GetLostOrdersFilters, CreateOrderDTO, LossReasonCode } from "../types/orderLoss.types";
+import { Order, LostOrderFromSapiens, GetLostOrdersFilters, CreateOrderDTO, LossReasonCode, OrderWithLossReason } from "../types/orderLoss.types";
 
 export const OrderService = {
-    getAll: async (): Promise<Order[]> => {
+    getAll: async (): Promise<OrderWithLossReason[]> => {
         const response = await fetch(`${getBaseUrl()}/api/orders`);
         if (!response.ok) {
             throw new Error(`Erro ao buscar pedidos: ${response.statusText}`);

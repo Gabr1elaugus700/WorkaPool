@@ -6,6 +6,7 @@ import {
   IOrdersRepository,
   GetLostOrdersFilters,
   LostOrderFromSapiens,
+  OrderWithLossReason,
 } from "./IOrdersRepository";
 import { sqlPool } from "../../../database/sqlServer";
 export class OrdersRepository implements IOrdersRepository {
@@ -94,6 +95,48 @@ export class OrdersRepository implements IOrdersRepository {
           updatedAt: order.updatedAt,
         }),
     );
+  }
+
+  async getAllWithLossReasons(): Promise<OrderWithLossReason[]> {
+    const orders = await this.prisma.order.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        lossReason: true,
+        products: true,
+      },
+    });
+
+    return orders.map((order) => ({
+      order: new Order({
+        id: order.id,
+        orderNumber: order.orderNumber,
+        status: order.status as OrderStatus,
+        idUser: order.idUser,
+        codRep: order.codRep,
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt,
+      }),
+      lossReason: order.lossReason
+        ? new LossReason({
+            id: order.lossReason.id,
+            orderId: order.lossReason.orderId,
+            code: order.lossReason.code as any,
+            description: order.lossReason.description,
+            submittedBy: order.lossReason.submittedBy,
+            submittedAt: order.lossReason.submittedAt,
+          })
+        : null,
+      products: order.products.map(
+        (product) =>
+          new OrderProduct({
+            id: product.id,
+            orderId: product.orderId,
+            codprod: product.codprod,
+            description: product.description || undefined,
+            createdAt: product.createdAt,
+          }),
+      ),
+    }));
   }
 
   async getLostOrdersFromSapiens(

@@ -1,4 +1,4 @@
-import { IOrdersRepository } from "../repositories/IOrdersRepository";
+import { IOrdersRepository, OrderWithLossReason } from "../repositories/IOrdersRepository";
 import { OrdersRepository } from "../repositories/OrdersRepository";
 
 export class GetAllOrdersUseCase {
@@ -6,8 +6,9 @@ export class GetAllOrdersUseCase {
     private readonly ordersRepository: IOrdersRepository = new OrdersRepository()
   ) {}
 
-  async execute() {
-    const orders = await this.ordersRepository.getAll();
-    return orders;
+  async execute(): Promise<OrderWithLossReason[]> {
+    const ordersWithLossReasons = await this.ordersRepository.getAllWithLossReasons();
+    
+    return ordersWithLossReasons;
   }
 }

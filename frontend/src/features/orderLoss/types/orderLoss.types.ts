@@ -65,6 +65,13 @@ export interface OrderWithDetails extends Order {
   lossReason?: LossReasonDetail;
 }
 
+// Tipo retornado pelo backend no GetAllOrdersUseCase
+export interface OrderWithLossReason {
+  order: Order;
+  lossReason: LossReasonDetail | null;
+  products: OrderProduct[];
+}
+
 export interface CreateOrderDTO {
   orderNumber: string | number;
   status?: OrderStatus;

@@ -44,15 +44,15 @@ export class OrdersController {
    */
   static async create(req: Request, res: Response): Promise<Response> {
     try {
-      console.log('🔷 [OrdersController.create] Requisição recebida');
-      console.log('🔷 [OrdersController.create] Body:', JSON.stringify(req.body, null, 2));
+      // console.log('🔷 [OrdersController.create] Requisição recebida');
+      // console.log('🔷 [OrdersController.create] Body:', JSON.stringify(req.body, null, 2));
       
       const parsed = CreateOrderSchema.safeParse(req.body);
 
       if (!parsed.success) {
-        console.error('❌ [OrdersController.create] Validação falhou');
-        console.error('❌ [OrdersController.create] Erros:', JSON.stringify(parsed.error.format(), null, 2));
-        console.error('❌ [OrdersController.create] Issues:', JSON.stringify(parsed.error.issues, null, 2));
+        // console.error('❌ [OrdersController.create] Validação falhou');
+        // console.error('❌ [OrdersController.create] Erros:', JSON.stringify(parsed.error.format(), null, 2));
+        // console.error('❌ [OrdersController.create] Issues:', JSON.stringify(parsed.error.issues, null, 2));
         
         return res.status(400).json({
           error: "Dados inválidos",
@@ -61,13 +61,13 @@ export class OrdersController {
         });
       }
 
-      console.log('✅ [OrdersController.create] Validação OK');
-      console.log('✅ [OrdersController.create] Dados validados:', JSON.stringify(parsed.data, null, 2));
+      // console.log('✅ [OrdersController.create] Validação OK');
+      // console.log('✅ [OrdersController.create] Dados validados:', JSON.stringify(parsed.data, null, 2));
       
       const useCase = new CreateOrderUseCase();
       const order = await useCase.execute(parsed.data);
 
-      console.log('✅ [OrdersController.create] Pedido criado:', order.id);
+      // console.log('✅ [OrdersController.create] Pedido criado:', order.id);
       
       return res.status(201).json({
         id: order.id,
@@ -79,7 +79,7 @@ export class OrdersController {
         updatedAt: order.updatedAt,
       });
     } catch (err) {
-      console.error('❌ [OrdersController.create] Erro:', err);
+      // console.error('❌ [OrdersController.create] Erro:', err);
       const message = err instanceof Error ? err.message : "Erro interno ao criar pedido";
       return res.status(500).json({ error: message });
     }
