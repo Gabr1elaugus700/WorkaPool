@@ -2,10 +2,10 @@ import { PrismaClient } from "@prisma/client";
 import { Order, OrderStatus } from "../entities/Order";
 import { OrderProduct } from "../entities/OrderProduct";
 import { LossReason } from "../entities/LossReason";
-import { 
-  IOrdersRepository, 
-  GetLostOrdersFilters, 
-  LostOrderFromSapiens 
+import {
+  IOrdersRepository,
+  GetLostOrdersFilters,
+  LostOrderFromSapiens,
 } from "./IOrdersRepository";
 import { sqlPool } from "../../../database/sqlServer";
 export class OrdersRepository implements IOrdersRepository {
@@ -17,6 +17,7 @@ export class OrdersRepository implements IOrdersRepository {
         id: order.id,
         orderNumber: order.orderNumber,
         status: order.status,
+        idUser: order.idUser,
         codRep: order.codRep,
         createdAt: order.createdAt,
         updatedAt: order.updatedAt,
@@ -51,6 +52,7 @@ export class OrdersRepository implements IOrdersRepository {
       id: order.id,
       orderNumber: order.orderNumber,
       status: order.status as OrderStatus,
+      idUser: order.idUser,
       codRep: order.codRep,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
@@ -58,7 +60,7 @@ export class OrdersRepository implements IOrdersRepository {
   }
 
   async findByOrderNumber(orderNumber: number): Promise<Order | null> {
-    const order = await this.prisma.order.findFirst({
+    const order = await this.prisma.order.findUnique({
       where: { orderNumber },
     });
 
@@ -68,6 +70,7 @@ export class OrdersRepository implements IOrdersRepository {
       id: order.id,
       orderNumber: order.orderNumber,
       status: order.status as OrderStatus,
+      idUser: order.idUser,
       codRep: order.codRep,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
@@ -85,15 +88,16 @@ export class OrdersRepository implements IOrdersRepository {
           id: order.id,
           orderNumber: order.orderNumber,
           status: order.status as OrderStatus,
+          idUser: order.idUser,
           codRep: order.codRep,
           createdAt: order.createdAt,
           updatedAt: order.updatedAt,
-        })
+        }),
     );
   }
 
   async getLostOrdersFromSapiens(
-    filters?: GetLostOrdersFilters
+    filters?: GetLostOrdersFilters,
   ): Promise<LostOrderFromSapiens[]> {
     try {
       await sqlPool;
@@ -135,7 +139,7 @@ export class OrdersRepository implements IOrdersRepository {
       `;
 
       const conditions: string[] = [];
-      
+
       if (filters?.startDate) {
         conditions.push(`ped.datemi >= '${filters.startDate}'`);
       } else {
@@ -187,7 +191,7 @@ export class OrdersRepository implements IOrdersRepository {
           codprod: product.codprod,
           description: product.description || undefined,
           createdAt: product.createdAt,
-        })
+        }),
     );
   }
 

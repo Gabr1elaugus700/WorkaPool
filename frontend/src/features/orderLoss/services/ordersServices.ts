@@ -101,7 +101,8 @@ export const OrderService = {
     // Função auxiliar: Cria pedido e adiciona motivo de perda em uma operação
     createOrderWithLossReason: async (
         orderNumber: string,
-        codRep: string,
+        codRep: string ,
+        idUser: string,
         code: LossReasonCode,
         description: string
     ): Promise<Order> => {
@@ -113,6 +114,7 @@ export const OrderService = {
             console.log('🔧 [OrderService] Passo 1: Criando pedido...');
             const orderData = {
                 orderNumber,
+                idUser,
                 codRep,
                 status: "LOST" as const,
             };

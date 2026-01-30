@@ -39,12 +39,13 @@ const groupOrdersByNumber = (orders: LostOrderFromSapiens[]) => {
 };
 
 export const SellerOrdersView = () => {
-  const { user} = useAuth();
+  const { user } = useAuth();
+  console.log('📍 Usuário:', user);
   const [activeFilter, setActiveFilter] = useState<OrderStatus | 'all'>('all');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // console.log('🚀 SellerOrdersView montado - user:', user);
-  // console.log('📍 codRep do usuário:', user?.codRep);
+  console.log('📍 codRep do usuário:', user?.codRep);
 
   // Buscar pedidos do SAPIENS filtrados por codRep do usuário logado
   const { data: sapiensOrders, isLoading, error, refetch } = useLostOrdersFromSapiens({
@@ -101,12 +102,12 @@ export const SellerOrdersView = () => {
     code: LossReasonCode,
     description: string
   ) => {
-    console.log('🎯 [SellerOrdersView] handleUpdateLossReason iniciado');
-    console.log('🎯 [SellerOrdersView] Parâmetros:', { orderNumber, code, description });
-    console.log('🎯 [SellerOrdersView] user:', user);
-    console.log('🎯 [SellerOrdersView] user.id:', user?.id);
+    // console.log('🎯 [SellerOrdersView] handleUpdateLossReason iniciado');
+    // console.log('🎯 [SellerOrdersView] Parâmetros:', { orderNumber, code, description });
+    // console.log('🎯 [SellerOrdersView] user:', user);
+    // console.log('🎯 [SellerOrdersView] user.codRep:', user?.codRep);
     
-    if (!user?.id) {
+    if (!user?.codRep) {
       console.error('❌ [SellerOrdersView] Usuário não identificado');
       toast.error("Erro: Usuário não identificado");
       return;
@@ -115,11 +116,12 @@ export const SellerOrdersView = () => {
     setIsSubmitting(true);
     
     try {
-      console.log('🚀 [SellerOrdersView] Chamando OrderService.createOrderWithLossReason...');
+      // console.log('🚀 [SellerOrdersView] Chamando OrderService.createOrderWithLossReason...');
       
       // Criar pedido localmente e adicionar motivo de perda
       const result = await OrderService.createOrderWithLossReason(
         orderNumber,
+        user.codRep.toLocaleString(),
         user.id,
         code,
         description
@@ -131,9 +133,9 @@ export const SellerOrdersView = () => {
       // Recarregar dados
       refetch();
     } catch (err) {
-      console.error('❌ [SellerOrdersView] Erro completo:', err);
-      console.error('❌ [SellerOrdersView] Erro message:', err instanceof Error ? err.message : 'Erro desconhecido');
-      console.error('❌ [SellerOrdersView] Erro stack:', err instanceof Error ? err.stack : 'N/A');
+      // console.error('❌ [SellerOrdersView] Erro completo:', err);
+      // console.error('❌ [SellerOrdersView] Erro message:', err instanceof Error ? err.message : 'Erro desconhecido');
+      // console.error('❌ [SellerOrdersView] Erro stack:', err instanceof Error ? err.stack : 'N/A');
       
       const errorMessage = err instanceof Error ? err.message : "Erro ao registrar justificativa";
       toast.error(`Erro: ${errorMessage}`);

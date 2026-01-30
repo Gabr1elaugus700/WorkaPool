@@ -73,6 +73,7 @@ export class OrdersController {
         id: order.id,
         orderNumber: order.orderNumber,
         status: order.status,
+        idUser: order.idUser,
         codRep: order.codRep,
         createdAt: order.createdAt,
         updatedAt: order.updatedAt,
@@ -171,6 +172,7 @@ export class OrdersController {
         id: order.id,
         orderNumber: order.orderNumber,
         status: order.status,
+        idUser: order.idUser,
         codRep: order.codRep,
         updatedAt: order.updatedAt,
       });

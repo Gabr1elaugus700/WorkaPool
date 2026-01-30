@@ -19,6 +19,7 @@ export interface OrderProps {
   id?: string;
   orderNumber: number;
   status: OrderStatus;
+  idUser: string;
   codRep: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -28,6 +29,7 @@ export class Order {
   public readonly id: string;
   public orderNumber: number;
   public status: OrderStatus;
+  public idUser: string;
   public codRep: string;
   public readonly createdAt: Date;
   public updatedAt: Date;
@@ -36,6 +38,7 @@ export class Order {
     id,
     orderNumber,
     status,
+    idUser,
     codRep,
     createdAt = new Date(),
     updatedAt = new Date(),
@@ -43,6 +46,7 @@ export class Order {
     this.id = id || uuid();
     this.orderNumber = orderNumber;
     this.status = status;
+    this.idUser = idUser;
     this.codRep = codRep;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
