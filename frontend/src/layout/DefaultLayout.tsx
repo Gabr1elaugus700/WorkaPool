@@ -31,7 +31,7 @@ export default function DefaultLayout({ children }: Props) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col ">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Navbar */}
       <nav className="hidden md:block bg-primary text-primary-foreground shadow">
 
@@ -77,7 +77,7 @@ export default function DefaultLayout({ children }: Props) {
             <ButtonLink
               to="/os"
               // allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
-              allowedRoles={["ADMIN"]}
+              allowedRoles={["ADMIN", "GERENTE_DPTO"]}
             >
               Ordens de Serviço
             </ButtonLink>
@@ -173,7 +173,7 @@ export default function DefaultLayout({ children }: Props) {
       </nav>
 
       {/* Conteúdo principal */}
-      <main className="flex-1 container mx-auto p-4 pb-24 md:pb-4 bg-background/50">{children}</main>
+      <main className="flex-1 container mx-auto p-4 pb-24 md:pb-4 ">{children}</main>
 
       {/* Toaster do Sonner */}
       <Toaster richColors position="top-center" />

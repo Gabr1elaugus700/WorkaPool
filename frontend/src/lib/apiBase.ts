@@ -2,6 +2,9 @@ import axios from 'axios';
 
 // Função para obter a URL base (mantendo compatibilidade)
 export const getBaseUrl = (): string => {
+   if (window.location.hostname === 'pooltecnica.no-ip.biz') {
+    return 'http://pooltecnica.no-ip.biz:3005';
+  }
   return import.meta.env.VITE_API_BASE_URL || 'http://192.168.0.32:3005';
 };
 
@@ -46,3 +49,4 @@ if (import.meta.env.DEV) {
 
 // Exportar também como default para compatibilidade
 export default apiBase;
+  

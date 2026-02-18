@@ -29,7 +29,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ sellers }) => {
           {sellers.map((seller) => (
             <div
               key={seller.id}
-              className="flex-shrink-0 w-80 bg-gray-300 rounded-lg p-4"
+              className="flex-shrink-0 w-80 bg-white rounded-lg p-4"
             >
               {/* Header da Coluna */}
               <div className="mb-4">

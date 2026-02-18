@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { KPICards } from "../components/KPICards";
 import { KanbanBoard } from "../components/KanbanBoard";
-import { Separator } from "@/components/ui/separator";
 import { OrderService } from "../services/ordersServices";
 import { Seller, KPIData, LostOrderFromSapiens, OrderWithLossReason, LegacyOrder } from "../types/orderLoss.types";
 import { Loader2 } from "lucide-react";
@@ -276,27 +275,24 @@ export const OrderLossView = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full mx-auto px-2 sm:px-4 bg-white/50">
+      <div className="w-full mx-auto px-2 sm:px-4 bg-white/50 justify-start">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-content-light dark:text-content-dark text-center">
-            Gestão de Pedidos
+        <div className="mb-6  ">
+          <h1 className="text-3xl font-display text-content-light dark:text-content-dark text-start">
+            Análise de Pedidos Perdidos e Negociações em Andamento
           </h1>
-          <p className="text-center text-gray-600 mt-2">
+          <p className="text-start font-light text-gray-600 mt-2">
             Acompanhe negociações em andamento e pedidos perdidos
           </p>
         </div>
-
-        <Separator className="my-4 bg-[#17cf54]" />
-
         {/* KPI Cards */}
         {kpis && <KPICards data={kpis} />}
 
         {/* Kanban Board */}
         <div className="mt-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">
-              Pedidos por Vendedor
+            <h2 className="text-xl font-thin text-gray-800">
+              Desempenho por Vendedor
             </h2>
             
             {/* Filtros */}

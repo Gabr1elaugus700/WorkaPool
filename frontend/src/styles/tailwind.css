@@ -6,9 +6,10 @@
 @layer base {
   body {
     font-family: 'Inter', sans-serif;
+    @apply bg-background text-foreground;
   }
   :root {
-    --background: 0 0% 97%;
+    --background: 140 10% 97%;  /* cinza com leve tom verde */
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;

@@ -19,25 +19,25 @@ export const KPICards: React.FC<KPICardsProps> = ({ data }) => {
       {/* Card 1: Peso em Negociação */}
       <Card className="hover:shadow-lg transition-shadow">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Peso em Negociação
+          <CardTitle className="text-sm font-semibold text-gray-500">
+            PESO EM NEGOCIAÇÃO
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-blue-600">
             {formatWeight(data.weightInNegotiation)}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Total em produtos
-          </p>
+          {/* <p className="text-xs text-muted-foreground mt-1">
+            TOTAL EM PRODUTOS
+          </p> */}
         </CardContent>
       </Card>
 
       {/* Card 2: Margem Média */}
       <Card className="hover:shadow-lg transition-shadow">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Margem Média em Negociação
+          <CardTitle className="text-sm font-semibold text-gray-500">
+            MARGEM MÉDIA EM NEGOCIAÇÃO
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -53,8 +53,8 @@ export const KPICards: React.FC<KPICardsProps> = ({ data }) => {
       {/* Card 3: Negociações em Andamento */}
       <Card className="hover:shadow-lg transition-shadow">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Negociações em Andamento
+          <CardTitle className="text-sm font-semibold text-gray-500">
+            NEGOCIAÇÕES EM ANDAMENTO
           </CardTitle>
         </CardHeader>
         <CardContent>
