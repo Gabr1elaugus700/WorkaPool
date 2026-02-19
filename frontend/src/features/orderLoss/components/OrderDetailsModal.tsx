@@ -1,15 +1,13 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { LegacyOrder } from "../types/orderLoss.types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Package, TrendingUp, Truck, DollarSign } from "lucide-react";
+import { Package, Truck, MessageSquareMore } from "lucide-react";
 
 interface OrderDetailsModalProps {
   order: LegacyOrder;
@@ -22,8 +20,6 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const isLost = order.status === 'lost';
-
   const formatCurrency = (value: number) => {
     return value.toLocaleString('pt-BR', {
       style: 'currency',
@@ -31,176 +27,195 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     });
   };
 
-  const formatWeight = (weight: number) => {
-    return `${weight.toLocaleString('pt-BR', { minimumFractionDigits: 0 })} kg`;
-  };
-
   const calculateTotalFreight = () => {
     return order.products.reduce((sum, product) => sum + product.freight, 0);
   };
 
+  const calculateTotalVolume = () => {
+    return order.products.reduce((sum, product) => sum + (product.weight * product.quantity), 0);
+  };
+
+  const formatWeight = (value: number) => {
+    return `${value.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })} kg`;
+  };
+
+  const getReasonLabel = (code: string) => {
+    const labels: Record<string, string> = {
+      'FREIGHT': 'FRETE ALTO',
+      'PRICE': 'PREÇO',
+      'MARGIN': 'MARGEM INSUFICIENTE',
+      'STOCK': 'ESTOQUE INSUFICIENTE',
+      'OTHER': 'OUTROS',
+    };
+    return labels[code] || code;
+  };
+
+  const getInitials = (name: string) => {
+    const words = name.split(' ');
+    if (words.length >= 2) {
+      return (words[0][0] + words[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
+      <DialogContent className="max-w-3xl max-h-[90vh]">
         <DialogHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <DialogTitle className="text-2xl">
-                Pedido #{order.orderNumber}
-              </DialogTitle>
-              <DialogDescription className="mt-1">
-                Cliente: {order.clientName} • Vendedor: {order.seller}
-              </DialogDescription>
-            </div>
-            <Badge 
-              variant={isLost ? "destructive" : "default"}
-              className={isLost ? "" : "bg-yellow-500 hover:bg-yellow-600"}
-            >
-              {isLost ? 'Perdido' : 'Em Negociação'}
-            </Badge>
-          </div>
+          <DialogTitle className="text-xl font-normal">
+            Detalhes e Justificativa do Pedido{" "}
+            <span className="text-gray-500">#{order.orderNumber}</span>
+          </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(90vh-200px)] pr-4">
+        <ScrollArea className="max-h-[calc(90vh-120px)] pr-4">
           <div className="space-y-6">
-            {/* Resumo Geral */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
-                <DollarSign className="h-5 w-5 text-blue-600 mt-0.5" />
-                <div>
-                  <p className="text-xs text-gray-600">Valor Total</p>
-                  <p className="font-semibold text-blue-900">
-                    {formatCurrency(order.totalValue)}
-                  </p>
-                </div>
+            {/* Informações Principais */}
+            <div className="grid grid-cols-3 gap-6 bg-gray-50 rounded-lg p-6">
+              <div>
+                <p className="text-xs text-gray-500 uppercase font-medium mb-2">
+                  Cliente
+                </p>
+                <p className="font-semibold text-gray-900">
+                  {order.clientName}
+                </p>
               </div>
-
-              <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-green-600 mt-0.5" />
-                <div>
-                  <p className="text-xs text-gray-600">Margem Média</p>
-                  <p className="font-semibold text-green-900">
-                    {order.averageMargin.toFixed(1)}%
-                  </p>
-                </div>
+              <div>
+                <p className="text-xs text-gray-500 uppercase font-medium mb-2">
+                  Valor Total
+                </p>
+                <p className="font-semibold text-gray-900 text-lg">
+                  {formatCurrency(order.totalValue)}
+                </p>
               </div>
-
-              <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
-                <Package className="h-5 w-5 text-purple-600 mt-0.5" />
-                <div>
-                  <p className="text-xs text-gray-600">Peso Total</p>
-                  <p className="font-semibold text-purple-900">
-                    {formatWeight(order.totalWeight)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-3 bg-orange-50 rounded-lg">
-                <Truck className="h-5 w-5 text-orange-600 mt-0.5" />
-                <div>
-                  <p className="text-xs text-gray-600">Frete Total</p>
-                  <p className="font-semibold text-orange-900">
-                    {formatCurrency(calculateTotalFreight())}
-                  </p>
-                </div>
+              <div>
+                <p className="text-xs text-gray-500 uppercase font-medium mb-2">
+                  Motivo da Perda
+                </p>
+                {order.lossReasonDetail?.code ? (
+                  <span className="inline-block px-3 py-1 rounded-full bg-red-50 text-red-600 text-sm font-medium">
+                    {getReasonLabel(order.lossReasonDetail.code)}
+                  </span>
+                ) : (
+                  <span className="text-gray-400 text-sm">Não informado</span>
+                )}
               </div>
             </div>
 
-            <Separator />
+            {/* Produtos do Pedido */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Package className="h-5 w-5 text-green-600" />
+                <h3 className="font-semibold text-gray-900 uppercase text-sm">
+                  Produtos do Pedido
+                </h3>
+              </div>
 
-            {/* Justificativa de Perda */}
-            {isLost && order.lossReason && (
-              <>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-red-900 mb-2">
-                        Motivo da Perda
-                      </h4>
-                      <p className="text-sm text-red-800">
-                        {order.lossReason}
-                      </p>
-                    </div>
+              <div className="border rounded-lg overflow-hidden">
+                {/* Header da Tabela */}
+                <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 border-b">
+                  <div className="col-span-6 text-xs text-gray-500 uppercase font-medium">
+                    Produto
+                  </div>
+                  <div className="col-span-2 text-center text-xs text-gray-500 uppercase font-medium">
+                    QTD
+                  </div>
+                  <div className="col-span-2 text-right text-xs text-gray-500 uppercase font-medium">
+                    Unitário
+                  </div>
+                  <div className="col-span-2 text-right text-xs text-gray-500 uppercase font-medium">
+                    Total
                   </div>
                 </div>
-                <Separator />
-              </>
-            )}
 
-            {/* Lista de Produtos */}
-            <div>
-              <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Produtos ({order.products.length})
-              </h4>
-              
-              <div className="space-y-3">
-                {order.products.map((product) => (
+                {/* Linhas de Produtos */}
+                {order.products.map((product, index) => (
                   <div
                     key={product.id}
-                    className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors"
+                    className={`grid grid-cols-12 gap-4 px-4 py-4 ${
+                      index !== order.products.length - 1 ? "border-b" : ""
+                    }`}
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <h5 className="font-medium text-gray-900">
-                          {product.name}
-                        </h5>
-                        <p className="text-sm text-gray-500 mt-1">
-                          ID: {product.id}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-lg">
-                          {formatCurrency(product.totalPrice)}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {formatCurrency(product.unitPrice)}/un
-                        </p>
-                      </div>
+                    <div className="col-span-6">
+                      <p className="font-medium text-gray-900">{product.name}</p>
                     </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-                      <div>
-                        <p className="text-gray-500 text-xs mb-1">Quantidade</p>
-                        <p className="font-medium">{product.quantity} un</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-xs mb-1">Peso</p>
-                        <p className="font-medium">{formatWeight(product.weight)}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-xs mb-1">Margem</p>
-                        <p className="font-medium text-green-600">
-                          {product.margin.toFixed(1)}%
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-xs mb-1">Frete</p>
-                        <p className="font-medium">{formatCurrency(product.freight)}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-xs mb-1">Volume</p>
-                        <p className="font-medium">
-                          {(product.weight * product.quantity).toLocaleString('pt-BR', { 
-                            minimumFractionDigits: 0 
-                          })} kg
-                        </p>
-                      </div>
+                    <div className="col-span-2 text-center">
+                      <p className="text-gray-700">{formatWeight(product.quantity)}</p>
+                    </div>
+                    <div className="col-span-2 text-right">
+                      <p className="text-gray-700">{formatCurrency(product.unitPrice)}</p>
+                    </div>
+                    <div className="col-span-2 text-right">
+                      <p className="font-semibold text-gray-900">
+                        {formatCurrency(product.totalPrice)}
+                      </p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Datas */}
-            <Separator />
-            <div className="flex justify-end text-sm text-gray-500">
-                <div>
-                <span className="font-medium">Data do Pedido:</span>{' '}
-                {new Date(order.createdAt).toLocaleDateString('pt-BR')}
+            {/* Logística e Frete */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Truck className="h-5 w-5 text-green-600" />
+                <h3 className="font-semibold text-gray-900 uppercase text-sm">
+                  Logística e Frete
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-600 mb-1">Custo do Frete</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {formatCurrency(calculateTotalFreight())}
+                  </p>
                 </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-600 mb-1">Volume Total</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {formatWeight(calculateTotalVolume())}
+                  </p>
+                </div>
+              </div>
             </div>
+
+            {/* Justificativa do Vendedor */}
+            {order.lossReasonDetail && (
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <MessageSquareMore className="h-5 w-5 text-green-600" />
+                  <h3 className="font-semibold text-gray-900 uppercase text-sm">
+                    Justificativa do Vendedor
+                  </h3>
+                </div>
+
+                <div className="border-l-4 border-green-600 bg-gray-50 rounded-r-lg p-5">
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    {order.lossReasonDetail.description}
+                  </p>
+
+                  <Separator className="my-4" />
+
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold">
+                      {getInitials(order.seller)}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {order.seller}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {order.lossReasonDetail.submittedBy}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </ScrollArea>
       </DialogContent>

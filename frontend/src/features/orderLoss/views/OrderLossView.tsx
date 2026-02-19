@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import DefaultLayout from "@/layout/DefaultLayout";
-import { KPICards } from "../components/KPICards";
-import { KanbanBoard } from "../components/KanbanBoard";
+import { SellersList } from "../components/SellersList";
 import { OrderService } from "../services/ordersServices";
-import { Seller, KPIData, LostOrderFromSapiens, OrderWithLossReason, LegacyOrder } from "../types/orderLoss.types";
+import { Seller, LostOrderFromSapiens, OrderWithLossReason, LegacyOrder } from "../types/orderLoss.types";
 import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -13,7 +12,6 @@ type FilterType = 'all' | 'pending' | 'justified';
 export const OrderLossView = () => {
   const [sapiensOrders, setSapiensOrders] = useState<LostOrderFromSapiens[]>([]);
   const [localOrders, setLocalOrders] = useState<OrderWithLossReason[]>([]);
-  const [kpis, setKpis] = useState<KPIData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
@@ -35,25 +33,7 @@ export const OrderLossView = () => {
       const localData = await OrderService.getAll();
       setLocalOrders(localData);
 
-      // Calcular KPIs globais
-      const totalOrders = sapiensData.length;
-      const totalValue = sapiensData.reduce((sum, order) => sum + order.VLRFINAL, 0);
-      const averageMargin = totalOrders > 0
-        ? sapiensData.reduce((sum, order) => sum + order["MARGEM LUCRO"], 0) / totalOrders
-        : 0;
-
       const justifiedCount = localData.filter(o => o.lossReason !== null).length;
-
-      const kpisData: KPIData = {
-        weightInNegotiation: 0,
-        averageMargin,
-        activeNegotiations: 0,
-        totalOrders,
-        lostOrders: totalOrders,
-        totalValue,
-      };
-
-      setKpis(kpisData);
       
       console.log('📊 Pedidos carregados:', {
         sapiens: sapiensData.length,
@@ -275,7 +255,7 @@ export const OrderLossView = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full mx-auto px-2 sm:px-4 bg-white/50 justify-start">
+      <div className="w-full mx-auto px-2 sm:px-4 justify-start">
         {/* Header */}
         <div className="mb-6  ">
           <h1 className="text-3xl font-display text-content-light dark:text-content-dark text-start">
@@ -285,10 +265,8 @@ export const OrderLossView = () => {
             Acompanhe negociações em andamento e pedidos perdidos
           </p>
         </div>
-        {/* KPI Cards */}
-        {kpis && <KPICards data={kpis} />}
 
-        {/* Kanban Board */}
+        {/* Lista de Vendedores */}
         <div className="mt-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-thin text-gray-800">
@@ -329,9 +307,9 @@ export const OrderLossView = () => {
               </button>
             </div>
           </div>
-          
+
           {filteredSellers.length > 0 ? (
-            <KanbanBoard sellers={filteredSellers} />
+            <SellersList sellers={filteredSellers} />
           ) : (
             <div className="text-center py-12 text-gray-500">
               <p>Nenhum pedido encontrado</p>
