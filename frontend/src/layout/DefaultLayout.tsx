@@ -77,7 +77,7 @@ export default function DefaultLayout({ children }: Props) {
             <ButtonLink
               to="/os"
               // allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
-              allowedRoles={["ADMIN", "GERENTE_DPTO"]}
+              allowedRoles={["ADMIN"]}
             >
               Ordens de Serviço
             </ButtonLink>
