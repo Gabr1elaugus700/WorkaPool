@@ -1,13 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { SellersList } from "../components/SellersList";
+import FilterButtons from "../components/FilterButtons";
+import ExportButton from "../components/ExportButton";
 import { OrderService } from "../services/ordersServices";
 import { Seller, LostOrderFromSapiens, OrderWithLossReason, LegacyOrder } from "../types/orderLoss.types";
-import { Loader2, Download, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import * as XLSX from 'xlsx';
 
 type FilterType = 'all' | 'pending' | 'justified';
+type DateFilterType = 'all' | 'today' | 'week' | 'month';
 
 export const OrderLossView = () => {
   const [sapiensOrders, setSapiensOrders] = useState<LostOrderFromSapiens[]>([]);
@@ -15,6 +17,7 @@ export const OrderLossView = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [dateFilter, setDateFilter] = useState<DateFilterType>('all');
 
   useEffect(() => {
     loadOrders();
@@ -206,31 +209,67 @@ export const OrderLossView = () => {
     return sellersList;
   }, [sapiensOrders, localOrders]);
 
-  // Filtrar sellers baseado no filtro ativo
+  // Filtrar sellers baseado no filtro ativo e data
   const filteredSellers = useMemo(() => {
-    if (activeFilter === 'all') return sellers;
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
 
     return sellers.map(seller => ({
       ...seller,
       orders: seller.orders.filter(order => {
+        // Filtro de status
+        let statusMatch = true;
         if (activeFilter === 'pending') {
-          return !order.lossReasonDetail;
+          statusMatch = !order.lossReasonDetail;
         } else if (activeFilter === 'justified') {
-          return !!order.lossReasonDetail;
+          statusMatch = !!order.lossReasonDetail;
         }
-        return true;
+
+        // Filtro de data
+        let dateMatch = true;
+        const orderDate = new Date(order.createdAt);
+        if (dateFilter === 'today') {
+          dateMatch = orderDate >= startOfToday;
+        } else if (dateFilter === 'week') {
+          dateMatch = orderDate >= oneWeekAgo;
+        } else if (dateFilter === 'month') {
+          dateMatch = orderDate >= oneMonthAgo;
+        }
+
+        return statusMatch && dateMatch;
       })
     })).filter(seller => seller.orders.length > 0);
-  }, [sellers, activeFilter]);
+  }, [sellers, activeFilter, dateFilter]);
 
-  // Estatísticas para os filtros
+  // Estatísticas para os filtros (considerando o filtro de data)
   const filterStats = useMemo(() => {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+
     let totalPending = 0;
     let totalJustified = 0;
     let totalAll = 0;
 
     sellers.forEach(seller => {
       seller.orders.forEach(order => {
+        // Aplicar filtro de data
+        const orderDate = new Date(order.createdAt);
+        let includeOrder = true;
+        
+        if (dateFilter === 'today') {
+          includeOrder = orderDate >= startOfToday;
+        } else if (dateFilter === 'week') {
+          includeOrder = orderDate >= oneWeekAgo;
+        } else if (dateFilter === 'month') {
+          includeOrder = orderDate >= oneMonthAgo;
+        }
+
+        if (!includeOrder) return;
+
         totalAll++;
         if (order.lossReasonDetail) {
           totalJustified++;
@@ -241,97 +280,7 @@ export const OrderLossView = () => {
     });
 
     return { totalAll, totalPending, totalJustified };
-  }, [sellers]);
-
-  const exportToExcel = () => {
-    // Mapeamento de códigos para português
-    const getReasonLabel = (code: string | undefined) => {
-      if (!code) return 'Não justificado';
-      
-      const labels: Record<string, string> = {
-        'FREIGHT': 'Frete',
-        'PRICE': 'Preço',
-        'MARGIN': 'Margem',
-        'STOCK': 'Estoque',
-        'OTHER': 'Outros',
-      };
-      return labels[code] || code;
-    };
-
-    // Preparar dados para exportação
-    interface ExportRow {
-      'Vendedor': string;
-      'ID Pedido': string;
-      'Data': string;
-      'Cliente': string;
-      'Valor Total': number;
-      'Margem (%)': string;
-      'Peso Total': number;
-      'Motivo': string;
-      'Descrição da Justificativa': string;
-      'Justificado': string;
-      'Justificado Por': string;
-      'Data da Justificativa': string;
-    }
-
-    const exportData: ExportRow[] = [];
-
-    filteredSellers.forEach((seller) => {
-      seller.orders.forEach((order) => {
-        exportData.push({
-          'Vendedor': seller.name,
-          'ID Pedido': order.orderNumber,
-          'Data': new Date(order.createdAt).toLocaleDateString('pt-BR'),
-          'Cliente': order.clientName,
-          'Valor Total': order.totalValue,
-          'Margem (%)': order.averageMargin.toFixed(2),
-          'Peso Total': order.totalWeight,
-          'Motivo': getReasonLabel(order.lossReasonDetail?.code),
-          'Descrição da Justificativa': order.lossReasonDetail?.description || '-',
-          'Justificado': order.lossReasonDetail ? 'Sim' : 'Não',
-          'Justificado Por': order.lossReasonDetail?.submittedBy || '-',
-          'Data da Justificativa': order.lossReasonDetail?.submittedAt 
-            ? new Date(order.lossReasonDetail.submittedAt).toLocaleDateString('pt-BR')
-            : '-',
-        });
-      });
-    });
-
-    console.log('📊 Exportando dados:', {
-      totalLinhas: exportData.length,
-      primeiraLinha: exportData[0],
-      vendedoresUnicos: [...new Set(exportData.map(d => d.Vendedor))]
-    });
-
-    // Criar workbook e worksheet
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(exportData);
-
-    // Ajustar largura das colunas
-    const columnWidths = [
-      { wch: 20 }, // Vendedor
-      { wch: 12 }, // ID Pedido
-      { wch: 12 }, // Data
-      { wch: 30 }, // Cliente
-      { wch: 15 }, // Valor Total
-      { wch: 12 }, // Margem
-      { wch: 12 }, // Peso Total
-      { wch: 20 }, // Motivo
-      { wch: 50 }, // Descrição
-      { wch: 12 }, // Justificado
-      { wch: 20 }, // Justificado Por
-      { wch: 18 }, // Data Justificativa
-    ];
-    ws['!cols'] = columnWidths;
-
-    // Adicionar worksheet ao workbook
-    XLSX.utils.book_append_sheet(wb, ws, 'Pedidos Perdidos');
-
-    // Gerar arquivo e fazer download
-    const filterName = activeFilter === 'all' ? 'todos' : activeFilter === 'pending' ? 'pendentes' : 'justificados';
-    const fileName = `pedidos-perdidos-${filterName}-${new Date().toISOString().split('T')[0]}.xlsx`;
-    XLSX.writeFile(wb, fileName);
-  };
+  }, [sellers, dateFilter]);
 
   if (loading) {
     return (
@@ -373,56 +322,21 @@ export const OrderLossView = () => {
               Acompanhe negociações em andamento e pedidos perdidos
             </p>
           </div>
-          <button
-            onClick={exportToExcel}
-            className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg border border-green-700 hover:bg-green-200 transition-colors font-medium shadow-sm"
-          >
-            <Download size={18} />
-            Exportar Excel
-          </button>
+          <ExportButton 
+            filteredSellers={filteredSellers} 
+            activeFilter={activeFilter} 
+          />
         </div>
 
         {/* Lista de Vendedores */}
         <div className="mt-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-thin text-gray-800">
-              Desempenho por Vendedor
-            </h2>
-            
-            {/* Filtros */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => setActiveFilter('all')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  activeFilter === 'all'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Mostrar Tudo ({filterStats.totalAll})
-              </button>
-              <button
-                onClick={() => setActiveFilter('pending')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  activeFilter === 'pending'
-                    ? 'bg-red-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Pendentes ({filterStats.totalPending})
-              </button>
-              <button
-                onClick={() => setActiveFilter('justified')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  activeFilter === 'justified'
-                    ? 'bg-green-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Justificados ({filterStats.totalJustified})
-              </button>
-            </div>
-          </div>
+          <FilterButtons
+            dateFilter={dateFilter}
+            setDateFilter={setDateFilter}
+            activeFilter={activeFilter}
+            setActiveFilter={setActiveFilter}
+            filterStats={filterStats}
+          />
 
           {filteredSellers.length > 0 ? (
             <SellersList sellers={filteredSellers} />
