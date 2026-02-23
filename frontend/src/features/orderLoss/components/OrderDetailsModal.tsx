@@ -42,6 +42,13 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     })} kg`;
   };
 
+  const formatMargin = (value: number) => {
+    return `${value.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}%`;
+  }
+
   const getReasonLabel = (code: string) => {
     const labels: Record<string, string> = {
       'FREIGHT': 'FRETE ALTO',
@@ -117,11 +124,14 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               <div className="border rounded-lg overflow-hidden">
                 {/* Header da Tabela */}
                 <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 border-b">
-                  <div className="col-span-6 text-xs text-gray-500 uppercase font-medium">
+                  <div className="col-span-4 text-xs text-gray-500 uppercase font-medium">
                     Produto
                   </div>
                   <div className="col-span-2 text-center text-xs text-gray-500 uppercase font-medium">
                     QTD
+                  </div>
+                  <div className="col-span-2 text-center text-xs text-gray-500 uppercase font-medium">
+                    MARGEM
                   </div>
                   <div className="col-span-2 text-right text-xs text-gray-500 uppercase font-medium">
                     Unitário
@@ -139,11 +149,14 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       index !== order.products.length - 1 ? "border-b" : ""
                     }`}
                   >
-                    <div className="col-span-6">
+                    <div className="col-span-4">
                       <p className="font-medium text-gray-900">{product.name}</p>
                     </div>
                     <div className="col-span-2 text-center">
                       <p className="text-gray-700">{formatWeight(product.quantity)}</p>
+                    </div>
+                    <div className="col-span-2 text-center">
+                      <p className="text-gray-700">{formatMargin(product.margin)}</p>
                     </div>
                     <div className="col-span-2 text-right">
                       <p className="text-gray-700">{formatCurrency(product.unitPrice)}</p>

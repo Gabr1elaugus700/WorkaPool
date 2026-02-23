@@ -28,7 +28,7 @@ export default function ExportButton({ filteredSellers, activeFilter }: ExportBu
     // Preparar dados para exportação
     interface ExportRow {
       'Vendedor': string;
-      'ID Pedido': string;
+      'Numero do Pedido': string;
       'Data': string;
       'Cliente': string;
       'Valor Total': number;
@@ -37,7 +37,6 @@ export default function ExportButton({ filteredSellers, activeFilter }: ExportBu
       'Motivo': string;
       'Descrição da Justificativa': string;
       'Justificado': string;
-      'Justificado Por': string;
       'Data da Justificativa': string;
     }
 
@@ -47,7 +46,7 @@ export default function ExportButton({ filteredSellers, activeFilter }: ExportBu
       seller.orders.forEach((order) => {
         exportData.push({
           'Vendedor': seller.name,
-          'ID Pedido': order.orderNumber,
+          'Numero do Pedido': order.orderNumber,
           'Data': new Date(order.createdAt).toLocaleDateString('pt-BR'),
           'Cliente': order.clientName,
           'Valor Total': order.totalValue,
@@ -56,7 +55,6 @@ export default function ExportButton({ filteredSellers, activeFilter }: ExportBu
           'Motivo': getReasonLabel(order.lossReasonDetail?.code),
           'Descrição da Justificativa': order.lossReasonDetail?.description || '-',
           'Justificado': order.lossReasonDetail ? 'Sim' : 'Não',
-          'Justificado Por': order.lossReasonDetail?.submittedBy || '-',
           'Data da Justificativa': order.lossReasonDetail?.submittedAt 
             ? new Date(order.lossReasonDetail.submittedAt).toLocaleDateString('pt-BR')
             : '-',
