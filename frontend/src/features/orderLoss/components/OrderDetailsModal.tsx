@@ -8,6 +8,9 @@ import { LegacyOrder } from "../types/orderLoss.types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Package, Truck, MessageSquareMore } from "lucide-react";
+import formatMargin from "@/utils/formatMargin";
+import formatWeight from "@/utils/formatWeight";
+import getInitials from "@/utils/getInitials";
 
 interface OrderDetailsModalProps {
   order: LegacyOrder;
@@ -35,19 +38,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     return order.products.reduce((sum, product) => sum + (product.weight * product.quantity), 0);
   };
 
-  const formatWeight = (value: number) => {
-    return `${value.toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })} kg`;
-  };
+  
 
-  const formatMargin = (value: number) => {
-    return `${value.toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}%`;
-  }
 
   const getReasonLabel = (code: string) => {
     const labels: Record<string, string> = {
@@ -60,14 +52,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     return labels[code] || code;
   };
 
-  const getInitials = (name: string) => {
-    const words = name.split(' ');
-    if (words.length >= 2) {
-      return (words[0][0] + words[1][0]).toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  };
-
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh]">
