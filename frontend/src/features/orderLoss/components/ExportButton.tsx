@@ -31,6 +31,7 @@ export default function ExportButton({ filteredSellers, activeFilter }: ExportBu
       'Numero do Pedido': string;
       'Data': string;
       'Cliente': string;
+      'Produtos': string;
       'Valor Total': number;
       'Margem (%)': string;
       'Peso Total': number;
@@ -49,6 +50,7 @@ export default function ExportButton({ filteredSellers, activeFilter }: ExportBu
           'Numero do Pedido': order.orderNumber,
           'Data': new Date(order.createdAt).toLocaleDateString('pt-BR'),
           'Cliente': order.clientName,
+          'Produtos': order.products.map(p => p.name).join(', '),
           'Valor Total': order.totalValue,
           'Margem (%)': order.averageMargin.toFixed(2),
           'Peso Total': order.totalWeight,
