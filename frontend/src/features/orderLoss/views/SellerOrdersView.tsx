@@ -301,7 +301,7 @@ export const SellerOrdersView = () => {
                 id: `${g.numped}-${idx}`,
                 name: item.PRODUTO,
                 quantity: item.QTDPED,
-                weight: 1,
+                weight: item.QTDPED,
                 margin: item["MARGEM LUCRO"],
                 freight: item.VLRFRETE,
                 unitPrice: item.PREUNI,
