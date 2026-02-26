@@ -30,10 +30,11 @@ export default function ExportButton({
 
     // Preparar dados para exportação
     interface ExportRow {
-      Vendedor: string;
       "Numero do Pedido": string;
+      Vendedor: string;
       Data: string;
       Cliente: string;
+      "Cidade - Estado": string;
       Produto: string;
       "Valor Unitário": number;
       "Valor Total": number;
@@ -51,10 +52,11 @@ export default function ExportButton({
       seller.orders.forEach((order) => {
         order.products.forEach((product) => {
           exportData.push({
-            Vendedor: seller.name,
             "Numero do Pedido": order.orderNumber,
+            Vendedor: seller.name,
             Data: new Date(order.createdAt).toLocaleDateString("pt-BR"),
             Cliente: order.clientName,
+            "Cidade - Estado": order.city,
             Produto: product.name,
             "Valor Unitário": product.unitPrice,
             "Valor Total": product.totalPrice,

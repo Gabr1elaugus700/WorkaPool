@@ -158,6 +158,7 @@ export interface LegacyOrder {
   orderNumber: string;
   clientName: string;
   status: 'negotiating' | 'lost';
+  city: string;
   seller: string;
   sellerId: string;
   totalWeight: number; // em kg
