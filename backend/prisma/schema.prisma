@@ -14,7 +14,7 @@ enum Role {
   LOGISTICA
   ALMOX
   GERENTE_DPTO // Novo role para gerentes de departamento
-}
+} 
 
 enum FuncaoDepartamento {
   GERENTE

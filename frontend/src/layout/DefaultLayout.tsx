@@ -48,11 +48,11 @@ export default function DefaultLayout({ children }: Props) {
               to="/order-loss"
               allowedRoles={["ADMIN", "GERENTE_DPTO"]}
             >
-              Pedidos
+              Pedidos Perdidos
             </ButtonLink>
             <ButtonLink
               to="/my-orders"
-              allowedRoles={["ADMIN", "VENDAS"]}
+              allowedRoles={["VENDAS"]}
             >
               Meus Pedidos
             </ButtonLink>
@@ -104,12 +104,7 @@ export default function DefaultLayout({ children }: Props) {
               Metas
             </ButtonLink>
 
-            <ButtonLink
-              to="/vendasPerdidas"
-              allowedRoles={["ADMIN"]}
-            >
-              Vendas Perdidas
-            </ButtonLink>
+            
 
             <ButtonLink
               to="/dashboard"
