@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { atualizarPedidoNaCarga } from "../services/alteraPedidoCargaService";
+import { atualizarPedidoNaCarga } from "../features/cargo/useCases/alteraPedidoCargaService";
 
 export const updatePedido = async (req: Request, res: Response): Promise<any> => {
   const { numPed } = req.params;

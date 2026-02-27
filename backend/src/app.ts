@@ -14,12 +14,12 @@ import vendedoresRoutes from "./routes/vendedoresRoutes";
 import pedidosFechadosRoutes from "./routes/pedidosFechadosRoutes";
 import authRoutes from "./features/users/routes/authRoutes";
 import pedidosCargasRoutes from "./routes/pedidosCargasRoutes";
-import alteraPedidoCarga from "./routes/alteraPedidoCagasRoutes";
+import alteraPedidoCarga from "./features/cargo/http/routes/alteraPedidoCagasRoutes";
 import clientesInativos from "./routes/clientesInativosRoutes";
 import produtosEstoque from "./routes/estoqueProdutosRoutes";
 
 //Importando as rotas De Consulta no banco de dados Prisma
-import criarCargas from "./routes/criaCargas";
+import criarCargas from "./features/cargo/http/routes/criaCargas";
 import metasRoutes from "./routes/metasRoutes";
 import caminhoes from "./routes/caminhoesRoutes";
 import parametrosGlobaisFretes from "./routes/parametrosFretesRoutes";

@@ -25,7 +25,7 @@
  *         description: Pedido atualizado
  */
 import { Router } from 'express';
-import { updatePedido } from '../controllers/alteraPedidoCargaController';
+import { updatePedido } from '../../../../controllers/alteraPedidoCargaController';
 
 const router = Router();
 

@@ -1,4 +1,4 @@
-import { UpdatePedidoCarga } from "../repositories/alteraPedidoCargaRepository";
+import { UpdatePedidoCarga } from "../alteraPedidoCargaRepository";
 
 export async function atualizarPedidoNaCarga(numPed: number, codCar: number, posCar: number) {
   // console.log('📥 Dados recebidos Service:', { numPed, codCar, posCar });

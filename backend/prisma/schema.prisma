@@ -14,7 +14,7 @@ enum Role {
   LOGISTICA
   ALMOX
   GERENTE_DPTO // Novo role para gerentes de departamento
-} 
+}
 
 enum FuncaoDepartamento {
   GERENTE
@@ -74,7 +74,10 @@ model Cargas {
   situacao       CargaSituacao    @default(ABERTA)
   previsaoSaida  DateTime         @default(now())
   createdAt      DateTime         @default(now())
+  closedAt       DateTime?
   CargasFechadas CargasFechadas[]
+
+  @@map("carga")
 }
 
 enum Meses {

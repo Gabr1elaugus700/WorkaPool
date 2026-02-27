@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getPedidosFechados } from "../services/pedidosFechadosService";
+import { getPedidosFechados } from "../features/cargo/useCases/getPedidosFechados.use-case";
 
 export const getPedFechados = async (req: Request, res: Response): Promise<any> => {
   const codRep = Number(req.query.codRep);

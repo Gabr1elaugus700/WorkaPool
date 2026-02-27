@@ -1,4 +1,4 @@
-import { sqlPool, sqlPoolConnect } from "../database/sqlServer";
+import { sqlPool, sqlPoolConnect } from "../../database/sqlServer";
 
 export async function UpdatePedidoCarga(codCar: number, posCar: number, numPed: number) {
     await sqlPoolConnect;

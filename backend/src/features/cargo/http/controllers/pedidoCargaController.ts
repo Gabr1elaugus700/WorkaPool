@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getPedidosPorCarga } from '../features/cargo/useCases/pedidosCargaService';
+import { getPedidosPorCarga } from '../../useCases/pedidosCargaService';
 
 export const getPedCargas = async (req: Request, res: Response): Promise<any> => {
   const codCarParam = req.query.codCar;
