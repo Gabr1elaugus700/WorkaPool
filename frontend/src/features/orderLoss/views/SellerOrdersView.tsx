@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import DefaultLayout from "@/layout/DefaultLayout";
-import { Separator } from "@/components/ui/separator";
 // import { Card, CardContent } from "@/components/ui/card";
 import { SellerOrdersList } from "../components/SellerOrdersList";
 import { OrderFilter } from "../components/OrderFilter";
@@ -18,7 +17,7 @@ import {
 } from "lucide-react";
 import { StatCard } from "../components/StatCard";
 
-// Helper para agrupar pedidos do SAPIENS por número de ped ido
+// Helper para agrupar pedidos do SAPIENS por número de pedido
 const groupOrdersByNumber = (orders: LostOrderFromSapiens[]) => {
   const grouped = new Map<string, LostOrderFromSapiens[]>();
   
@@ -204,15 +203,13 @@ export const SellerOrdersView = () => {
       <div className="w-full mx-auto px-2 sm:px-4 bg-background/50">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-content-light dark:text-content-dark text-center">
+            <h1 className="text-3xl font-display text-content-light dark:text-content-dark text-start">
             Meus Pedidos
           </h1>
-          <p className="text-center text-gray-600 mt-2">
+          <p className="text-start text-gray-600 mt-2">
             Olá, <span className="font-semibold">{user?.name || "Vendedor"}</span> - Gerencie suas negociações
           </p>
         </div>
-
-        <Separator className="my-4 bg-[#17cf54]" />
 
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">

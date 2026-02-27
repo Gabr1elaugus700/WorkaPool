@@ -147,38 +147,40 @@ export class OrdersRepository implements IOrdersRepository {
 
       let query = `
         SELECT  ped.datemi [DATA]
-                ,ped.numped [NUMPED]
-                ,ped.sitped [SITUAÇÃO]
-                ,ped.codven [CODREP]
-                ,rep.aperep [APEREP]
-                ,ped.codcli [CODCLI]
-                ,cli.apecli [FANTASIA]
-                ,(cli.cidcli + ' - ' + cli.sigufs) [CIDADE]
-                ,ipd.codpro [CODPRO]
-                ,ISNULL(grp.desgrp, 'OUTROS PRODUTOS')  [PRODUTO]
-                ,ipd.qtdped [QTDPED]
-                ,ipd.preuni [PREUNI]
-                ,ipd.usu_vlrfin [VLRFINAL]
-                ,ipd.usu_mgmluc [MARGEM LUCRO]
-                ,ipd.usu_vlrfre [VLRFRETE]
-                ,ipd.usu_vlripi [IPI]
-                ,ipd.usu_vlricm [ICMS]
-        FROM e120ped ped
-        LEFT JOIN e120ipd ipd 
-                  ON ipd.codemp = ped.codemp
-                AND ipd.codfil = ped.codfil
-                AND ipd.numped = ped.numped	   
-        LEFT JOIN e090rep rep 
-                ON rep.codrep = ped.codven	
-        LEFT JOIN e085cli cli 	
-                ON cli.codcli = ped.codcli
-        LEFT JOIN e085hcl hcl 
-                  ON hcl.codemp = ped.codemp
-                AND hcl.codfil = ped.codfil
-                AND hcl.codcli = ped.codcli
-        LEFT JOIN poolbi.dbo.grppro grp 
-                ON grp.codpro = ipd.codpro
-        WHERE ped.sitped = '5'
+				,ped.numped [NUMPED]
+				,ped.sitped [SITUAÇÃO]
+				,ped.codven [CODREP]
+				,rep.aperep [APEREP]
+				,ped.codcli [CODCLI]
+				,cli.apecli [FANTASIA]
+				,(cli.cidcli + ' - ' + cli.sigufs) [CIDADE]
+				,ipd.codpro [CODPRO]
+				,ISNULL(grp.desgrp, 'OUTROS PRODUTOS')  [PRODUTO]
+				,ipd.qtdped [QTDPED]
+				,ipd.preuni [PREUNI]
+				,ipd.usu_vlrfin [VLRFINAL] -- Com Impostos somados 
+				,ipd.usu_mgmluc [MARGEM LUCRO]
+				,ipd.usu_vlrfre [VLRFRETE]
+				,ipd.usu_vlripi [IPI]
+				,ipd.usu_vlricm [ICMS]
+				,ped.usu_obsint [OBS]
+FROM e120ped ped
+LEFT JOIN e120ipd ipd 	
+			  ON ipd.codemp = ped.codemp
+			AND ipd.codfil = ped.codfil
+			AND ipd.numped = ped.numped	   
+LEFT JOIN e090rep rep 
+        ON rep.codrep = ped.codven	
+LEFT JOIN e085cli cli 	
+		ON cli.codcli = ped.codcli
+LEFT JOIN e085hcl hcl 
+			  ON hcl.codemp = ped.codemp
+			AND hcl.codfil = ped.codfil
+			AND hcl.codcli = ped.codcli
+LEFT JOIN poolbi.dbo.grppro grp 
+        ON grp.codpro = ipd.codpro
+WHERE ped.datemi >= '01-01-2026'
+      AND ped.sitped = '5'
       `;
 
       const conditions: string[] = [];
