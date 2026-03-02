@@ -9,25 +9,25 @@ export class CreateOrderUseCase {
   ) {}
 
   async execute(data: CreateOrderDTO): Promise<Order> {
-    console.log('🔶 [CreateOrderUseCase] Executando...');
-    console.log('🔶 [CreateOrderUseCase] Dados recebidos:', JSON.stringify(data, null, 2));
+    // console.log('🔶 [CreateOrderUseCase] Executando...');
+    // console.log('🔶 [CreateOrderUseCase] Dados recebidos:', JSON.stringify(data, null, 2));
     
     // Verificar se já existe um pedido com esse número
     const existing = await this.ordersRepository.findByOrderNumber(data.orderNumber);
 
     if (existing) {
-      console.warn('⚠️ [CreateOrderUseCase] Pedido já existe:', data.orderNumber);
+      // console.warn('⚠️ [CreateOrderUseCase] Pedido já existe:', data.orderNumber);
       throw new Error("Já existe um pedido com este número.");
     }
 
-    console.log('🔶 [CreateOrderUseCase] Criando entidade Order...');
+    // console.log('🔶 [CreateOrderUseCase] Criando entidade Order...');
     const order = new Order({
       ...data,
       status: data.status as OrderStatus,
     });
 
-    console.log('🔶 [CreateOrderUseCase] Order criado:', order);
-    console.log('🔶 [CreateOrderUseCase] Salvando no banco...');
+    // console.log('🔶 [CreateOrderUseCase] Order criado:', order);
+    // console.log('🔶 [CreateOrderUseCase] Salvando no banco...');
     
     await this.ordersRepository.create(order);
     

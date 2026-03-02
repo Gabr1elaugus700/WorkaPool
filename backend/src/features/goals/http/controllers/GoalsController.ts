@@ -21,7 +21,7 @@ export class GoalsController {
 
       console.log("Parsed data:", parsed.data);
       const service = new CreateGoalUseCase();
-      const goal = await service.execute(parsed.data);
+      const goal = await service.execute(parsed.data);  
 
       return res.status(201).json({
         id: goal.id,
