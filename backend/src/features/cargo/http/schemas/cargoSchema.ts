@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Carga } from "../../entities/Carga";
+import { Pedido } from "../../entities/Pedido";
 
 // Enums
 export const sitCargoEnum = z.enum(["ABERTA", "FECHADA", "CANCELADA", "SOLICITADA", "ENTREGUE"]);
@@ -35,5 +36,23 @@ export function toCargaResponseDTO(carga: Carga): CargaResponseDTO {
     situacao: carga.situacao,
     createdAt: carga.createdAt.toISOString(),
     closedAt: carga.closedAt?.toISOString(),
+  };
+}
+
+// DTO extendido com peso total calculado
+export interface CargaComPesoDTO extends CargaResponseDTO {
+  pesoAtual: number;          // Peso total de TODOS os pedidos da carga
+  quantidadePedidos: number;  // Número de pedidos na carga
+}
+
+// Converte Carga + array de Pedidos para CargaComPesoDTO
+export function toCargaComPesoDTO(
+  carga: Carga,
+  pedidos: Pedido[]
+): CargaComPesoDTO {
+  return {
+    ...toCargaResponseDTO(carga),
+    pesoAtual: pedidos.reduce((sum, p) => sum + p.peso, 0),
+    quantidadePedidos: pedidos.length,
   };
 }

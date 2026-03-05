@@ -8,6 +8,7 @@ import { GetAllOpenCargasUseCase } from "../../useCases/GetAllOpenCargas.use-cas
 import { UpdateCargaSituacaoUseCase } from "../../useCases/UpdateCargaSituacao.use-case";
 import { SituacaoCarga } from "../../entities/Carga";
 import { UpdateCargaUseCase } from "../../useCases/UpdateCarga.use-case";
+import { GetPedidosCargaUseCase } from "../../useCases/GetPedidosCarga.use-case";
 
 export class CargoController {
   static async createCarga(req: Request, res: Response): Promise<Response> {
@@ -199,6 +200,36 @@ export class CargoController {
         error instanceof Error
           ? error.message
           : "Erro Interno ao atualizar pedido";
+      return res.status(500).json({ error: message });
+    }
+  }
+
+  static async getPedidosPorCarga(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const { codCar } = req.params;
+      const { codRep } = req.query;
+
+      if (!codCar) {
+        return res.status(400).json({ error: "Código da carga é obrigatório." });
+      }
+
+      const getPedidosCargaUseCase = new GetPedidosCargaUseCase();
+      let pedidos = await getPedidosCargaUseCase.execute(Number(codCar));
+
+      // Filtrar por vendedor SE fornecido (para visualização)
+      if (codRep && Number(codRep) !== 999) {
+        pedidos = pedidos.filter(p => p.codRep === Number(codRep));
+      }
+
+      return res.json(pedidos);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Erro Interno ao buscar pedidos da carga";
       return res.status(500).json({ error: message });
     }
   }

@@ -5,22 +5,24 @@ import { toast } from "sonner";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
 
+import { Carga, Pedido } from "../types/cargo.types";
+import { 
+  fetchCargas, 
+  fetchPedidosCargas, 
+  updatePedidoCarga,
+  updateSituacaoCarga, 
+  salvarPedidosCargaFechada 
+} from "../services";
+import { cargoService } from "../services/cargoService";
+
 import {
-  Pedido,
-  Carga,
   PedidoCard,
   PedidoDropzone,
   CargaDropzone,
   NovaCargaModal,
   CargasFechadas,
-  FiltroCarga,
-  fetchPedidosFechados,
-  fetchCargas,
-  fetchPedidosCargas,
-  updatePedidoCarga,
-  updateSituacaoCarga,
-  salvarPedidosCargaFechada
-} from "@/features/cargo";
+  FiltroCarga
+} from "../components";
 
 export default function ControleDeCargas() {
   const { user } = useAuth();
@@ -35,73 +37,42 @@ export default function ControleDeCargas() {
     if (!user?.codRep) return;
 
     try {
-      const data = await fetchPedidosFechados(user.codRep);
-      setPedidosResumo(data);
+      // =====================================
+      // 1️⃣ BUSCAR PEDIDOS SEM CARGA (zona de arrastar)
+      //    Filtrado por vendedor
+      // =====================================
+      const pedidosSoltos = await cargoService.getPedidosFechados(user.codRep);
+      setPedidos(pedidosSoltos.filter(p => !p.codCar || p.codCar === 0));
+      setPedidosResumo(pedidosSoltos);
 
-      const convertidos = data.map((p) => ({
-        id: p.numPed,
-        numPed: p.numPed,
-        cliente: p.cliente,
-        cidade: p.cidade,
-        peso: p.peso,
-        vendedor: p.vendedor,
-        codRep: p.codRep ?? undefined,
-        bloqueado: p.bloqueado,
-        precoFrete: 0,
-        codCar: p.codCar ?? null,
-        sitcar: p.sitcar ?? null,
-        poscar: p.poscar ?? null,
-        produtos: p.produtos ?? [],
-      }));
-
-      setPedidos(convertidos);
-
+      // =====================================
+      // 2️⃣ BUSCAR CARGAS COM PESO TOTAL REAL
+      //    Backend já calcula peso de TODOS os pedidos
+      // =====================================
       const cargasBase = await fetchCargas();
+      // ✅ cargasBase[x].pesoAtual já considera TODOS os vendedores!
 
-      const cargasComPedidos = await Promise.all(
+      // =====================================
+      // 3️⃣ PARA CADA CARGA: buscar pedidos DO VENDEDOR
+      //    Apenas para VISUALIZAÇÃO
+      // =====================================
+      const cargasComPedidosFiltrados = await Promise.all(
         cargasBase.map(async (carga) => {
-          const todosPedidos = await fetchPedidosCargas(carga.codCar);
-
-          setPedidosResumo((prev) => {
-            const novos = todosPedidos.map((p) => ({
-              id: p.numPed,
-              numPed: p.numPed,
-              cliente: p.cliente,
-              cidade: p.cidade,
-              vendedor: p.vendedor,
-              codRep: p.codRep ?? undefined,
-              bloqueado: p.bloqueado,
-              produtos: p.produtos ?? [],
-              peso: p.peso,
-              precoFrete: 0,
-              codCar: p.codCar,
-              sitcar: p.sitcar,
-              poscar: p.poscar,
-            }));
-
-            const combinados = [...prev];
-            novos.forEach((novo) => {
-              if (!combinados.some((r) => r.numPed === novo.numPed)) {
-                combinados.push(novo);
-              }
-            });
-
-            return combinados;
-          });
-
-          const pedidosFiltrados = todosPedidos.filter(
-            (pedido) => Number(pedido.codCar) === Number(carga.codCar)
+          // ✨ Filtrar pedidos por vendedor para exibição
+          const pedidosVisiveis = await fetchPedidosCargas(
+            carga.codCar,
+            user.codRep  // 🔍 Filtra apenas pedidos deste vendedor
           );
 
           return {
             ...carga,
-            pedidos: pedidosFiltrados,
-            pesoAtual: pedidosFiltrados.reduce((soma, p) => soma + p.peso, 0),
+            pedidos: pedidosVisiveis,  // 👁️ Visualização filtrada
+            // pesoAtual: JÁ VEM DO BACKEND (peso real global) - NÃO recalcular
           };
         })
       );
 
-      setCargas(cargasComPedidos);
+      setCargas(cargasComPedidosFiltrados);
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
     } finally {
@@ -114,7 +85,7 @@ export default function ControleDeCargas() {
   }, [carregar]);
 
   const handleDragEnd = async (event: DragEndEvent) => {
-    const pedido = event.active.data.current?.pedido as Pedido;
+    const pedido = event.active.data.current?.pedido as Pedido | undefined;
     const destinoId = event.over?.id?.toString();
 
     if (!pedido || !destinoId) return;
@@ -173,7 +144,6 @@ export default function ControleDeCargas() {
   };
 
   const cargasFiltradas = cargas.filter((carga) => {
-    // Aplica filtro de permissão do usuário
     if (!user) return false;
 
     if (user.role === "VENDAS") {
@@ -186,19 +156,16 @@ export default function ControleDeCargas() {
       );
     }
     
-    // Se nenhum destino está selecionado, mostra todas as cargas
     if (destinosFiltrados.length === 0) {
       return true;
     }
     
-    // Se há filtros aplicados, mostra apenas as cargas dos destinos selecionados
     return destinosFiltrados.includes(carga.destino);
   });
 
   const handleChangeSituacao = async (id: string, novaSituacao: string) => {
     console.log("Atualizando situação da carga:", id, novaSituacao);
 
-    // Atualizar estado local
     setCargas((prev) =>
       prev.map((carga) =>
         carga.id === id ? { ...carga, situacao: novaSituacao } : carga
@@ -206,23 +173,17 @@ export default function ControleDeCargas() {
     );
 
     try {
-      // Primeiro atualiza a situação da carga no banco de dados
       await updateSituacaoCarga(id, novaSituacao);
 
-      // Depois verifica se a situação é FECHADA
       if (novaSituacao === "FECHADA") {
-        // Encontra a carga que foi alterada
         const cargaFechada = cargas.find(carga => carga.id === id);
 
-        // Se encontrou a carga e ela tem pedidos
         if (cargaFechada && cargaFechada.pedidos && cargaFechada.pedidos.length > 0) {
-          // Extrai apenas os números dos pedidos
           const numerosPedidos = cargaFechada.pedidos.map(pedido => Number(pedido.numPed));
 
           console.log("Salvando pedidos da carga fechada:", id, numerosPedidos);
 
           try {
-            // Chama o serviço para salvar os pedidos
             await salvarPedidosCargaFechada(id, numerosPedidos);
             toast.success("Pedidos da carga fechada salvos com sucesso");
           } catch (error) {
@@ -244,7 +205,6 @@ export default function ControleDeCargas() {
       <DndContext onDragEnd={handleDragEnd}>
         <div className="grid grid-cols-5 gap-6 p-6">
 
-          {/* Coluna dos pedidos */}
           <div className="col-span-2">
             {loading ? (
               <div className="text-center text-lg text-muted-foreground">
@@ -265,7 +225,6 @@ export default function ControleDeCargas() {
             )}
           </div>
 
-          {/* Coluna das cargas */}
           <div className="col-span-3 bg-muted p-6 rounded-lg shadow-md">
             <div className="flex justify-between items-center h-14 mb-4 px-2">
               <h1 className="text-2xl font-bold text-foreground">

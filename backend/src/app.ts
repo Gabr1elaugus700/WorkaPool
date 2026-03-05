@@ -4,22 +4,16 @@ import express from "express";
 import cors from "cors";
 import { setupSwagger } from "./swagger";
 
-import clienteRoutes from "./routes/clienteRoutes";
 import testeConectionRoutes from "./routes/testeConection";
-import pedidosRoutes from "./routes/pedidosRoutes";
 import fatVenRoutes from "./routes/totalFatVendedorRoutes";
 import rankingProdutosVendidos from "./routes/rankingProdutosRoutes";
 import productRoutes from "./routes/produtosRoutes";
 import vendedoresRoutes from "./routes/vendedoresRoutes";
-import pedidosFechadosRoutes from "./routes/pedidosFechadosRoutes";
 import authRoutes from "./features/users/routes/authRoutes";
-import pedidosCargasRoutes from "./routes/pedidosCargasRoutes";
-import alteraPedidoCarga from "./features/cargo/http/routes/alteraPedidoCagasRoutes";
 import clientesInativos from "./routes/clientesInativosRoutes";
 import produtosEstoque from "./routes/estoqueProdutosRoutes";
 
 //Importando as rotas De Consulta no banco de dados Prisma
-import criarCargas from "./features/cargo/http/routes/criaCargas";
 import metasRoutes from "./routes/metasRoutes";
 import caminhoes from "./routes/caminhoesRoutes";
 import parametrosGlobaisFretes from "./routes/parametrosFretesRoutes";
@@ -33,6 +27,7 @@ import vistoriaRoutes from "./features/workOrder/routes/vistoriaRoutes";
 import checklistVistoria from "./features/workOrder/routes/chacklilstVistoriaRoutes";
 
 import userRoutes from "./features/users/routes/userRoutes";
+import cargoRoutes from "./features/cargo/http/routes/CargoRoute";
 
 // New Routes After Refactor
 import goals from "./features/goals/http/routes/goalsRoutes";
@@ -84,18 +79,15 @@ app.get("/health", (req, res) => {
 
 
 // Rotas De consulta no banco de dados Sapiens
-app.use("/api/clientes", clienteRoutes);
+
 app.use("/api/teste", testeConectionRoutes);
-app.use("/api/pedidos", pedidosRoutes);
 app.use("/api/faturamento", fatVenRoutes);
 app.use("/api/rankingProdutos", rankingProdutosVendidos);
 app.use("/api/produtos", productRoutes);
 app.use("/api/vendedores", vendedoresRoutes);
 
 //Cargas
-app.use("/api/pedidosFechados", pedidosFechadosRoutes);
-app.use("/api/pedidosEmCargas", pedidosCargasRoutes);
-app.use("/api/pedidoToCarga", alteraPedidoCarga);
+app.use("/api/cargo", cargoRoutes);
 
 //Clientes Perdidos
 app.use("/api/clientes-inativos", clientesInativos);
@@ -105,7 +97,6 @@ app.use("/api/produtosEstoque", produtosEstoque);
 
 // Rota de consultas Banco de dados Prisma
 app.use("/api/auth", authRoutes);
-app.use("/api/Cargas", criarCargas);
 app.use("/api/caminhoes", caminhoes);
 app.use("/api/parametrosFretes", parametrosGlobaisFretes);
 
@@ -132,9 +123,6 @@ app.use("/api/goals", goals);
 // Order Loss - Pedidos Perdidos e em Negociação
 app.use("/api/orders", ordersRoutes);
 
-// Rotas Power BI
-import pbiMetasRoutes from "./routes/pbiMetasRoutes";
-app.use("/api/pbi-Metas", pbiMetasRoutes);
 // Iniciar servidor
 app.use(
   (
