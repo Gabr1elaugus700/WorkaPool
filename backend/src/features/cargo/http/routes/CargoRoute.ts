@@ -3,9 +3,10 @@ import { CargoController } from "../controllers/CargoController";
 const router = Router();
 
 router.post("/", CargoController.createCarga);
+
 router.patch("/:id/situacao", CargoController.updateSituacao);
 router.put("/update-carga/:id", CargoController.updateCarga);
-router.get("/listar-abertas", CargoController.getAllOpenCargas);
+router.get("/listar-abertas", CargoController.getCargas);
 
 router.put("/update-pedido/:numPed", CargoController.updatePedidoCarga); // Sapiens Database - Rota para atualizar pedido com carga
 router.get(

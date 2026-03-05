@@ -2,7 +2,7 @@ import { Carga, CargaComPesoDTO, toCarga } from '../types/cargo.types';
 import { getBaseUrl } from '@/lib/apiBase';
 
 export const fetchCargas = async (): Promise<Carga[]> => {
-  const response = await fetch(`${getBaseUrl()}/api/cargo/listarAbertas`, {
+  const response = await fetch(`${getBaseUrl()}/api/cargo/listar-abertas`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -28,6 +28,8 @@ export const createCarga = async (input: {
   situacao: string;
   previsaoSaida: string;
 }): Promise<Carga> => {
+
+  console.log("Criando carga com dados:", input);
   const response = await fetch(`${getBaseUrl()}/api/cargo`, {
     method: 'POST',
     headers: {

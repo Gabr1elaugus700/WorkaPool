@@ -115,9 +115,26 @@ export class CargoRepository implements ICargoRepository {
     });
     return result ? result.codCar : 0;
   }
-  async listarAbertas(): Promise<Carga[]> {
+  async listarTodas(): Promise<Carga[]> {
+    const cargas = await this.prisma.cargas.findMany();
+    return cargas.map(
+      (carga) =>
+        new Carga({
+          id: carga.id,
+          codCar: carga.codCar,
+          destino: carga.destino,
+          previsaoSaida: carga.previsaoSaida,
+          createdAt: carga.createdAt,
+          closedAt: carga.closedAt || undefined,
+          situacao: carga.situacao as SituacaoCarga,
+          pesoMaximo: carga.pesoMax,
+        }),
+    );
+  }
+
+  async listarPorSituacao(situacao: SituacaoCarga): Promise<Carga[]> {
     const cargas = await this.prisma.cargas.findMany({
-      where: { situacao: "ABERTA" },
+      where: { situacao },
     });
     return cargas.map(
       (carga) =>

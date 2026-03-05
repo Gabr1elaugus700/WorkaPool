@@ -7,7 +7,6 @@ import { useAuth } from "@/auth/AuthContext";
 
 import { Carga, Pedido } from "../types/cargo.types";
 import { 
-  fetchCargas, 
   fetchPedidosCargas, 
   updatePedidoCarga,
   updateSituacaoCarga, 
@@ -37,37 +36,22 @@ export default function ControleDeCargas() {
     if (!user?.codRep) return;
 
     try {
-      // =====================================
-      // 1️⃣ BUSCAR PEDIDOS SEM CARGA (zona de arrastar)
-      //    Filtrado por vendedor
-      // =====================================
       const pedidosSoltos = await cargoService.getPedidosFechados(user.codRep);
       setPedidos(pedidosSoltos.filter(p => !p.codCar || p.codCar === 0));
       setPedidosResumo(pedidosSoltos);
 
-      // =====================================
-      // 2️⃣ BUSCAR CARGAS COM PESO TOTAL REAL
-      //    Backend já calcula peso de TODOS os pedidos
-      // =====================================
-      const cargasBase = await fetchCargas();
-      // ✅ cargasBase[x].pesoAtual já considera TODOS os vendedores!
-
-      // =====================================
-      // 3️⃣ PARA CADA CARGA: buscar pedidos DO VENDEDOR
-      //    Apenas para VISUALIZAÇÃO
-      // =====================================
+      const cargasBase = await cargoService.getAllCargas();
       const cargasComPedidosFiltrados = await Promise.all(
         cargasBase.map(async (carga) => {
-          // ✨ Filtrar pedidos por vendedor para exibição
           const pedidosVisiveis = await fetchPedidosCargas(
             carga.codCar,
-            user.codRep  // 🔍 Filtra apenas pedidos deste vendedor
+            user.codRep  
           );
 
           return {
             ...carga,
-            pedidos: pedidosVisiveis,  // 👁️ Visualização filtrada
-            // pesoAtual: JÁ VEM DO BACKEND (peso real global) - NÃO recalcular
+            pedidos: pedidosVisiveis,
+            
           };
         })
       );

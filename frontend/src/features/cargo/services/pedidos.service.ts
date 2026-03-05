@@ -60,7 +60,7 @@ export async function fetchPedidosCargas(
   codRep?: number
 ): Promise<Pedido[]> {
   const url = codRep 
-    ? `${getBaseUrl()}/api/cargo/${codCar}/pedidos?codRep=${codRep}`
+    ? `${getBaseUrl()}/api/cargo/pedidos-fechados/${codRep}`
     : `${getBaseUrl()}/api/cargo/${codCar}/pedidos`;
 
   const response = await fetch(url);

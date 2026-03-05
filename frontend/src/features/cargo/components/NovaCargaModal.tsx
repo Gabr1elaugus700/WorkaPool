@@ -11,8 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/auth/AuthContext";
 import { PackagePlus } from "lucide-react";
-import { createCarga } from "../services";
+// import { createCarga } from "../services";
 import { Carga } from "../types/cargo.types";
+import { cargoService } from "../services/cargoService";
 
 type Props = {
   onCreated: (novaCarga: Carga) => void;
@@ -29,7 +30,7 @@ export function NovaCargaModal({ onCreated }: Props) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     destino: "",
-    pesoMaximo: 10000,
+    pesoMax: 10000,
     situacao,
     previsaoSaida: "",
   });
@@ -44,11 +45,12 @@ export function NovaCargaModal({ onCreated }: Props) {
   };
 
   const criarCarga = async () => {
-    const nova = await createCarga(form);
+    console.log("Criando carga com dados:", form);
+    const nova = await cargoService.createCarga(form);
     onCreated(nova);
     setForm({
       destino: "",
-      pesoMaximo: 10000,
+      pesoMax: 10000,
       situacao,
       previsaoSaida: "",
     });
@@ -89,9 +91,9 @@ export function NovaCargaModal({ onCreated }: Props) {
           <div className="grid gap-2">
             <Label>Peso Máximo (kg)</Label>
             <Input
-              name="pesoMaximo"
+              name="pesoMax"
               type="number"
-              value={form.pesoMaximo}
+              value={form.pesoMax}
               onChange={handleChange}
             />
           </div>

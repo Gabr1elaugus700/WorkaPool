@@ -4,7 +4,7 @@ import { UpdatePedidoCargaUseCase } from "../../useCases/UpdatePedidoCarga.use-c
 import { CreateCargaUseCase } from "../../useCases/CreateCarga.use-case";
 import { GetPedidosFechadosVendedorUseCase } from "../../useCases/GetPedidosFechadosVendedor.use-case";
 import { CreateCargaSchema } from "../schemas/cargoSchema";
-import { GetAllOpenCargasUseCase } from "../../useCases/GetAllOpenCargas.use-case";
+import { GetAllCargasUseCase } from "../../useCases/GetAllCargas.use-case";
 import { UpdateCargaSituacaoUseCase } from "../../useCases/UpdateCargaSituacao.use-case";
 import { SituacaoCarga } from "../../entities/Carga";
 import { UpdateCargaUseCase } from "../../useCases/UpdateCarga.use-case";
@@ -100,13 +100,17 @@ export class CargoController {
     }
   }
 
-  static async getAllOpenCargas(
+  static async getCargas(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      const allOpenCargasUseCase = new GetAllOpenCargasUseCase();
-      const cargas = await allOpenCargasUseCase.execute();
+        const { situacao } = req.query;
+
+      const getCargasUsecase = new GetAllCargasUseCase();
+      const cargas = await getCargasUsecase.execute(
+        situacao ? String(situacao) as SituacaoCarga : undefined
+      );
       return res.json(cargas);
     } catch (error) {
       const message =

@@ -7,10 +7,9 @@ export const sitCargoEnum = z.enum(["ABERTA", "FECHADA", "CANCELADA", "SOLICITAD
 
 export const CreateCargaSchema = z.object({
     destino: z.string().min(1, "O destino é obrigatório"),
-    pesoMax: z.number().positive("O peso máximo deve ser um número positivo"),
+    pesoMax: z.coerce.number().positive("O peso máximo deve ser um número positivo"),
     previsaoSaida: z.string().refine((date) => !isNaN(Date.parse(date)), "A previsão de saída deve ser uma data válida"),
     situacao: sitCargoEnum.optional(),
-    
 });
 
 export type CreateCargaDTO = z.infer<typeof CreateCargaSchema>;
