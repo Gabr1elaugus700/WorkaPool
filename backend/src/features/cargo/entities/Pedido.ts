@@ -13,6 +13,7 @@ export interface PedidoProps {
   codCar?: number | null;
   poscar?: number | null;
   sitcar?: string | null;
+  qtdOri: number;
   produtos?: {
     nome: string;
     derivacao: string;
@@ -36,6 +37,7 @@ export class Pedido {
   public codCar?: number | null;
   public poscar?: number | null;
   public sitcar?: string | null;
+  public qtdOri: number;
   public produtos?: {
     nome: string;
     derivacao: string;
@@ -59,6 +61,7 @@ export class Pedido {
     poscar,
     sitcar,
     produtos,
+    qtdOri,
   }: PedidoProps) {
     this.id = id;
     this.numPed = numPed;
@@ -75,6 +78,7 @@ export class Pedido {
     this.poscar = poscar;
     this.sitcar = sitcar;
     this.produtos = produtos;
+    this.qtdOri = qtdOri;
   }
 }
 
@@ -95,4 +99,5 @@ export type PedidoRaw = {
   CODCAR: number;
   POSCAR: number;
   SITCAR: string;
+  QTD_ORI_PED: number;
 }

@@ -8,10 +8,12 @@ export interface ICargoRepository {
   deleteCarga(id: string): Promise<void>;
   getPedidosPorCarga(codCar: number): Promise<Pedido[]>;
   updatePedidoCarga(numPed: number, codCar: number, posCar: number): Promise<void>;
-  listarTodas(): Promise<Carga[]>;
-  listarPorSituacao(situacao: SituacaoCarga): Promise<Carga[]>;
-  getPedidosFechadosPorVendedor(codRep: number): Promise<Pedido[]>;
+  getCargas(situacao?: SituacaoCarga ): Promise<Carga[]>;
+  getPedidos(codRep?: number): Promise<Pedido[]>;
+  getPedidosWeight(numPed?: number): Promise<{ numPed: number; peso: number }>;
   getMaxCodCar(): Promise<number>;
   updateSituacaoCarga(codCar: number, situacao: SituacaoCarga): Promise<Carga>;
+  getLastHistoricoPesoPedido(numPed: number): Promise<{ peso: number; codCar: number } | null>;
+  createHistoricoPesoPedido(numPed: number, cargaId: string, peso: number): Promise<void>;
 
 }

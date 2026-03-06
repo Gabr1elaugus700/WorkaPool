@@ -72,6 +72,13 @@ export interface Pedido {
   }[];
 }
 
+export enum CargaSituacao {
+  ABERTA = "ABERTA",
+  FECHADA = "FECHADA",
+  CANCELADA = "CANCELADA",
+  SOLICITADA = "SOLICITADA",
+  ENTREGUE = "ENTREGUE",
+}
 /** Carga com campos calculados para o frontend */
 export interface Carga {
   id: string;
@@ -80,11 +87,13 @@ export interface Carga {
   pesoMaximo: number;  // Normalizado para pesoMaximo
   pesoAtual: number;  // Calculado no frontend
   previsaoSaida: string;
-  situacao: string;
+  situacao: CargaSituacao;
   createdAt: string;
   closedAt?: string;
   pedidos: Pedido[];
 }
+
+
 
 // ==========================================
 // TIPOS LEGADOS (para compatibilidade)
@@ -149,7 +158,7 @@ export function toCarga(dto: CargaResponseDTO, pedidos: Pedido[] = []): Carga {
     pesoMaximo: dto.pesoMaximo,
     pesoAtual: pedidos.reduce((sum, p) => sum + p.peso, 0),  // Calculado
     previsaoSaida: dto.previsaoSaida,
-    situacao: dto.situacao,
+    situacao: dto.situacao as CargaSituacao,
     createdAt: dto.createdAt,
     closedAt: dto.closedAt,
     pedidos,

@@ -9,7 +9,7 @@ import Clientes from "../pages/Clientes";
 import Pedidos from "../pages/Pedidos";
 import Dashboard from "../pages/dashboardVendas";
 import DashboardTest from "../pages/dashboard";
-import MontagemDeCargas from "../pages/controleDeCargas";
+import CargasPage from "../pages/CargasPage";
 import ClientesInativos from "../pages/ClientesInativos";
 import { OrderLossView, SellerOrdersView } from "@/features/orderLoss";
 import Login from "@/auth/Login";
@@ -117,7 +117,7 @@ const AppRoutes = () => {
             path="/cargas"
             element={
               <PrivateRoute>
-                <MontagemDeCargas />
+                <CargasPage />
               </PrivateRoute>
             }
           />

@@ -5,13 +5,7 @@ import { toast } from "sonner";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
 
-import { Carga, Pedido } from "../types/cargo.types";
-import { 
-  fetchPedidosCargas, 
-  updatePedidoCarga,
-  updateSituacaoCarga, 
-  salvarPedidosCargaFechada 
-} from "../services";
+import { Carga, CargaSituacao, Pedido, CargaComPesoDTO } from "../types/cargo.types";
 import { cargoService } from "../services/cargoService";
 
 import {
@@ -23,10 +17,53 @@ import {
   FiltroCarga
 } from "../components";
 
+/**
+ * Agrupa pedidos por carga e calcula peso de pedidos visíveis
+ */
+function agruparPedidosPorCarga(
+  pedidosTodos: Pedido[],
+  cargasComPesoTotal: CargaComPesoDTO[]
+): { pedidosSoltos: Pedido[]; cargasComPedidos: Carga[] } {
+
+  // Separa pedidos sem carga
+  const pedidosSoltos = pedidosTodos.filter(p => !p.codCar || p.codCar ===  0);
+
+  // Agrupa pedidos COM carga
+  const pedidosPorCarga = new Map<number, Pedido[]>();
+  pedidosTodos
+    .filter(p => p.codCar && p.codCar > 0)
+    .forEach(pedido => {
+      const codCar = pedido.codCar!;
+      if (!pedidosPorCarga.has(codCar)) {
+        pedidosPorCarga.set(codCar, []);
+      }
+      pedidosPorCarga.get(codCar)!.push(pedido);
+    });
+
+  // Monta cargas com pedidos vinculados
+  const cargasComPedidos: Carga[] = cargasComPesoTotal.map(cargaDTO => {
+    const pedidosDaCarga = pedidosPorCarga.get(cargaDTO.codCar) || [];
+    
+    return {
+      id: cargaDTO.id,
+      codCar: cargaDTO.codCar,
+      destino: cargaDTO.destino,
+      pesoMaximo: cargaDTO.pesoMaximo,
+      pesoAtual: cargaDTO.pesoAtual, // Peso TOTAL (backend calculou com TODOS os pedidos)
+      previsaoSaida: cargaDTO.previsaoSaida,
+      situacao: cargaDTO.situacao as CargaSituacao,
+      createdAt: cargaDTO.createdAt,
+      closedAt: cargaDTO.closedAt,
+      pedidos: pedidosDaCarga, // Apenas pedidos VISÍVEIS para o usuário
+    };
+  });
+
+  return { pedidosSoltos, cargasComPedidos };
+}
+
 export default function ControleDeCargas() {
   const { user } = useAuth();
 
-  const [, setPedidosResumo] = useState<Pedido[]>([]);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [cargas, setCargas] = useState<Carga[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,33 +73,31 @@ export default function ControleDeCargas() {
     if (!user?.codRep) return;
 
     try {
-      const pedidosSoltos = await cargoService.getPedidosFechados(user.codRep);
-      setPedidos(pedidosSoltos.filter(p => !p.codCar || p.codCar === 0));
-      setPedidosResumo(pedidosSoltos);
+      // Buscar cargas e pedidos EM PARALELO
+      const [cargasDTO, todosPedidos] = await Promise.all([
+        cargoService.getCargas(
+          user.role === "VENDEDOR" || user.role === "LOGISTICA"
+            ? ["ABERTA", "SOLICITADA"]
+            : undefined
+        ),
+        cargoService.getTodosPedidosFechados(user.codRep === 999 ? undefined : user.codRep),
+      ]);
 
-      const cargasBase = await cargoService.getAllCargas();
-      const cargasComPedidosFiltrados = await Promise.all(
-        cargasBase.map(async (carga) => {
-          const pedidosVisiveis = await fetchPedidosCargas(
-            carga.codCar,
-            user.codRep  
-          );
-
-          return {
-            ...carga,
-            pedidos: pedidosVisiveis,
-            
-          };
-        })
+      // Agrupar pedidos por carga
+      const { pedidosSoltos, cargasComPedidos } = agruparPedidosPorCarga(
+        todosPedidos,
+        cargasDTO
       );
 
-      setCargas(cargasComPedidosFiltrados);
+      setPedidos(pedidosSoltos);
+      setCargas(cargasComPedidos);
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
+      toast.error("Erro ao carregar dados");
     } finally {
       setLoading(false);
     }
-  }, [user?.codRep]);
+  }, [user?.codRep, user?.role]);
 
   useEffect(() => {
     carregar();
@@ -93,8 +128,9 @@ export default function ControleDeCargas() {
       }
 
       try {
-        await updatePedidoCarga(Number(pedido.numPed), 0, 0);
+        await cargoService.updatePedidoCarga(Number(pedido.numPed), 0, 0);
         await carregar();
+        toast.success("Pedido removido da carga");
       } catch (err) {
         toast.error("Erro ao remover pedido da carga");
         console.error(err);
@@ -110,6 +146,7 @@ export default function ControleDeCargas() {
       return toast.error("Pedido já está na carga selecionada.");
     }
 
+    // Valida peso máximo (usando peso REAL da carga + peso do novo pedido)
     const novoPeso = cargaDestino.pesoAtual + pedido.peso;
     if (novoPeso > cargaDestino.pesoMaximo) {
       toast.error(`Carga excede o peso máximo de ${cargaDestino.pesoMaximo}kg!`);
@@ -119,8 +156,13 @@ export default function ControleDeCargas() {
     const novaPos = cargaDestino.pedidos.length + 1;
 
     try {
-      await updatePedidoCarga(Number(pedido.numPed), cargaDestino.codCar, novaPos);
+      await cargoService.updatePedidoCarga(
+        Number(pedido.numPed),
+        cargaDestino.codCar,
+        novaPos
+      );
       await carregar();
+      toast.success("Pedido movido com sucesso");
     } catch (err) {
       toast.error("Erro ao mover pedido para carga");
       console.error(err);
@@ -131,12 +173,13 @@ export default function ControleDeCargas() {
     if (!user) return false;
 
     if (user.role === "VENDAS") {
-      return carga.situacao === "ABERTA";
+      return carga.situacao === CargaSituacao.ABERTA ||
+             (carga.pedidos && carga.pedidos.some(p => p.codRep === user.codRep));
     }
     if (user.role === "LOGISTICA") {
       return (
-        carga.situacao === "ABERTA" ||
-        carga.situacao === "SOLICITADA"
+        carga.situacao === CargaSituacao.ABERTA ||
+        carga.situacao === CargaSituacao.SOLICITADA
       );
     }
     
@@ -147,9 +190,7 @@ export default function ControleDeCargas() {
     return destinosFiltrados.includes(carga.destino);
   });
 
-  const handleChangeSituacao = async (id: string, novaSituacao: string) => {
-    console.log("Atualizando situação da carga:", id, novaSituacao);
-
+  const handleChangeSituacao = async (id: string, novaSituacao: CargaSituacao) => {
     setCargas((prev) =>
       prev.map((carga) =>
         carga.id === id ? { ...carga, situacao: novaSituacao } : carga
@@ -157,25 +198,21 @@ export default function ControleDeCargas() {
     );
 
     try {
-      await updateSituacaoCarga(id, novaSituacao);
+      await cargoService.updateSituacaoCarga(id, novaSituacao);
 
-      if (novaSituacao === "FECHADA") {
+      if (novaSituacao === CargaSituacao.FECHADA) {
         const cargaFechada = cargas.find(carga => carga.id === id);
 
         if (cargaFechada && cargaFechada.pedidos && cargaFechada.pedidos.length > 0) {
           const numerosPedidos = cargaFechada.pedidos.map(pedido => Number(pedido.numPed));
 
-          console.log("Salvando pedidos da carga fechada:", id, numerosPedidos);
-
           try {
-            await salvarPedidosCargaFechada(id, numerosPedidos);
-            toast.success("Pedidos da carga fechada salvos com sucesso");
+            await cargoService.salvarPedidosCargaFechada(id, numerosPedidos);
+            toast.success("Carga fechada com sucesso");
           } catch (error) {
             console.error("Erro ao salvar pedidos da carga fechada:", error);
             toast.error("Erro ao salvar pedidos da carga fechada");
           }
-        } else {
-          console.log("Carga sem pedidos para salvar:", cargaFechada);
         }
       }
     } catch (error) {
@@ -237,10 +274,16 @@ export default function ControleDeCargas() {
                     setCargas((prev): Carga[] => [
                       ...prev,
                       {
-                        ...nova,
-                        pedidos: [],
-                        pesoAtual: 0,
+                        id: nova.id,
+                        codCar: nova.codCar,
+                        destino: nova.destino,
+                        pesoMaximo: nova.pesoMaximo,
+                        pesoAtual: nova.pesoAtual || 0,
                         previsaoSaida: nova.previsaoSaida,
+                        situacao: nova.situacao as CargaSituacao,
+                        createdAt: nova.createdAt,
+                        closedAt: nova.closedAt,
+                        pedidos: [],
                       },
                     ])
                   }

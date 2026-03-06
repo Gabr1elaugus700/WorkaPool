@@ -17,13 +17,13 @@ import {
   SelectContent,
 } from "@/components/ui/select";
 import { Pencil } from "lucide-react";
-import { Carga } from "../types/cargo.types";
+import { Carga, CargaSituacao } from "../types/cargo.types";
 import { getBaseUrl } from "@/lib/apiBase";
 
 type Props = {
   carga: Carga;
   onUpdated: (nova: Carga) => void;
-  onChangeSituacao?: (id: string, novaSituacao: string) => void;
+  onChangeSituacao?: (id: string, novaSituacao: CargaSituacao) => void;
 };
 
 export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) {
@@ -41,7 +41,7 @@ export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) 
     }));
   };
 
-  const handleSituacaoChange = (value: string) => {
+  const handleSituacaoChange = (value: CargaSituacao) => {
     setForm((prev) => ({ ...prev, situacao: value }));
   };
 
@@ -119,10 +119,11 @@ export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) 
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ABERTA">ABERTA</SelectItem>
-                <SelectItem value="FECHADA">FECHADA</SelectItem>
-                <SelectItem value="SOLICITADA">SOLICITADA</SelectItem>
-                <SelectItem value="CANCELADA">CANCELADA</SelectItem>
+                <SelectItem value={CargaSituacao.ABERTA}>ABERTA</SelectItem>
+                <SelectItem value={CargaSituacao.FECHADA}>FECHADA</SelectItem>
+                <SelectItem value={CargaSituacao.SOLICITADA}>SOLICITADA</SelectItem>
+                <SelectItem value={CargaSituacao.CANCELADA}>CANCELADA</SelectItem>
+                <SelectItem value={CargaSituacao.ENTREGUE}>ENTREGUE</SelectItem>
               </SelectContent>
             </Select>
           </div>

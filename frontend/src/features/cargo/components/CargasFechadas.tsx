@@ -8,7 +8,7 @@ import {
     DialogClose,
     DialogHeader
 } from "@/components/ui/dialog";
-import { fetchCargasFechadas } from "../services";
+import { fetchCargasFechadas } from "../services/cargoService";
 import { CargaFechada } from "../types/cargo.types";
 import { Separator } from "@/components/ui/separator";
 

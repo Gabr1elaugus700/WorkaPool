@@ -66,18 +66,39 @@ enum CargaSituacao {
 }
 
 model Cargas {
-  id             String           @id @default(uuid())
-  codCar         Int              @unique
-  destino        String
-  pesoMax        Int
-  custoMin       Int
-  situacao       CargaSituacao    @default(ABERTA)
-  previsaoSaida  DateTime         @default(now())
-  createdAt      DateTime         @default(now())
-  closedAt       DateTime?
-  CargasFechadas CargasFechadas[]
+  id                   String                 @id @default(uuid())
+  codCar               Int                    @unique
+  destino              String
+  pesoMax              Int
+  custoMin             Int
+  situacao             CargaSituacao          @default(ABERTA)
+  previsaoSaida        DateTime               @default(now())
+  createdAt            DateTime               @default(now())
+  closedAt             DateTime?
+  CargasFechadas       CargasFechadas[]
+  historicoPesoPedidos HistoricoPesoPedidos[]
 
   @@map("carga")
+}
+
+model HistoricoPesoPedidos {
+  id      String @id @default(uuid())
+  cargaId String
+  carga   Cargas @relation(fields: [cargaId], references: [id])
+
+  numPed    Int
+  peso      Int
+  createdAt DateTime @default(now())
+
+  @@map("historico_peso_pedidos")
+}
+
+model CargasFechadas {
+  id        String   @id @default(uuid())
+  cargaId   String
+  carga     Cargas   @relation(fields: [cargaId], references: [id])
+  pedidos   Json[]
+  createdAt DateTime @default(now())
 }
 
 enum Meses {
@@ -126,14 +147,6 @@ model CalendarioMetas {
   id        String   @id @default(uuid())
   mes       Meses    @default(JANEIRO)
   ano       Int      @default(2025)
-  createdAt DateTime @default(now())
-}
-
-model CargasFechadas {
-  id        String   @id @default(uuid())
-  cargaId   String
-  carga     Cargas   @relation(fields: [cargaId], references: [id])
-  pedidos   Json[]
   createdAt DateTime @default(now())
 }
 

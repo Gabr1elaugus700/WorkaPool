@@ -74,22 +74,22 @@ export class CargoController {
     }
   }
 
-  static async getPedidosFechadosPorVendedor(
+  static async getPedidos(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      const { codRep } = req.params;
-      if (!codRep) {
-        return res
-          .status(400)
-          .json({ error: "Código do vendedor é obrigatório." });
-      }
-      const getPedidosFechadosVendedorUseCase =
-        new GetPedidosFechadosVendedorUseCase();
+      // Suporta tanto /pedidos-fechados/:codRep quanto /pedidos-fechados?codRep=X
+      const codRepParam = req.params.codRep;
+      const codRepQuery = req.query.codRep;
+      
+      const codRep = codRepParam || codRepQuery;
+      
+      const getPedidosFechadosVendedorUseCase = new GetPedidosFechadosVendedorUseCase();
       const pedidos = await getPedidosFechadosVendedorUseCase.execute(
-        Number(codRep),
+        codRep ? Number(codRep) : undefined
       );
+      
       return res.json(pedidos);
     } catch (error) {
       const message =
@@ -100,23 +100,26 @@ export class CargoController {
     }
   }
 
-  static async getCargas(
-    req: Request,
-    res: Response,
-  ): Promise<Response> {
+  static async getCargas(req: Request, res: Response): Promise<Response> {
     try {
-        const { situacao } = req.query;
+      const situacao = req.query.situacao;
 
-      const getCargasUsecase = new GetAllCargasUseCase();
-      const cargas = await getCargasUsecase.execute(
-        situacao ? String(situacao) as SituacaoCarga : undefined
-      );
+      // Converter para array se vier múltiplos valores
+      const situacoes = Array.isArray(situacao)
+        ? situacao.map((s) => String(s).toUpperCase())
+        : situacao
+          ? [String(situacao).toUpperCase()]
+          : undefined;
+
+      const getAllCargasUseCase = new GetAllCargasUseCase();
+      const cargas = await getAllCargasUseCase.execute(situacoes);
+
       return res.json(cargas);
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : "Erro Interno ao buscar cargas abertas";
+          : "Erro Interno ao buscar cargas";
       return res.status(500).json({ error: message });
     }
   }
@@ -217,7 +220,9 @@ export class CargoController {
       const { codRep } = req.query;
 
       if (!codCar) {
-        return res.status(400).json({ error: "Código da carga é obrigatório." });
+        return res
+          .status(400)
+          .json({ error: "Código da carga é obrigatório." });
       }
 
       const getPedidosCargaUseCase = new GetPedidosCargaUseCase();
@@ -225,7 +230,7 @@ export class CargoController {
 
       // Filtrar por vendedor SE fornecido (para visualização)
       if (codRep && Number(codRep) !== 999) {
-        pedidos = pedidos.filter(p => p.codRep === Number(codRep));
+        pedidos = pedidos.filter((p) => p.codRep === Number(codRep));
       }
 
       return res.json(pedidos);
@@ -237,5 +242,4 @@ export class CargoController {
       return res.status(500).json({ error: message });
     }
   }
-
 }

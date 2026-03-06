@@ -11,12 +11,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/auth/AuthContext";
 import { PackagePlus } from "lucide-react";
-// import { createCarga } from "../services";
-import { Carga } from "../types/cargo.types";
+import { CargaComPesoDTO } from "../types/cargo.types";
 import { cargoService } from "../services/cargoService";
 
 type Props = {
-  onCreated: (novaCarga: Carga) => void;
+  onCreated: (novaCarga: CargaComPesoDTO) => void;
 };
 
 export function NovaCargaModal({ onCreated }: Props) {

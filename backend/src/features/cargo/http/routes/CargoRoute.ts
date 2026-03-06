@@ -6,13 +6,15 @@ router.post("/", CargoController.createCarga);
 
 router.patch("/:id/situacao", CargoController.updateSituacao);
 router.put("/update-carga/:id", CargoController.updateCarga);
-router.get("/listar-abertas", CargoController.getCargas);
+router.get("/listar-cargas", CargoController.getCargas);
 
 router.put("/update-pedido/:numPed", CargoController.updatePedidoCarga); // Sapiens Database - Rota para atualizar pedido com carga
-router.get(
-  "/pedidos-fechados/:codRep",
-  CargoController.getPedidosFechadosPorVendedor,  
-); // Sapiens Database - Rota para obter pedidos fechados por vendedor
+
+// Nova rota: GET /pedidos-fechados (todos) ou GET /pedidos-fechados?codRep=X
+router.get("/pedidos-fechados", CargoController.getPedidos);
+// Rota compatível: GET /pedidos-fechados/:codRep
+router.get("/pedidos-fechados/:codRep", CargoController.getPedidos);
+
 router.get("/:codCar/pedidos", CargoController.getPedidosPorCarga); // Sapiens Database - Rota para obter pedidos de uma carga específica
 
 export default router;
