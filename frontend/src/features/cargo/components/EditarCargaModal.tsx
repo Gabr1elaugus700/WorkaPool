@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/select";
 import { Pencil } from "lucide-react";
 import { Carga, CargaSituacao } from "../types/cargo.types";
-import { getBaseUrl } from "@/lib/apiBase";
+import { cargoService } from "../services/cargoService";
+import { toast } from "sonner";
 
 type Props = {
   carga: Carga;
@@ -50,29 +51,42 @@ export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) 
       const situacaoMudou = form.situacao !== carga.situacao;
       const novaSituacao = form.situacao;
 
-      const res = await fetch(`${getBaseUrl()}/api/cargo/${carga.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+      // Validar peso máximo
+      const pesoMaximo = Number(form.pesoMaximo);
+      if (isNaN(pesoMaximo) || pesoMaximo <= 0) {
+        toast.error("Peso máximo deve ser um número válido maior que zero");
+        return;
+      }
+
+      // Atualiza a carga completa
+      const atualizada = await cargoService.updateCarga(carga.id, {
+        destino: form.destino,
+        pesoMax: pesoMaximo,
+        previsaoSaida: form.previsaoSaida,
+        situacao: form.situacao,
       });
 
-      const atualizada = await res.json();
       setOpen(false);
 
-      const cargaAtualizada = {
+      const cargaAtualizada: Carga = {
         ...atualizada,
+        situacao: atualizada.situacao as CargaSituacao,
         pedidos: carga.pedidos ?? [],
         pesoAtual: carga.pesoAtual ?? 0,
       };
 
       onUpdated(cargaAtualizada);
 
+      // Se a situação mudou para FECHADA, chama o handler adicional
       if (situacaoMudou && novaSituacao === "FECHADA" && onChangeSituacao) {
         console.log("Situação alterada para FECHADA - chamando onChangeSituacao");
         onChangeSituacao(carga.id, novaSituacao);
       }
+
+      toast.success("Carga atualizada com sucesso");
     } catch (error) {
       console.error("Erro ao atualizar carga:", error);
+      toast.error(error instanceof Error ? error.message : "Erro ao atualizar carga");
     }
   };
 

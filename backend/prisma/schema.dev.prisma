@@ -1,0 +1,554 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma-dev"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+  VENDAS
+  LOGISTICA
+  ALMOX
+  GERENTE_DPTO // Novo role para gerentes de departamento
+}
+
+enum FuncaoDepartamento {
+  GERENTE
+  FUNCIONARIO
+}
+
+model User {
+  id                 String   @id @default(uuid())
+  name               String   @default("")
+  user               String   @unique
+  password           String
+  role               Role     @default(USER)
+  createdAt          DateTime @default(now())
+  codRep             Int      @default(0)
+  mustChangePassword Boolean  @default(true)
+
+  orders Order[]
+
+  WorkOrders      WorkOrder[]
+  solicitacaoRota SolicitacaoRota[]
+  OrdemServico    OrdemServico[]
+  Vistoria        Vistoria[]
+
+  departamentos UsuarioDepartamento[]
+
+  ordensAtribuidas    OrdemServico[] @relation("OSAtribuida")
+  ordensAtribuidasPor OrdemServico[] @relation("OSAtribuidaPor")
+
+  workOrders           WorkOrder[]  @relation("WOAssigned")
+  workOrdersAssignedBy WorkOrder[]  @relation("WOAssignedBy")
+  inspections          Inspection[]
+}
+
+// Caminhões Disponíveis
+model Trucks {
+  id        String   @id @default(uuid())
+  name      String
+  capacity  Int
+  createdAt DateTime @default(now())
+  codRep    Int      @default(0)
+}
+
+enum CargaSituacao {
+  ABERTA
+  SOLICITADA
+  FECHADA
+  CANCELADA
+  ENTREGUE
+}
+
+model Cargas {
+  id                   String                 @id @default(uuid())
+  codCar               Int                    @unique
+  destino              String
+  pesoMax              Int
+  custoMin             Int
+  situacao             CargaSituacao          @default(ABERTA)
+  previsaoSaida        DateTime               @default(now())
+  createdAt            DateTime               @default(now())
+  closedAt             DateTime?
+  CargasFechadas       CargasFechadas[]
+  historicoPesoPedidos HistoricoPesoPedidos[]
+
+}
+
+model HistoricoPesoPedidos {
+  id      String @id @default(uuid())
+  cargaId String
+  carga   Cargas @relation(fields: [cargaId], references: [id])
+
+  numPed    Int
+  peso      Int
+  createdAt DateTime @default(now())
+
+  @@map("historico_peso_pedidos")
+}
+
+model CargasFechadas {
+  id        String   @id @default(uuid())
+  cargaId   String
+  carga     Cargas   @relation(fields: [cargaId], references: [id])
+  pedidos   Json[]
+  createdAt DateTime @default(now())
+}
+
+enum Meses {
+  JANEIRO
+  FEVEREIRO
+  MARCO
+  ABRIL
+  MAIO
+  JUNHO
+  JULHO
+  AGOSTO
+  SETEMBRO
+  OUTUBRO
+  NOVEMBRO
+  DEZEMBRO
+}
+
+// DEPRECATED - usar model Goals
+model Metas {
+  id          String   @id @default(uuid())
+  produto     String   @default("")
+  metaProduto Int      @default(0)
+  createdAt   DateTime @default(now())
+  codRep      Int      @default(0)
+  mesMeta     Int      @default(0)
+  anoMeta     Int      @default(0)
+  precoMedio  Float    @default(0.0)
+  totalVendas Float    @default(0.0)
+  cod_grp     String?  @default("")
+}
+
+model Goals {
+  id           String   @id @default(uuid())
+  product      String   @default("")
+  productGoal  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  codRep       Int      @default(0)
+  monthGoal    Int      @default(0)
+  yearGoal     Int      @default(0)
+  averagePrice Float    @default(0.0)
+  cod_grp      String?  @default("") // Internal Code to seller
+}
+
+model CalendarioMetas {
+  id        String   @id @default(uuid())
+  mes       Meses    @default(JANEIRO)
+  ano       Int      @default(2025)
+  createdAt DateTime @default(now())
+}
+
+model Caminhao {
+  id                 Int    @id @default(autoincrement())
+  modelo             String // exemplo: "bi-truck - scania"
+  eixos              Int // qtd_eixos geral
+  eixos_carregado    Int
+  eixos_vazio        Int
+  pneus              Int
+  capacidade_kg      Int // ex: 18000
+  consumo_medio_km_l Float // ex: 3.5
+
+  tipo String?
+
+  rotas CaminhaoRota[]
+}
+
+model Rota_base {
+  id          Int    @id @default(autoincrement())
+  origem      String
+  destino     String
+  total_km    Int
+  dias_viagem Int
+
+  caminhoes CaminhaoRota[]
+}
+
+model CaminhaoRota {
+  id                         Int       @id @default(autoincrement())
+  rota_base                  Rota_base @relation(fields: [rota_base_id], references: [id])
+  rota_base_id               Int
+  caminhao                   Caminhao  @relation(fields: [caminhao_id], references: [id])
+  caminhao_id                Int
+  pedagio_ida                Float
+  pedagio_volta              Float
+  custo_combustivel          Float
+  custo_total                Float
+  salario_motorista_rota     Float
+  refeicao_motorista_rota    Float
+  ajuda_custo_motorista_rota Float
+  chapa_descarga_rota        Float
+  desgaste_pneus_rota        Float
+  margem_lucro_frete         Float     @default(0.35) // 35%
+  custo_total_rota           Float     @default(0.0)
+  custo_por_kg               Float     @default(0.0)
+  valor_frete_kg             Float     @default(0.0)
+  custo_operacional          Float     @default(0.0)
+  createdAt                  DateTime  @default(now())
+
+  @@unique([rota_base_id, caminhao_id])
+}
+
+model ParametrosGlobaisViagem {
+  id                           Int      @id @default(autoincrement())
+  valor_diesel_s10_sem_icms    Float
+  valor_diesel_s10_com_icms    Float
+  valor_salario_motorista_dia  Float
+  valor_refeicao_motorista_dia Float
+  valor_ajuda_custo_motorista  Float
+  valor_chapa_descarga         Float
+  valor_desgaste_pneus         Float
+  updatedAt                    DateTime @updatedAt
+  margem_lucro_frete           Float    @default(0.35) // 35% de margem de lucro
+}
+
+enum Status {
+  PENDENTE
+  EM_ANDAMENTO
+  FINALIZADO
+  CANCELADO
+}
+
+model SolicitacaoRota {
+  id               Int      @id @default(autoincrement())
+  data_solicitacao DateTime @default(now())
+  peso             Int
+  origem           String
+  destino          String
+  status           Status   @default(PENDENTE)
+  solicitante      User     @relation(fields: [solicitante_user], references: [user])
+  solicitante_user String
+}
+
+enum StatusOrdemServico {
+  ABERTA
+  EM_ANDAMENTO
+  FINALIZADA
+  CANCELADA
+}
+
+enum Prioridade {
+  BAIXA
+  MEDIA
+  ALTA
+}
+
+model OrdemServico {
+  id                String             @id @default(uuid())
+  descricao         String             @default("")
+  problema          String             @default("")
+  status            StatusOrdemServico @default(ABERTA)
+  prioridade        Prioridade         @default(BAIXA)
+  data_criacao      DateTime           @default(now())
+  data_conclusao    DateTime?
+  email_solicitante String?
+  localizacao       String?
+  imagens           OsImagens[]
+
+  // Solicitante
+  id_solicitante String?
+  solicitante    User?   @relation(fields: [id_solicitante], references: [id])
+
+  // Atribuição da OS
+  id_responsavel String?
+  responsavel    User?   @relation("OSAtribuida", fields: [id_responsavel], references: [id])
+
+  id_atribuida_por String?
+  atribuida_por    User?   @relation("OSAtribuidaPor", fields: [id_atribuida_por], references: [id])
+
+  data_atribuicao DateTime?
+
+  // Departamento
+  id_departamento String?
+  departamento_os Departamento? @relation(fields: [id_departamento], references: [id])
+
+  id_vistoria          String?
+  ChecklistVistoria    ChecklistVistoria[]
+  checklistInspections ChecklistInspection[]
+}
+
+enum StatusWorkOrder {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+  CANCELED
+}
+
+model WorkOrder {
+  id              String            @id @default(uuid())
+  description     String            @default("")
+  problem         String            @default("")
+  status          StatusWorkOrder   @default(OPEN)
+  priority        Prioridade        @default(BAIXA)
+  creation_date   DateTime          @default(now())
+  completion_date DateTime?
+  requester_email String?
+  location        String?
+  images          WorkOrderImages[]
+
+  // Requester
+  requester_id String?
+  requester    User?   @relation(fields: [requester_id], references: [id])
+
+  // Work Order Assignment
+  responsible_id String?
+  responsible    User?   @relation("WOAssigned", fields: [responsible_id], references: [id])
+
+  assigned_by_id String?
+  assigned_by    User?   @relation("WOAssignedBy", fields: [assigned_by_id], references: [id])
+
+  assignment_date DateTime?
+
+  // Department
+  department_id String?
+  department    Departamento? @relation(fields: [department_id], references: [id])
+
+  inspection_id        String?
+  checklistInspections ChecklistInspection[]
+}
+
+model WorkOrderImages {
+  id            String   @id @default(uuid())
+  work_order_id String
+  image_url     String
+  createdAt     DateTime @default(now())
+
+  workOrder WorkOrder @relation(fields: [work_order_id], references: [id])
+}
+
+model OsImagens {
+  id         String   @id @default(uuid())
+  ordem_id   String
+  imagem_url String
+  createdAt  DateTime @default(now())
+
+  ordemServico OrdemServico @relation(fields: [ordem_id], references: [id])
+}
+
+model Inspection {
+  id                  String                @id @default(uuid())
+  inspection_date     DateTime              @default(now())
+  department_id       String
+  inspection_dept     Departamento          @relation(fields: [department_id], references: [id])
+  responsible_id      String
+  responsible         User                  @relation(fields: [responsible_id], references: [id])
+  checklistInspection ChecklistInspection[]
+}
+
+model Vistoria {
+  id                String              @id @default(uuid())
+  data_vistoria     DateTime            @default(now())
+  departamento_id   String
+  vistoria_dpto     Departamento        @relation(fields: [departamento_id], references: [id])
+  responsavel_id    String
+  responsavel       User                @relation(fields: [responsavel_id], references: [id])
+  checklistVistoria ChecklistVistoria[]
+}
+
+model ItemChecklist {
+  id                   String                @id @default(uuid())
+  descricao            String
+  models               ChecklistModelItem[]
+  checklistInspections ChecklistInspection[]
+}
+
+// ==
+model ChecklistItem {
+  id                   String                @id @default(uuid())
+  descricao            String
+  modelos              ChecklistModeloItem[]
+  ChecklistVistoria    ChecklistVistoria[]
+  checklistModelItems  ChecklistModelItem[]
+  checklistInspections ChecklistInspection[]
+}
+
+model ChecklistModel {
+  id                   String                @id @default(uuid())
+  nome                 String
+  createdAt            DateTime              @default(now())
+  departurement_id     String?
+  department           Departamento?         @relation(fields: [departurement_id], references: [id])
+  items                ChecklistModelItem[]
+  checklistInspections ChecklistInspection[]
+}
+
+model ChecklistModelo {
+  id                   String                @id @default(uuid())
+  nome                 String
+  createdAt            DateTime              @default(now())
+  departamento_id      String?
+  departamento         Departamento?         @relation(fields: [departamento_id], references: [id])
+  itens                ChecklistModeloItem[]
+  vistorias            ChecklistVistoria[]
+  checklistInspections ChecklistInspection[]
+}
+
+model ChecklistModelItem {
+  id               String @id @default(uuid())
+  checklistModelId String
+  checklistItemId  String
+
+  checklistModel  ChecklistModel @relation(fields: [checklistModelId], references: [id])
+  checklistItem   ChecklistItem  @relation(fields: [checklistItemId], references: [id])
+  itemChecklist   ItemChecklist? @relation(fields: [itemChecklistId], references: [id])
+  itemChecklistId String?
+
+  @@unique([checklistModelId, checklistItemId])
+}
+
+model ChecklistModeloItem {
+  id                String @id @default(uuid())
+  checklistModeloId String
+  checklistItemId   String
+
+  checklistModelo ChecklistModelo @relation(fields: [checklistModeloId], references: [id])
+  checklistItem   ChecklistItem   @relation(fields: [checklistItemId], references: [id])
+
+  @@unique([checklistModeloId, checklistItemId])
+}
+
+model ChecklistInspection {
+  id                String  @id @default(uuid())
+  inspection_id     String
+  checklistModeloId String
+  checklistItemId   String
+  checked           Boolean @default(false)
+  observacao        String?
+
+  inspection      Inspection      @relation(fields: [inspection_id], references: [id])
+  checklistModelo ChecklistModelo @relation(fields: [checklistModeloId], references: [id])
+  checklistItem   ChecklistItem   @relation(fields: [checklistItemId], references: [id])
+  OrdemServico    OrdemServico?   @relation(fields: [ordemServicoId], references: [id])
+  ordemServicoId  String?
+  workOrder       WorkOrder?      @relation(fields: [workOrderId], references: [id])
+  workOrderId     String?
+  itemChecklist   ItemChecklist?  @relation(fields: [itemChecklistId], references: [id])
+  itemChecklistId String?
+
+  checklistModel   ChecklistModel? @relation(fields: [checklistModelId], references: [id])
+  checklistModelId String?
+}
+
+// ==
+model ChecklistVistoria {
+  id                String  @id @default(uuid())
+  vistoria_id       String
+  checklistModeloId String
+  checklistItemId   String
+  checked           Boolean @default(false)
+  observacao        String?
+
+  vistoria        Vistoria        @relation(fields: [vistoria_id], references: [id])
+  checklistModelo ChecklistModelo @relation(fields: [checklistModeloId], references: [id])
+  checklistItem   ChecklistItem   @relation(fields: [checklistItemId], references: [id])
+  OrdemServico    OrdemServico?   @relation(fields: [ordemServicoId], references: [id])
+  ordemServicoId  String?
+}
+
+model Departamento {
+  id         String   @id @default(uuid())
+  name       String   @unique
+  created_at DateTime @default(now())
+  recebe_os  Boolean  @default(false)
+
+  // Relacionamentos
+  usuarios        UsuarioDepartamento[]
+  Vistorias       Vistoria[]
+  Checklists      ChecklistModelo[]
+  OrdensServico   OrdemServico[]
+  workOrders      WorkOrder[]
+  inspections     Inspection[]
+  checklistModels ChecklistModel[]
+}
+
+model UsuarioDepartamento {
+  id              String             @id @default(uuid())
+  user_id         String
+  departamento_id String
+  funcao          FuncaoDepartamento @default(FUNCIONARIO)
+  ativo           Boolean            @default(true)
+  created_at      DateTime           @default(now())
+
+  // Relacionamentos
+  usuario      User         @relation(fields: [user_id], references: [id])
+  departamento Departamento @relation(fields: [departamento_id], references: [id])
+
+  @@unique([user_id, departamento_id])
+}
+
+enum OrderStatus {
+  NEGOTIATING // Em **negociação**
+  LOST // Perdido
+  WON // Ganho (futuro)
+  CANCELLED // Cancelado (futuro)
+}
+
+enum LossReasonCode {
+  FREIGHT // Frete
+  PRICE // Preço
+  MARGIN // Margem
+  STOCK // Estoque
+  OTHER // Outro
+}
+
+// ==================== MODELS ====================
+
+model Order {
+  id          String      @id @default(uuid())
+  orderNumber Int         @unique //Id externo do pedido (SAPIENS)
+  status      OrderStatus @default(NEGOTIATING)
+  idUser      String
+  userAlt     User        @relation(fields: [idUser], references: [id])
+
+  codRep    String // Vendedor responsável pelo pedido
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  products   OrderProduct[]
+  lossReason LossReason?
+
+  @@index([idUser])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderProduct {
+  id      String @id @default(uuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  codprod     String // add Relation with Product model next step
+  description String?
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@map("order_products")
+}
+
+model LossReason {
+  id      String @id @default(uuid())
+  orderId String @unique
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  code        LossReasonCode
+  description String         @db.Text
+  submittedAt DateTime       @default(now())
+  submittedBy String // sellerId
+
+  @@index([code])
+  @@map("loss_reasons")
+}

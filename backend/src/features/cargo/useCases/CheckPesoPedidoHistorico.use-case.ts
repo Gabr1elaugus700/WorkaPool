@@ -25,6 +25,13 @@ export class CheckPesoPedidoHistoricoUseCase {
       for (const pedido of pedidos) {
         const numPed = Number(pedido.numPed);
         const pesoAtual = Number(pedido.qtdOri);
+        
+        // Validar peso
+        if (isNaN(pesoAtual) || pesoAtual === null || pesoAtual === undefined) {
+          console.warn(`⚠️ Pedido ${numPed} com peso inválido: ${pedido.qtdOri}. Pulando...`);
+          continue;
+        }
+        
         const lastPeso =
           await this.cargoRepository.getLastHistoricoPesoPedido(numPed);
 

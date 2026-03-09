@@ -156,16 +156,24 @@ export default function ControleDeCargas() {
     const novaPos = cargaDestino.pedidos.length + 1;
 
     try {
+      console.log("🔄 Movendo pedido:", {
+        numPed: Number(pedido.numPed),
+        codCar: cargaDestino.codCar,
+        novaPos
+      });
+      
       await cargoService.updatePedidoCarga(
         Number(pedido.numPed),
         cargaDestino.codCar,
         novaPos
       );
+      
+      console.log("✅ Pedido movido, recarregando dados...");
       await carregar();
       toast.success("Pedido movido com sucesso");
     } catch (err) {
+      console.error("❌ Erro completo:", err);
       toast.error("Erro ao mover pedido para carga");
-      console.error(err);
     }
   };
 

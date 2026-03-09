@@ -187,7 +187,17 @@ export class CargoController {
     try {
       const { numPed } = req.params;
       const { codCar, posCar } = req.body;
+      
+      console.log("🔵 [Controller] updatePedidoCarga recebeu:", {
+        numPed,
+        codCar,
+        posCar,
+        params: req.params,
+        body: req.body
+      });
+      
       if (!numPed || codCar == null || posCar == null) {
+        console.log("❌ [Controller] Dados obrigatórios ausentes");
         return res.status(400).json({
           error: "Dados obrigatórios ausentes para atualização de carga.",
         });
@@ -199,6 +209,8 @@ export class CargoController {
         Number(codCar),
         Number(posCar),
       );
+      
+      console.log("✅ [Controller] Pedido atualizado com sucesso");
       return res
         .status(200)
         .json({ message: "Pedido atualizado com sucesso." });

@@ -13,6 +13,9 @@ export interface ICargoRepository {
   getPedidosWeight(numPed?: number): Promise<{ numPed: number; peso: number }>;
   getMaxCodCar(): Promise<number>;
   updateSituacaoCarga(codCar: number, situacao: SituacaoCarga): Promise<Carga>;
+  getCargaByCodCar(codCar: number): Promise<Carga | null>;
+  createHistoricoPesoPedido(numPed: number, cargaId: string, peso: number): Promise<void>;
+  getLastHistoricoPesoPedido(numPed: number): Promise<{ peso: number; codCar: number; numPed: number; createdAt: Date } | null>;
   getLastHistoricoPesoPedido(numPed: number): Promise<{ peso: number; codCar: number } | null>;
   createHistoricoPesoPedido(numPed: number, cargaId: string, peso: number): Promise<void>;
 

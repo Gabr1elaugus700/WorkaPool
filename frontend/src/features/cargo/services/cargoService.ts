@@ -76,6 +76,31 @@ export const cargoService = {
   },
 
   /**
+   * Atualiza os dados completos de uma carga
+   */
+  updateCarga: async (id: string, data: {
+    destino: string;
+    pesoMax: number;
+    previsaoSaida: string;
+    situacao: CargaSituacao;
+  }): Promise<CargaComPesoDTO> => {
+    const response = await fetch(`${getBaseUrl()}/api/cargo/update-carga/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Erro ao atualizar carga");
+    }
+
+    return response.json();
+  },
+
+  /**
    * Atualiza a carga de um pedido (move pedido para/de uma carga)
    */
   updatePedidoCarga: async (

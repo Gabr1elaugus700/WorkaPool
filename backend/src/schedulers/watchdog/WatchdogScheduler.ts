@@ -1,5 +1,6 @@
 import * as cron from "node-cron";
 import { watchdogConfig } from "./watchdogConfig";
+import { CheckPesoPedidoHistoricoUseCase } from "../../features/cargo/useCases/CheckPesoPedidoHistorico.use-case";
 
 /**
  * WatchdogScheduler
@@ -17,6 +18,11 @@ import { watchdogConfig } from "./watchdogConfig";
 export class WatchdogScheduler {
   private task: cron.ScheduledTask | null = null;
   private isRunning: boolean = false;
+  private checkPesoPedidoUseCase: CheckPesoPedidoHistoricoUseCase;
+
+  constructor() {
+    this.checkPesoPedidoUseCase = new CheckPesoPedidoHistoricoUseCase();
+  }
 
   /**
    * Inicia o agendamento das tarefas
@@ -75,82 +81,26 @@ export class WatchdogScheduler {
   }
 
   /**
-   * ============================================
-   * MÉTODO PRIVADO - ADICIONE SUA LÓGICA AQUI
-   * ============================================
-   * 
-   * Este método é executado automaticamente a cada 2 minutos.
-   * 
-   * EXEMPLOS DE USO:
-   * 
-   * 1. Processar pedidos pendentes:
-   * ```typescript
-   * const pedidosPendentes = await prisma.pedido.findMany({
-   *   where: { status: 'PENDENTE' }
-   * });
-   * // ... processar pedidos
-   * ```
-   * 
-   * 2. Sincronizar dados externos:
-   * ```typescript
-   * const response = await fetch('https://api.externa.com/dados');
-   * const dados = await response.json();
-   * // ... salvar no banco
-   * ```
-   * 
-   * 3. Limpar registros antigos:
-   * ```typescript
-   * await prisma.log.deleteMany({
-   *   where: {
-   *     createdAt: {
-   *       lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // 7 dias
-   *     }
-   *   }
-   * });
-   * ```
-   * 
-   * 4. Verificar status de serviços:
-   * ```typescript
-   * const servicos = ['API1', 'API2', 'DB'];
-   * for (const servico of servicos) {
-   *   const status = await verificarSaude(servico);
-   *   if (!status.ok) {
-   *     console.error(`❌ ${servico} está fora do ar`);
-   *   }
-   * }
-   * ```
+   * Executa a verificação de peso dos pedidos em cargas abertas
+   * Este método é chamado automaticamente a cada 2 minutos
    */
   private async executeTask(): Promise<void> {
     const startTime = Date.now();
 
     try {
-      console.log("🔄 Executando tarefa do watchdog...");
+      console.log("\n🔄 ===== WATCHDOG: Iniciando verificação de peso dos pedidos =====");
 
-      // ============================================
-      // 👇 ADICIONE SUA LÓGICA PERSONALIZADA AQUI
-      // ============================================
+      await this.checkPesoPedidoUseCase.execute();
 
-      // Exemplo: Simples log de execução
-      console.log(`✅ Tarefa executada com sucesso em ${Date.now() - startTime}ms`);
-
-      // DICA: Remova o exemplo acima e adicione seu código
-      // Por exemplo:
-      // - Chamar um use case: await new ProcessarPedidosUseCase().execute()
-      // - Acessar banco de dados: await prisma.pedido.findMany(...)
-      // - Fazer requisição HTTP: await fetch(...)
-      // - Processar arquivos: fs.readdir(...)
-      
-      // ============================================
-      // 👆 FIM DA ÁREA DE PERSONALIZAÇÃO
-      // ============================================
+      const duration = Date.now() - startTime;
+      console.log(`✅ ===== WATCHDOG: Tarefa concluída em ${duration}ms =====\n`);
 
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erro desconhecido";
-      console.error(`❌ Erro ao executar tarefa do watchdog: ${errorMessage}`);
-      
-      // OPCIONAL: Adicione aqui lógica de notificação/alerta
-      // Por exemplo: enviar email, criar log no banco, chamar webhook, etc.
+      console.error(`❌ ===== WATCHDOG: Erro ao executar tarefa: ${errorMessage} =====`);
+      console.error(error);
+      console.log(""); // Linha em branco para separar logs
     }
   }
 }

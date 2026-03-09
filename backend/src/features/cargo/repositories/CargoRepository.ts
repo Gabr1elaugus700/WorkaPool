@@ -141,6 +141,8 @@ export class CargoRepository implements ICargoRepository {
     codCar: number,
     posCar: number,
   ): Promise<void> {
+    console.log("🔵 [Repository] updatePedidoCarga recebeu:", { numPed, codCar, posCar });
+    
     await sqlPoolConnect;
     const result = await sqlPool
       .request()
@@ -152,13 +154,21 @@ export class CargoRepository implements ICargoRepository {
                ,usu_poscar =@posCar
             WHERE numped =@numPed
         `);
+    
+    console.log("🔵 [Repository] Resultado da query:", {
+      rowsAffected: result.rowsAffected[0],
+      numPed,
+      codCar,
+      posCar
+    });
+    
     if (result.rowsAffected[0] === 0) {
       throw new Error(
         `Pedido ${numPed} não encontrado ou não pôde ser atualizado.`,
       );
     } else {
       console.log(
-        `Pedido ${numPed} atualizado com sucesso para carga ${codCar} na posição ${posCar}.`,
+        `✅ [Repository] Pedido ${numPed} atualizado com sucesso para carga ${codCar} na posição ${posCar}.`,
       );
     }
   }
@@ -314,12 +324,44 @@ export class CargoRepository implements ICargoRepository {
     cargaId: string,
     peso: number,
   ): Promise<void> {
+    console.log("💾 [Repository] Criando histórico de peso:", { numPed, cargaId, peso });
+    
+    // Validar peso
+    if (isNaN(peso) || peso === null || peso === undefined) {
+      console.error("❌ [Repository] Peso inválido:", peso);
+      throw new Error(`Peso inválido para o pedido ${numPed}: ${peso}`);
+    }
+
     await this.prisma.historicoPesoPedidos.create({
       data: {
         numPed,
-        cargaId,
-        peso,
+        peso: Math.round(peso), // Garantir que seja inteiro
+        carga: {
+          connect: { id: cargaId }
+        }
       },
     });
+    
+    console.log("✅ [Repository] Histórico de peso criado com sucesso");
+  }
+
+  async getCargaByCodCar(codCar: number): Promise<Carga | null> {
+    const carga = await this.prisma.cargas.findUnique({
+      where: { codCar },
+    });
+
+    if (!carga) {
+      return null;
+    }
+
+    return {
+      id: carga.id,
+      codCar: carga.codCar,
+      destino: carga.destino,
+      pesoMaximo: carga.pesoMax,
+      previsaoSaida: carga.previsaoSaida,
+      situacao: carga.situacao as SituacaoCarga,
+      createdAt: carga.createdAt,
+    };
   }
 }
