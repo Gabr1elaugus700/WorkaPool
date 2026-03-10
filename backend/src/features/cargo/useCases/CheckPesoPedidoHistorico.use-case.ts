@@ -20,21 +20,58 @@ export class CheckPesoPedidoHistoricoUseCase {
         carga.codCar,
       );
 
-      console.log(`📦 Carga ${carga.codCar} possui ${pedidos.length} pedido(s)`);
+      // Peso máximo total da carga
+      const pesoMaximoCarga = carga.pesoMaximo;
+
+      // Calcula o peso usado pelos pedidos baseado no histórico
+      let pesoUsadoPedidos = 0;
+      for (const pedido of pedidos) {
+        const numPed = Number(pedido.numPed);
+        const historico =
+          await this.cargoRepository.getLastHistoricoPesoPedido(numPed);
+
+        if (historico && historico.peso) {
+          pesoUsadoPedidos += historico.peso;
+        } else {
+          // Se não houver histórico, usa o peso atual
+          const pesoAtual = await this.cargoRepository
+            .getPedidosWeight(numPed)
+            .then((res) => res.peso);
+
+          if (!isNaN(pesoAtual) && pesoAtual !== null) {
+            pesoUsadoPedidos += pesoAtual;
+          }
+        }
+      }
+
+      const pesoDisponivel = pesoMaximoCarga - pesoUsadoPedidos;
+
+      console.log(
+        `📦 Carga ${carga.codCar} possui ${pedidos.length} pedido(s)\n` +
+          `   Peso Máximo: ${pesoMaximoCarga}\n` +
+          `   Peso Usado: ${pesoUsadoPedidos}\n` +
+          `   Peso Disponível: ${pesoDisponivel}`,
+      );
 
       for (const pedido of pedidos) {
         const numPed = Number(pedido.numPed);
-        const pesoAtual = Number(pedido.qtdOri);
-        
+        const pesoAtual = await this.cargoRepository
+          .getPedidosWeight(numPed)
+          .then((res) => res.peso);
+
+        console.log(
+          `🔍 Verificando pedido ${numPed} com peso atual: ${pesoAtual}`,
+        );
         // Validar peso
         if (isNaN(pesoAtual) || pesoAtual === null || pesoAtual === undefined) {
-          console.warn(`⚠️ Pedido ${numPed} com peso inválido: ${pedido.qtdOri}. Pulando...`);
+          console.warn(
+            `⚠️ Pedido ${numPed} com peso inválido: ${pedido.qtdOri}. Pulando...`,
+          );
           continue;
         }
-        
+
         const lastPeso =
           await this.cargoRepository.getLastHistoricoPesoPedido(numPed);
-
 
         if (!lastPeso) {
           console.log(
@@ -57,32 +94,30 @@ export class CheckPesoPedidoHistoricoUseCase {
           console.log(
             `🔺 Pedido ${numPed}: peso aumentou ${lastPeso.peso} → ${pesoAtual}`,
           );
-          console.log(
-            `🚫 Removendo pedido ${numPed} da carga ${carga.codCar}`,
-          );
-          
+          console.log(`🚫 Removendo pedido ${numPed} da carga ${carga.codCar}`);
+
           await this.cargoRepository.updatePedidoCarga(numPed, 0, 0);
           await this.cargoRepository.createHistoricoPesoPedido(
             numPed,
             carga.id,
             pesoAtual,
           );
-          
+
           console.log(`✅ Histórico atualizado para pedido ${numPed}`);
-          continue; 
+          continue;
         }
 
         if (lastPeso.peso > pesoAtual) {
           console.log(
             `🔻 Pedido ${numPed}: peso reduziu ${lastPeso.peso} → ${pesoAtual}`,
           );
-          
+
           await this.cargoRepository.createHistoricoPesoPedido(
             numPed,
             carga.id,
             pesoAtual,
           );
-          
+
           console.log(`✅ Histórico atualizado para pedido ${numPed}`);
         }
       }

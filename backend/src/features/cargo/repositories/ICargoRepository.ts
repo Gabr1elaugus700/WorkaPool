@@ -11,7 +11,7 @@ export interface ICargoRepository {
   getCargas(situacao?: SituacaoCarga ): Promise<Carga[]>;
   getPedidos(codRep?: number): Promise<Pedido[]>;
   getPedidosWeight(numPed?: number): Promise<{ numPed: number; peso: number }>;
-  getMaxCodCar(): Promise<number>;
+  getMaxCodCar(): Promise<number>
   updateSituacaoCarga(codCar: number, situacao: SituacaoCarga): Promise<Carga>;
   getCargaByCodCar(codCar: number): Promise<Carga | null>;
   createHistoricoPesoPedido(numPed: number, cargaId: string, peso: number): Promise<void>;
