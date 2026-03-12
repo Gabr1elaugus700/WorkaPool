@@ -2,11 +2,39 @@ import { ICargoRepository } from "../repositories/ICargoRepository";
 import { CargoRepository } from "../repositories/CargoRepository";
 import { GetCargasBySituacaoUseCase } from "./GetCargaBySituacao.use-case";
 import { SituacaoCarga } from "../entities/Carga";
+import { CargaProcessor } from "../services/CargaProcessor";
+import { PesoCargaCalculator } from "../services/PesoCargaCalculator";
+import { PedidoProcessor } from "../services/PedidoProcessor";
 
+/**
+ * Use Case: Verifica e processa mudanças de peso em pedidos de cargas abertas.
+ * 
+ * Fluxo:
+ * 1. Busca todas as cargas abertas
+ * 2. Para cada carga, verifica mudanças de peso nos pedidos
+ * 3. Remove pedidos que não cabem mais
+ * 4. Reposiciona pedidos com peso aumentado
+ * 5. Atualiza histórico de peso
+ */
 export class CheckPesoPedidoHistoricoUseCase {
-  constructor(
-    private readonly cargoRepository: ICargoRepository = new CargoRepository(),
-  ) {}
+  private readonly cargoRepository: ICargoRepository;
+  private readonly pedidoProcessor: PedidoProcessor;
+  private readonly pesoCargaCalculator: PesoCargaCalculator;
+  private readonly cargaProcessor: CargaProcessor;
+
+  constructor() {
+    this.cargoRepository = new CargoRepository();
+    this.pedidoProcessor = new PedidoProcessor(this.cargoRepository);
+    this.pesoCargaCalculator = new PesoCargaCalculator(
+      this.cargoRepository,
+      this.pedidoProcessor,
+    );
+    this.cargaProcessor = new CargaProcessor(
+      this.cargoRepository,
+      this.pesoCargaCalculator,
+      this.pedidoProcessor,
+    );
+  }
 
   async execute() {
     const openCargas = await new GetCargasBySituacaoUseCase().execute(
@@ -15,115 +43,43 @@ export class CheckPesoPedidoHistoricoUseCase {
 
     console.log(`🔍 Verificando ${openCargas.length} carga(s) aberta(s)...`);
 
+    let totalRemovidos = 0;
+    let totalReposicionados = 0;
+    let totalSemHistorico = 0;
+
     for (const carga of openCargas) {
-      const pedidos = await this.cargoRepository.getPedidosPorCarga(
-        carga.codCar,
-      );
+      console.log(`\n📦 Processando carga ${carga.codCar}...`);
 
-      // Peso máximo total da carga
-      const pesoMaximoCarga = carga.pesoMaximo;
+      const resultado = await this.cargaProcessor.processarMudancasPesoPedidos(carga);
 
-      // Calcula o peso usado pelos pedidos baseado no histórico
-      let pesoUsadoPedidos = 0;
-      for (const pedido of pedidos) {
-        const numPed = Number(pedido.numPed);
-        const historico =
-          await this.cargoRepository.getLastHistoricoPesoPedido(numPed);
+      totalRemovidos += resultado.pedidosRemovidos.length;
+      totalReposicionados += resultado.pedidosReposicionados.length;
+      totalSemHistorico += resultado.pedidosSemHistorico.length;
 
-        if (historico && historico.peso) {
-          pesoUsadoPedidos += historico.peso;
-        } else {
-          // Se não houver histórico, usa o peso atual
-          const pesoAtual = await this.cargoRepository
-            .getPedidosWeight(numPed)
-            .then((res) => res.peso);
-
-          if (!isNaN(pesoAtual) && pesoAtual !== null) {
-            pesoUsadoPedidos += pesoAtual;
-          }
-        }
+      if (resultado.pedidosRemovidos.length > 0) {
+        console.log(`🚫 Pedidos removidos: ${resultado.pedidosRemovidos.join(', ')}`);
       }
 
-      const pesoDisponivel = pesoMaximoCarga - pesoUsadoPedidos;
-
-      console.log(
-        `📦 Carga ${carga.codCar} possui ${pedidos.length} pedido(s)\n` +
-          `   Peso Máximo: ${pesoMaximoCarga}\n` +
-          `   Peso Usado: ${pesoUsadoPedidos}\n` +
-          `   Peso Disponível: ${pesoDisponivel}`,
-      );
-
-      for (const pedido of pedidos) {
-        const numPed = Number(pedido.numPed);
-        const pesoAtual = await this.cargoRepository
-          .getPedidosWeight(numPed)
-          .then((res) => res.peso);
-
-        console.log(
-          `🔍 Verificando pedido ${numPed} com peso atual: ${pesoAtual}`,
-        );
-        // Validar peso
-        if (isNaN(pesoAtual) || pesoAtual === null || pesoAtual === undefined) {
-          console.warn(
-            `⚠️ Pedido ${numPed} com peso inválido: ${pedido.qtdOri}. Pulando...`,
-          );
-          continue;
-        }
-
-        const lastPeso =
-          await this.cargoRepository.getLastHistoricoPesoPedido(numPed);
-
-        if (!lastPeso) {
-          console.log(
-            `📝 Pedido ${numPed} sem histórico. Criando registro inicial com peso: ${pesoAtual}`,
-          );
-          await this.cargoRepository.createHistoricoPesoPedido(
-            numPed,
-            carga.id,
-            pesoAtual,
-          );
-          continue;
-        }
-
-        if (lastPeso.peso === pesoAtual) {
-          console.log(`✅ Pedido ${numPed} manteve o peso: ${pesoAtual}`);
-          continue;
-        }
-
-        if (lastPeso.peso < pesoAtual) {
-          console.log(
-            `🔺 Pedido ${numPed}: peso aumentou ${lastPeso.peso} → ${pesoAtual}`,
-          );
-          console.log(`🚫 Removendo pedido ${numPed} da carga ${carga.codCar}`);
-
-          await this.cargoRepository.updatePedidoCarga(numPed, 0, 0);
-          await this.cargoRepository.createHistoricoPesoPedido(
-            numPed,
-            carga.id,
-            pesoAtual,
-          );
-
-          console.log(`✅ Histórico atualizado para pedido ${numPed}`);
-          continue;
-        }
-
-        if (lastPeso.peso > pesoAtual) {
-          console.log(
-            `🔻 Pedido ${numPed}: peso reduziu ${lastPeso.peso} → ${pesoAtual}`,
-          );
-
-          await this.cargoRepository.createHistoricoPesoPedido(
-            numPed,
-            carga.id,
-            pesoAtual,
-          );
-
-          console.log(`✅ Histórico atualizado para pedido ${numPed}`);
-        }
+      if (resultado.pedidosReposicionados.length > 0) {
+        console.log(`🔄 Pedidos reposicionados: ${resultado.pedidosReposicionados.join(', ')}`);
       }
+
+      if (resultado.pedidosSemHistorico.length > 0) {
+        console.log(`📝 Históricos criados: ${resultado.pedidosSemHistorico.join(', ')}`);
+      }
+
+      const pesoDisponivel = await this.pesoCargaCalculator.calculaPesoDisponivel(carga);
+      console.log(`✅ Carga ${carga.codCar} - Peso disponível: ${pesoDisponivel}kg`);
     }
 
-    console.log(`✅ Verificação concluída para ${openCargas.length} carga(s)`);
+    console.log(
+      `\n✅ Verificação concluída:\n` +
+      `   📦 ${openCargas.length} carga(s) processada(s)\n` +
+      `   🚫 ${totalRemovidos} pedido(s) removido(s)\n` +
+      `   🔄 ${totalReposicionados} pedido(s) reposicionado(s)\n` +
+      `   📝 ${totalSemHistorico} histórico(s) criado(s)`
+    );
+
     return openCargas;
   }
 }

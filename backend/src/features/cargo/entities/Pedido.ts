@@ -101,3 +101,43 @@ export type PedidoRaw = {
   SITCAR: string;
   QTD_ORI_PED: number;
 }
+
+export interface HistoricoPesoPedido {
+  numPed: number;
+  peso: number;
+  codCar: number;
+  createdAt: Date;
+}
+
+export class HistoricoPesoPedido {
+  constructor(
+    public numPed: number,
+    public peso: number,
+    public codCar: number,
+    public createdAt: Date,
+  ) {}
+
+  numpedNumber(): number {
+    return Number(this.numPed);
+  }
+
+  pesoAtual(): number {
+    if (isNaN(this.peso) || this.peso === null || this.peso === undefined) {
+      throw new Error(`Peso inválido para pedido ${this.numPed}: ${this.peso}`);
+    }
+    return this.peso;
+  }
+
+}
+
+
+export type SimulacaoPedidoNaCarga = {
+  pesoAnteriorConsiderado: number;
+  pesoAtualPedido: number;
+  pesoUsadoAtual: number;
+  novoPesoUsado: number;
+  pesoDisponivelAtual: number;
+  pesoDisponivelAposTroca: number;
+  cabeNaCarga: boolean;
+  excesso: number;
+};

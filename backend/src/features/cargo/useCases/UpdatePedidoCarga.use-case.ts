@@ -21,7 +21,7 @@ export class UpdatePedidoCargaUseCase {
     if (codCar > 0) {
       console.log("💾 [UseCase] Salvando histórico de peso do pedido...");
       
-      try {
+      try { 
         const { peso } = await this.cargoRepository.getPedidosWeight(numPed);
         console.log("⚖️ [UseCase] Peso do pedido obtido:", peso);
 
