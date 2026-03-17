@@ -1,6 +1,6 @@
 import { useDraggable } from "@dnd-kit/core";
 import { Pedido } from "../types/cargo.types";
-import clsx from "clsx";
+import { GripVertical, Lock, UserRound, Weight } from "lucide-react";
 
 type Props = {
   pedido: Pedido;
@@ -10,53 +10,112 @@ type Props = {
     peso: number;
   }[];
   destaque?: boolean;
+  viewMode?: "full" | "summary";
+  isDraggable?: boolean;
+  compact?: boolean;
 };
 
-export default function PedidoCard({ pedido, produtos, destaque = false }: Props) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+// Estilos para cada status de pedido
+const statusStyles = {
+  mine: "border-emerald-400 bg-emerald-50",
+  other: "border-slate-300 bg-slate-50",
+  blocked: "border-red-400 bg-red-50",
+  highlighted: "border-emerald-300 bg-emerald-100",
+};
+
+const headerStyles = {
+  mine: "bg-emerald-400 text-white",
+  other: "bg-slate-400 text-white",
+  blocked: "bg-red-500 text-white",
+  highlighted: "bg-emerald-400 text-white",
+};
+
+export default function PedidoCard({ 
+  pedido, 
+  produtos, 
+  destaque = false,
+  viewMode = "full",
+  isDraggable = true,
+  compact = false,
+}: Props) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: pedido.id,
     data: { pedido },
+    disabled: !isDraggable,
   });
+
+  const style = transform
+    ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: 50 }
+    : undefined;
+
+  // Determina o status visual do pedido
+  const getStatus = () => {
+    if (pedido.bloqueado === "S") return "blocked";
+    if (viewMode === "summary") return "other";
+    if (destaque) return "highlighted";
+    return "mine";
+  };
+
+  const status = getStatus();
+  const isOther = viewMode === "summary";
+  const isBlocked = pedido.bloqueado === "S";
 
   return (
     <div
       ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      className={clsx(
-        "min-w-[200px] max-w-[220px] border rounded-lg p-3 shadow-md cursor-move",
-        "transition-colors text-sm space-y-1",
-        {
-          "bg-red-200 border-red-400 border-2": pedido.bloqueado === "S",
-          "bg-emerald-100 border-emerald-300 border-2": pedido.bloqueado !== "S" && destaque,
-          "bg-emerald-400 border-emerald-400 border-2": pedido.bloqueado !== "S" && !destaque,
-        }
-      )}
-      style={{
-        transform: transform
-          ? `translate(${transform.x}px, ${transform.y}px)`
-          : undefined,
-      }}
+      style={style}
+      className={`rounded-lg border-2 ${statusStyles[status]} transition-shadow ${
+        isDragging ? "shadow-xl opacity-80" : "shadow-sm"
+      } ${isBlocked ? "cursor-not-allowed opacity-70" : "cursor-grab active:cursor-grabbing"}`}
+      {...(!isBlocked && isDraggable ? { ...listeners, ...attributes } : {})}
     >
-      <p className="font-bold text-base">• {pedido.cidade} - {pedido.numPed}</p>
-      <p>{pedido.cliente}</p>
-      <p className="font-semibold">Vendedor: {pedido.vendedor}</p>
-      {/* <p>Peso total: {pedido.peso.toLocaleString("pt-BR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })} kg</p> */}
-      <p>Peso total: {pedido.peso} kg</p>
+      {/* Header */}
+      <div className={`flex items-center gap-1.5 rounded-t-md px-3 py-1.5 text-xs font-bold ${headerStyles[status]}`}>
+        {!isBlocked && isDraggable && <GripVertical className="h-3.5 w-3.5 opacity-70" />}
+        {isBlocked && <Lock className="h-3.5 w-3.5" />}
+        <span className="truncate">
+          {pedido.cidade} 
+        </span>
+      </div>
 
-      {produtos && (
-        <ul className="text-xs mt-2 space-y-1">
-          {produtos.map((prod, idx) => (
-            <li key={idx} className="border-t pt-1">
-              <span className="block font-medium">{prod.nome}</span>
-              <span>Derivação: {prod.derivacao} • Peso: {prod.peso}kg</span>
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* Body */}
+      <div className="p-2.5 text-xs space-y-1">
+        {isOther ? (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <UserRound className="h-8 w-8 text-slate-400 opacity-60" />
+            <div>
+              <p className="font-semibold text-foreground">{pedido.vendedor}</p>
+              <p className="flex items-center gap-1">
+                <Weight className="h-3 w-3" />
+                {pedido.peso.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} kg
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <p className="font-medium truncate text-foreground">{pedido.cliente}</p>
+            <p className="text-muted-foreground">
+              Vendedor: <span className="font-semibold text-foreground">{pedido.vendedor}</span>
+            </p>
+            <p className="text-muted-foreground">
+              Peso total:{" "}
+              <span className="font-semibold text-foreground">
+                {pedido.peso.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} kg
+              </span>
+            </p>
+            {!compact &&
+              produtos &&
+              produtos.map((prod, idx) => (
+                <div key={idx} className="mt-1 border-t border-border pt-1">
+                  <p className="font-semibold text-foreground">{prod.nome}</p>
+                  <p className="text-muted-foreground">
+                    Derivação: {prod.derivacao} • Peso: {prod.peso}kg
+                  </p>
+                </div>
+              ))}
+          </>
+        )}
+      </div>
     </div>
   );
 }

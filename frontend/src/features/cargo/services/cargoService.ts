@@ -7,10 +7,10 @@ export const cargoService = {
    * @param codRep - Código do vendedor (opcional). Se não passar, retorna de todos.
    */
   getTodosPedidosFechados: async (codRep?: number): Promise<Pedido[]> => {
-    const url = codRep 
+    const url = codRep
       ? `${getBaseUrl()}/api/cargo/pedidos-fechados?codRep=${codRep}`
       : `${getBaseUrl()}/api/cargo/pedidos-fechados`;
-    
+
     const response = await fetch(url);
     if (!response.ok) throw new Error("Erro ao buscar pedidos");
     return response.json();
@@ -22,12 +22,14 @@ export const cargoService = {
    */
   getCargas: async (situacoes?: string[]): Promise<CargaComPesoDTO[]> => {
     let url = `${getBaseUrl()}/api/cargo/listar-cargas`;
-    
+
     if (situacoes && situacoes.length > 0) {
-      const params = situacoes.map(s => `situacao=${s.toUpperCase()}`).join('&');
+      const params = situacoes
+        .map((s) => `situacao=${s.toUpperCase()}`)
+        .join("&");
       url += `?${params}`;
     }
-    
+
     const response = await fetch(url);
     if (!response.ok) throw new Error("Erro ao buscar cargas");
     return response.json();
@@ -61,7 +63,10 @@ export const cargoService = {
   /**
    * Atualiza a situação de uma carga
    */
-  updateSituacaoCarga: async (id: string, situacao: CargaSituacao): Promise<void> => {
+  updateSituacaoCarga: async (
+    id: string,
+    situacao: CargaSituacao,
+  ): Promise<void> => {
     const response = await fetch(`${getBaseUrl()}/api/cargo/${id}/situacao`, {
       method: "PATCH",
       headers: {
@@ -78,19 +83,25 @@ export const cargoService = {
   /**
    * Atualiza os dados completos de uma carga
    */
-  updateCarga: async (id: string, data: {
-    destino: string;
-    pesoMax: number;
-    previsaoSaida: string;
-    situacao: CargaSituacao;
-  }): Promise<CargaComPesoDTO> => {
-    const response = await fetch(`${getBaseUrl()}/api/cargo/update-carga/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
+  updateCarga: async (
+    id: string,
+    data: {
+      destino: string;
+      pesoMax: number;
+      previsaoSaida: string;
+      situacao: CargaSituacao;
+    },
+  ): Promise<CargaComPesoDTO> => {
+    const response = await fetch(
+      `${getBaseUrl()}/api/cargo/update-carga/${id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
       },
-      body: JSON.stringify(data),
-    });
+    );
 
     if (!response.ok) {
       const error = await response.json();
@@ -106,15 +117,18 @@ export const cargoService = {
   updatePedidoCarga: async (
     numPed: number,
     codCar: number,
-    posCar: number
+    posCar: number,
   ): Promise<void> => {
-    const response = await fetch(`${getBaseUrl()}/api/cargo/update-pedido/${numPed}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${getBaseUrl()}/api/cargo/update-pedido/${numPed}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ codCar, posCar }),
       },
-      body: JSON.stringify({ codCar, posCar }),
-    });
+    );
 
     if (!response.ok) {
       const error = await response.json();
@@ -125,14 +139,20 @@ export const cargoService = {
   /**
    * Salva pedidos de uma carga fechada (se aplicável ao seu sistema)
    */
-  salvarPedidosCargaFechada: async (codCar: string, pedidos: number[]): Promise<void> => {
-    const response = await fetch(`${getBaseUrl()}/api/cargo/${codCar}/pedidos-fechados`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+  salvarPedidosCargaFechada: async (
+    codCar: string,
+    pedidos: number[],
+  ): Promise<void> => {
+    const response = await fetch(
+      `${getBaseUrl()}/api/cargo/${codCar}/pedidos-fechados`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ pedidos }),
       },
-      body: JSON.stringify({ pedidos }),
-    });
+    );
 
     if (!response.ok) {
       throw new Error("Erro ao salvar pedidos da carga fechada");
@@ -146,7 +166,7 @@ export const cargoService = {
 export const fetchCargasFechadas = async () => {
   // Por enquanto, retorna cargas com situação FECHADA
   const cargas = await cargoService.getCargas(["FECHADA"]);
-  return cargas.map(carga => ({
+  return cargas.map((carga) => ({
     id: carga.id,
     cargaId: carga.id,
     carga: {
@@ -159,8 +179,8 @@ export const fetchCargasFechadas = async () => {
       situacao: carga.situacao as CargaSituacao,
       createdAt: carga.createdAt,
       closedAt: carga.closedAt,
-      pedidos: [] // TODO: buscar pedidos se necessário
+      pedidos: [], // TODO: buscar pedidos se necessário
     },
-    pedidos: [] // TODO: adicionar pedidos se necessário
+    pedidos: [], // TODO: adicionar pedidos se necessário
   }));
 };

@@ -1,72 +1,94 @@
 import { useDroppable } from "@dnd-kit/core";
 import { Carga, CargaSituacao } from "../types/cargo.types";
+import { UserRole } from "../types/roles.types";
 import { EditarCargaModal } from "./EditarCargaModal";
-import clsx from "clsx";
-import { useAuth } from "@/auth/AuthContext";
-import { Card } from "@/components/ui/card";
+import CargaProgress from "./CargaProgress";
+import { Badge } from "@/components/ui/badge";
+import { canEditCarga } from "../utils/permissions";
 
 type Props = {
   carga: Carga;
   children: React.ReactNode;
   onChangeSituacao: (id: string, novaSituacao: CargaSituacao) => void;
   onUpdate: (cargaAtualizada: Carga) => void;
+  userRole?: UserRole;
+  userCodRep?: number;
 };
 
-const situacaoClasses: Record<CargaSituacao, string> = {
-  ABERTA: "border-emerald-500",
-  SOLICITADA: "border-yellow-400",
-  FECHADA: "border-green-600",
-  CANCELADA: "border-red-600",
-  ENTREGUE: "border-blue-600",
+const situacaoVariant: Record<CargaSituacao, "default" | "secondary" | "destructive" | "outline"> = {
+  ABERTA: "default",
+  SOLICITADA: "outline",
+  FECHADA: "secondary",
+  CANCELADA: "destructive",
+  ENTREGUE: "secondary",
 };
 
-export default function CargaDropzone({ carga, children, onUpdate, onChangeSituacao }: Props) {
-  const { setNodeRef } = useDroppable({ id: carga.id });
-  const { user } = useAuth();
+export default function CargaDropzone({ 
+  carga, 
+  children, 
+  onUpdate, 
+  onChangeSituacao,
+  userRole,
+}: Props) {
+  const { setNodeRef, isOver } = useDroppable({ id: carga.id });
+
+  const childrenArray = Array.isArray(children) 
+    ? children 
+    : children 
+      ? [children] 
+      : [];
+
+  const hasChildren = childrenArray.length > 0;
 
   return (
-    <Card
+    <div
       ref={setNodeRef}
-      className={clsx(
-        "border-2 rounded mb-4 min-h-[150px] p-4 shadow-md bg-white transition-all",
-        situacaoClasses[carga.situacao] || "border-gray-300"
-      )}
+      className={`rounded-xl border-2 border-border bg-card p-4 mb-4 transition-colors ${
+        isOver ? "border-primary bg-accent/50" : ""
+      }`}
     >
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <div>
-          <h2 className="text-lg font-bold">
-            Carga: {carga.destino}{" "}
-            <span className={clsx("ml-2 text-xs px-2 py-1 rounded font-semibold", {
-              "bg-emerald-100 text-emerald-700": carga.situacao === CargaSituacao.ABERTA,
-              "bg-yellow-100 text-yellow-700": carga.situacao === CargaSituacao.SOLICITADA,
-              "bg-green-600 text-white": carga.situacao === CargaSituacao.FECHADA,
-              "bg-red-600 text-white": carga.situacao === CargaSituacao.CANCELADA,
-              "bg-blue-600 text-white": carga.situacao === CargaSituacao.ENTREGUE,
-            })}>
-              {carga.situacao}
-            </span>
-          </h2>
+      {/* Header */}
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-bold text-foreground">
+            Carga: {carga.destino}
+          </h3>
+          <Badge
+            variant={situacaoVariant[carga.situacao]}
+            className="text-[10px]"
+          >
+            {carga.situacao}
+          </Badge>
         </div>
 
-        <div className="text-sm text-muted-foreground">
-          Capacidade: {carga.pesoMaximo}kg Máx • Utilizado:{" "}
-          {carga.pesoAtual.toLocaleString("pt-BR", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}{" "}
-          kg
-        </div>
-
-        {user?.role && ["LOGISTICA", "ADMIN"].includes(user.role) && (
-          <div className="flex justify-end">
-            <EditarCargaModal carga={carga} onUpdated={onUpdate} onChangeSituacao={onChangeSituacao} />
+        <div className="flex items-center gap-3">
+          <div className="text-right text-xs text-muted-foreground">
+            <p>Capacidade: {carga.pesoMaximo.toLocaleString("pt-BR")}kg Máx</p>
+            <p>Código: {carga.codCar}</p>
           </div>
-        )}
+
+          {canEditCarga(userRole) && (
+            <EditarCargaModal 
+              carga={carga} 
+              onUpdated={onUpdate} 
+              onChangeSituacao={onChangeSituacao} 
+            />
+          )}
+        </div>
       </div>
 
-      <div className="flex flex-row flex-wrap gap-2">
-        {Array.isArray(children) ? children : <>{children}</>}
+      {/* Capacity bar */}
+      <CargaProgress pesoAtual={carga.pesoAtual} pesoMaximo={carga.pesoMaximo} />
+
+      {/* Orders grid */}
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 min-h-[80px]">
+        {!hasChildren && (
+          <p className="col-span-full text-center text-sm text-muted-foreground py-6 border-2 border-dashed border-border rounded-lg">
+            Arraste pedidos aqui
+          </p>
+        )}
+        {childrenArray}
       </div>
-    </Card>
+    </div>
   );
 }
