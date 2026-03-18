@@ -9,10 +9,10 @@
     @apply bg-background text-foreground;
   }
   :root {
-    --background: 140 10% 97%;  /* cinza com leve tom verde */
-    --foreground: 240 10% 3.9%;
+    --background: 0 0% 97%;
+    --foreground: 220 20% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 220 20% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
     --primary: 143.3 80.6% 45.1%;
@@ -37,6 +37,29 @@
     --background-light: 140 0% 100%;
     --background-dark: 240 10% 3.9%;
     --subtle-gray: 150 14% 96%;
+
+    /* Cores dos Cards */
+    --order-mine: 160 55% 35%;
+    --order-mine-bg: 160 55% 92%;
+    --order-mine-border: 160 55% 60%;
+
+    --order-other: 150 40% 50%;
+    --order-other-bg: 150 40% 94%;
+    --order-other-border: 150 40% 75%;
+
+    --order-blocked: 0 72% 51%;
+    --order-blocked-bg: 0 72% 95%;
+    --order-blocked-border: 0 72% 70%;
+
+    --order-nostock: 30 90% 50%;
+    --order-nostock-bg: 30 90% 94%;
+    --order-nostock-border: 30 90% 70%;
+
+    --progress-bar: 160 55% 45%;
+    --progress-bar-bg: 160 20% 90%;
+    --progress-bar-danger: 0 72% 55%;
+    --progress-bar-warning: 40 90% 50%;
+
   }
 
   .dark {

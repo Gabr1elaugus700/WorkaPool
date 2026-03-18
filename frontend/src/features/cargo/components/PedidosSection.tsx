@@ -7,12 +7,19 @@ type Props = {
   pedidos: Pedido[];
   loading: boolean;
   userRole?: UserRole;
+  codRepUsuarioLogado?: number;
 };
 
 /**
  * Seção que exibe a lista de pedidos soltos (sem carga)
  */
-export default function PedidosSection({ pedidos, loading, userRole }: Props) {
+export default function PedidosSection({
+  pedidos,
+  loading,
+  userRole,
+  codRepUsuarioLogado,
+}: Props) {
+
   if (userRole === "ALMOX") {
     return null;
   }
@@ -26,16 +33,20 @@ export default function PedidosSection({ pedidos, loading, userRole }: Props) {
   }
 
   return (
-    <PedidoDropzone>
-      {pedidos.map((pedido) => (
-        <PedidoCard
-          key={pedido.id}
-          pedido={pedido}
-          produtos={pedido.produtos || []}
-          viewMode="full"
-          isDraggable={true}
-        />
-      ))}
-    </PedidoDropzone>
+    <>
+
+      <PedidoDropzone>
+        {pedidos.map((pedido) => (
+          <PedidoCard
+            key={pedido.id}
+            pedido={pedido}
+            produtos={pedido.produtos || []}
+            viewMode="full"
+            isDraggable={true}
+            codRepUsuarioLogado={codRepUsuarioLogado || 999}
+          />
+        ))}
+      </PedidoDropzone>
+    </>
   );
 }

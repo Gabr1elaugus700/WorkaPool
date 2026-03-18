@@ -15,7 +15,7 @@ type Props = {
   onChangeSituacao: (id: string, novaSituacao: CargaSituacao) => void;
   onUpdate: (cargaAtualizada: Carga) => void;
   userRole?: UserRole;
-  userCodRep?: number;
+  codRepUsuarioLogado?: number;
   todasCargas: Carga[];
 };
 
@@ -30,7 +30,7 @@ export default function CargasSection({
   onChangeSituacao,
   onUpdate,
   userRole,
-  userCodRep,
+  codRepUsuarioLogado,
   todasCargas,
 }: Props) {
   return (
@@ -91,7 +91,7 @@ export default function CargasSection({
             onChangeSituacao={onChangeSituacao}
             onUpdate={onUpdate}
             userRole={userRole}
-            userCodRep={userCodRep}
+            codRepUsuarioLogado={codRepUsuarioLogado}
           >
             {carga.pedidos
               .slice()
@@ -99,7 +99,7 @@ export default function CargasSection({
               .map((pedido) => {
                 const viewMode = getPedidoViewMode(
                   userRole,
-                  userCodRep,
+                  codRepUsuarioLogado,
                   pedido.codRep
                 );
                 const isDraggable = viewMode === "full";
@@ -109,10 +109,11 @@ export default function CargasSection({
                     key={pedido.id}
                     pedido={pedido}
                     produtos={pedido.produtos || []}
-                    destaque={userCodRep !== pedido.codRep}
+                    destaque={codRepUsuarioLogado !== pedido.codRep}
                     viewMode={viewMode}
                     isDraggable={isDraggable}
                     compact={true}
+                    codRepUsuarioLogado={codRepUsuarioLogado || 999}
                   />
                 );
               })}

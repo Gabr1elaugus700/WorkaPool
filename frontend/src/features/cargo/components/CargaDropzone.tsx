@@ -2,9 +2,10 @@ import { useDroppable } from "@dnd-kit/core";
 import { Carga, CargaSituacao } from "../types/cargo.types";
 import { UserRole } from "../types/roles.types";
 import { EditarCargaModal } from "./EditarCargaModal";
-import CargaProgress from "./CargaProgress";
+// import CargaProgress from "./CargaProgress";
 import { Badge } from "@/components/ui/badge";
 import { canEditCarga } from "../utils/permissions";
+import { CapacityBar } from "./CapacityBar";
 
 type Props = {
   carga: Carga;
@@ -12,7 +13,7 @@ type Props = {
   onChangeSituacao: (id: string, novaSituacao: CargaSituacao) => void;
   onUpdate: (cargaAtualizada: Carga) => void;
   userRole?: UserRole;
-  userCodRep?: number;
+  codRepUsuarioLogado?: number;
 };
 
 const situacaoVariant: Record<CargaSituacao, "default" | "secondary" | "destructive" | "outline"> = {
@@ -33,7 +34,7 @@ export default function CargaDropzone({
   const { setNodeRef, isOver } = useDroppable({ id: carga.id });
 
   const childrenArray = Array.isArray(children) 
-    ? children 
+    ? children    
     : children 
       ? [children] 
       : [];
@@ -78,7 +79,9 @@ export default function CargaDropzone({
       </div>
 
       {/* Capacity bar */}
-      <CargaProgress pesoAtual={carga.pesoAtual} pesoMaximo={carga.pesoMaximo} />
+      {/* <CargaProgress pesoAtual={carga.pesoAtual} pesoMaximo={carga.pesoMaximo} /> */}
+      {/* Capacity bar */}
+      <CapacityBar usedKg={carga.pesoAtual} capacityKg={carga.pesoMaximo} />
 
       {/* Orders grid */}
       <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 min-h-[80px]">

@@ -225,17 +225,22 @@ export function useCargasManager(
    */
   const cargasFiltradas = cargas.filter((carga) => {
     // Filtro por role
+    let passaFiltroRole = true;
+    
     if (userRole === "VENDAS") {
-      return (
+      passaFiltroRole = (
         carga.situacao === CargaSituacao.ABERTA ||
         (carga.pedidos && carga.pedidos.some((p) => p.codRep === userCodRep))
       );
-    }
-    if (userRole === "LOGISTICA") {
-      return (
+    } else if (userRole === "LOGISTICA") {
+      passaFiltroRole = (
         carga.situacao === CargaSituacao.ABERTA ||
         carga.situacao === CargaSituacao.SOLICITADA
       );
+    }
+
+    if (!passaFiltroRole) {
+      return false;
     }
 
     // Filtro por destino

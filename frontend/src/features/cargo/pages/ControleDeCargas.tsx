@@ -43,6 +43,7 @@ export default function ControleDeCargas() {
               pedidos={pedidos} 
               loading={loading}
               userRole={user?.role as UserRole}
+              codRepUsuarioLogado={user?.codRep}
             />
           </div>
 
@@ -61,7 +62,7 @@ export default function ControleDeCargas() {
               );
             }}
             userRole={user?.role as UserRole}
-            userCodRep={user?.codRep}
+            codRepUsuarioLogado={user?.codRep}
           />
         </div>
       </DndContext>
