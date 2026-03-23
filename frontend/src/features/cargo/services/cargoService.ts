@@ -137,7 +137,40 @@ export const cargoService = {
   },
 
   /**
-   * Salva pedidos de uma carga fechada (se aplicável ao seu sistema)
+   * Fecha uma carga salvando todos os pedidos vinculados
+   * @param codCar - Código da carga (número)
+   */
+  closeCarga: async (codCar: number): Promise<{ message: string; pedidosSalvos: number }> => {
+    const response = await fetch(
+      `${getBaseUrl()}/api/cargo/close-carga`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ codCar }),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Erro ao fechar carga");
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Busca cargas fechadas com seus pedidos salvos
+   */
+  getCargasFechadas: async () => {
+    const response = await fetch(`${getBaseUrl()}/api/cargo/cargas-fechadas`);
+    if (!response.ok) throw new Error("Erro ao buscar cargas fechadas");
+    return response.json();
+  },
+
+  /**
+   * @deprecated Use closeCarga() ao invés deste método
    */
   salvarPedidosCargaFechada: async (
     codCar: string,
@@ -161,26 +194,9 @@ export const cargoService = {
 };
 
 /**
- * Busca cargas fechadas com seus pedidos
+ * Busca cargas fechadas com seus pedidos salvos
+ * @deprecated Use cargoService.getCargasFechadas() diretamente
  */
 export const fetchCargasFechadas = async () => {
-  // Por enquanto, retorna cargas com situação FECHADA
-  const cargas = await cargoService.getCargas(["FECHADA"]);
-  return cargas.map((carga) => ({
-    id: carga.id,
-    cargaId: carga.id,
-    carga: {
-      id: carga.id,
-      codCar: carga.codCar,
-      destino: carga.destino,
-      pesoMaximo: carga.pesoMaximo,
-      pesoAtual: carga.pesoAtual,
-      previsaoSaida: carga.previsaoSaida,
-      situacao: carga.situacao as CargaSituacao,
-      createdAt: carga.createdAt,
-      closedAt: carga.closedAt,
-      pedidos: [], // TODO: buscar pedidos se necessário
-    },
-    pedidos: [], // TODO: adicionar pedidos se necessário
-  }));
+  return cargoService.getCargasFechadas();
 };

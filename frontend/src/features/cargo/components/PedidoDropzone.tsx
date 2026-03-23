@@ -11,7 +11,7 @@ export default function PedidoDropzone({ children }: Props) {
   return (
     <div
       ref={setNodeRef}
-      className="border-2 rounded-lg p-6 mb-4 min-h-[100px] bg-muted shadow w-full col-span-2 flex flex-col items-center"
+      className="border-2 rounded-lg p-6 mb-4 min-h-[100px] bg-card shadow w-full col-span-2 flex flex-col items-center"
     >
       <div className="flex items-center gap-2 mb-4">
         <Package className="h-5 w-5 text-primary" />

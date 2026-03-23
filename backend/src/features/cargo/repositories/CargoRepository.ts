@@ -61,6 +61,80 @@ export class CargoRepository implements ICargoRepository {
     return carga;
   }
 
+  async closeCarga(codCar: number): Promise<{ carga: Carga; pedidosSalvos: number }> {
+    console.log(`🔵 [Repository] Iniciando fechamento da carga ${codCar}`);
+    
+    // 1. Buscar a carga
+    const carga = await this.getCargaByCodCar(codCar);
+    if (!carga) {
+      throw new Error(`Carga ${codCar} não encontrada`);
+    }
+
+    // 2. Buscar TODOS os pedidos REAIS dessa carga do SQL Server
+    const pedidosReais = await this.getPedidosPorCarga(codCar);
+    
+    if (pedidosReais.length === 0) {
+      throw new Error(`Carga ${codCar} não possui pedidos para ser fechada`);
+    }
+
+    console.log(`📦 [Repository] Encontrados ${pedidosReais.length} pedidos na carga`);
+
+    // 3. Atualizar situação da carga para FECHADA
+    await this.prisma.cargas.update({
+      where: { codCar },
+      data: {
+        situacao: "FECHADA",
+        closedAt: new Date(),
+      },
+    });
+
+    // 4. Verificar se já existe registro de carga fechada (upsert)
+    const cargaFechadaExistente = await this.prisma.cargasFechadas.findFirst({
+      where: { cargaId: carga.id },
+    });
+
+    const pedidosJson = pedidosReais.map((pedido) => ({
+      numPed: pedido.numPed,
+      codCli: pedido.codCli,
+      cliente: pedido.cliente,
+      cidade: pedido.cidade,
+      estado: pedido.estado,
+      vendedor: pedido.vendedor,
+      codRep: pedido.codRep,
+      peso: pedido.peso,
+      bloqueado: pedido.bloqueado,
+      produtos: pedido.produtos || [],
+    }));
+
+    if (cargaFechadaExistente) {
+      // Atualizar registro existente
+      await this.prisma.cargasFechadas.update({
+        where: { id: cargaFechadaExistente.id },
+        data: {
+          pedidos: pedidosJson,
+          createdAt: new Date(), // Atualizar timestamp
+        },
+      });
+      console.log(`✅ [Repository] Registro de carga fechada atualizado`);
+    } else {
+      // Criar novo registro
+      await this.prisma.cargasFechadas.create({
+        data: {
+          cargaId: carga.id,
+          pedidos: pedidosJson,
+        },
+      });
+      console.log(`✅ [Repository] Novo registro de carga fechada criado`);
+    }
+
+    console.log(`🎉 [Repository] Carga ${codCar} fechada com sucesso`);
+    
+    return { 
+      carga: { ...carga, situacao: "FECHADA" as SituacaoCarga, closedAt: new Date() },
+      pedidosSalvos: pedidosReais.length 
+    };
+  }
+
   async deleteCarga(id: string): Promise<void> {
     await this.prisma.cargas.delete({
       where: { id },
@@ -364,4 +438,33 @@ export class CargoRepository implements ICargoRepository {
       createdAt: carga.createdAt,
     };
   }
-}
+  async getCargasFechadas(): Promise<any[]> {
+    console.log(`🔵 [Repository] Buscando cargas fechadas`);
+
+    const cargasFechadas = await this.prisma.cargasFechadas.findMany({
+      include: {
+        carga: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    console.log(`📦 [Repository] Encontradas ${cargasFechadas.length} cargas fechadas`);
+
+    return cargasFechadas.map((cf) => ({
+      id: cf.id,
+      cargaId: cf.cargaId,
+      createdAt: cf.createdAt,
+      carga: {
+        id: cf.carga.id,
+        codCar: cf.carga.codCar,
+        destino: cf.carga.destino,
+        pesoMaximo: cf.carga.pesoMax,
+        situacao: cf.carga.situacao,
+        previsaoSaida: cf.carga.previsaoSaida,
+        closedAt: cf.carga.closedAt,
+      },
+      pedidos: cf.pedidos,
+    }));
+  }}

@@ -34,7 +34,7 @@ export default function CargasSection({
   todasCargas,
 }: Props) {
   return (
-    <div className="col-span-3 bg-muted p-6 rounded-lg shadow-md">
+    <div className="col-span-3 bg-card p-6 rounded-lg shadow-md">
       <div className="flex justify-between items-center h-14 mb-4 px-2">
         <h1 className="text-2xl font-bold text-foreground">
           Cargas

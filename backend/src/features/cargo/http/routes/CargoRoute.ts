@@ -3,6 +3,7 @@ import { CargoController } from "../controllers/CargoController";
 const router = Router();
 
 router.post("/", CargoController.createCarga);
+router.post("/close-carga", CargoController.closeCarga);
 
 router.patch("/:id/situacao", CargoController.updateSituacao);
 router.put("/update-carga/:id", CargoController.updateCarga);
@@ -15,6 +16,7 @@ router.get("/pedidos-fechados", CargoController.getPedidos);
 // Rota compatível: GET /pedidos-fechados/:codRep
 router.get("/pedidos-fechados/:codRep", CargoController.getPedidos);
 
+router.get("/cargas-fechadas", CargoController.getCargasFechadas); // Buscar cargas fechadas com pedidos salvos
 router.get("/:codCar/pedidos", CargoController.getPedidosPorCarga); // Sapiens Database - Rota para obter pedidos de uma carga específica
 
 export default router;

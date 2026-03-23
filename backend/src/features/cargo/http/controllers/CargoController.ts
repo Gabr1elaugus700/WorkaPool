@@ -9,6 +9,8 @@ import { UpdateCargaSituacaoUseCase } from "../../useCases/UpdateCargaSituacao.u
 import { SituacaoCarga } from "../../entities/Carga";
 import { UpdateCargaUseCase } from "../../useCases/UpdateCarga.use-case";
 import { GetPedidosCargaUseCase } from "../../useCases/GetPedidosCarga.use-case";
+import { CloseCargaUseCase } from "../../useCases/CloseCarga.use-case";
+import { GetCargasFechadasUseCase } from "../../useCases/GetCargasFechadas.use-case";
 
 export class CargoController {
   static async createCarga(req: Request, res: Response): Promise<Response> {
@@ -43,6 +45,36 @@ export class CargoController {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro Interno ao buscar carga";
+      return res.status(500).json({ error: message });
+    }
+  }
+
+  static async closeCarga(req: Request, res: Response): Promise<Response> {
+    try {      
+      const { codCar } = req.body;
+
+      if (codCar == null) {
+        return res.status(400).json({
+          error: "Código da carga é obrigatório para fechar a carga.",
+        });
+      }
+
+      console.log(`🔵 [Controller] Recebida requisição para fechar carga ${codCar}`);
+
+      const closeCargaUseCase = new CloseCargaUseCase();
+      const result = await closeCargaUseCase.execute(Number(codCar));
+      
+      console.log(`✅ [Controller] Carga ${codCar} fechada com sucesso. ${result.pedidosSalvos} pedidos salvos.`);
+      
+      return res.status(200).json({
+        message: "Carga fechada com sucesso",
+        carga: result.carga,
+        pedidosSalvos: result.pedidosSalvos,
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao fechar carga";
+      console.error(`❌ [Controller] Erro ao fechar carga:`, message);
       return res.status(500).json({ error: message });
     }
   }
@@ -251,6 +283,29 @@ export class CargoController {
         error instanceof Error
           ? error.message
           : "Erro Interno ao buscar pedidos da carga";
+      return res.status(500).json({ error: message });
+    }
+  }
+
+  static async getCargasFechadas(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      console.log(`🔵 [Controller] Buscando cargas fechadas`);
+
+      const getCargasFechadasUseCase = new GetCargasFechadasUseCase();
+      const cargasFechadas = await getCargasFechadasUseCase.execute();
+
+      console.log(`✅ [Controller] Retornando ${cargasFechadas.length} cargas fechadas`);
+
+      return res.json(cargasFechadas);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Erro Interno ao buscar cargas fechadas";
+      console.error(`❌ [Controller] Erro ao buscar cargas fechadas:`, message);
       return res.status(500).json({ error: message });
     }
   }

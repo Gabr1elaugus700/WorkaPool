@@ -58,7 +58,26 @@ export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) 
         return;
       }
 
-      // Atualiza a carga completa
+      // Se a situação mudou para FECHADA, usa o fluxo de fechamento específico
+      if (situacaoMudou && novaSituacao === "FECHADA") {
+        console.log("🔵 Fechando carga - chamando closeCarga");
+        
+        if (!carga.codCar) {
+          toast.error("Carga sem código válido");
+          return;
+        }
+
+        setOpen(false);
+
+        // Chama o fluxo de fechamento que já atualiza a situação + salva pedidos
+        if (onChangeSituacao) {
+          onChangeSituacao(carga.id, novaSituacao);
+        }
+        
+        return;
+      }
+
+      // Para outras situações, atualiza normalmente
       const atualizada = await cargoService.updateCarga(carga.id, {
         destino: form.destino,
         pesoMax: pesoMaximo,
@@ -76,13 +95,6 @@ export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) 
       };
 
       onUpdated(cargaAtualizada);
-
-      // Se a situação mudou para FECHADA, chama o handler adicional
-      if (situacaoMudou && novaSituacao === "FECHADA" && onChangeSituacao) {
-        console.log("Situação alterada para FECHADA - chamando onChangeSituacao");
-        onChangeSituacao(carga.id, novaSituacao);
-      }
-
       toast.success("Carga atualizada com sucesso");
     } catch (error) {
       console.error("Erro ao atualizar carga:", error);

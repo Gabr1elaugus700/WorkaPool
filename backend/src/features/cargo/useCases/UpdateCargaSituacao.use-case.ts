@@ -12,6 +12,7 @@ export class UpdateCargaSituacaoUseCase {
             throw new Error("Código da carga e situação são obrigatórios");
         }
 
+            
         const cargaAtualizada = await this.cargoRepository.updateSituacaoCarga(codCar, situacao);
         return cargaAtualizada;
     } 

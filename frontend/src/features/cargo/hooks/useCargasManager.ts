@@ -182,42 +182,51 @@ export function useCargasManager(
    */
   const handleChangeSituacao = useCallback(
     async (id: string, novaSituacao: CargaSituacao) => {
-      setCargas((prev) =>
-        prev.map((carga) =>
-          carga.id === id ? { ...carga, situacao: novaSituacao } : carga
-        )
-      );
+      console.log(`🔵 [useCargasManager] handleChangeSituacao chamado:`, { id, novaSituacao });
 
       try {
-        await cargoService.updateSituacaoCarga(id, novaSituacao);
-
+        // Se a situação for FECHADA, usa o fluxo especial de fechamento
         if (novaSituacao === CargaSituacao.FECHADA) {
           const cargaFechada = cargas.find((carga) => carga.id === id);
+          console.log(`🔍 [useCargasManager] Carga a fechar:`, cargaFechada);
 
-          if (
-            cargaFechada &&
-            cargaFechada.pedidos &&
-            cargaFechada.pedidos.length > 0
-          ) {
-            const numerosPedidos = cargaFechada.pedidos.map((pedido) =>
-              Number(pedido.numPed)
-            );
-
-            try {
-              await cargoService.salvarPedidosCargaFechada(id, numerosPedidos);
-              toast.success("Carga fechada com sucesso");
-            } catch (error) {
-              console.error("Erro ao salvar pedidos da carga fechada:", error);
-              toast.error("Erro ao salvar pedidos da carga fechada");
-            }
+          if (!cargaFechada || !cargaFechada.codCar) {
+            toast.error("Carga não encontrada ou sem código válido");
+            return;
           }
+
+          console.log(`📤 [useCargasManager] Chamando closeCarga com codCar: ${cargaFechada.codCar}`);
+
+          try {
+            // closeCarga já atualiza a situação + salva pedidos
+            const resultado = await cargoService.closeCarga(cargaFechada.codCar);
+            console.log(`✅ [useCargasManager] Resultado:`, resultado);
+            
+            toast.success(`Carga fechada com sucesso! ${resultado.pedidosSalvos} pedidos salvos.`);
+            
+            // Recarregar dados para refletir mudanças
+            await carregar();
+          } catch (error) {
+            console.error("❌ [useCargasManager] Erro ao fechar carga:", error);
+            toast.error(`Erro ao fechar carga: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+          }
+        } else {
+          // Para outras situações, apenas atualiza a situação normalmente
+          setCargas((prev) =>
+            prev.map((carga) =>
+              carga.id === id ? { ...carga, situacao: novaSituacao } : carga
+            )
+          );
+
+          await cargoService.updateSituacaoCarga(id, novaSituacao);
+          toast.success("Situação da carga atualizada com sucesso");
         }
       } catch (error) {
-        console.error("Erro ao atualizar situação da carga:", error);
+        console.error("❌ [useCargasManager] Erro ao atualizar situação:", error);
         toast.error("Erro ao atualizar situação da carga");
       }
     },
-    [cargas]
+    [cargas, carregar]
   );
 
   /**
