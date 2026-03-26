@@ -18,4 +18,5 @@ export interface ICargoRepository {
   createHistoricoPesoPedido(numPed: number, cargaId: string, peso: number): Promise<void>;
   getLastHistoricoPesoPedido(numPed: number): Promise<{ peso: number; codCar: number; numPed: number; createdAt: Date } | null>;
   getCargasFechadas(): Promise<any[]>;
+  getPedidoCargaSapiens(numPed: number): Promise<{ numPed: number; sitPed: number }>;
 }

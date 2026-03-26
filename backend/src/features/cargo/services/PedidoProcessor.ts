@@ -91,4 +91,13 @@ export class PedidoProcessor {
     const numPed = Number(pedido.numPed);
     await this.cargoRepository.createHistoricoPesoPedido(numPed, cargaId, peso);
   }
+
+  /**
+   * Retorna a situação do pedido no sistema Sapiens, para verificar se o pedido foi vinculado a uma carga ou não.
+   * @param numPed O número do pedido
+   * @returns Um objeto contendo o número do pedido e sua situação
+   */
+  async getPedidoCargaSapiens(numPed: number): Promise<{ numPed: number; sitPed: number }> {
+    return await this.cargoRepository.getPedidoCargaSapiens(numPed);
+  }
 }

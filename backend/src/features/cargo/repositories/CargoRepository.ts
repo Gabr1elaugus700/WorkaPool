@@ -61,9 +61,11 @@ export class CargoRepository implements ICargoRepository {
     return carga;
   }
 
-  async closeCarga(codCar: number): Promise<{ carga: Carga; pedidosSalvos: number }> {
+  async closeCarga(
+    codCar: number,
+  ): Promise<{ carga: Carga; pedidosSalvos: number }> {
     console.log(`🔵 [Repository] Iniciando fechamento da carga ${codCar}`);
-    
+
     // 1. Buscar a carga
     const carga = await this.getCargaByCodCar(codCar);
     if (!carga) {
@@ -72,12 +74,14 @@ export class CargoRepository implements ICargoRepository {
 
     // 2. Buscar TODOS os pedidos REAIS dessa carga do SQL Server
     const pedidosReais = await this.getPedidosPorCarga(codCar);
-    
+
     if (pedidosReais.length === 0) {
       throw new Error(`Carga ${codCar} não possui pedidos para ser fechada`);
     }
 
-    console.log(`📦 [Repository] Encontrados ${pedidosReais.length} pedidos na carga`);
+    console.log(
+      `📦 [Repository] Encontrados ${pedidosReais.length} pedidos na carga`,
+    );
 
     // 3. Atualizar situação da carga para FECHADA
     await this.prisma.cargas.update({
@@ -128,10 +132,14 @@ export class CargoRepository implements ICargoRepository {
     }
 
     console.log(`🎉 [Repository] Carga ${codCar} fechada com sucesso`);
-    
-    return { 
-      carga: { ...carga, situacao: "FECHADA" as SituacaoCarga, closedAt: new Date() },
-      pedidosSalvos: pedidosReais.length 
+
+    return {
+      carga: {
+        ...carga,
+        situacao: "FECHADA" as SituacaoCarga,
+        closedAt: new Date(),
+      },
+      pedidosSalvos: pedidosReais.length,
     };
   }
 
@@ -215,8 +223,12 @@ export class CargoRepository implements ICargoRepository {
     codCar: number,
     posCar: number,
   ): Promise<void> {
-    console.log("🔵 [Repository] updatePedidoCarga recebeu:", { numPed, codCar, posCar });
-    
+    console.log("🔵 [Repository] updatePedidoCarga recebeu:", {
+      numPed,
+      codCar,
+      posCar,
+    });
+
     await sqlPoolConnect;
     const result = await sqlPool
       .request()
@@ -228,14 +240,14 @@ export class CargoRepository implements ICargoRepository {
                ,usu_poscar =@posCar
             WHERE numped =@numPed
         `);
-    
+
     console.log("🔵 [Repository] Resultado da query:", {
       rowsAffected: result.rowsAffected[0],
       numPed,
       codCar,
-      posCar
+      posCar,
     });
-    
+
     if (result.rowsAffected[0] === 0) {
       throw new Error(
         `Pedido ${numPed} não encontrado ou não pôde ser atualizado.`,
@@ -250,7 +262,6 @@ export class CargoRepository implements ICargoRepository {
   async getPedidos(codRep?: number, codCar?: number): Promise<Pedido[]> {
     await sqlPoolConnect;
 
-    
     const isAll = !codRep || codRep === 999;
     const request = sqlPool.request();
 
@@ -296,7 +307,9 @@ export class CargoRepository implements ICargoRepository {
     return mapRawToPedidos(result.recordset);
   }
 
-  async getPedidosWeight(numPed: number): Promise<{ numPed: number; peso: number }> {
+  async getPedidosWeight(
+    numPed: number,
+  ): Promise<{ numPed: number; peso: number }> {
     await sqlPoolConnect;
     const request = sqlPool.request();
 
@@ -344,7 +357,7 @@ export class CargoRepository implements ICargoRepository {
     }
 
     return {
-        numPed: Number(result.recordset[0].NUM_PED),
+      numPed: Number(result.recordset[0].NUM_PED),
       peso: Number(result.recordset[0].PESO),
     };
   }
@@ -369,9 +382,7 @@ export class CargoRepository implements ICargoRepository {
     });
   }
 
-  async getLastHistoricoPesoPedido(
-    numPed: number,
-  ): Promise<{
+  async getLastHistoricoPesoPedido(numPed: number): Promise<{
     peso: number;
     codCar: number;
     numPed: number;
@@ -398,8 +409,12 @@ export class CargoRepository implements ICargoRepository {
     cargaId: string,
     peso: number,
   ): Promise<void> {
-    console.log("💾 [Repository] Criando histórico de peso:", { numPed, cargaId, peso });
-    
+    console.log("💾 [Repository] Criando histórico de peso:", {
+      numPed,
+      cargaId,
+      peso,
+    });
+
     // Validar peso
     if (isNaN(peso) || peso === null || peso === undefined) {
       console.error("❌ [Repository] Peso inválido:", peso);
@@ -411,11 +426,11 @@ export class CargoRepository implements ICargoRepository {
         numPed,
         peso: Math.round(peso), // Garantir que seja inteiro
         carga: {
-          connect: { id: cargaId }
-        }
+          connect: { id: cargaId },
+        },
       },
     });
-    
+
     console.log("✅ [Repository] Histórico de peso criado com sucesso");
   }
 
@@ -450,7 +465,9 @@ export class CargoRepository implements ICargoRepository {
       },
     });
 
-    console.log(`📦 [Repository] Encontradas ${cargasFechadas.length} cargas fechadas`);
+    console.log(
+      `📦 [Repository] Encontradas ${cargasFechadas.length} cargas fechadas`,
+    );
 
     return cargasFechadas.map((cf) => ({
       id: cf.id,
@@ -467,4 +484,24 @@ export class CargoRepository implements ICargoRepository {
       },
       pedidos: cf.pedidos,
     }));
-  }}
+  }
+  async getPedidoCargaSapiens(
+    numPed: number,
+  ): Promise<{ numPed: number; sitPed: number }> {
+    await sqlPoolConnect;
+    const result = await sqlPool.request().input("numPed", numPed).query(`
+          SELECT numped AS [NUM_PED], sitped AS [SIT_PED]
+          FROM e120ped
+          WHERE numped = @numPed
+        `);
+
+    if (result.recordset.length === 0) {
+      throw new Error(`Pedido ${numPed} não encontrado.`);
+    }
+
+    return {
+      numPed: Number(result.recordset[0].NUM_PED),
+      sitPed: Number(result.recordset[0].SIT_PED),
+    };
+  }
+}
