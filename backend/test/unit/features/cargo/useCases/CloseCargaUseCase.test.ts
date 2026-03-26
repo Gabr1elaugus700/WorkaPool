@@ -109,4 +109,48 @@ describe("CloseCargaUseCase", () => {
     assert.deepStrictEqual(resultado.pedidosSemCargaSapiens, []);
     assert.strictEqual(resultado.carga.codCar, 202);
   });
+
+  it("deve retornar erro quando um pedido da lista está com situação 1 no Sapiens", async () => {
+    // Arrange
+    const carga = buildCarga(303);
+    const pedidos = [buildPedido("1", "3001"), buildPedido("2", "3002")];
+
+    const getCargaByCodCar = mock.fn(async () => carga);
+    const getPedidosPorCarga = mock.fn(async () => pedidos);
+    const closeCarga = mock.fn(async () => ({ carga, pedidosSalvos: pedidos.length }));
+
+    const mockRepository: ICargoRepository = {
+      getCargaByCodCar,
+      getPedidosPorCarga,
+      closeCarga,
+    } as any;
+
+    const getPedidoCargaSapiens = mock.fn(async (numPed: number) => {
+      if (numPed === 3001) {
+        return { numPed, sitPed: 1 };
+      }
+      return { numPed, sitPed: 8 };
+    });
+
+    const mockPedidoProcessor = {
+      getPedidoCargaSapiens,
+    } as any;
+
+    const useCase = new CloseCargaUseCase(mockRepository, mockPedidoProcessor);
+
+    // Act + Assert
+    await assert.rejects(
+      async () => useCase.execute(303),
+      (error: any) => {
+        assert.match(
+          error.message,
+          /Os seguintes pedidos não estão vinculados a nenhuma carga no sistema Sapiens: 3001/,
+        );
+        return true;
+      },
+    );
+
+    assert.strictEqual(getPedidoCargaSapiens.mock.calls.length, 2);
+    assert.strictEqual(closeCarga.mock.calls.length, 0);
+  });
 });
