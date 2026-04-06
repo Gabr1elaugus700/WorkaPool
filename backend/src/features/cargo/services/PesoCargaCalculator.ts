@@ -1,7 +1,8 @@
 import { ICargoRepository } from "../repositories/ICargoRepository";
 import { Carga } from "../entities/Carga";
 import { Pedido, SimulacaoPedidoNaCarga } from "../entities/Pedido";
-import { PedidoProcessor } from "./PedidoProcessor";
+import { PedidoService } from "../../pedidos/services/PedidoService";
+import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
 
 type ResultadoValidacaoPedidoNaCarga = {
   podeAdicionar: boolean;
@@ -14,8 +15,8 @@ type ResultadoValidacaoPedidoNaCarga = {
 export class PesoCargaCalculator {
   constructor(
     private readonly cargoRepository: ICargoRepository,
-    private readonly pedidoProcessor: PedidoProcessor = new PedidoProcessor(
-      this.cargoRepository,
+    private readonly pedidoService: PedidoService = new PedidoService(
+      new PedidosRepository(),
     ),
   ) {}
 
@@ -53,14 +54,14 @@ export class PesoCargaCalculator {
 
     for (const pedido of pedidos) {
       // Tenta buscar histórico primeiro
-      const historico = await this.pedidoProcessor.getUltimoHistoricoPeso(pedido);
+      const historico = await this.pedidoService.getUltimoHistoricoPeso(pedido);
       
       if (historico?.peso) {
         pesoUsado += historico.peso;
       } else {
         // Fallback: usa peso atual
         try {
-          const pesoAtual = await this.pedidoProcessor.pesoAtualPedido(pedido);
+          const pesoAtual = await this.pedidoService.pesoAtualPedido(pedido);
           pesoUsado += pesoAtual;
         } catch (error) {
           console.warn(`⚠️ Pedido ${pedido.numPed} com peso inválido, ignorando...`);
@@ -83,8 +84,8 @@ export class PesoCargaCalculator {
     pedidos: Pedido[],
     pedido: Pedido,
   ): Promise<SimulacaoPedidoNaCarga> {
-    const historico = await this.pedidoProcessor.getUltimoHistoricoPeso(pedido);
-    const pesoAtualPedido = await this.pedidoProcessor.pesoAtualPedido(pedido);
+    const historico = await this.pedidoService.getUltimoHistoricoPeso(pedido);
+    const pesoAtualPedido = await this.pedidoService.pesoAtualPedido(pedido);
     const pesoUsadoAtual = await this.calcularPesoUsado(pedidos);
 
     if (pesoAtualPedido == null || isNaN(pesoAtualPedido)) {
@@ -123,7 +124,7 @@ export class PesoCargaCalculator {
   ): Promise<ResultadoValidacaoPedidoNaCarga> {
 
     const pesoDisponivel = await this.calculaPesoDisponivel(carga);
-    const pesoPedido = await this.pedidoProcessor.pesoAtualPedido(novoPedido);
+    const pesoPedido = await this.pedidoService.pesoAtualPedido(novoPedido);
 
     if (pesoPedido == null || isNaN(pesoPedido)) {
       throw new Error(

@@ -2,17 +2,17 @@ import { ICargoRepository } from "../repositories/ICargoRepository";
 import { Carga } from "../entities/Carga";
 import { Pedido } from "../entities/Pedido";
 import { PesoCargaCalculator } from "./PesoCargaCalculator";
-import { PedidoProcessor } from "./PedidoProcessor";
+import { PedidoService } from "../../pedidos/services/PedidoService";
 
 /**
  * Orquestrador de operações complexas sobre cargas.
- * Combina PedidoProcessor e PesoCargaCalculator para executar regras de negócio.
+ * Combina PedidoService e PesoCargaCalculator para executar regras de negócio.
  */
 export class CargaProcessor {
   constructor(
     private readonly cargoRepository: ICargoRepository,
     private readonly pesoCargaCalculator: PesoCargaCalculator,
-    private readonly pedidoProcessor: PedidoProcessor,
+    private readonly pedidoService: PedidoService,
   ) {}
 
   /**
@@ -32,14 +32,14 @@ export class CargaProcessor {
 
     for (const pedido of pedidos) {
       try {
-        const mudanca = await this.pedidoProcessor.verificarMudancaPeso(pedido);
+        const mudanca = await this.pedidoService.verificarMudancaPeso(pedido);
 
         // Sem histórico: cria inicial
         if (mudanca.pesoAnterior === null) {
           console.log(
             `📝 Pedido ${pedido.numPed} sem histórico. Criando registro inicial com peso: ${mudanca.pesoAtual}`,
           );
-          await this.pedidoProcessor.salvarHistoricoPeso(
+          await this.pedidoService.salvarHistoricoPeso(
             pedido,
             carga.id,
             mudanca.pesoAtual,
@@ -82,7 +82,7 @@ export class CargaProcessor {
             pedidosReposicionados.push(Number(pedido.numPed));
           }
 
-          await this.pedidoProcessor.salvarHistoricoPeso(
+          await this.pedidoService.salvarHistoricoPeso(
             pedido,
             carga.id,
             mudanca.pesoAtual,
@@ -94,7 +94,7 @@ export class CargaProcessor {
           console.log(
             `🔻 Pedido ${pedido.numPed}: peso reduziu ${mudanca.pesoAnterior} → ${mudanca.pesoAtual}`,
           );
-          await this.pedidoProcessor.salvarHistoricoPeso(
+          await this.pedidoService.salvarHistoricoPeso(
             pedido,
             carga.id,
             mudanca.pesoAtual,
@@ -153,7 +153,7 @@ export class CargaProcessor {
     }
 
     await this.moverPedidoParaFinal(carga, pedido);
-    await this.pedidoProcessor.salvarHistoricoPeso(
+    await this.pedidoService.salvarHistoricoPeso(
       pedido,
       carga.id,
       validacao.pesoPedido,

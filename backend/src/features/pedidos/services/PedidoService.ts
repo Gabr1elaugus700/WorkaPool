@@ -1,14 +1,13 @@
-import { Pedido, HistoricoPesoPedido } from "../entities/Pedido";
-import { ICargoRepository } from "../repositories/ICargoRepository";
+import { Pedido } from '../../cargo/entities/Pedido';
+import { HistoricoPesoPedido } from '../entities/HistoricoPesoPedido';
+import { IPedidosRepository } from '../repositories/IPedidosRepository';
 
 /**
- * Processa operações relacionadas a pedidos individuais.
+ * Serviço para operações relacionadas a pedidos individuais.
  * Responsável por buscar e validar dados de UM pedido específico.
  */
-export class PedidoProcessor {
-  constructor(
-    private readonly cargoRepository: ICargoRepository,
-  ) {}
+export class PedidoService {
+  constructor(private readonly pedidosRepository: IPedidosRepository) {}
 
   /**
    * Obtém o peso ATUAL cadastrado no sistema para o pedido.
@@ -18,8 +17,8 @@ export class PedidoProcessor {
    */
   async pesoAtualPedido(pedido: Pedido): Promise<number> {
     const numPed = Number(pedido.numPed);
-    const pesoAtual = await this.cargoRepository
-      .getPedidosWeight(numPed)
+    const pesoAtual = await this.pedidosRepository
+      .getPedidoWeight(numPed)
       .then((res) => res.peso);
 
     if (isNaN(pesoAtual) || pesoAtual == null) {
@@ -34,10 +33,13 @@ export class PedidoProcessor {
    * @param pedido O pedido para consultar
    * @returns O histórico mais recente ou null se não existir
    */
-  async getUltimoHistoricoPeso(pedido: Pedido): Promise<HistoricoPesoPedido | null> {
+  async getUltimoHistoricoPeso(
+    pedido: Pedido,
+  ): Promise<HistoricoPesoPedido | null> {
     const numPed = Number(pedido.numPed);
-    const historico = await this.cargoRepository.getLastHistoricoPesoPedido(numPed);
-    return historico as HistoricoPesoPedido | null;
+    const historico =
+      await this.pedidosRepository.getLastHistoricoPeso(numPed);
+    return historico;
   }
 
   /**
@@ -55,7 +57,7 @@ export class PedidoProcessor {
   }> {
     const pesoAtual = await this.pesoAtualPedido(pedido);
     const historico = await this.getUltimoHistoricoPeso(pedido);
-    
+
     if (!historico) {
       return {
         mudou: false,
@@ -89,7 +91,7 @@ export class PedidoProcessor {
     peso: number,
   ): Promise<void> {
     const numPed = Number(pedido.numPed);
-    await this.cargoRepository.createHistoricoPesoPedido(numPed, cargaId, peso);
+    await this.pedidosRepository.createHistoricoPeso(numPed, cargaId, peso);
   }
 
   /**
@@ -97,7 +99,9 @@ export class PedidoProcessor {
    * @param numPed O número do pedido
    * @returns Um objeto contendo o número do pedido e sua situação
    */
-  async getPedidoCargaSapiens(numPed: number): Promise<{ numPed: number; sitPed: number }> {
-    return await this.cargoRepository.getPedidoCargaSapiens(numPed);
+  async getPedidoCargaSapiens(
+    numPed: number,
+  ): Promise<{ numPed: number; sitPed: number }> {
+    return await this.pedidosRepository.getPedidoSituacaoSapiens(numPed);
   }
 }

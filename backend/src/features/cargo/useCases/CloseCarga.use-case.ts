@@ -1,27 +1,31 @@
 import { Carga } from "../entities/Carga";
 import { ICargoRepository } from "../repositories/ICargoRepository";
-import { PedidoProcessor } from "../services/PedidoProcessor";
+import { PedidoService } from "../../pedidos/services/PedidoService";
+import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
 
 export class CloseCargaUseCase {
     private readonly cargoRepository: ICargoRepository;
-    private readonly pedidoProcessor: PedidoProcessor;
+    private readonly pedidoService: PedidoService;
 
     constructor(
         cargoRepository?: ICargoRepository,
-        pedidoProcessor?: PedidoProcessor,
+        pedidoService?: PedidoService,
     ) {
         this.cargoRepository = cargoRepository ?? this.createDefaultRepository();
-        this.pedidoProcessor = pedidoProcessor ?? new PedidoProcessor(this.cargoRepository);
+        this.pedidoService = pedidoService ?? new PedidoService(new PedidosRepository());
     }
 
+    
     private createDefaultRepository(): ICargoRepository {
         // Lazy-load para evitar side effects de conexão SQL em testes unitários.
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const { CargoRepository } = require("../repositories/CargoRepository");
         return new CargoRepository();
     }
-
+    
     async execute(codCar: number): Promise<{ carga: Carga; pedidosSalvos: number, pedidosSemCargaSapiens: string[] }> {
+        const SITUACAO_PEDIDO_EM_CARGA = 8;
+
         if (codCar == null) {
             throw new Error("Código da carga é obrigatório");
         }
@@ -40,9 +44,9 @@ export class CloseCargaUseCase {
 
         for (const pedido of pedidos) {
             const numPed = Number(pedido.numPed);
-            const pedidoSituacao = await this.pedidoProcessor.getPedidoCargaSapiens(numPed);
+            const pedidoSituacao = await this.pedidoService.getPedidoCargaSapiens(numPed);
 
-            if (pedidoSituacao.sitPed !== 8) {
+            if (pedidoSituacao.sitPed !== SITUACAO_PEDIDO_EM_CARGA) {
                 pedidosSemCarga.push(pedido.numPed);
             }            
         }

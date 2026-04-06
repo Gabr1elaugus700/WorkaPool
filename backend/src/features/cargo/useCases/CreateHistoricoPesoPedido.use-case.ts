@@ -1,18 +1,18 @@
-import { ICargoRepository } from "../repositories/ICargoRepository";
-import { CargoRepository } from "../repositories/CargoRepository";
+import { IPedidosRepository } from "../../pedidos/repositories/IPedidosRepository";
+import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
 
 export class CreateHistoricoPesoPedidoUseCase {
   constructor(
-    private readonly cargoRepository: ICargoRepository = new CargoRepository(),
+    private readonly pedidosRepository: IPedidosRepository = new PedidosRepository(),
   ) {}
 
   async execute(numPed: number, cargaId: string, peso: number) {
-    const input = await this.cargoRepository.getLastHistoricoPesoPedido(numPed);
+    const input = await this.pedidosRepository.getLastHistoricoPeso(numPed);
 
     if (!input) {
       throw new Error(`Histórico do pedido ${numPed} não encontrado.`);
     }
 
-    await this.cargoRepository.createHistoricoPesoPedido(numPed, cargaId, peso);
+    await this.pedidosRepository.createHistoricoPeso(numPed, cargaId, peso);
   }
 }

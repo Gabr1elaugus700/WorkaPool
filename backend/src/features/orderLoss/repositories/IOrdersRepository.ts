@@ -1,6 +1,7 @@
 import { Order } from "../entities/Order";
 import { OrderProduct } from "../entities/OrderProduct";
 import { LossReason } from "../entities/LossReason";
+import { PedidoOrderLoss } from "../../pedidos";
 
 export interface GetLostOrdersFilters {
   startDate?: string;
@@ -8,25 +9,8 @@ export interface GetLostOrdersFilters {
   codRep?: string;
 }
 
-export interface LostOrderFromSapiens {
-  DATA: Date;
-  NUMPED: string;
-  SITUAÇÃO: string;
-  CODREP: number;
-  APEREP: string;
-  CODCLI: number;
-  FANTASIA: string;
-  CIDADE: string;
-  CODPRO: string;
-  PRODUTO: string;
-  QTDPED: number;
-  PREUNI: number;
-  VLRFINAL: number;
-  "MARGEM LUCRO": number;
-  VLRFRETE: number;
-  IPI: number;
-  ICMS: number;
-}
+// Alias para compatibilidade - usa PedidoOrderLoss como base
+export type LostOrderFromSapiens = PedidoOrderLoss;
 
 export interface OrderWithLossReason {
   order: Order;

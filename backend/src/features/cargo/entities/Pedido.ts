@@ -1,12 +1,6 @@
-export interface PedidoProps {
-  id: string;
-  numPed: string;
-  codCli?: string;
-  cliente: string;
-  cidade: string;
-  estado?: string;
-  vendedor: string;
-  codRep?: number;
+import { PedidoBase, PedidoBaseProps } from '../../pedidos/entities/PedidoBase';
+
+export interface PedidoProps extends PedidoBaseProps {
   bloqueado?: string;
   peso: number;
   precoFrete?: number;
@@ -22,15 +16,7 @@ export interface PedidoProps {
   }[];
 }
 
-export class Pedido {
-  public readonly id: string;
-  public numPed: string;
-  public codCli?: string;
-  public cliente: string;
-  public cidade: string;
-  public estado?: string;
-  public vendedor: string;
-  public codRep?: number;
+export class Pedido extends PedidoBase {
   public bloqueado?: string;
   public peso: number;
   public precoFrete?: number;
@@ -46,14 +32,6 @@ export class Pedido {
   }[];
 
   constructor({
-    id,
-    numPed,
-    codCli,
-    cliente,
-    cidade,
-    estado,
-    vendedor,
-    codRep,
     bloqueado,
     peso,
     precoFrete,
@@ -62,15 +40,9 @@ export class Pedido {
     sitcar,
     produtos,
     qtdOri,
+    ...baseProps
   }: PedidoProps) {
-    this.id = id;
-    this.numPed = numPed;
-    this.codCli = codCli;
-    this.cliente = cliente;
-    this.cidade = cidade;
-    this.estado = estado;
-    this.vendedor = vendedor;
-    this.codRep = codRep;
+    super(baseProps);
     this.bloqueado = bloqueado;
     this.peso = peso;
     this.precoFrete = precoFrete;
@@ -82,62 +54,5 @@ export class Pedido {
   }
 }
 
-/** DTO bruto retornado pelo SQL — uma linha por produto/derivação */
-export type PedidoRaw = {
-  NUM_PED: string;
-  COD_CLI: string;
-  CLIENTE: string;
-  CIDADE: string;
-  ESTADO: string;
-  VENDEDOR: string;
-  CODREP: number;
-  BLOQUEADO: string;
-  PESO: number;
-  PRODUTOS: string;
-  DERIVACAO: string;
-  QUANTIDADE: number;
-  CODCAR: number;
-  POSCAR: number;
-  SITCAR: string;
-  QTD_ORI_PED: number;
-}
-
-export interface HistoricoPesoPedido {
-  numPed: number;
-  peso: number;
-  codCar: number;
-  createdAt: Date;
-}
-
-export class HistoricoPesoPedido {
-  constructor(
-    public numPed: number,
-    public peso: number,
-    public codCar: number,
-    public createdAt: Date,
-  ) {}
-
-  numpedNumber(): number {
-    return Number(this.numPed);
-  }
-
-  pesoAtual(): number {
-    if (isNaN(this.peso) || this.peso === null || this.peso === undefined) {
-      throw new Error(`Peso inválido para pedido ${this.numPed}: ${this.peso}`);
-    }
-    return this.peso;
-  }
-
-}
-
-
-export type SimulacaoPedidoNaCarga = {
-  pesoAnteriorConsiderado: number;
-  pesoAtualPedido: number;
-  pesoUsadoAtual: number;
-  novoPesoUsado: number;
-  pesoDisponivelAtual: number;
-  pesoDisponivelAposTroca: number;
-  cabeNaCarga: boolean;
-  excesso: number;
-};
+export type { PedidoRaw, SimulacaoPedidoNaCarga } from '../../pedidos';
+export { HistoricoPesoPedido } from '../../pedidos';

@@ -1,9 +1,12 @@
 import { ICargoRepository } from "../repositories/ICargoRepository";
 import { CargoRepository } from "../repositories/CargoRepository";
+import { IPedidosRepository } from "../../pedidos/repositories/IPedidosRepository";
+import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
 
 export class UpdatePedidoCargaUseCase {
   constructor(
-    private readonly cargoRepository: ICargoRepository = new CargoRepository(),
+    private readonly cargoRepository: ICargoRepository = new CargoRepository(undefined as any, new PedidosRepository()),
+    private readonly pedidosRepository: IPedidosRepository = new PedidosRepository(),
   ) {}
   async execute(numPed: number, codCar: number, posCar: number) {
     console.log("🟢 [UseCase] execute recebeu:", { numPed, codCar, posCar });
@@ -22,7 +25,7 @@ export class UpdatePedidoCargaUseCase {
       console.log("💾 [UseCase] Salvando histórico de peso do pedido...");
       
       try { 
-        const { peso } = await this.cargoRepository.getPedidosWeight(numPed);
+        const { peso } = await this.pedidosRepository.getPedidoWeight(numPed);
         console.log("⚖️ [UseCase] Peso do pedido obtido:", peso);
 
         const carga = await this.cargoRepository.getCargaByCodCar(codCar);
@@ -32,7 +35,7 @@ export class UpdatePedidoCargaUseCase {
         }
 
         // Salvar o histórico de peso
-        await this.cargoRepository.createHistoricoPesoPedido(
+        await this.pedidosRepository.createHistoricoPeso(
           numPed,
           carga.id,
           peso

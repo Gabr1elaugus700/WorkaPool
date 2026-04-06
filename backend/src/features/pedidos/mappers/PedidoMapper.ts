@@ -1,5 +1,5 @@
-import { Pedido } from '../entities/Pedido';
-import { PedidoRaw } from '../entities/Pedido';
+import { Pedido } from '../../cargo/entities/Pedido';
+import { PedidoRaw } from '../types/PedidoRaw';
 
 /**
  * Converte linhas brutas do SQL (uma por produto/derivação)
@@ -28,6 +28,7 @@ export function mapRawToPedidos(rows: PedidoRaw[]): Pedido[] {
           codCar: row.CODCAR ?? null,
           poscar: row.POSCAR ?? null,
           sitcar: row.SITCAR ?? null,
+          qtdOri: row.QTD_ORI_PED,
           produtos: [],
         }),
       );

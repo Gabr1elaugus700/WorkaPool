@@ -1,13 +1,13 @@
-import { ICargoRepository } from "../repositories/ICargoRepository";
-import { CargoRepository } from "../repositories/CargoRepository";
+import { IPedidosRepository } from "../../pedidos/repositories/IPedidosRepository";
+import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
 
 export class GetUltimoPesoPedidoUseCase {
   constructor(
-    private readonly cargoRepository: ICargoRepository = new CargoRepository(),
+    private readonly pedidosRepository: IPedidosRepository = new PedidosRepository(),
   ) {}
 
   async execute(numPed: number) {
-    const historico = await this.cargoRepository.getLastHistoricoPesoPedido(numPed);
+    const historico = await this.pedidosRepository.getLastHistoricoPeso(numPed);
 
     if (!historico) {
       throw new Error(`Histórico do pedido ${numPed} não encontrado.`);

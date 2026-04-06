@@ -1,13 +1,13 @@
-import { ICargoRepository } from "../repositories/ICargoRepository";
-import { CargoRepository } from "../repositories/CargoRepository";
+import { IPedidosRepository } from "../../pedidos/repositories/IPedidosRepository";
+import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
 
 export class GetPedidosFechadosVendedorUseCase {
   constructor(
-    private readonly cargoRepository: ICargoRepository = new CargoRepository(),
+    private readonly pedidosRepository: IPedidosRepository = new PedidosRepository(),
   ) {}
 
   async execute(codRep?: number) {
-    const pedidos = await this.cargoRepository.getPedidos(codRep);
+    const pedidos = await this.pedidosRepository.getPedidos(codRep);
     return pedidos;
   }
 }

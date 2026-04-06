@@ -1,15 +1,13 @@
-import { ICargoRepository } from "../repositories/ICargoRepository";
-import { CargoRepository } from "../repositories/CargoRepository";
-import { GetCargasBySituacaoUseCase } from "./GetCargaBySituacao.use-case";
-import { SituacaoCarga } from "../entities/Carga";
+import { IPedidosRepository } from "../../pedidos/repositories/IPedidosRepository";
+import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
 
 export class GetWeightPedidoUseCase {
   constructor(
-    private readonly cargoRepository: ICargoRepository = new CargoRepository(),
+    private readonly pedidosRepository: IPedidosRepository = new PedidosRepository(),
   ) {}
 
   async execute(numPed: number) {
-    const weightPedido = await this.cargoRepository.getPedidosWeight(numPed);
+    const weightPedido = await this.pedidosRepository.getPedidoWeight(numPed);
 
     if (!weightPedido) {
       throw new Error(`Peso do pedido ${numPed} não encontrado.`);
