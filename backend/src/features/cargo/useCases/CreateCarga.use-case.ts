@@ -6,7 +6,7 @@ import { NewNumberCargoUseCase } from "./NewNumberCargo.use-case";
 
 export class CreateCargaUseCase {
   constructor(
-    private readonly cargoRepository: ICargoRepository = new CargoRepository(),
+    private readonly cargoRepository: ICargoRepository = new CargoRepository(new PedidosRepository()),
   ) {}
 
   async execute(input: CreateCargaDTO): Promise<CargaResponseDTO> {

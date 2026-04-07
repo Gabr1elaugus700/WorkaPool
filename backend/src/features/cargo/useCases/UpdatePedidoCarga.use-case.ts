@@ -5,7 +5,7 @@ import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository"
 
 export class UpdatePedidoCargaUseCase {
   constructor(
-    private readonly cargoRepository: ICargoRepository = new CargoRepository(undefined as any, new PedidosRepository()),
+    private readonly cargoRepository: ICargoRepository = new CargoRepository(new PedidosRepository()),
     private readonly pedidosRepository: IPedidosRepository = new PedidosRepository(),
   ) {}
   async execute(numPed: number, codCar: number, posCar: number) {

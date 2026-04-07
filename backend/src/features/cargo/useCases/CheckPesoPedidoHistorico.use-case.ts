@@ -4,7 +4,8 @@ import { GetCargasBySituacaoUseCase } from "./GetCargaBySituacao.use-case";
 import { SituacaoCarga } from "../entities/Carga";
 import { CargaProcessor } from "../services/CargaProcessor";
 import { PesoCargaCalculator } from "../services/PesoCargaCalculator";
-import { PedidoProcessor } from "../services/PedidoProcessor";
+import { PedidoService } from "../../pedidos/services/PedidoService";
+import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
 
 /**
  * Use Case: Verifica e processa mudanças de peso em pedidos de cargas abertas.
@@ -18,21 +19,21 @@ import { PedidoProcessor } from "../services/PedidoProcessor";
  */
 export class CheckPesoPedidoHistoricoUseCase {
   private readonly cargoRepository: ICargoRepository;
-  private readonly pedidoProcessor: PedidoProcessor;
+  private readonly pedidoService: PedidoService;
   private readonly pesoCargaCalculator: PesoCargaCalculator;
   private readonly cargaProcessor: CargaProcessor;
 
   constructor() {
-    this.cargoRepository = new CargoRepository();
-    this.pedidoProcessor = new PedidoProcessor(this.cargoRepository);
+    this.cargoRepository = new CargoRepository(new PedidosRepository());
+    this.pedidoService = new PedidoService(new PedidosRepository());
     this.pesoCargaCalculator = new PesoCargaCalculator(
       this.cargoRepository,
-      this.pedidoProcessor,
+      this.pedidoService,
     );
     this.cargaProcessor = new CargaProcessor(
       this.cargoRepository,
       this.pesoCargaCalculator,
-      this.pedidoProcessor,
+      this.pedidoService,
     );
   }
 

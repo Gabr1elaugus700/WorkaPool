@@ -3,13 +3,14 @@ import { Carga, SituacaoCarga } from "../entities/Carga";
 import { Pedido, PedidoRaw } from "../entities/Pedido";
 import { ICargoRepository } from "./ICargoRepository";
 import { IPedidosRepository } from "../../pedidos/repositories/IPedidosRepository";
+import prismaInstance from "../../../config/prisma";
 
 import { sqlPool, sqlPoolConnect } from "../../../database/sqlServer";
 
 export class CargoRepository implements ICargoRepository {
   constructor(
-    private prisma: PrismaClient = new PrismaClient(),
-    private pedidosRepository: IPedidosRepository
+    private pedidosRepository: IPedidosRepository,
+    private prisma: PrismaClient = prismaInstance
   ) {}
 
   async createCarga(carga: Carga): Promise<Carga> {

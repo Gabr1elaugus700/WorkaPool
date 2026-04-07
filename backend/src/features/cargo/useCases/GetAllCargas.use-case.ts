@@ -1,11 +1,12 @@
 import { ICargoRepository } from "../repositories/ICargoRepository";
 import { CargoRepository } from "../repositories/CargoRepository";
+import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
 import { toCargaComPesoDTO } from "../http/schemas/cargoSchema";
 import { SituacaoCarga } from "../entities/Carga";
 
 export class GetAllCargasUseCase {
   constructor(
-    private readonly cargoRepository: ICargoRepository = new CargoRepository(),
+    private readonly cargoRepository: ICargoRepository = new CargoRepository(new PedidosRepository()),
   ) {}
 
   async execute(situacoes?: string[]) {

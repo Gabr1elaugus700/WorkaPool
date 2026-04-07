@@ -20,7 +20,9 @@ export class CloseCargaUseCase {
         // Lazy-load para evitar side effects de conexão SQL em testes unitários.
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const { CargoRepository } = require("../repositories/CargoRepository");
-        return new CargoRepository();
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { PedidosRepository } = require("../../pedidos/repositories/PedidosRepository");
+        return new CargoRepository(new PedidosRepository());
     }
     
     async execute(codCar: number): Promise<{ carga: Carga; pedidosSalvos: number, pedidosSemCargaSapiens: string[] }> {

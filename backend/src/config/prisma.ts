@@ -30,7 +30,7 @@ let prismaInstance: any = null;
 export function getPrismaClient() {
   if (!prismaInstance) {
     prismaInstance = new PrismaClient({
-      log: isDevelopment ? ['query', 'error', 'warn'] : ['error'],
+      log: ['error'], // Apenas erros (sem queries)
     });
   }
   return prismaInstance;
