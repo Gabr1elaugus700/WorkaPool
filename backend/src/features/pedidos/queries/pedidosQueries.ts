@@ -1,3 +1,5 @@
+const CODIGO_TRANSPORTADORA: number = 26;
+
 /**
  * Queries SQL para buscar pedidos do ERP Sapiens.
  * Queries compartilhadas entre diferentes features (cargo, etc).
@@ -35,7 +37,7 @@ export const QUERY_GET_PEDIDOS_BASE = `
   LEFT JOIN e090rep rep ON rep.codrep = ped.codven
   LEFT JOIN poolbi.dbo.grppro grp ON grp.codpro = ipd.codpro
   WHERE ped.sitped = 1
-    AND ped.codtra = 26
+    AND ped.codtra = ${CODIGO_TRANSPORTADORA}
 `;
 
 export const QUERY_GET_PEDIDOS_GROUP_BY = `
@@ -94,7 +96,7 @@ export const QUERY_GET_PEDIDOS_BY_CARGA = `
   LEFT JOIN e090rep rep ON rep.codrep = ped.codven
   LEFT JOIN poolbi.dbo.grppro grp ON grp.codpro = ipd.codpro
   WHERE ped.sitped = 1
-    AND ped.codtra = 26
+    AND ped.codtra = ${CODIGO_TRANSPORTADORA}
     AND ped.usu_codcar = @codCar
   GROUP BY ped.numped, ped.codcli, cli.nomcli, cli.cidcli, cli.sigufs,
            rep.aperep, rep.codrep, ped.pedblo, ipd.codder, ipd.qtdped,

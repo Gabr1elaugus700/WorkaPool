@@ -54,11 +54,11 @@ describe("CloseCargaUseCase", () => {
       return { numPed, sitPed: 0 };
     });
 
-    const mockPedidoProcessor = {
+    const mockPedidoService = {
       getPedidoCargaSapiens,
     } as any;
 
-    const useCase = new CloseCargaUseCase(mockRepository, mockPedidoProcessor);
+    const useCase = new CloseCargaUseCase(mockRepository, mockPedidoService);
 
     // Act + Assert
     await assert.rejects(
@@ -93,11 +93,11 @@ describe("CloseCargaUseCase", () => {
 
     const getPedidoCargaSapiens = mock.fn(async (numPed: number) => ({ numPed, sitPed: 8 }));
 
-    const mockPedidoProcessor = {
+    const mockPedidoService = {
       getPedidoCargaSapiens,
     } as any;
 
-    const useCase = new CloseCargaUseCase(mockRepository, mockPedidoProcessor);
+    const useCase = new CloseCargaUseCase(mockRepository, mockPedidoService);
 
     // Act
     const resultado = await useCase.execute(202);
@@ -132,11 +132,11 @@ describe("CloseCargaUseCase", () => {
       return { numPed, sitPed: 8 };
     });
 
-    const mockPedidoProcessor = {
+    const mockPedidoService = {
       getPedidoCargaSapiens,
     } as any;
 
-    const useCase = new CloseCargaUseCase(mockRepository, mockPedidoProcessor);
+    const useCase = new CloseCargaUseCase(mockRepository, mockPedidoService);
 
     // Act + Assert
     await assert.rejects(

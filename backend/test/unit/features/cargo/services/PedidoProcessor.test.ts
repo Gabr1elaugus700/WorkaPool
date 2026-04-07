@@ -1,11 +1,11 @@
 import { describe, it, mock } from 'node:test';
 import assert from 'node:assert';
-import { PedidoProcessor } from '../../../../../src/features/cargo/services/PedidoProcessor';
+import { PedidoService } from '../../../../../src/features/pedidos/services/PedidoService';
 import { Pedido } from '../../../../../src/features/cargo/entities/Pedido';
 import { Carga, SituacaoCarga } from '../../../../../src/features/cargo/entities/Carga';
-import { ICargoRepository } from '../../../../../src/features/cargo/repositories/ICargoRepository';
+import { IPedidosRepository } from '../../../../../src/features/pedidos/repositories/IPedidosRepository';
 
-describe('PedidoProcessor', () => {
+describe('PedidoService', () => {
   describe('getUltimoHistoricoPeso', () => {
     it('deve retornar o peso do histórico quando existe', async () => {
       // Arrange
@@ -16,11 +16,11 @@ describe('PedidoProcessor', () => {
         createdAt: new Date(),
       }));
 
-      const mockRepository: ICargoRepository = {
-        getLastHistoricoPesoPedido: mockGetLastHistorico,
+      const mockRepository: IPedidosRepository = {
+        getLastHistoricoPeso: mockGetLastHistorico,
       } as any;
 
-      const processor = new PedidoProcessor(mockRepository);
+      const service = new PedidoService(mockRepository);
 
       const pedido = new Pedido({
         id: '1',
@@ -43,10 +43,10 @@ describe('PedidoProcessor', () => {
       });
 
       // Act
-      const resultado = await processor.getUltimoHistoricoPeso(pedido);
+      const resultado = await service.getUltimoHistoricoPeso(pedido);
 
       // Assert
-      assert.strictEqual(resultado, 1500);
+      assert.strictEqual(resultado?.peso, 1500);
       assert.strictEqual(mockGetLastHistorico.mock.calls.length, 1);
       // @ts-expect-error - mock.calls typing issue
       assert.strictEqual(mockGetLastHistorico.mock.calls[0].arguments[0], 456);
@@ -56,11 +56,11 @@ describe('PedidoProcessor', () => {
       // Arrange
       const mockGetLastHistorico = mock.fn(async () => null);
 
-      const mockRepository: ICargoRepository = {
-        getLastHistoricoPesoPedido: mockGetLastHistorico,
+      const mockRepository: IPedidosRepository = {
+        getLastHistoricoPeso: mockGetLastHistorico,
       } as any;
 
-      const processor = new PedidoProcessor(mockRepository);
+      const service = new PedidoService(mockRepository);
 
       const pedido = new Pedido({
         id: '2',
@@ -83,7 +83,7 @@ describe('PedidoProcessor', () => {
       });
 
       // Act
-      const resultado = await processor.getUltimoHistoricoPeso(pedido);
+      const resultado = await service.getUltimoHistoricoPeso(pedido);
 
       // Assert
       assert.strictEqual(resultado, null);
@@ -101,11 +101,11 @@ describe('PedidoProcessor', () => {
         createdAt: new Date(),
       }));
 
-      const mockRepository: ICargoRepository = {
-        getLastHistoricoPesoPedido: mockGetLastHistorico,
+      const mockRepository: IPedidosRepository = {
+        getLastHistoricoPeso: mockGetLastHistorico,
       } as any;
 
-      const processor = new PedidoProcessor(mockRepository);
+      const service = new PedidoService(mockRepository);
 
       const pedido = new Pedido({
         id: '3',
@@ -128,9 +128,10 @@ describe('PedidoProcessor', () => {
       });
 
       // Act
-      const resultado = await processor.getUltimoHistoricoPeso(pedido);
+      const resultado = await service.getUltimoHistoricoPeso(pedido);
 
       // Assert
+      assert.ok(resultado, 'Resultado não deveria ser null');
       assert.strictEqual(resultado.peso, 3500);
       assert.strictEqual(mockGetLastHistorico.mock.calls.length, 1);
       // Verifica que o número foi convertido corretamente
