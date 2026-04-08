@@ -9,7 +9,7 @@ import { sqlPool, sqlPoolConnect } from "../../../database/sqlServer";
 
 export class CargoRepository implements ICargoRepository {
   constructor(
-    private pedidosRepository: IPedidosRepository,
+    private pedidosRepository?: IPedidosRepository,
     private prisma: PrismaClient = prismaInstance
   ) {}
 
@@ -155,6 +155,11 @@ export class CargoRepository implements ICargoRepository {
 
   async getPedidosPorCarga(codCar: number): Promise<Pedido[]> {
     // Delega para o repositório de pedidos
+    console.log(`🔵 [Repository] Buscando pedidos para carga ${codCar}`);
+    if (!this.pedidosRepository) {
+      throw new Error("Repositório de pedidos não inicializado");
+    } 
+
     return await this.pedidosRepository.getPedidosByCarga(codCar);
   }
 

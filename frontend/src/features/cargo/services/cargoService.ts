@@ -44,6 +44,7 @@ export const cargoService = {
     situacao: string;
     previsaoSaida: string;
   }): Promise<CargaComPesoDTO> => {
+    console.log("🔵 [Service-FrontEnd] Criando carga com dados:", input);
     const response = await fetch(`${getBaseUrl()}/api/cargo`, {
       method: "POST",
       headers: {
