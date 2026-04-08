@@ -1,5 +1,5 @@
-import { describe, it, mock } from "node:test";
-import assert from "node:assert";
+import { describe, it, mock, after } from "node:test";
+import assert from "node:assert/strict";
 import { CloseCargaUseCase } from "../../../../../src/features/cargo/useCases/CloseCarga.use-case";
 import { Carga, SituacaoCarga } from "../../../../../src/features/cargo/entities/Carga";
 import { Pedido } from "../../../../../src/features/cargo/entities/Pedido";
@@ -28,6 +28,12 @@ const buildPedido = (id: string, numPed: string): Pedido =>
   });
 
 describe("CloseCargaUseCase", () => {
+  after(async () => {
+    // Aguarda múltiplos ticks para permitir que promises pendentes sejam resolvidas
+    await new Promise((resolve) => setImmediate(resolve));
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  });
+
   it("deve lançar erro com todos os pedidos sem carga no Sapiens", async () => {
     // Arrange
     const carga = buildCarga(101);

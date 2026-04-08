@@ -1,11 +1,16 @@
-import { describe, it, mock } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, mock, after } from 'node:test';
+import assert from 'node:assert/strict';
 import { PedidoService } from '../../../../../src/features/pedidos/services/PedidoService';
 import { Pedido } from '../../../../../src/features/cargo/entities/Pedido';
-import { Carga, SituacaoCarga } from '../../../../../src/features/cargo/entities/Carga';
 import { IPedidosRepository } from '../../../../../src/features/pedidos/repositories/IPedidosRepository';
 
 describe('PedidoService', () => {
+  after(async () => {
+    // Aguarda múltiplos ticks para permitir que promises pendentes sejam resolvidas
+    await new Promise((resolve) => setImmediate(resolve));
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  });
+
   describe('getUltimoHistoricoPeso', () => {
     it('deve retornar o peso do histórico quando existe', async () => {
       // Arrange
@@ -31,15 +36,6 @@ describe('PedidoService', () => {
         vendedor: 'Vendedor Teste',
         peso: 1000,
         qtdOri: 10,
-      });
-
-      const carga = new Carga({
-        id: 'carga-1',
-        codCar: 123,
-        destino: 'São Paulo',
-        pesoMaximo: 5000,
-        previsaoSaida: new Date(),
-        situacao: SituacaoCarga.ABERTA,
       });
 
       // Act
@@ -71,15 +67,6 @@ describe('PedidoService', () => {
         vendedor: 'Vendedor Teste 2',
         peso: 2000,
         qtdOri: 20,
-      });
-
-      const carga = new Carga({
-        id: 'carga-2',
-        codCar: 456,
-        destino: 'Rio de Janeiro',
-        pesoMaximo: 8000,
-        previsaoSaida: new Date(),
-        situacao: SituacaoCarga.ABERTA,
       });
 
       // Act
@@ -116,15 +103,6 @@ describe('PedidoService', () => {
         vendedor: 'Vendedor Teste 3',
         peso: 3000,
         qtdOri: 15,
-      });
-
-      const carga = new Carga({
-        id: 'carga-3',
-        codCar: 999,
-        destino: 'Belo Horizonte',
-        pesoMaximo: 10000,
-        previsaoSaida: new Date(),
-        situacao: SituacaoCarga.ABERTA,
       });
 
       // Act

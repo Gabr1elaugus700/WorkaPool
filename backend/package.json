@@ -19,8 +19,8 @@
     "db:setup": "npm run prisma:generate && npm run prisma:migrate",
     "db:setup:prod": "npm run prisma:generate:prod && npm run prisma:deploy:prod",
     "deploy": "npm run build && npm run db:setup:prod && npm run start",
-    "test": "tsx --test test/unit/**/*.test.ts",
-    "test:watch": "tsx --test --watch test/unit/**/*.test.ts"
+    "test": "cross-env NODE_ENV=test tsx --test test/unit/**/*.test.ts",
+    "test:watch": "cross-env NODE_ENV=test tsx --test --watch test/unit/**/*.test.ts"
   },
   "keywords": [],
   "author": "",

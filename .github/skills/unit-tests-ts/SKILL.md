@@ -1,5 +1,5 @@
 ---
-name: unit-tests-node-native
+name: unit-tests-ts
 description: Cria e melhora testes unitários para aplicações TypeScript usando o test runner nativo do Node.js (node:test e node:assert).
 ---
 
