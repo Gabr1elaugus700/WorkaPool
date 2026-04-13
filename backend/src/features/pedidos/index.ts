@@ -9,6 +9,7 @@ export { PedidoCargo } from './types/PedidoCargo.types';
 export type { PedidoCargoProps, ProdutoPedido, SimulacaoPedidoNaCarga } from './types/PedidoCargo.types';
 export { PedidoOrderLoss } from './types/PedidoOrderLoss.types';
 export type { PedidoOrderLossProps } from './types/PedidoOrderLoss.types';
+export type { PedidosSapiensFiltersDTO } from './contracts/PedidosFilters.dto';
 
 // Repositories
 export type { IPedidosRepository } from './repositories/IPedidosRepository';

@@ -1,12 +1,12 @@
-import { Pedido } from '../../cargo/entities/Pedido';
+import { PedidoCargo } from '../types/PedidoCargo.types';
 import { PedidoRaw } from '../types/PedidoRaw';
 
 /**
  * Converte linhas brutas do SQL (uma por produto/derivação)
  * em entidades Pedido agregadas (um por número de pedido).
  */
-export function mapRawToPedidos(rows: PedidoRaw[]): Pedido[] {
-  const map = new Map<string, Pedido>();
+export function mapRawToPedidos(rows: PedidoRaw[]): PedidoCargo[] {
+  const map = new Map<string, PedidoCargo>();
 
   for (const row of rows) {
     const numPed = String(row.NUM_PED);
@@ -14,7 +14,7 @@ export function mapRawToPedidos(rows: PedidoRaw[]): Pedido[] {
     if (!map.has(numPed)) {
       map.set(
         numPed,
-        new Pedido({
+        new PedidoCargo({
           id: numPed,
           numPed,
           codCli: row.COD_CLI,

@@ -1,13 +1,7 @@
 import { Order } from "../entities/Order";
 import { OrderProduct } from "../entities/OrderProduct";
 import { LossReason } from "../entities/LossReason";
-import { PedidoOrderLoss } from "../../pedidos";
-
-export interface GetLostOrdersFilters {
-  startDate?: string;
-  endDate?: string;
-  codRep?: string;
-}
+import { PedidoOrderLoss, PedidosSapiensFiltersDTO } from "../../pedidos";
 
 // Alias para compatibilidade - usa PedidoOrderLoss como base
 export type LostOrderFromSapiens = PedidoOrderLoss;
@@ -29,7 +23,7 @@ export interface IOrdersRepository {
   getAllWithLossReasons(): Promise<OrderWithLossReason[]>;
   
   // Buscar pedidos perdidos do SAPIENS
-  getLostOrdersFromSapiens(filters?: GetLostOrdersFilters): Promise<LostOrderFromSapiens[]>;
+  getLostOrdersFromSapiens(filters?: PedidosSapiensFiltersDTO): Promise<LostOrderFromSapiens[]>;
   
   // Operações com produtos
   addProduct(product: OrderProduct): Promise<void>;

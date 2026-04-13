@@ -25,7 +25,7 @@ export type UpdateOrderStatusDTO = z.infer<typeof UpdateOrderStatusSchema>;
 export const AddLossReasonSchema = z.object({
   orderId: z.string().uuid("O ID do pedido deve ser um UUID válido"),
   code: LossReasonCodeEnum,
-  description: z.string().min(1, "A descrição é obrigatória"),
+  description: z.string().trim().min(10, "A descrição deve ter no mínimo 10 caracteres"),
   submittedBy: z.string().min(1, "O código do responsável é obrigatório"),
 });
 
@@ -43,6 +43,24 @@ export type CreateOrderProductDTO = z.infer<typeof CreateOrderProductSchema>;
 // Query Filters for Lost Orders
 export const GetLostOrdersFiltersSchema = z.object({
   codRep: z.string().optional(),
-});
+  startDate: z
+    .string()
+    .regex(/^\d{2}-\d{2}-\d{4}$/, "startDate deve estar no formato DD-MM-YYYY")
+    .optional(),
+  endDate: z
+    .string()
+    .regex(/^\d{2}-\d{2}-\d{4}$/, "endDate deve estar no formato DD-MM-YYYY")
+    .optional(),
+}).refine(
+  ({ startDate, endDate }) => {
+    if (!startDate || !endDate) return true;
+    const [sDay, sMonth, sYear] = startDate.split("-").map(Number);
+    const [eDay, eMonth, eYear] = endDate.split("-").map(Number);
+    const start = new Date(sYear, sMonth - 1, sDay);
+    const end = new Date(eYear, eMonth - 1, eDay);
+    return start <= end;
+  },
+  { message: "startDate deve ser menor ou igual a endDate", path: ["startDate"] },
+);
 
 export type GetLostOrdersFiltersDTO = z.infer<typeof GetLostOrdersFiltersSchema>;

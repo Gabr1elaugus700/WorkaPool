@@ -13,6 +13,9 @@ import {
 } from "../schemas/orderSchemas";
 
 export class OrdersController {
+  private static isPrivilegedRole(role?: string): boolean {
+    return role === "ADMIN" || role === "GERENTE_DPTO" || role === "LOGISTICA";
+  }
   /**
    * GET /api/orders/lost-sapiens
    * Busca pedidos perdidos do SAPIENS (sitped = 5)
@@ -28,13 +31,25 @@ export class OrdersController {
         });
       }
 
+      const currentUser = req.user;
+      if (!currentUser) {
+        return res.status(401).json({ error: "Usuário não autenticado" });
+      }
+
+      const normalizedFilters = { ...parsed.data };
+      if (currentUser.role === "VENDAS") {
+        if (!currentUser.codRep) {
+          return res.status(403).json({ error: "Usuário sem código de vendedor vinculado" });
+        }
+        normalizedFilters.codRep = String(currentUser.codRep);
+      }
+
       const useCase = new GetLostOrdersUseCase();
-      const lostOrders = await useCase.execute(parsed.data);
+      const lostOrders = await useCase.execute(normalizedFilters);
 
       return res.status(200).json(lostOrders);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao buscar pedidos perdidos do SAPIENS";
-      return res.status(500).json({ error: message });
+      return res.status(500).json({ error: "Erro ao buscar pedidos perdidos do SAPIENS" });
     }
   }
 
@@ -127,9 +142,19 @@ export class OrdersController {
 
     try {
       const { codRep } = req.params;
+      const currentUser = req.user;
 
       if (!codRep) {
         return res.status(400).json({ error: "Código do Vendedor é obrigatório." });
+      }
+      if (!currentUser) {
+        return res.status(401).json({ error: "Usuário não autenticado" });
+      }
+
+      if (!OrdersController.isPrivilegedRole(currentUser.role)) {
+        if (!currentUser.codRep || Number(codRep) !== currentUser.codRep) {
+          return res.status(403).json({ error: "Acesso negado para pedidos de outro vendedor" });
+        }
       }
 
       const useCase = new GetLostOrdersUseCase();
@@ -137,8 +162,7 @@ export class OrdersController {
 
       return res.status(200).json(lostOrders);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao buscar pedidos do vendedor";
-      return res.status(500).json({ error: message });
+      return res.status(500).json({ error: "Erro ao buscar pedidos do vendedor" });
     }
   }
   /**
@@ -148,9 +172,17 @@ export class OrdersController {
   static async updateStatus(req: Request, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
+      const currentUser = req.user;
 
       if (!id) {
         return res.status(400).json({ error: "ID do pedido é obrigatório." });
+      }
+      if (!currentUser) {
+        return res.status(401).json({ error: "Usuário não autenticado" });
+      }
+
+      if (!OrdersController.isPrivilegedRole(currentUser.role) && currentUser.role !== "VENDAS") {
+        return res.status(403).json({ error: "Acesso negado" });
       }
 
       const parsed = UpdateOrderStatusSchema.safeParse(req.body);
@@ -177,8 +209,7 @@ export class OrdersController {
         updatedAt: order.updatedAt,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao atualizar status do pedido";
-      return res.status(500).json({ error: message });
+      return res.status(500).json({ error: "Erro ao atualizar status do pedido" });
     }
   }
 
@@ -188,6 +219,11 @@ export class OrdersController {
    */
   static async addLossReason(req: Request, res: Response): Promise<Response> {
     try {  
+      const currentUser = req.user;
+      if (!currentUser) {
+        return res.status(401).json({ error: "Usuário não autenticado" });
+      }
+
       const parsed = AddLossReasonSchema.safeParse(req.body);
 
       if (!parsed.success) {
@@ -202,13 +238,16 @@ export class OrdersController {
         });
       }
 
-      console.log('✅ [OrdersController.addLossReason] Validação OK');
-      console.log('✅ [OrdersController.addLossReason] Dados validados:', JSON.stringify(parsed.data, null, 2));
+      if (
+        currentUser.role === "VENDAS" &&
+        currentUser.codRep &&
+        parsed.data.submittedBy !== String(currentUser.codRep)
+      ) {
+        return res.status(403).json({ error: "Vendedor só pode registrar motivo para si próprio" });
+      }
       
       const useCase = new AddLossReasonUseCase();
       const lossReason = await useCase.execute(parsed.data);
-
-      console.log('✅ [OrdersController.addLossReason] Motivo de perda adicionado:', lossReason.id);
       
       return res.status(201).json({
         id: lossReason.id,
@@ -219,9 +258,7 @@ export class OrdersController {
         submittedAt: lossReason.submittedAt,
       });
     } catch (err) {
-      console.error('❌ [OrdersController.addLossReason] Erro:', err);
-      const message = err instanceof Error ? err.message : "Erro ao adicionar motivo de perda";
-      return res.status(500).json({ error: message });
+      return res.status(500).json({ error: "Erro ao adicionar motivo de perda" });
     }
   }
 }

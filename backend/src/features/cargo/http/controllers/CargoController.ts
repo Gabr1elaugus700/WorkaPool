@@ -160,6 +160,11 @@ export class CargoController {
     try {
       const { codCar } = req.params;
       const { situacao } = req.body;
+      const parsedCodCar = Number(codCar);
+
+      if (!codCar || Number.isNaN(parsedCodCar)) {
+        return res.status(400).json({ error: "Código da carga inválido." });
+      }
 
       const updateSituacaoSchema = CreateCargaSchema.pick({ situacao: true });
       const parsed = updateSituacaoSchema.safeParse({ situacao });
@@ -173,7 +178,7 @@ export class CargoController {
 
       const updateCargaSituacaoUseCase = new UpdateCargaSituacaoUseCase();
       await updateCargaSituacaoUseCase.execute(
-        Number(codCar),
+        parsedCodCar,
         parsed.data.situacao! as SituacaoCarga,
       );
       return res

@@ -3,6 +3,24 @@
 > **Data de Criação:** 23/01/2026  
 > **Projeto:** WorkaPool - Sistema de Gestão de Pedidos Perdidos  
 > **Status:** 🟡 Planejamento
+> **Atualização Técnica:** 13/04/2026 - Contratos de API alinhados, auth/roles aplicados em rotas críticas, filtros de datas validados, query Sapiens parametrizada, testes iniciais adicionados.
+
+---
+
+## Atualização de Execução (13/04/2026)
+
+Itens implementados neste ciclo:
+- Contrato de rota de cargo corrigido para `PATCH /api/cargo/:codCar/situacao`
+- Autenticação/autorização aplicada em rotas críticas de `cargo` e `orders`
+- Validação de filtros em `GET /api/orders/lost-sapiens` com `startDate`/`endDate`
+- Hardening de consulta SQL Server com parâmetros (`@startDate`, `@endDate`, `@codRep`)
+- Boundary do domínio `pedidos` mantido como interno, com contrato compartilhado para filtros
+- Testes adicionados para autorização e validação de filtros
+
+Pendências para próximos ciclos:
+- Completar testes de integração de fluxos críticos de fechamento de carga em ambiente com banco controlado
+- Revisar e unificar documentação Swagger para refletir os contratos atuais
+- Evoluir regras de ownership para cenários vendedor/gestor por endpoint de `orders`
 
 ---
 

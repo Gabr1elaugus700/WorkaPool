@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { sqlPool, sqlPoolConnect } from '../../../database/sqlServer';
-import { Pedido, PedidoRaw } from '../../cargo/entities/Pedido';
+import { PedidoRaw } from '../types/PedidoRaw';
+import { PedidoCargo } from '../types/PedidoCargo.types';
 import { mapRawToPedidos } from '../mappers/PedidoMapper';
 import { HistoricoPesoPedido } from '../entities/HistoricoPesoPedido';
 import { IPedidosRepository } from './IPedidosRepository';
@@ -18,7 +19,7 @@ import {
 export class PedidosRepository implements IPedidosRepository {
   constructor(private prisma: PrismaClient = new PrismaClient()) {}
 
-  async getPedidos(codRep?: number, codCar?: number): Promise<Pedido[]> {
+  async getPedidos(codRep?: number, codCar?: number): Promise<PedidoCargo[]> {
     await sqlPoolConnect;
 
     const isAll = !codRep || codRep === 999;
@@ -34,7 +35,7 @@ export class PedidosRepository implements IPedidosRepository {
     return mapRawToPedidos(result.recordset);
   }
 
-  async getPedidosByCarga(codCar: number): Promise<Pedido[]> {
+  async getPedidosByCarga(codCar: number): Promise<PedidoCargo[]> {
     await sqlPoolConnect;
 
     const result = await sqlPool

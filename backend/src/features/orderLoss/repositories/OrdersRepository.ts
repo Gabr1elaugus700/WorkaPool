@@ -4,11 +4,11 @@ import { OrderProduct } from "../entities/OrderProduct";
 import { LossReason } from "../entities/LossReason";
 import {
   IOrdersRepository,
-  GetLostOrdersFilters,
   LostOrderFromSapiens,
   OrderWithLossReason,
 } from "./IOrdersRepository";
 import { sqlPool } from "../../../database/sqlServer";
+import { PedidosSapiensFiltersDTO } from "../../pedidos";
 export class OrdersRepository implements IOrdersRepository {
   constructor(private prisma: PrismaClient = new PrismaClient()) {}
 
@@ -140,7 +140,7 @@ export class OrdersRepository implements IOrdersRepository {
   }
 
   async getLostOrdersFromSapiens(
-    filters?: GetLostOrdersFilters,
+    filters?: PedidosSapiensFiltersDTO,
   ): Promise<LostOrderFromSapiens[]> {
     try {
       await sqlPool;
@@ -182,26 +182,27 @@ export class OrdersRepository implements IOrdersRepository {
       `;
 
       const conditions: string[] = [];
+      const request = sqlPool.request();
+      const defaultStartDate = "01-01-2026";
 
-      if (filters?.startDate) {
-        conditions.push(`ped.datemi >= '${filters.startDate}'`);
-      } else {
-        conditions.push(`ped.datemi >= '01-01-2026'`);
-      }
+      conditions.push("ped.datemi >= @startDate");
+      request.input("startDate", filters?.startDate ?? defaultStartDate);
 
       if (filters?.endDate) {
-        conditions.push(`ped.datemi <= '${filters.endDate}'`);
+        conditions.push("ped.datemi <= @endDate");
+        request.input("endDate", filters.endDate);
       }
 
       if (filters?.codRep) {
-        conditions.push(`ped.codven = '${filters.codRep}'`);
+        conditions.push("ped.codven = @codRep");
+        request.input("codRep", filters.codRep);
       }
 
       if (conditions.length > 0) {
         query += ` AND ${conditions.join(" AND ")}`;
       }
 
-      const result = await sqlPool.request().query(query);
+      const result = await request.query(query);
       return result.recordset as LostOrderFromSapiens[];
     } catch (error) {
       console.error("Erro ao buscar pedidos perdidos do SAPIENS:", error);

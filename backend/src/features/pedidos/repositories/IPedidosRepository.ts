@@ -1,4 +1,4 @@
-import { Pedido } from '../../cargo/entities/Pedido';
+import { PedidoCargo } from '../types/PedidoCargo.types';
 import { HistoricoPesoPedido } from '../entities/HistoricoPesoPedido';
 
 /**
@@ -11,13 +11,13 @@ export interface IPedidosRepository {
    * @param codRep - Código do representante (999 = todos)
    * @param codCar - Código da carga (opcional)
    */
-  getPedidos(codRep?: number, codCar?: number): Promise<Pedido[]>;
+  getPedidos(codRep?: number, codCar?: number): Promise<PedidoCargo[]>;
 
   /**
    * Busca pedidos vinculados a uma carga específica.
    * @param codCar - Código da carga
    */
-  getPedidosByCarga(codCar: number): Promise<Pedido[]>;
+  getPedidosByCarga(codCar: number): Promise<PedidoCargo[]>;
 
   /**
    * Obtém o peso atual de um pedido no Sapiens.
