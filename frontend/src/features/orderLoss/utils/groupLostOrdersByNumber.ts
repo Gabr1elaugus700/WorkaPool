@@ -1,4 +1,5 @@
 import type { LostOrderFromSapiens } from "../types/orderLoss.types";
+import { normalizeOrderNumberKey } from "./orderNumberKey";
 
 export interface GroupedLostOrderRow {
   numped: string;
@@ -16,7 +17,8 @@ export function groupLostOrdersByNumber(
   const grouped = new Map<string, LostOrderFromSapiens[]>();
 
   orders.forEach((order) => {
-    const key = order.NUMPED;
+    const key = normalizeOrderNumberKey(order.NUMPED);
+    if (!key) return;
     if (!grouped.has(key)) {
       grouped.set(key, []);
     }

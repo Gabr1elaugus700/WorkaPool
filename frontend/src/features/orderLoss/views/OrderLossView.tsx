@@ -10,6 +10,7 @@ import {
   LostOrderFromSapiens,
   LegacyOrder,
 } from "../types/orderLoss.types";
+import { normalizeOrderNumberKey } from "../utils/orderNumberKey";
 
 type FilterType = "all" | "pending" | "justified";
 type DateFilterType = "all" | "today" | "week" | "month";
@@ -18,6 +19,11 @@ function toQueryError(err: unknown): Error | null {
   if (!err) return null;
   if (err instanceof Error) return err;
   return new Error(String(err));
+}
+
+function normalizeCodRep(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return "";
+  return String(value).replace(/\D/g, "");
 }
 
 export const OrderLossView = () => {
@@ -44,20 +50,24 @@ export const OrderLossView = () => {
 
     const sapiensOrdersMap = new Map<string, LostOrderFromSapiens[]>();
     sapiensOrders.forEach((order) => {
-      if (!sapiensOrdersMap.has(order.NUMPED)) {
-        sapiensOrdersMap.set(order.NUMPED, []);
+      const key = normalizeOrderNumberKey(order.NUMPED);
+      if (!key) return;
+      if (!sapiensOrdersMap.has(key)) {
+        sapiensOrdersMap.set(key, []);
       }
-      sapiensOrdersMap.get(order.NUMPED)!.push(order);
+      sapiensOrdersMap.get(key)!.push(order);
     });
 
     const justifiedOrderNumbers = new Set(
       localOrders
-        .filter((o) => o.lossReason !== null)
-        .map((o) => String(o.order.orderNumber)),
+        .filter((o) => !!o.lossReason)
+        .map((o) => normalizeOrderNumberKey(o.order.orderNumber))
+        .filter((key) => key !== ""),
     );
 
     sapiensOrders.forEach((sapiensOrder) => {
-      if (justifiedOrderNumbers.has(sapiensOrder.NUMPED)) return;
+      if (justifiedOrderNumbers.has(normalizeOrderNumberKey(sapiensOrder.NUMPED)))
+        return;
 
       const sellerId = sapiensOrder.CODREP.toString();
 
@@ -104,11 +114,11 @@ export const OrderLossView = () => {
     localOrders.forEach((localOrder) => {
       if (!localOrder.lossReason) return;
 
-      const sellerId = localOrder.order.codRep;
+      const sellerId = normalizeCodRep(localOrder.order.codRep);
 
       if (!sellerMap.has(sellerId)) {
         const sapiensRef = sapiensOrders.find(
-          (s) => s.CODREP.toString() === sellerId,
+          (s) => normalizeCodRep(s.CODREP) === sellerId,
         );
         sellerMap.set(sellerId, {
           id: sellerId,
@@ -120,7 +130,9 @@ export const OrderLossView = () => {
       const seller = sellerMap.get(sellerId)!;
 
       const sapiensProducts =
-        sapiensOrdersMap.get(String(localOrder.order.orderNumber)) || [];
+        sapiensOrdersMap.get(
+          normalizeOrderNumberKey(localOrder.order.orderNumber),
+        ) || [];
 
       const firstSapiensItem = sapiensProducts[0];
 

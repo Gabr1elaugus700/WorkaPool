@@ -1,9 +1,9 @@
 /**
  * Arquivo centralizador do Prisma Client
  * Usa o client correto baseado no NODE_ENV
- * 
+ *
  * - development: usa src/generated/prisma-dev
- * - production: usa src/generated/prisma
+ * - production: usa @prisma/client
  */
 
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -18,8 +18,8 @@ if (isDevelopment) {
   PrismaClient = devPrisma.PrismaClient;
   Prisma = devPrisma.Prisma;
 } else {
-  // PROD: usa schema.prisma
-  const prodPrisma = require('../generated/prisma');
+  // PROD: usa client padrão gerado em node_modules/@prisma/client
+  const prodPrisma = require('@prisma/client');
   PrismaClient = prodPrisma.PrismaClient;
   Prisma = prodPrisma.Prisma;
 }

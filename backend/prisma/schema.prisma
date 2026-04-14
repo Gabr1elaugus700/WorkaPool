@@ -38,15 +38,29 @@ model Trucks {
 }
 
 model Cargas {
-  id             String           @id @default(uuid())
-  codCar         Int              @unique
-  destino        String
-  pesoMax        Int
-  custoMin       Int
-  situacao       CargaSituacao    @default(ABERTA)
-  previsaoSaida  DateTime         @default(now())
-  createdAt      DateTime         @default(now())
-  CargasFechadas CargasFechadas[]
+  id                   String                 @id @default(uuid())
+  codCar               Int                    @unique
+  destino              String
+  pesoMax              Int
+  custoMin             Int
+  situacao             CargaSituacao          @default(ABERTA)
+  previsaoSaida        DateTime               @default(now())
+  createdAt            DateTime               @default(now())
+  closedAt             DateTime?
+  CargasFechadas       CargasFechadas[]
+  historicoPesoPedidos HistoricoPesoPedidos[]
+}
+
+model HistoricoPesoPedidos {
+  id      String @id @default(uuid())
+  cargaId String
+  carga   Cargas @relation(fields: [cargaId], references: [id])
+
+  numPed    Int
+  peso      Int
+  createdAt DateTime @default(now())
+
+  @@map("historico_peso_pedidos")
 }
 
 model Metas {

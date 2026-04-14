@@ -24,7 +24,12 @@ const buildCarga = (codCar, situacao = Carga_1.SituacaoCarga.ABERTA) => new Carg
     (0, node_test_1.it)("deve lançar erro quando a carga não for encontrada", async () => {
         // Arrange
         const cargaId = "carga-inexistente";
-        const novaSituacao = Carga_1.SituacaoCarga.FECHADA;
+        const payload = {
+            destino: "Destino Teste",
+            pesoMax: 5000,
+            previsaoSaida: "2026-04-14",
+            situacao: Carga_1.SituacaoCarga.FECHADA,
+        };
         const getCargaById = node_test_1.mock.fn(async () => null);
         const updateCarga = node_test_1.mock.fn();
         const mockRepository = {
@@ -33,7 +38,7 @@ const buildCarga = (codCar, situacao = Carga_1.SituacaoCarga.ABERTA) => new Carg
         };
         const useCase = new UpdateCarga_use_case_1.UpdateCargaUseCase(mockRepository);
         // Act + Assert
-        await strict_1.default.rejects(async () => useCase.execute(cargaId, novaSituacao), (error) => {
+        await strict_1.default.rejects(async () => useCase.execute(cargaId, payload), (error) => {
             strict_1.default.strictEqual(error.message, `Carga ${cargaId} não encontrada.`);
             return true;
         });
@@ -42,89 +47,61 @@ const buildCarga = (codCar, situacao = Carga_1.SituacaoCarga.ABERTA) => new Carg
         strict_1.default.strictEqual(getCargaById.mock.calls[0].arguments[0], cargaId);
         strict_1.default.strictEqual(updateCarga.mock.calls.length, 0);
     });
-    (0, node_test_1.it)("deve atualizar a situação da carga com sucesso", async () => {
+    (0, node_test_1.it)("deve atualizar todos os campos da carga com sucesso", async () => {
         // Arrange
         const cargaId = "carga-123";
         const carga = buildCarga(123, Carga_1.SituacaoCarga.ABERTA);
-        const novaSituacao = Carga_1.SituacaoCarga.FECHADA;
+        const payload = {
+            destino: "Teste - 5",
+            pesoMax: 5000,
+            previsaoSaida: "2026-04-14",
+            situacao: Carga_1.SituacaoCarga.FECHADA,
+        };
         const getCargaById = node_test_1.mock.fn(async () => carga);
-        const updateCarga = node_test_1.mock.fn(async (id, cargaAtualizada) => {
-            return { ...cargaAtualizada, situacao: novaSituacao };
-        });
+        const updateCarga = node_test_1.mock.fn(async (id, cargaAtualizada) => cargaAtualizada);
         const mockRepository = {
             getCargaById,
             updateCarga,
         };
         const useCase = new UpdateCarga_use_case_1.UpdateCargaUseCase(mockRepository);
         // Act
-        const resultado = await useCase.execute(cargaId, novaSituacao);
+        const resultado = await useCase.execute(cargaId, payload);
         // Assert
         strict_1.default.strictEqual(getCargaById.mock.calls.length, 1);
         // @ts-expect-error - mock.calls typing issue
         strict_1.default.strictEqual(getCargaById.mock.calls[0].arguments[0], cargaId);
         strict_1.default.strictEqual(updateCarga.mock.calls.length, 1);
         strict_1.default.strictEqual(updateCarga.mock.calls[0].arguments[0], cargaId);
-        strict_1.default.strictEqual(updateCarga.mock.calls[0].arguments[1].situacao, novaSituacao);
-        strict_1.default.strictEqual(resultado.situacao, novaSituacao);
+        strict_1.default.strictEqual(updateCarga.mock.calls[0].arguments[1].destino, payload.destino);
+        strict_1.default.strictEqual(updateCarga.mock.calls[0].arguments[1].pesoMaximo, payload.pesoMax);
+        strict_1.default.strictEqual(updateCarga.mock.calls[0].arguments[1].previsaoSaida.toISOString(), new Date(payload.previsaoSaida).toISOString());
+        strict_1.default.strictEqual(updateCarga.mock.calls[0].arguments[1].situacao, payload.situacao);
+        strict_1.default.strictEqual(resultado.destino, payload.destino);
+        strict_1.default.strictEqual(resultado.pesoMaximo, payload.pesoMax);
+        strict_1.default.strictEqual(resultado.situacao, payload.situacao);
     });
-    (0, node_test_1.it)("deve atualizar para situação CANCELADA", async () => {
+    (0, node_test_1.it)("deve preservar situação atual quando payload vier sem situação", async () => {
         // Arrange
         const cargaId = "carga-234";
         const carga = buildCarga(234, Carga_1.SituacaoCarga.ABERTA);
-        const novaSituacao = Carga_1.SituacaoCarga.CANCELADA;
+        const payloadSemSituacao = {
+            destino: "Joinville",
+            pesoMax: 9000,
+            previsaoSaida: "2026-04-20",
+        };
         const getCargaById = node_test_1.mock.fn(async () => carga);
-        const updateCarga = node_test_1.mock.fn(async (id, cargaAtualizada) => {
-            return { ...cargaAtualizada, situacao: novaSituacao };
-        });
+        const updateCarga = node_test_1.mock.fn(async (id, cargaAtualizada) => cargaAtualizada);
         const mockRepository = {
             getCargaById,
             updateCarga,
         };
         const useCase = new UpdateCarga_use_case_1.UpdateCargaUseCase(mockRepository);
         // Act
-        const resultado = await useCase.execute(cargaId, novaSituacao);
+        const resultado = await useCase.execute(cargaId, payloadSemSituacao);
         // Assert
-        strict_1.default.strictEqual(resultado.situacao, Carga_1.SituacaoCarga.CANCELADA);
-        strict_1.default.strictEqual(updateCarga.mock.calls[0].arguments[1].situacao, Carga_1.SituacaoCarga.CANCELADA);
-    });
-    (0, node_test_1.it)("deve atualizar para situação ENTREGUE", async () => {
-        // Arrange
-        const cargaId = "carga-345";
-        const carga = buildCarga(345, Carga_1.SituacaoCarga.FECHADA);
-        const novaSituacao = Carga_1.SituacaoCarga.ENTREGUE;
-        const getCargaById = node_test_1.mock.fn(async () => carga);
-        const updateCarga = node_test_1.mock.fn(async (id, cargaAtualizada) => {
-            return { ...cargaAtualizada, situacao: novaSituacao };
-        });
-        const mockRepository = {
-            getCargaById,
-            updateCarga,
-        };
-        const useCase = new UpdateCarga_use_case_1.UpdateCargaUseCase(mockRepository);
-        // Act
-        const resultado = await useCase.execute(cargaId, novaSituacao);
-        // Assert
-        strict_1.default.strictEqual(resultado.situacao, Carga_1.SituacaoCarga.ENTREGUE);
-        strict_1.default.strictEqual(updateCarga.mock.calls[0].arguments[1].situacao, Carga_1.SituacaoCarga.ENTREGUE);
-    });
-    (0, node_test_1.it)("deve atualizar para situação SOLICITADA", async () => {
-        // Arrange
-        const cargaId = "carga-456";
-        const carga = buildCarga(456, Carga_1.SituacaoCarga.ABERTA);
-        const novaSituacao = Carga_1.SituacaoCarga.SOLICITADA;
-        const getCargaById = node_test_1.mock.fn(async () => carga);
-        const updateCarga = node_test_1.mock.fn(async (id, cargaAtualizada) => {
-            return { ...cargaAtualizada, situacao: novaSituacao };
-        });
-        const mockRepository = {
-            getCargaById,
-            updateCarga,
-        };
-        const useCase = new UpdateCarga_use_case_1.UpdateCargaUseCase(mockRepository);
-        // Act
-        const resultado = await useCase.execute(cargaId, novaSituacao);
-        // Assert
-        strict_1.default.strictEqual(resultado.situacao, Carga_1.SituacaoCarga.SOLICITADA);
-        strict_1.default.strictEqual(updateCarga.mock.calls[0].arguments[1].situacao, Carga_1.SituacaoCarga.SOLICITADA);
+        strict_1.default.strictEqual(resultado.situacao, Carga_1.SituacaoCarga.ABERTA);
+        strict_1.default.strictEqual(updateCarga.mock.calls[0].arguments[1].situacao, Carga_1.SituacaoCarga.ABERTA);
+        strict_1.default.strictEqual(resultado.destino, payloadSemSituacao.destino);
+        strict_1.default.strictEqual(resultado.pesoMaximo, payloadSemSituacao.pesoMax);
     });
 });

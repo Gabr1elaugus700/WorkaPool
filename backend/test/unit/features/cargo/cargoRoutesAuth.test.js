@@ -27,7 +27,8 @@ function createToken(role) {
         node_assert_1.default.strictEqual(response.status, 401);
     });
     await t.test("PATCH /:codCar/situacao com role sem permissão deve retornar 403", async () => {
-        const token = createToken("VENDAS");
+        // USER está em cargoReadRoles mas não em cargoWriteRoles (VENDAS pode escrita)
+        const token = createToken("USER");
         const response = await (0, supertest_1.default)(app)
             .patch("/api/cargo/1/situacao")
             .set("Authorization", `Bearer ${token}`)

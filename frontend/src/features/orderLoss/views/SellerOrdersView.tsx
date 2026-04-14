@@ -11,11 +11,17 @@ import { OrderService } from "../services/ordersServices";
 import { FileText, XCircle, MessageSquare } from "lucide-react";
 import { StatCard } from "../components/StatCard";
 import { groupLostOrdersByNumber } from "../utils/groupLostOrdersByNumber";
+import { normalizeOrderNumberKey } from "../utils/orderNumberKey";
 
 function toQueryError(err: unknown): Error | null {
   if (!err) return null;
   if (err instanceof Error) return err;
   return new Error(String(err));
+}
+
+function normalizeCodRep(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return "";
+  return String(value).replace(/\D/g, "");
 }
 
 export const SellerOrdersView = () => {
@@ -40,20 +46,25 @@ export const SellerOrdersView = () => {
   // Filtrar pedidos do SAPIENS removendo os já justificados
   const unjustifiedSapiensOrders = useMemo(() => {
     if (!sapiensOrders || !localOrders) return sapiensOrders || [];
-    
+
+    const currentUserCodRep = normalizeCodRep(user?.codRep);
+
     // Pegar números de pedidos que já foram justificados
     const justifiedOrderNumbers = new Set(
       localOrders
         .filter(
           (order) =>
-            order.lossReason !== null &&
-            order.order.codRep === user?.codRep?.toString(),
+            !!order.lossReason &&
+            normalizeCodRep(order.order.codRep) === currentUserCodRep,
         )
-        .map((order) => String(order.order.orderNumber)),
+        .map((order) => normalizeOrderNumberKey(order.order.orderNumber))
+        .filter((key) => key !== ""),
     );
-    
+
     // Filtrar pedidos do SAPIENS que NÃO estão justificados
-    return sapiensOrders.filter(order => !justifiedOrderNumbers.has(order.NUMPED));
+    return sapiensOrders.filter(
+      (order) => !justifiedOrderNumbers.has(normalizeOrderNumberKey(order.NUMPED)),
+    );
   }, [sapiensOrders, localOrders, user?.codRep]);
 
   // Agrupar pedidos por número (apenas os não justificados)
@@ -123,7 +134,7 @@ export const SellerOrdersView = () => {
       // Criar pedido localmente e adicionar motivo de perda
       const result = await OrderService.createOrderWithLossReason(
         orderNumber,
-        user.codRep.toLocaleString(),
+        String(user.codRep),
         user.id,
         code,
         description

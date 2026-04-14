@@ -24,6 +24,16 @@ const situacaoVariant: Record<CargaSituacao, "default" | "secondary" | "destruct
   ENTREGUE: "secondary",
 };
 
+function formatPrevisaoSaida(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const weekday = d.toLocaleDateString("pt-BR", { weekday: "long" });
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${weekday}, ${day}-${month}-${year}`;
+}
+
 export default function CargaDropzone({ 
   carga, 
   children, 
@@ -49,20 +59,43 @@ export default function CargaDropzone({
       }`}
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
+      <div
+        className={
+          userRole === "VENDAS"
+            ? "mb-3 grid grid-cols-3 items-center gap-2"
+            : "mb-3 flex items-start justify-between gap-2"
+        }
+      >
+        <div className="flex min-w-0 items-center gap-2 justify-self-start">
           <h3 className="text-lg font-bold text-foreground">
             Carga: {carga.destino}
           </h3>
           <Badge
             variant={situacaoVariant[carga.situacao]}
-            className="text-[10px]"
+            className="shrink-0 text-[10px]"
           >
             {carga.situacao}
           </Badge>
         </div>
 
-        <div className="flex items-center gap-3">
+        {userRole === "VENDAS" && (
+          <div className="min-w-0 justify-self-center text-center">
+            <p className="text-[10px] font-medium text-muted-foreground">
+              Previsão de saída
+            </p>
+            <p className="text-sm font-bold leading-tight text-foreground sm:text-base">
+              {formatPrevisaoSaida(carga.previsaoSaida)}
+            </p>
+          </div>
+        )}
+
+        <div
+          className={
+            userRole === "VENDAS"
+              ? "flex items-center gap-3 justify-self-end"
+              : "flex shrink-0 items-center gap-3"
+          }
+        >
           <div className="text-right text-xs text-muted-foreground">
             <p>Capacidade: {carga.pesoMaximo.toLocaleString("pt-BR")}kg Máx</p>
             <p>Código: {carga.codCar}</p>
@@ -77,6 +110,7 @@ export default function CargaDropzone({
           )}
         </div>
       </div>
+
       
       <CapacityBar usedKg={carga.pesoAtual} capacityKg={carga.pesoMaximo} />
 
