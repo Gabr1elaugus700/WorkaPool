@@ -142,7 +142,30 @@ export interface CargaFechada {
   id: string;
   cargaId: string;
   carga: Carga;
-  pedidos: Array<{ id: number }>; 
+  pedidos: Array<{ id: number }>;
+}
+
+/** Item retornado por GET /api/cargo/cargas-fechadas */
+export interface CargaFechadaData {
+  id: string;
+  cargaId: string;
+  createdAt: string;
+  carga: {
+    id: string;
+    codCar: number;
+    destino: string;
+    pesoMaximo: number;
+    situacao: string;
+    previsaoSaida: string | null;
+    closedAt: string;
+  };
+  pedidos: Array<{
+    numPed: number;
+    codRep: number;
+    nomeVendedor: string;
+    peso: number;
+    razaoCli: string;
+  }>;
 }
 
 // ==========================================

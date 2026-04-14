@@ -52,7 +52,8 @@ export interface OrderProduct {
 
 export interface Order {
   id: string;
-  orderNumber: string;
+  /** API pode retornar número (create) ou string (listagens) */
+  orderNumber: string | number;
   status: OrderStatus;
   idUser: string;
   codRep: string;
@@ -107,6 +108,10 @@ export interface LostOrderFromSapiens {
 
 export interface GetLostOrdersFilters {
   codRep?: string;
+  /** Formato DD-MM-YYYY (alinhado ao backend Zod) */
+  startDate?: string;
+  /** Formato DD-MM-YYYY */
+  endDate?: string;
 }
 
 // ==================== AGGREGATED DATA (Frontend computed) ====================

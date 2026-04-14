@@ -1,9 +1,9 @@
-import CargasFechadasView from "@/features/cargo/pages/CargasFechadasView";
+import CargasFechadas from "@/features/cargo/components/CargasFechadas";
 
 export default function CargasFechadasPage() {
   return (
     <div>
-      <CargasFechadasView />
+      <CargasFechadas />
     </div>
   );
 }

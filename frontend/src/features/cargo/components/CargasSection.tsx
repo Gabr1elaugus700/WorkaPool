@@ -103,16 +103,19 @@ export default function CargasSection({
                   pedido.codRep
                 );
                 const isDraggable = viewMode === "full";
+                const isPedidoDoUsuarioLogado =
+                  codRepUsuarioLogado === pedido.codRep;
+                const canSeeProdutosInCarga =
+                  isPedidoDoUsuarioLogado || userRole === "LOGISTICA";
 
                 return (
                   <PedidoCard
                     key={pedido.id}
                     pedido={pedido}
                     produtos={pedido.produtos || []}
-                    destaque={codRepUsuarioLogado !== pedido.codRep}
                     viewMode={viewMode}
                     isDraggable={isDraggable}
-                    compact={true}
+                    compact={!canSeeProdutosInCarga}
                     codRepUsuarioLogado={codRepUsuarioLogado || 999}
                   />
                 );

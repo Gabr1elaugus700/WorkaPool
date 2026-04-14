@@ -13,7 +13,6 @@ type Props = {
     derivacao: string;
     peso: number;
   }[];
-  destaque?: boolean;
   viewMode?: "full" | "summary";
   isDraggable?: boolean;
   compact?: boolean;
@@ -23,14 +22,12 @@ const statusStyles = {
   mine: "border-green-400 bg-green-50",
   other: "border-slate-900 bg-slate-50",
   blocked: "border-red-400 bg-red-50",
-  highlighted: "border-emerald-300 bg-emerald-100",
 };
 
 const headerStyles = {
   mine: "bg-green-400 text-white",
   other: "bg-slate-900 text-white",
   blocked: "bg-red-500 text-white",
-  highlighted: "bg-emerald-400 text-white",
 };
 
 function canViewPedidoCompleto(
@@ -46,7 +43,6 @@ export default function PedidoCard({
   pedido,
   codRepUsuarioLogado,
   produtos,
-  destaque = false,
   isDraggable = true,
   compact = false,
 }: Props) {
@@ -81,7 +77,6 @@ export default function PedidoCard({
   const getStatus = () => {
     if (isBlocked) return "blocked";
     if (isOther) return "other";
-    if (destaque) return "highlighted";
     return "mine";
   };
 

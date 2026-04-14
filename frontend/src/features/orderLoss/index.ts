@@ -10,6 +10,11 @@ export { OrderDetailsModal } from './components/OrderDetailsModal';
 export { LossReasonForm } from './components/LossReasonForm';
 export { SellerOrdersList } from './components/SellerOrdersList';
 export { OrderFilter } from './components/OrderFilter';
+export { OrderLossAsyncLayout } from './components/OrderLossAsyncLayout';
+
+// Utils
+export { groupLostOrdersByNumber } from './utils/groupLostOrdersByNumber';
+export type { GroupedLostOrderRow } from './utils/groupLostOrdersByNumber';
 
 // Types
 export * from './types/orderLoss.types';

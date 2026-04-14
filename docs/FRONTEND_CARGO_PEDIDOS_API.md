@@ -56,6 +56,13 @@ Base path: `/api/orders`
 - `POST /api/orders/loss-reason`
   - `description` minimum length is 10 chars (after trim)
 
+## Frontend implementation (service layer)
+
+- HTTP for these domains goes through [frontend/src/lib/apiFetch.ts](frontend/src/lib/apiFetch.ts) and [frontend/src/lib/authHeaders.ts](frontend/src/lib/authHeaders.ts) (Bearer from `localStorage` key `token`).
+- Cargo: [frontend/src/features/cargo/services/cargoService.ts](frontend/src/features/cargo/services/cargoService.ts) — views/hooks must not call `fetch` to `/api/cargo` directly.
+- Order loss: [frontend/src/features/orderLoss/services/ordersServices.ts](frontend/src/features/orderLoss/services/ordersServices.ts) — same rule for `/api/orders`.
+- Shared UI for loading/error: [frontend/src/features/orderLoss/components/OrderLossAsyncLayout.tsx](frontend/src/features/orderLoss/components/OrderLossAsyncLayout.tsx).
+
 ## Integration Notes for Frontend
 
 - Keep seller filters (`codRep`) aligned with token context for VENDAS users

@@ -77,10 +77,7 @@ export default function CargaDropzone({
           )}
         </div>
       </div>
-
-      {/* Capacity bar */}
-      {/* <CargaProgress pesoAtual={carga.pesoAtual} pesoMaximo={carga.pesoMaximo} /> */}
-      {/* Capacity bar */}
+      
       <CapacityBar usedKg={carga.pesoAtual} capacityKg={carga.pesoMaximo} />
 
       {/* Orders grid */}

@@ -1,5 +1,10 @@
-import { getBaseUrl } from "@/lib/apiBase";
-import { CargaComPesoDTO, CargaSituacao, Pedido } from "../types/cargo.types";
+import { apiFetchJson } from "@/lib/apiFetch";
+import {
+  CargaComPesoDTO,
+  CargaFechadaData,
+  CargaSituacao,
+  Pedido,
+} from "../types/cargo.types";
 
 export const cargoService = {
   /**
@@ -7,13 +12,11 @@ export const cargoService = {
    * @param codRep - Código do vendedor (opcional). Se não passar, retorna de todos.
    */
   getTodosPedidosFechados: async (codRep?: number): Promise<Pedido[]> => {
-    const url = codRep
-      ? `${getBaseUrl()}/api/cargo/pedidos-fechados?codRep=${codRep}`
-      : `${getBaseUrl()}/api/cargo/pedidos-fechados`;
-
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("Erro ao buscar pedidos");
-    return response.json();
+    const path =
+      codRep != null
+        ? `/api/cargo/pedidos-fechados?codRep=${encodeURIComponent(String(codRep))}`
+        : "/api/cargo/pedidos-fechados";
+    return apiFetchJson<Pedido[]>(path);
   },
 
   /**
@@ -21,18 +24,11 @@ export const cargoService = {
    * @param situacoes - Array de situações para filtrar (ex: ['ABERTA', 'SOLICITADA'])
    */
   getCargas: async (situacoes?: string[]): Promise<CargaComPesoDTO[]> => {
-    let url = `${getBaseUrl()}/api/cargo/listar-cargas`;
-
+    let path = "/api/cargo/listar-cargas";
     if (situacoes && situacoes.length > 0) {
-      const params = situacoes
-        .map((s) => `situacao=${s.toUpperCase()}`)
-        .join("&");
-      url += `?${params}`;
+      path += `?${situacoes.map((s) => `situacao=${encodeURIComponent(s.toUpperCase())}`).join("&")}`;
     }
-
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("Erro ao buscar cargas");
-    return response.json();
+    return apiFetchJson<CargaComPesoDTO[]>(path);
   },
 
   /**
@@ -44,41 +40,23 @@ export const cargoService = {
     situacao: string;
     previsaoSaida: string;
   }): Promise<CargaComPesoDTO> => {
-    console.log("🔵 [Service-FrontEnd] Criando carga com dados:", input);
-    const response = await fetch(`${getBaseUrl()}/api/cargo`, {
+    return apiFetchJson<CargaComPesoDTO>("/api/cargo", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify(input),
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Erro ao criar carga");
-    }
-
-    return response.json();
   },
 
   /**
-   * Atualiza a situação de uma carga
+   * Atualiza a situação de uma carga (backend: PATCH /api/cargo/:codCar/situacao)
    */
   updateSituacaoCarga: async (
-    id: string,
+    codCar: number,
     situacao: CargaSituacao,
   ): Promise<void> => {
-    const response = await fetch(`${getBaseUrl()}/api/cargo/${id}/situacao`, {
+    await apiFetchJson(`/api/cargo/${encodeURIComponent(String(codCar))}/situacao`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify({ situacao }),
     });
-
-    if (!response.ok) {
-      throw new Error("Erro ao alterar status");
-    }
   },
 
   /**
@@ -93,23 +71,10 @@ export const cargoService = {
       situacao: CargaSituacao;
     },
   ): Promise<CargaComPesoDTO> => {
-    const response = await fetch(
-      `${getBaseUrl()}/api/cargo/update-carga/${id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      },
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Erro ao atualizar carga");
-    }
-
-    return response.json();
+    return apiFetchJson<CargaComPesoDTO>(`/api/cargo/update-carga/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
   },
 
   /**
@@ -120,84 +85,32 @@ export const cargoService = {
     codCar: number,
     posCar: number,
   ): Promise<void> => {
-    const response = await fetch(
-      `${getBaseUrl()}/api/cargo/update-pedido/${numPed}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ codCar, posCar }),
-      },
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Erro ao atualizar pedido");
-    }
+    await apiFetchJson(`/api/cargo/update-pedido/${encodeURIComponent(String(numPed))}`, {
+      method: "PUT",
+      body: JSON.stringify({ codCar, posCar }),
+    });
   },
 
   /**
    * Fecha uma carga salvando todos os pedidos vinculados
-   * @param codCar - Código da carga (número)
    */
-  closeCarga: async (codCar: number): Promise<{ message: string; pedidosSalvos: number }> => {
-    const response = await fetch(
-      `${getBaseUrl()}/api/cargo/close-carga`,
+  closeCarga: async (
+    codCar: number,
+  ): Promise<{ message: string; pedidosSalvos: number }> => {
+    return apiFetchJson<{ message: string; pedidosSalvos: number }>(
+      "/api/cargo/close-carga",
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({ codCar }),
       },
     );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Erro ao fechar carga");
-    }
-
-    return response.json();
   },
 
   /**
    * Busca cargas fechadas com seus pedidos salvos
    */
-  getCargasFechadas: async () => {
-    const response = await fetch(`${getBaseUrl()}/api/cargo/cargas-fechadas`);
-    if (!response.ok) throw new Error("Erro ao buscar cargas fechadas");
-    return response.json();
+  getCargasFechadas: async (): Promise<CargaFechadaData[]> => {
+    return apiFetchJson<CargaFechadaData[]>("/api/cargo/cargas-fechadas");
   },
 
-  /**
-   * @deprecated Use closeCarga() ao invés deste método
-   */
-  salvarPedidosCargaFechada: async (
-    codCar: string,
-    pedidos: number[],
-  ): Promise<void> => {
-    const response = await fetch(
-      `${getBaseUrl()}/api/cargo/${codCar}/pedidos-fechados`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ pedidos }),
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error("Erro ao salvar pedidos da carga fechada");
-    }
-  },
-};
-
-/**
- * Busca cargas fechadas com seus pedidos salvos
- * @deprecated Use cargoService.getCargasFechadas() diretamente
- */
-export const fetchCargasFechadas = async () => {
-  return cargoService.getCargasFechadas();
 };

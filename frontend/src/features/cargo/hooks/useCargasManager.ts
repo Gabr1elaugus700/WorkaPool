@@ -211,14 +211,19 @@ export function useCargasManager(
             toast.error(`Erro ao fechar carga: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
           }
         } else {
-          // Para outras situações, apenas atualiza a situação normalmente
+          const cargaAlvo = cargas.find((c) => c.id === id);
+          if (cargaAlvo == null || cargaAlvo.codCar == null) {
+            toast.error("Carga não encontrada ou sem código válido");
+            return;
+          }
+
           setCargas((prev) =>
             prev.map((carga) =>
-              carga.id === id ? { ...carga, situacao: novaSituacao } : carga
-            )
+              carga.id === id ? { ...carga, situacao: novaSituacao } : carga,
+            ),
           );
 
-          await cargoService.updateSituacaoCarga(id, novaSituacao);
+          await cargoService.updateSituacaoCarga(cargaAlvo.codCar, novaSituacao);
           toast.success("Situação da carga atualizada com sucesso");
         }
       } catch (error) {

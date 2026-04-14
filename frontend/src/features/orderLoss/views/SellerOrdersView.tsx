@@ -1,41 +1,22 @@
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import DefaultLayout from "@/layout/DefaultLayout";
-// import { Card, CardContent } from "@/components/ui/card";
 import { SellerOrdersList } from "../components/SellerOrdersList";
 import { OrderFilter } from "../components/OrderFilter";
+import { OrderLossAsyncLayout } from "../components/OrderLossAsyncLayout";
 import { useLostOrdersFromSapiens, useOrders } from "../hooks/useOrders";
 import { useAuth } from "@/auth/AuthContext";
-import { LostOrderFromSapiens, LossReasonCode } from "../types/orderLoss.types";
+import { LossReasonCode } from "../types/orderLoss.types";
 import { OrderService } from "../services/ordersServices";
-import { 
-  AlertCircle, 
-  FileText,
-  XCircle,
-  Loader2,
-  MessageSquare
-} from "lucide-react";
+import { FileText, XCircle, MessageSquare } from "lucide-react";
 import { StatCard } from "../components/StatCard";
+import { groupLostOrdersByNumber } from "../utils/groupLostOrdersByNumber";
 
-// Helper para agrupar pedidos do SAPIENS por número de pedido
-const groupOrdersByNumber = (orders: LostOrderFromSapiens[]) => {
-  const grouped = new Map<string, LostOrderFromSapiens[]>();
-  
-  orders.forEach(order => {
-    const key = order.NUMPED;
-    if (!grouped.has(key)) {
-      grouped.set(key, []);
-    }
-    grouped.get(key)!.push(order);
-  });
-  
-  return Array.from(grouped.entries()).map(([numped, items]) => ({
-    numped,
-    items,
-    firstItem: items[0],
-    totalValue: items.reduce((sum, item) => sum + item.VLRFINAL, 0),
-  }));
-};
+function toQueryError(err: unknown): Error | null {
+  if (!err) return null;
+  if (err instanceof Error) return err;
+  return new Error(String(err));
+}
 
 export const SellerOrdersView = () => {
   const { user } = useAuth();
@@ -63,8 +44,12 @@ export const SellerOrdersView = () => {
     // Pegar números de pedidos que já foram justificados
     const justifiedOrderNumbers = new Set(
       localOrders
-        .filter(order => order.lossReason !== null && order.order.codRep === user?.codRep?.toString())
-        .map(order => order.order.orderNumber)
+        .filter(
+          (order) =>
+            order.lossReason !== null &&
+            order.order.codRep === user?.codRep?.toString(),
+        )
+        .map((order) => String(order.order.orderNumber)),
     );
     
     // Filtrar pedidos do SAPIENS que NÃO estão justificados
@@ -74,7 +59,7 @@ export const SellerOrdersView = () => {
   // Agrupar pedidos por número (apenas os não justificados)
   const groupedOrders = useMemo(() => {
     if (!unjustifiedSapiensOrders) return [];
-    return groupOrdersByNumber(unjustifiedSapiensOrders);
+    return groupLostOrdersByNumber(unjustifiedSapiensOrders);
   }, [unjustifiedSapiensOrders]);
 
   // Calcular estatísticas
@@ -169,37 +154,16 @@ export const SellerOrdersView = () => {
     });
   };
 
-  if (isLoading) {
-    return (
-      <DefaultLayout>
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary mb-4" />
-            <p className="text-gray-600">Carregando pedidos...</p>
-          </div>
-        </div>
-      </DefaultLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <DefaultLayout>
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
-            <p className="text-red-600 font-semibold mb-2">Erro ao carregar pedidos</p>
-            <p className="text-gray-600 text-sm">
-              {error instanceof Error ? error.message : "Erro desconhecido"}
-            </p>
-          </div>
-        </div>
-      </DefaultLayout>
-    );
-  }
+  const queryError = toQueryError(error);
 
   return (
-    <DefaultLayout>
+    <OrderLossAsyncLayout
+      loading={isLoading}
+      error={queryError}
+      loadingLabel="Carregando pedidos..."
+      contentMinHeightClass="min-h-96"
+    >
+      <DefaultLayout>
       <div className="w-full mx-auto px-2 sm:px-4 bg-background/50">
         {/* Header */}
         <div className="mb-6">
@@ -312,6 +276,7 @@ export const SellerOrdersView = () => {
         </div>
       </div>
     </DefaultLayout>
+    </OrderLossAsyncLayout>
   );
 };
 

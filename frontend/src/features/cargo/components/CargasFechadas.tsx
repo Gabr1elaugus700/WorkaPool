@@ -8,6 +8,7 @@ import {
   DialogHeader,
 } from "@/components/ui/dialog";
 import { cargoService } from "../services/cargoService";
+import type { CargaFechadaData } from "../types/cargo.types";
 import { Separator } from "@/components/ui/separator";
 import {
   ChevronLeft,
@@ -21,28 +22,6 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
-interface CargaFechadaData {
-  id: string;
-  cargaId: string;
-  createdAt: string;
-  carga: {
-    id: string;
-    codCar: number;
-    destino: string;
-    pesoMaximo: number;
-    situacao: string;
-    previsaoSaida: string | null;
-    closedAt: string;
-  };
-  pedidos: Array<{
-    numPed: number;
-    codRep: number;
-    nomeVendedor: string;
-    peso: number;
-    razaoCli: string;
-  }>;
-}
 
 export default function CargasFechadas() {
   const [open, setOpen] = useState(false);

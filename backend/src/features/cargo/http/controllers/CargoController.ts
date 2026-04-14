@@ -207,9 +207,9 @@ export class CargoController {
       const updateCargaUseCase = new UpdateCargaUseCase();
       const cargo = await updateCargaUseCase.execute(
         id,
-        parsed.data.situacao! as SituacaoCarga,
+        parsed.data,
       );
-      return res.status(201).json(cargo);
+      return res.status(200).json(cargo);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro Interno ao criar carga";
