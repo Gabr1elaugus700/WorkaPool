@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// Função para obter a URL base (mantendo compatibilidade)
+// Função para obter a URL base dinamicamente
 export const getBaseUrl = (): string => {
    if (window.location.hostname === 'pooltecnica.no-ip.biz') {
     return 'http://pooltecnica.no-ip.biz:3005';
