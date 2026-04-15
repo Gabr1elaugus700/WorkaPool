@@ -6,6 +6,8 @@ declare global {
       user?: {
         id: string;
         role: Role; // ← e usa aqui
+        codRep?: number;
+        name?: string;
       };
     }
   }

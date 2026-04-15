@@ -5,11 +5,9 @@ import { Toaster } from "sonner";
 import { useAuth } from "@/auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOutIcon } from "lucide-react";
+import { ClipboardList, FileText, LogOutIcon,  Home } from "lucide-react";
 
 import ButtonLink from "@/components/navBar/ButtonLink";
-// ...existing code...
-
 
 type Props = {
   children: React.ReactNode;
@@ -25,11 +23,17 @@ export default function DefaultLayout({ children }: Props) {
     navigate("/login");
   };
 
+  const isActive = (path: string) => {
+    if (path === "/") {
+      return location.pathname === "/";
+    }
+    return location.pathname.startsWith(path);
+  };
 
   return (
-    <div className="min-h-screen flex flex-col ">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Navbar */}
-      <nav className="bg-primary text-primary-foreground shadow">
+      <nav className="hidden md:block bg-primary text-primary-foreground shadow">
 
         <div className="container mx-auto px-3 py-3 flex justify-between items-center">
           {/* Logo */}
@@ -39,18 +43,56 @@ export default function DefaultLayout({ children }: Props) {
 
           {/* Links */}
           <div className="flex gap-4">
-            <ButtonLink to="/">Início</ButtonLink>
 
             <ButtonLink
+              to="/order-loss"
+              allowedRoles={["ADMIN", "GERENTE_DPTO"]}
+            >
+              Pedidos Perdidos
+            </ButtonLink>
+            <ButtonLink
+              to="/my-orders"
+              allowedRoles={["VENDAS"]}
+            >
+              Meus Pedidos
+            </ButtonLink>
+            <ButtonLink
               to="/cargas"
-              allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
+              allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX", "GERENTE_DPTO"]}
             >
               Cargas
+            </ButtonLink>
+            
+            {/* <ButtonLink to="/">Início</ButtonLink>
+
+            
+            <ButtonLink
+              to="/users"
+              allowedRoles={["ADMIN"]}
+            >
+              Usuários
+            </ButtonLink> */}
+
+            
+            <ButtonLink
+              to="/os"
+              // allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
+              allowedRoles={["ADMIN"]}
+            >
+              Ordens de Serviço
+            </ButtonLink>
+            <ButtonLink
+              to="/vistoria"
+              // allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
+              allowedRoles={["ADMIN"]}
+            >
+              Vistorias
             </ButtonLink>
 
             <ButtonLink
               to="/fretes"
-              allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
+              // allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}
+              allowedRoles={["ADMIN"]}
             >
               Fretes
             </ButtonLink>
@@ -62,12 +104,7 @@ export default function DefaultLayout({ children }: Props) {
               Metas
             </ButtonLink>
 
-            <ButtonLink
-              to="/vendasPerdidas"
-              allowedRoles={["ADMIN"]}
-            >
-              Vendas Perdidas
-            </ButtonLink>
+            
 
             <ButtonLink
               to="/dashboard"
@@ -76,12 +113,12 @@ export default function DefaultLayout({ children }: Props) {
               Dashboards
             </ButtonLink>
 
-            {/* <ButtonLink
+            <ButtonLink
               to="/dashboardTest"
               allowedRoles={["ADMIN"]}
             >
               DashBoardTeste
-            </ButtonLink> */}
+            </ButtonLink>
             <Button
               variant="ghost"
               onClick={handleLogout}
@@ -93,22 +130,52 @@ export default function DefaultLayout({ children }: Props) {
 
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <>
+      </nav>
 
-          </>
+      
+      {/* Bottom Navigation (somente mobile) */}
+      <nav className="fixed bottom-0 left-0 right-0 border-t border-primary/20 bg-white px-4 pt-2 pb-5 md:hidden">
+        <div className="flex justify-around">
+          <Link
+            to="/"
+            className={`flex flex-col items-center gap-1 ${isActive("/") ? "text-green-600" : "text-slate-500"
+              }`}
+          >
+            <Home className="w-6 h-6" />
+            <span className="text-xs font-medium">Home</span>
+          </Link>
+
+          <Link
+            to="/vistoria"
+            className={`flex flex-col items-center gap-1 ${isActive("/vistoria") ? "text-green-600" : "text-slate-500"
+              }`}
+          >
+            <ClipboardList className="w-6 h-6" />
+            <span className="text-xs font-medium">Vistorias</span>
+          </Link>
+
+          <Link
+            to="/os"
+            className={`flex flex-col items-center gap-1 ${isActive("/os") ? "text-green-600" : "text-slate-500"
+              }`}
+          >
+            <FileText className="w-6 h-6" />
+            <span className="text-xs font-medium">Ordens</span>
+          </Link>
+
+
         </div>
       </nav>
 
       {/* Conteúdo principal */}
-      <main className="flex-1 container mx-auto p-4">{children}</main>
+      <main className="flex-1 container mx-auto p-4 pb-24 md:pb-4 ">{children}</main>
 
       {/* Toaster do Sonner */}
       <Toaster richColors position="top-center" />
 
-      {/* Rodapé */}
-      <footer className="bg-white border-t text-center py-4 text-sm text-gray-500">
-        &copy; 2025 - Feito com 🧠 por Gabriel Garbugio. V 1.0.4
+      {/* Rodapé Desktop*/}
+      <footer className="hidden md:block bg-white border-t text-center py-4 text-sm text-gray-500">
+        &copy; 2025 - Feito com 🧠 por Gabriel Garbugio. V 2.0.5
       </footer>
     </div>
   );

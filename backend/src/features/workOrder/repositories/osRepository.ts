@@ -1,0 +1,33 @@
+import { PrismaClient, Prisma } from "@prisma/client"
+
+const prisma = new PrismaClient();
+
+
+export const osRepository = {
+    create: async (data: Prisma.OrdemServicoCreateInput, include?: Prisma.OrdemServicoInclude) => {
+    return await prisma.ordemServico.create({ data, include });
+},
+    findAll: async () => {
+        return await prisma.ordemServico.findMany();
+    },
+
+    findById: async (id: string) => {
+        return await prisma.ordemServico.findUnique({
+            where: { id },
+            include: { imagens: true, solicitante: true, departamento_os: true }
+        });
+    },
+
+    update: async (id: string, data: Prisma.OrdemServicoUpdateInput) => {
+        return await prisma.ordemServico.update({
+            where: { id },
+            data,
+        });
+    },
+
+    delete: async (id: string) => {
+        return await prisma.ordemServico.delete({
+            where: { id },
+        });
+    },
+};

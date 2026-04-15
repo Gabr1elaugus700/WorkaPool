@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,28 +7,28 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
-  USER
-  VENDAS
-  LOGISTICA
-  ALMOX
-}
-
 model User {
-  id                 String   @id @default(uuid())
-  name               String   @default("")
-  user               String   @unique
-  password           String
-  role               Role     @default(USER)
-  createdAt          DateTime @default(now())
-  codRep             Int      @default(0)
-  mustChangePassword Boolean  @default(true)
-
-  solicitacaoRota SolicitacaoRota[]
+  id                   String                @id @default(uuid())
+  name                 String                @default("")
+  user                 String                @unique
+  password             String
+  role                 Role                  @default(USER)
+  createdAt            DateTime              @default(now())
+  codRep               Int                   @default(0)
+  mustChangePassword   Boolean               @default(true)
+  inspections          Inspection[]
+  ordensAtribuidasPor  OrdemServico[]        @relation("OSAtribuidaPor")
+  ordensAtribuidas     OrdemServico[]        @relation("OSAtribuida")
+  OrdemServico         OrdemServico[]
+  solicitacaoRota      SolicitacaoRota[]
+  departamentos        UsuarioDepartamento[]
+  Vistoria             Vistoria[]
+  workOrdersAssignedBy WorkOrder[]           @relation("WOAssignedBy")
+  WorkOrders           WorkOrder[]
+  workOrders           WorkOrder[]           @relation("WOAssigned")
+  orders               Order[]
 }
 
-// Caminhões Disponíveis
 model Trucks {
   id        String   @id @default(uuid())
   name      String
@@ -43,24 +37,412 @@ model Trucks {
   codRep    Int      @default(0)
 }
 
+model Cargas {
+  id                   String                 @id @default(uuid())
+  codCar               Int                    @unique
+  destino              String
+  pesoMax              Int
+  custoMin             Int
+  situacao             CargaSituacao          @default(ABERTA)
+  previsaoSaida        DateTime               @default(now())
+  createdAt            DateTime               @default(now())
+  closedAt             DateTime?
+  CargasFechadas       CargasFechadas[]
+  historicoPesoPedidos HistoricoPesoPedidos[]
+}
+
+model HistoricoPesoPedidos {
+  id      String @id @default(uuid())
+  cargaId String
+  carga   Cargas @relation(fields: [cargaId], references: [id])
+
+  numPed    Int
+  peso      Int
+  createdAt DateTime @default(now())
+
+  @@map("historico_peso_pedidos")
+}
+
+model Metas {
+  id          String   @id @default(uuid())
+  produto     String   @default("")
+  metaProduto Int      @default(0)
+  createdAt   DateTime @default(now())
+  codRep      Int      @default(0)
+  mesMeta     Int      @default(0)
+  anoMeta     Int      @default(0)
+  precoMedio  Float    @default(0.0)
+  totalVendas Float    @default(0.0)
+  cod_grp     String?  @default("")
+}
+
+model Goals {
+  id           String   @id @default(uuid())
+  product      String   @default("")
+  productGoal  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  codRep       Int      @default(0)
+  monthGoal    Int      @default(0)
+  yearGoal     Int      @default(0)
+  averagePrice Float    @default(0.0)
+  cod_grp      String?  @default("")
+}
+
+model CalendarioMetas {
+  id        String   @id @default(uuid())
+  mes       Meses    @default(JANEIRO)
+  ano       Int      @default(2025)
+  createdAt DateTime @default(now())
+}
+
+model CargasFechadas {
+  id        String   @id @default(uuid())
+  cargaId   String
+  pedidos   Json[]
+  createdAt DateTime @default(now())
+  carga     Cargas   @relation(fields: [cargaId], references: [id])
+}
+
+model Caminhao {
+  id                 Int            @id @default(autoincrement())
+  modelo             String
+  eixos              Int
+  eixos_carregado    Int
+  eixos_vazio        Int
+  pneus              Int
+  capacidade_kg      Int
+  consumo_medio_km_l Float
+  tipo               String?
+  rotas              CaminhaoRota[]
+}
+
+model Rota_base {
+  id          Int            @id @default(autoincrement())
+  origem      String
+  destino     String
+  total_km    Int
+  dias_viagem Int
+  caminhoes   CaminhaoRota[]
+}
+
+model CaminhaoRota {
+  id                         Int       @id @default(autoincrement())
+  rota_base_id               Int
+  caminhao_id                Int
+  pedagio_ida                Float
+  pedagio_volta              Float
+  custo_combustivel          Float
+  custo_total                Float
+  salario_motorista_rota     Float
+  refeicao_motorista_rota    Float
+  ajuda_custo_motorista_rota Float
+  chapa_descarga_rota        Float
+  desgaste_pneus_rota        Float
+  margem_lucro_frete         Float     @default(0.35)
+  custo_total_rota           Float     @default(0.0)
+  custo_por_kg               Float     @default(0.0)
+  valor_frete_kg             Float     @default(0.0)
+  custo_operacional          Float     @default(0.0)
+  createdAt                  DateTime  @default(now())
+  caminhao                   Caminhao  @relation(fields: [caminhao_id], references: [id])
+  rota_base                  Rota_base @relation(fields: [rota_base_id], references: [id])
+
+  @@unique([rota_base_id, caminhao_id])
+}
+
+model ParametrosGlobaisViagem {
+  id                           Int      @id @default(autoincrement())
+  valor_diesel_s10_sem_icms    Float
+  valor_diesel_s10_com_icms    Float
+  valor_salario_motorista_dia  Float
+  valor_refeicao_motorista_dia Float
+  valor_ajuda_custo_motorista  Float
+  valor_chapa_descarga         Float
+  valor_desgaste_pneus         Float
+  updatedAt                    DateTime @updatedAt
+  margem_lucro_frete           Float    @default(0.35)
+}
+
+model SolicitacaoRota {
+  id               Int      @id @default(autoincrement())
+  data_solicitacao DateTime @default(now())
+  peso             Int
+  origem           String
+  destino          String
+  status           Status   @default(PENDENTE)
+  solicitante_user String
+  solicitante      User     @relation(fields: [solicitante_user], references: [user])
+}
+
+model OrdemServico {
+  id                   String                @id @default(uuid())
+  descricao            String                @default("")
+  problema             String                @default("")
+  status               StatusOrdemServico    @default(ABERTA)
+  prioridade           Prioridade            @default(BAIXA)
+  data_criacao         DateTime              @default(now())
+  data_conclusao       DateTime?
+  email_solicitante    String?
+  localizacao          String?
+  id_solicitante       String?
+  id_responsavel       String?
+  id_atribuida_por     String?
+  data_atribuicao      DateTime?
+  id_departamento      String?
+  id_vistoria          String?
+  checklistInspections ChecklistInspection[]
+  ChecklistVistoria    ChecklistVistoria[]
+  atribuida_por        User?                 @relation("OSAtribuidaPor", fields: [id_atribuida_por], references: [id])
+  departamento_os      Departamento?         @relation(fields: [id_departamento], references: [id])
+  responsavel          User?                 @relation("OSAtribuida", fields: [id_responsavel], references: [id])
+  solicitante          User?                 @relation(fields: [id_solicitante], references: [id])
+  imagens              OsImagens[]
+}
+
+model WorkOrder {
+  id                   String                @id @default(uuid())
+  description          String                @default("")
+  problem              String                @default("")
+  status               StatusWorkOrder       @default(OPEN)
+  priority             Prioridade            @default(BAIXA)
+  creation_date        DateTime              @default(now())
+  completion_date      DateTime?
+  requester_email      String?
+  location             String?
+  requester_id         String?
+  responsible_id       String?
+  assigned_by_id       String?
+  assignment_date      DateTime?
+  department_id        String?
+  inspection_id        String?
+  checklistInspections ChecklistInspection[]
+  assigned_by          User?                 @relation("WOAssignedBy", fields: [assigned_by_id], references: [id])
+  department           Departamento?         @relation(fields: [department_id], references: [id])
+  requester            User?                 @relation(fields: [requester_id], references: [id])
+  responsible          User?                 @relation("WOAssigned", fields: [responsible_id], references: [id])
+  images               WorkOrderImages[]
+}
+
+model WorkOrderImages {
+  id            String    @id @default(uuid())
+  work_order_id String
+  image_url     String
+  createdAt     DateTime  @default(now())
+  workOrder     WorkOrder @relation(fields: [work_order_id], references: [id])
+}
+
+model OsImagens {
+  id           String       @id @default(uuid())
+  ordem_id     String
+  imagem_url   String
+  createdAt    DateTime     @default(now())
+  ordemServico OrdemServico @relation(fields: [ordem_id], references: [id])
+}
+
+model Inspection {
+  id                  String                @id @default(uuid())
+  inspection_date     DateTime              @default(now())
+  department_id       String
+  responsible_id      String
+  checklistInspection ChecklistInspection[]
+  inspection_dept     Departamento          @relation(fields: [department_id], references: [id])
+  responsible         User                  @relation(fields: [responsible_id], references: [id])
+}
+
+model Vistoria {
+  id                String              @id @default(uuid())
+  data_vistoria     DateTime            @default(now())
+  departamento_id   String
+  responsavel_id    String
+  checklistVistoria ChecklistVistoria[]
+  vistoria_dpto     Departamento        @relation(fields: [departamento_id], references: [id])
+  responsavel       User                @relation(fields: [responsavel_id], references: [id])
+}
+
+model ItemChecklist {
+  id                   String                @id @default(uuid())
+  descricao            String
+  checklistInspections ChecklistInspection[]
+  models               ChecklistModelItem[]
+}
+
+model ChecklistItem {
+  id                   String                @id @default(uuid())
+  descricao            String
+  checklistInspections ChecklistInspection[]
+  checklistModelItems  ChecklistModelItem[]
+  modelos              ChecklistModeloItem[]
+  ChecklistVistoria    ChecklistVistoria[]
+}
+
+model ChecklistModel {
+  id                   String                @id @default(uuid())
+  nome                 String
+  createdAt            DateTime              @default(now())
+  departurement_id     String?
+  checklistInspections ChecklistInspection[]
+  Departamento         Departamento?         @relation(fields: [departurement_id], references: [id])
+  items                ChecklistModelItem[]
+}
+
+model ChecklistModelo {
+  id                   String                @id @default(uuid())
+  nome                 String
+  createdAt            DateTime              @default(now())
+  departamento_id      String?
+  checklistInspections ChecklistInspection[]
+  departamento         Departamento?         @relation(fields: [departamento_id], references: [id])
+  itens                ChecklistModeloItem[]
+  vistorias            ChecklistVistoria[]
+}
+
+model ChecklistModelItem {
+  id               String         @id @default(uuid())
+  checklistModelId String
+  checklistItemId  String
+  itemChecklistId  String?
+  checklistItem    ChecklistItem  @relation(fields: [checklistItemId], references: [id])
+  checklistModel   ChecklistModel @relation(fields: [checklistModelId], references: [id])
+  itemChecklist    ItemChecklist? @relation(fields: [itemChecklistId], references: [id])
+
+  @@unique([checklistModelId, checklistItemId])
+}
+
+model ChecklistModeloItem {
+  id                String          @id @default(uuid())
+  checklistModeloId String
+  checklistItemId   String
+  checklistItem     ChecklistItem   @relation(fields: [checklistItemId], references: [id])
+  checklistModelo   ChecklistModelo @relation(fields: [checklistModeloId], references: [id])
+
+  @@unique([checklistModeloId, checklistItemId])
+}
+
+model ChecklistInspection {
+  id                String          @id @default(uuid())
+  inspection_id     String
+  checklistModeloId String
+  checklistItemId   String
+  checked           Boolean         @default(false)
+  observacao        String?
+  ordemServicoId    String?
+  workOrderId       String?
+  itemChecklistId   String?
+  checklistModelId  String?
+  checklistItem     ChecklistItem   @relation(fields: [checklistItemId], references: [id])
+  checklistModel    ChecklistModel? @relation(fields: [checklistModelId], references: [id])
+  checklistModelo   ChecklistModelo @relation(fields: [checklistModeloId], references: [id])
+  inspection        Inspection      @relation(fields: [inspection_id], references: [id])
+  itemChecklist     ItemChecklist?  @relation(fields: [itemChecklistId], references: [id])
+  OrdemServico      OrdemServico?   @relation(fields: [ordemServicoId], references: [id])
+  workOrder         WorkOrder?      @relation(fields: [workOrderId], references: [id])
+}
+
+model ChecklistVistoria {
+  id                String          @id @default(uuid())
+  vistoria_id       String
+  checklistModeloId String
+  checklistItemId   String
+  checked           Boolean         @default(false)
+  observacao        String?
+  ordemServicoId    String?
+  checklistItem     ChecklistItem   @relation(fields: [checklistItemId], references: [id])
+  checklistModelo   ChecklistModelo @relation(fields: [checklistModeloId], references: [id])
+  OrdemServico      OrdemServico?   @relation(fields: [ordemServicoId], references: [id])
+  vistoria          Vistoria        @relation(fields: [vistoria_id], references: [id])
+}
+
+model Departamento {
+  id             String                @id @default(uuid())
+  name           String                @unique
+  created_at     DateTime              @default(now())
+  recebe_os      Boolean               @default(false)
+  ChecklistModel ChecklistModel[]
+  Checklists     ChecklistModelo[]
+  inspections    Inspection[]
+  OrdensServico  OrdemServico[]
+  usuarios       UsuarioDepartamento[]
+  Vistorias      Vistoria[]
+  workOrders     WorkOrder[]
+}
+
+model UsuarioDepartamento {
+  id              String             @id @default(uuid())
+  user_id         String
+  departamento_id String
+  funcao          FuncaoDepartamento @default(FUNCIONARIO)
+  ativo           Boolean            @default(true)
+  created_at      DateTime           @default(now())
+  departamento    Departamento       @relation(fields: [departamento_id], references: [id])
+  usuario         User               @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, departamento_id])
+}
+
+model Order {
+  id          String         @id @default(uuid())
+  orderNumber Int            @unique
+  status      OrderStatus    @default(NEGOTIATING)
+  idUser      String
+  codRep      String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  lossReason  LossReason?
+  products    OrderProduct[]
+  userAlt     User           @relation(fields: [idUser], references: [id])
+
+  @@index([idUser])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderProduct {
+  id          String   @id @default(uuid())
+  orderId     String
+  codprod     String
+  description String?
+  createdAt   DateTime @default(now())
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_products")
+}
+
+model LossReason {
+  id          String         @id @default(uuid())
+  orderId     String         @unique
+  code        LossReasonCode
+  description String
+  submittedAt DateTime       @default(now())
+  submittedBy String
+  order       Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([code])
+  @@map("loss_reasons")
+}
+
+enum Role {
+  ADMIN
+  USER
+  VENDAS
+  LOGISTICA
+  ALMOX
+  GERENTE_DPTO
+}
+
+enum FuncaoDepartamento {
+  GERENTE
+  FUNCIONARIO
+}
+
 enum CargaSituacao {
   ABERTA
   SOLICITADA
   FECHADA
   CANCELADA
   ENTREGUE
-}
-
-model Cargas {
-  id             String           @id @default(uuid())
-  codCar         Int              @unique
-  destino        String
-  pesoMax        Int
-  custoMin       Int
-  situacao       CargaSituacao    @default(ABERTA)
-  previsaoSaida  DateTime         @default(now())
-  createdAt      DateTime         @default(now())
-  CargasFechadas CargasFechadas[]
 }
 
 enum Meses {
@@ -78,96 +460,6 @@ enum Meses {
   DEZEMBRO
 }
 
-model Metas {
-  id          String   @id @default(uuid())
-  produto     String   @default("")
-  metaProduto Int      @default(0)
-  createdAt   DateTime @default(now())
-  codRep      Int      @default(0)
-  mesMeta     Int      @default(0)
-  anoMeta     Int      @default(0)
-  precoMedio  Float    @default(0.0)
-  totalVendas Float    @default(0.0)
-  cod_grp     String?  @default("")
-}
-
-model CalendarioMetas {
-  id        String   @id @default(uuid())
-  mes       Meses    @default(JANEIRO)
-  ano       Int      @default(2025)
-  createdAt DateTime @default(now())
-}
-
-model CargasFechadas {
-  id      String @id @default(uuid())
-  cargaId String
-  carga   Cargas @relation(fields: [cargaId], references: [id])
-  pedidos Json[]
-  createdAt DateTime @default(now())
-}
-
-model Caminhao {
-  id                 Int    @id @default(autoincrement())
-  modelo             String // exemplo: "bi-truck - scania"
-  eixos              Int // qtd_eixos geral
-  eixos_carregado    Int
-  eixos_vazio        Int
-  pneus              Int
-  capacidade_kg      Int // ex: 18000
-  consumo_medio_km_l Float // ex: 3.5
-
-  tipo String?
-
-  rotas CaminhaoRota[]
-}
-
-model Rota_base {
-  id          Int    @id @default(autoincrement())
-  origem      String
-  destino     String
-  total_km    Int
-  dias_viagem Int
-
-  caminhoes CaminhaoRota[]
-}
-
-model CaminhaoRota {
-  id                         Int       @id @default(autoincrement())
-  rota_base                  Rota_base @relation(fields: [rota_base_id], references: [id])
-  rota_base_id               Int
-  caminhao                   Caminhao  @relation(fields: [caminhao_id], references: [id])
-  caminhao_id                Int
-  pedagio_ida                Float
-  pedagio_volta              Float
-  custo_combustivel          Float
-  custo_total                Float
-  salario_motorista_rota     Float
-  refeicao_motorista_rota    Float
-  ajuda_custo_motorista_rota Float
-  chapa_descarga_rota        Float
-  desgaste_pneus_rota        Float
-  margem_lucro_frete         Float     @default(0.35) // 35%
-  custo_total_rota           Float     @default(0.0)
-  custo_por_kg               Float     @default(0.0)
-  valor_frete_kg             Float     @default(0.0)
-  custo_operacional          Float     @default(0.0)
-  createdAt                  DateTime  @default(now())
-  @@unique([rota_base_id, caminhao_id])
-}
-
-model ParametrosGlobaisViagem {
-  id                           Int      @id @default(autoincrement())
-  valor_diesel_s10_sem_icms    Float
-  valor_diesel_s10_com_icms    Float
-  valor_salario_motorista_dia  Float
-  valor_refeicao_motorista_dia Float
-  valor_ajuda_custo_motorista  Float
-  valor_chapa_descarga         Float
-  valor_desgaste_pneus         Float
-  updatedAt                    DateTime @updatedAt
-  margem_lucro_frete           Float    @default(0.35) // 35% de margem de lucro
-}
-
 enum Status {
   PENDENTE
   EM_ANDAMENTO
@@ -175,13 +467,37 @@ enum Status {
   CANCELADO
 }
 
-model SolicitacaoRota {
-  id               Int      @id @default(autoincrement())
-  data_solicitacao DateTime @default(now())
-  peso             Int
-  origem           String
-  destino          String
-  status           Status   @default(PENDENTE)
-  solicitante      User     @relation(fields: [solicitante_user], references: [user])
-  solicitante_user String
+enum StatusOrdemServico {
+  ABERTA
+  EM_ANDAMENTO
+  FINALIZADA
+  CANCELADA
+}
+
+enum Prioridade {
+  BAIXA
+  MEDIA
+  ALTA
+}
+
+enum StatusWorkOrder {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+  CANCELED
+}
+
+enum OrderStatus {
+  NEGOTIATING
+  LOST
+  WON
+  CANCELLED
+}
+
+enum LossReasonCode {
+  FREIGHT
+  PRICE
+  MARGIN
+  STOCK
+  OTHER
 }

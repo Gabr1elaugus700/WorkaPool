@@ -13,6 +13,7 @@ export const MetasRepository = {
     mesMeta: number;
     anoMeta: number;
     produto: string;
+    cod_grp: string;
     metaProduto: number;
     precoMedio?: number;
     totalVendas?: number;

@@ -1,16 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap'); */
 
 @layer base {
+  body {
+    font-family: 'Inter', sans-serif;
+    @apply bg-background text-foreground;
+  }
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: 0 0% 97%;
+    --foreground: 220 20% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 220 20% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 142.1 76.2% 36.3%;
+    --primary: 143.3 80.6% 45.1%;
     --primary-foreground: 355.7 100% 97.3%;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
@@ -29,6 +34,32 @@
     --chart-3: 140 65% 40%;  /* verde médio escuro */
     --chart-4: 140 55% 35%;  /* verde mais escuro */
     --chart-5: 140 55% 25%;  /* verde escuro profundo */
+    --background-light: 140 0% 100%;
+    --background-dark: 240 10% 3.9%;
+    --subtle-gray: 150 14% 96%;
+
+    /* Cores dos Cards */
+    --order-mine: 160 55% 35%;
+    --order-mine-bg: 160 55% 92%;
+    --order-mine-border: 160 55% 60%;
+
+    --order-other: 150 40% 50%;
+    --order-other-bg: 150 40% 94%;
+    --order-other-border: 150 40% 75%;
+
+    --order-blocked: 0 72% 51%;
+    --order-blocked-bg: 0 72% 95%;
+    --order-blocked-border: 0 72% 70%;
+
+    --order-nostock: 30 90% 50%;
+    --order-nostock-bg: 30 90% 94%;
+    --order-nostock-border: 30 90% 70%;
+
+    --progress-bar: 160 55% 45%;
+    --progress-bar-bg: 160 20% 90%;
+    --progress-bar-danger: 0 72% 55%;
+    --progress-bar-warning: 40 90% 50%;
+
   }
 
   .dark {

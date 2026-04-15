@@ -7,13 +7,16 @@ import Home from "../pages/Home";
 import VendedorMetas from "../pages/MetasPage";
 import Clientes from "../pages/Clientes";
 import Pedidos from "../pages/Pedidos";
-import Dashboard from '../pages/dashboardVendas';
-import DashboardTest from '../pages/dashboard'
-import MontagemDeCargas from '../pages/controleDeCargas';
-import ClientesInativos from '../pages/ClientesInativos';
+import Dashboard from "../pages/dashboardVendas";
+import DashboardTest from "../pages/dashboard";
+import CargasPage from "../pages/CargasPage";
+import ClientesInativos from "../pages/ClientesInativos";
+import { OrderLossView, SellerOrdersView } from "@/features/orderLoss";
 import Login from "@/auth/Login";
 import FretesPage from "@/pages/FretesPage";
-
+import OsListView from "@/features/workOrder/views/osView";
+import VistoriaView from "@/features/workOrder/views/vistoriaView";
+import UsersView from "@/features/users/views/usersView";
 
 const AppRoutes = () => {
   return (
@@ -30,6 +33,46 @@ const AppRoutes = () => {
             }
           />
 
+          <Route
+            path="/order-loss"
+            element={
+              <PrivateRoute>
+                <OrderLossView />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/Os"
+            element={
+              <PrivateRoute>
+                <OsListView />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/my-orders"
+            element={
+              <PrivateRoute>
+                <SellerOrdersView />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/vistoria"
+            element={
+              <PrivateRoute>
+                <VistoriaView />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <PrivateRoute>
+                <UsersView />
+              </PrivateRoute>
+            }
+          />
           <Route
             path="/vendasPerdidas"
             element={
@@ -74,7 +117,7 @@ const AppRoutes = () => {
             path="/cargas"
             element={
               <PrivateRoute>
-                <MontagemDeCargas />
+                <CargasPage />
               </PrivateRoute>
             }
           />

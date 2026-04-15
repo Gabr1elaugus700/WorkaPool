@@ -7,6 +7,7 @@ type MetaPayload = {
   anoMeta: number;
   metas: {
     produto: string;
+    cod_grp: string;
     metaProduto: number;
     precoMedio?: number; // Optional, can be added later if needed
     totalVendas?: number; // Optional, can be added later if needed
@@ -24,6 +25,7 @@ export const MetasService = {
       mesMeta,
       anoMeta,
       produto: m.produto,
+      cod_grp: m.cod_grp,
       metaProduto: m.metaProduto,
       precoMedio: m.precoMedio,
       totalVendas: m.totalVendas,

@@ -13,6 +13,11 @@ const config: sql.config = {
   }
 }
 
-
 export const sqlPool = new sql.ConnectionPool(config)
-export const sqlPoolConnect = sqlPool.connect()
+
+// Só inicia conexão se não estiver em ambiente de teste
+// Isso evita promises pendentes nos testes unitários
+const isTestEnvironment = process.env.NODE_ENV === 'test' || !process.env.DB_HOST;
+export const sqlPoolConnect = isTestEnvironment 
+  ? Promise.resolve(sqlPool)  // Mock resolve para testes
+  : sqlPool.connect()

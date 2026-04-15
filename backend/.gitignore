@@ -4,11 +4,15 @@ node_modules/
 # Build output
 dist/
 build/
+uploads/
 
 # Environment variables
 .env
 .env.production
 .env.development
+
+# Files
+*.txt
 
 # Logs
 logs/
@@ -31,4 +35,6 @@ yarn-error.log*
 .cache/
 .vite/
 
+# Prisma generated clients
 /src/generated/prisma
+/src/generated/prisma-dev
