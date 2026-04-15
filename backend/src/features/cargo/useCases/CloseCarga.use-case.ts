@@ -26,7 +26,7 @@ export class CloseCargaUseCase {
     }
     
     async execute(codCar: number): Promise<{ carga: Carga; pedidosSalvos: number, pedidosSemCargaSapiens: string[] }> {
-        const SITUACAO_PEDIDO_EM_CARGA = 8;
+        
 
         if (codCar == null) {
             throw new Error("Código da carga é obrigatório");
@@ -45,17 +45,18 @@ export class CloseCargaUseCase {
         const pedidosSemCarga: string[] = [];
 
         for (const pedido of pedidos) {
+            
             const numPed = Number(pedido.numPed);
-            const pedidoSituacao = await this.pedidoService.getPedidoCargaSapiens(numPed);
 
-            if (pedidoSituacao.sitPed !== SITUACAO_PEDIDO_EM_CARGA) {
-                pedidosSemCarga.push(pedido.numPed);
-            }            
+            if (!await this.cargoRepository.validarCargaSapiens(numPed)) {
+                pedidosSemCarga.push(numPed.toString());
+            }
+           
         }
-
         if (pedidosSemCarga.length > 0) {
-            const numPeds = pedidosSemCarga.join(", ");
-            throw new Error(`Os seguintes pedidos não estão vinculados a nenhuma carga no sistema Sapiens: ${numPeds}`);
+            throw new Error(`Os seguintes pedidos não estão vinculados a nenhuma carga no sistema Sapiens: ${pedidosSemCarga.join(", ")}`);
+        } else {
+            console.log(`Os seguintes pedidos estão corretamente em alguma carga no sistema Sapiens: ${pedidosSemCarga.join(", ")}`);
         }
 
         const pedidosSalvos = pedidos.length;

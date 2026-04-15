@@ -24,7 +24,7 @@ export function mapRawToPedidos(rows: PedidoRaw[]): PedidoCargo[] {
           vendedor: row.VENDEDOR,
           codRep: row.CODREP,
           bloqueado: row.BLOQUEADO,
-          peso: row.PESO,
+          peso: 0,
           codCar: row.CODCAR ?? null,
           poscar: row.POSCAR ?? null,
           sitcar: row.SITCAR ?? null,
@@ -35,6 +35,9 @@ export function mapRawToPedidos(rows: PedidoRaw[]): PedidoCargo[] {
     }
 
     const pedido = map.get(numPed)!;
+
+    pedido.peso += Number(row.PESO);
+
     pedido.produtos!.push({
       nome: row.PRODUTOS?.trim() || '',
       derivacao: row.DERIVACAO,

@@ -302,4 +302,18 @@ export class CargoRepository implements ICargoRepository {
       pedidos: cf.pedidos,
     }));
   }
+  async validarCargaSapiens(numPed: number): Promise<boolean> {
+    await sqlPoolConnect;
+    const result = await sqlPool
+      .request()
+      .input("numPed", numPed)
+      .query(`
+        SELECT pes.numane, pes.numped FROM e135pes pes WHERE pes.numped = @numPed
+      `);
+    if (result.recordset.length === 0) {
+      return false;
+    } else {
+      return true;
+    }
+  }
 }

@@ -14,4 +14,5 @@ export interface ICargoRepository {
   updateSituacaoCarga(codCar: number, situacao: SituacaoCarga): Promise<Carga>;
   getCargaByCodCar(codCar: number): Promise<Carga | null>;
   getCargasFechadas(): Promise<any[]>;
+  validarCargaSapiens(numPed: number): Promise<boolean>;
 }
