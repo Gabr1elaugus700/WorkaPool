@@ -31,6 +31,16 @@ export const AddLossReasonSchema = z.object({
 
 export type AddLossReasonDTO = z.infer<typeof AddLossReasonSchema>;
 
+// Update Loss Reason Schema (contrato do PUT /api/orders/loss-reason)
+export const UpdateLossReasonSchema = z.object({
+  orderId: z.string().uuid("O ID do pedido deve ser um UUID válido"),
+  code: LossReasonCodeEnum,
+  description: z.string().trim().min(10, "A descrição deve ter no mínimo 10 caracteres"),
+  submittedBy: z.string().min(1, "O código do responsável é obrigatório"),
+});
+
+export type UpdateLossReasonDTO = z.infer<typeof UpdateLossReasonSchema>;
+
 // Create Order Product Schema
 export const CreateOrderProductSchema = z.object({
   orderNumber: z.number().min(1, "O Numero do pedido é obrigatório"),

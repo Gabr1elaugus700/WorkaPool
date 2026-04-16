@@ -3,14 +3,17 @@ import { GetLostOrdersUseCase } from "../../useCases/GetLostOrdersUseCase";
 import { CreateOrderUseCase } from "../../useCases/CreateOrderUseCase";
 import { UpdateOrderStatusUseCase } from "../../useCases/UpdateOrderStatusUseCase";
 import { AddLossReasonUseCase } from "../../useCases/AddLossReasonUseCase";
+import { UpdateLossReasonUseCase } from "../../useCases/UpdateLossReasonUseCase";
 import { GetAllOrdersUseCase } from "../../useCases/GetAllOrdersUseCase";
 import { GetOrderByIdUseCase } from "../../useCases/GetOrderByIdUseCase";
 import {
   CreateOrderSchema,
   UpdateOrderStatusSchema,
   AddLossReasonSchema,
+  UpdateLossReasonSchema,
   GetLostOrdersFiltersSchema,
 } from "../schemas/orderSchemas";
+import { errorsMapper } from "../../mappers/errorsMapper";
 
 export class OrdersController {
   private static isPrivilegedRole(role?: string): boolean {
@@ -259,6 +262,51 @@ export class OrdersController {
       });
     } catch (err) {
       return res.status(500).json({ error: "Erro ao adicionar motivo de perda" });
+    }
+  }
+
+  /**
+   * PUT /api/orders/loss-reason
+   * Atualiza motivo de perda SOMENTE se já existir e se estiver dentro da janela de 7 dias.
+   */
+  static async updateLossReason(req: Request, res: Response): Promise<Response> {
+    try {
+      const currentUser = req.user;
+      if (!currentUser) {
+        return res.status(401).json({ error: "Usuário não autenticado" });
+      }
+
+      const parsed = UpdateLossReasonSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          error: "Dados inválidos",
+          details: parsed.error.format(),
+          issues: parsed.error.issues,
+        });
+      }
+
+      if (
+        currentUser.role === "VENDAS" &&
+        currentUser.codRep &&
+        parsed.data.submittedBy !== String(currentUser.codRep)
+      ) {
+        return res.status(403).json({ error: "Vendedor só pode atualizar motivo para si próprio" });
+      }
+
+      const useCase = new UpdateLossReasonUseCase();
+      const lossReason = await useCase.execute(parsed.data);
+
+      return res.status(200).json({
+        id: lossReason.id,
+        orderId: lossReason.orderId,
+        code: lossReason.code,
+        description: lossReason.description,
+        submittedBy: lossReason.submittedBy,
+        submittedAt: lossReason.submittedAt,
+      });
+    } catch (err) {
+      const { status, message, method = "PUT" } = errorsMapper(err instanceof Error ? err.message : "Erro ao atualizar motivo de perda")  ;
+      return res.status(status).json({ error: message, method });
     }
   }
 }

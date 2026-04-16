@@ -46,25 +46,16 @@ describe("CloseCargaUseCase", () => {
     const getCargaByCodCar = mock.fn(async () => carga);
     const getPedidosPorCarga = mock.fn(async () => pedidos);
     const closeCarga = mock.fn(async () => ({ carga, pedidosSalvos: pedidos.length }));
+    const validarCargaSapiens = mock.fn(async (numPed: number) => numPed === 1002);
 
     const mockRepository: ICargoRepository = {
       getCargaByCodCar,
       getPedidosPorCarga,
       closeCarga,
+      validarCargaSapiens,
     } as any;
 
-    const getPedidoCargaSapiens = mock.fn(async (numPed: number) => {
-      if (numPed === 1002) {
-        return { numPed, sitPed: 8 };
-      }
-      return { numPed, sitPed: 0 };
-    });
-
-    const mockPedidoService = {
-      getPedidoCargaSapiens,
-    } as any;
-
-    const useCase = new CloseCargaUseCase(mockRepository, mockPedidoService);
+    const useCase = new CloseCargaUseCase(mockRepository, {} as any);
 
     // Act + Assert
     await assert.rejects(
@@ -78,7 +69,7 @@ describe("CloseCargaUseCase", () => {
       },
     );
 
-    assert.strictEqual(getPedidoCargaSapiens.mock.calls.length, 3);
+    assert.strictEqual(validarCargaSapiens.mock.calls.length, 3);
     assert.strictEqual(closeCarga.mock.calls.length, 0);
   });
 
@@ -90,26 +81,22 @@ describe("CloseCargaUseCase", () => {
     const getCargaByCodCar = mock.fn(async () => carga);
     const getPedidosPorCarga = mock.fn(async () => pedidos);
     const closeCarga = mock.fn(async () => ({ carga, pedidosSalvos: pedidos.length }));
+    const validarCargaSapiens = mock.fn(async () => true);
 
     const mockRepository: ICargoRepository = {
       getCargaByCodCar,
       getPedidosPorCarga,
       closeCarga,
+      validarCargaSapiens,
     } as any;
 
-    const getPedidoCargaSapiens = mock.fn(async (numPed: number) => ({ numPed, sitPed: 8 }));
-
-    const mockPedidoService = {
-      getPedidoCargaSapiens,
-    } as any;
-
-    const useCase = new CloseCargaUseCase(mockRepository, mockPedidoService);
+    const useCase = new CloseCargaUseCase(mockRepository, {} as any);
 
     // Act
     const resultado = await useCase.execute(202);
 
     // Assert
-    assert.strictEqual(getPedidoCargaSapiens.mock.calls.length, 2);
+    assert.strictEqual(validarCargaSapiens.mock.calls.length, 2);
     assert.strictEqual(closeCarga.mock.calls.length, 1);
     assert.strictEqual(resultado.pedidosSalvos, 2);
     assert.deepStrictEqual(resultado.pedidosSemCargaSapiens, []);
@@ -124,25 +111,16 @@ describe("CloseCargaUseCase", () => {
     const getCargaByCodCar = mock.fn(async () => carga);
     const getPedidosPorCarga = mock.fn(async () => pedidos);
     const closeCarga = mock.fn(async () => ({ carga, pedidosSalvos: pedidos.length }));
+    const validarCargaSapiens = mock.fn(async (numPed: number) => numPed !== 3001);
 
     const mockRepository: ICargoRepository = {
       getCargaByCodCar,
       getPedidosPorCarga,
       closeCarga,
+      validarCargaSapiens,
     } as any;
 
-    const getPedidoCargaSapiens = mock.fn(async (numPed: number) => {
-      if (numPed === 3001) {
-        return { numPed, sitPed: 1 };
-      }
-      return { numPed, sitPed: 8 };
-    });
-
-    const mockPedidoService = {
-      getPedidoCargaSapiens,
-    } as any;
-
-    const useCase = new CloseCargaUseCase(mockRepository, mockPedidoService);
+    const useCase = new CloseCargaUseCase(mockRepository, {} as any);
 
     // Act + Assert
     await assert.rejects(
@@ -156,7 +134,7 @@ describe("CloseCargaUseCase", () => {
       },
     );
 
-    assert.strictEqual(getPedidoCargaSapiens.mock.calls.length, 2);
+    assert.strictEqual(validarCargaSapiens.mock.calls.length, 2);
     assert.strictEqual(closeCarga.mock.calls.length, 0);
   });
 });
