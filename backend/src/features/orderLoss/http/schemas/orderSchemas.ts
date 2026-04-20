@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PaginationQuerySchema } from "../../../../schemas/paginationSchema";
 
 // Enums
 export const OrderStatusEnum = z.enum(["NEGOTIATING", "LOST", "WON", "CANCELLED"]);
@@ -50,18 +51,23 @@ export const CreateOrderProductSchema = z.object({
 
 export type CreateOrderProductDTO = z.infer<typeof CreateOrderProductSchema>;
 
+
 // Query Filters for Lost Orders
-export const GetLostOrdersFiltersSchema = z.object({
-  codRep: z.string().optional(),
-  startDate: z
-    .string()
-    .regex(/^\d{2}-\d{2}-\d{4}$/, "startDate deve estar no formato DD-MM-YYYY")
-    .optional(),
-  endDate: z
-    .string()
-    .regex(/^\d{2}-\d{2}-\d{4}$/, "endDate deve estar no formato DD-MM-YYYY")
-    .optional(),
-}).refine(
+export const GetLostOrdersFiltersSchema = PaginationQuerySchema
+.merge(
+  z.object({
+    codRep: z.string().optional(),
+    startDate: z
+      .string()
+      .regex(/^\d{2}-\d{2}-\d{4}$/, "startDate deve estar no formato DD-MM-YYYY")
+      .optional(),
+    endDate: z
+      .string()
+      .regex(/^\d{2}-\d{2}-\d{4}$/, "endDate deve estar no formato DD-MM-YYYY")
+      .optional(),
+  })
+)
+.refine(
   ({ startDate, endDate }) => {
     if (!startDate || !endDate) return true;
     const [sDay, sMonth, sYear] = startDate.split("-").map(Number);

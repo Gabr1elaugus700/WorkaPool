@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert";
 
+import { AppError } from "../../../../src/utils/AppError";
 import { UpdateLossReasonUseCase } from "../../../../src/features/orderLoss/useCases/UpdateLossReasonUseCase";
 import { LossReason } from "../../../../src/features/orderLoss/entities/LossReason";
 import { LossReasonCode, Order, OrderStatus } from "../../../../src/features/orderLoss/entities/Order";
@@ -123,7 +124,10 @@ test("UpdateLossReasonUseCase - regras principais", async (t) => {
           description: "perda inicial com detalhes",
           submittedBy: "123",
         }),
-      (err: Error) => err.message === "ORDER_NOT_FOUND",
+      (err: unknown) =>
+        err instanceof AppError &&
+        err.code === "ORDER_NOT_FOUND" &&
+        err.statusCode === 404,
     );
   });
 
@@ -148,7 +152,10 @@ test("UpdateLossReasonUseCase - regras principais", async (t) => {
           description: "perda inicial com detalhes",
           submittedBy: "123",
         }),
-      (err: Error) => err.message === "ORDER_NOT_LOST",
+      (err: unknown) =>
+        err instanceof AppError &&
+        err.code === "ORDER_NOT_LOST" &&
+        err.statusCode === 409,
     );
   });
 
@@ -173,7 +180,10 @@ test("UpdateLossReasonUseCase - regras principais", async (t) => {
           description: "perda inicial com detalhes",
           submittedBy: "123",
         }),
-      (err: Error) => err.message === "LOSS_REASON_NOT_FOUND",
+      (err: unknown) =>
+        err instanceof AppError &&
+        err.code === "LOSS_REASON_NOT_FOUND" &&
+        err.statusCode === 404,
     );
   });
 
@@ -213,7 +223,10 @@ test("UpdateLossReasonUseCase - regras principais", async (t) => {
           description: "perda corrigida com detalhes",
           submittedBy: "999",
         }),
-      (err: Error) => err.message === "LOSS_REASON_EXPIRED",
+      (err: unknown) =>
+        err instanceof AppError &&
+        err.code === "LOSS_REASON_EXPIRED" &&
+        err.statusCode === 403,
     );
   });
 
