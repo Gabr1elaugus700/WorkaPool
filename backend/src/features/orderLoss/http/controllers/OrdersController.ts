@@ -37,13 +37,13 @@ export class OrdersController {
 
       const currentUser = req.user;
       if (!currentUser) {
-        throw new AppError({message: "Usuário não autenticado", statusCode: 401, code: "USER_NOT_AUTHENTICATED", details: "Usuário não autenticado"});
+        throw new AppError({ message: "Usuário não autenticado", statusCode: 401, code: "USER_NOT_AUTHENTICATED", details: "Usuário não autenticado" });
       }
 
       const normalizedFilters = { ...parsed.data };
       if (currentUser.role === "VENDAS") {
         if (!currentUser.codRep) {
-          throw new AppError({message: "Usuário sem código de vendedor vinculado", statusCode: 403, code: "USER_NO_COD_REP", details: "Usuário sem código de vendedor vinculado"});
+          throw new AppError({ message: "Usuário sem código de vendedor vinculado", statusCode: 403, code: "USER_NO_COD_REP", details: "Usuário sem código de vendedor vinculado" });
         }
         normalizedFilters.codRep = String(currentUser.codRep);
       }
@@ -53,14 +53,14 @@ export class OrdersController {
 
       return res.status(200).json(lostOrders);
     } catch (err) {
-      if(err instanceof AppError) {
+      if (err instanceof AppError) {
         return res.status(err.statusCode).json({
           error: err.message,
           code: err.code,
           details: err.details,
         });
       }
-      return res.status(500).json({ 
+      return res.status(500).json({
         error: "Erro ao buscar pedidos perdidos do SAPIENS",
         code: "INTERNAL_ERROR",
       });
@@ -76,7 +76,7 @@ export class OrdersController {
       const parsed = CreateOrderSchema.safeParse(req.body);
 
       if (!parsed.success) {
-        throw new AppError({message: "Dados inválidos", statusCode: 400, code: "INVALID_DATA", details: parsed.error.format()});
+        throw new AppError({ message: "Dados inválidos", statusCode: 400, code: "INVALID_DATA", details: parsed.error.format() });
       }
 
       const useCase = new CreateOrderUseCase();
@@ -92,7 +92,8 @@ export class OrdersController {
         updatedAt: order.updatedAt,
       });
     } catch (err) {
-      if(err instanceof AppError) {
+      // console.error('❌ [OrdersController.create] Erro:', err);
+      if (err instanceof AppError) {
         return res.status(err.statusCode).json({
           error: err.message,
           code: err.code,
@@ -114,7 +115,7 @@ export class OrdersController {
 
       return res.status(200).json(orders);
     } catch (err) {
-      if(err instanceof AppError) {
+      if (err instanceof AppError) {
         return res.status(err.statusCode).json({
           error: err.message,
           code: err.code,
@@ -142,7 +143,7 @@ export class OrdersController {
 
       return res.status(200).json(result);
     } catch (err) {
-      if(err instanceof AppError) {
+      if (err instanceof AppError) {
         return res.status(err.statusCode).json({
           error: err.message,
           code: err.code,
@@ -158,17 +159,17 @@ export class OrdersController {
     try {
       const parsed = GetLostOrdersFiltersSchema.safeParse(req.query);
       if (!parsed.success) {
-        throw new AppError({message: "Filtros inválidos", statusCode: 400, code: "INVALID_FILTERS", details: parsed.error.format()});
+        throw new AppError({ message: "Filtros inválidos", statusCode: 400, code: "INVALID_FILTERS", details: parsed.error.format() });
       }
       const normalizedFilters = { ...parsed.data };
-      
+
       const currentUser = req.user;
       if (!currentUser) {
-        throw new AppError({message: "Usuário não autenticado", statusCode: 401, code: "USER_NOT_AUTHENTICATED", details: "Usuário não autenticado"});
+        throw new AppError({ message: "Usuário não autenticado", statusCode: 401, code: "USER_NOT_AUTHENTICATED", details: "Usuário não autenticado" });
       }
       if (currentUser.role === "VENDAS") {
         if (!currentUser.codRep) {
-          throw new AppError({message: "Usuário sem código de vendedor vinculado", statusCode: 403, code: "USER_NO_COD_REP", details: "Usuário sem código de vendedor vinculado"});
+          throw new AppError({ message: "Usuário sem código de vendedor vinculado", statusCode: 403, code: "USER_NO_COD_REP", details: "Usuário sem código de vendedor vinculado" });
         }
         normalizedFilters.codRep = String(currentUser.codRep);
       }
@@ -178,7 +179,7 @@ export class OrdersController {
 
       return res.status(200).json(lostOrders);
     } catch (err) {
-      if(err instanceof AppError) {
+      if (err instanceof AppError) {
         return res.status(err.statusCode).json({
           error: err.message,
           code: err.code,
@@ -241,24 +242,21 @@ export class OrdersController {
    * Adiciona motivo de perda a um pedido e marca como perdido
    */
   static async addLossReason(req: Request, res: Response): Promise<Response> {
-    try {  
+    try {
       const currentUser = req.user;
       if (!currentUser) {
-        return res.status(401).json({ error: "Usuário não autenticado" });
+        throw new AppError({
+          message: "Usuário não autenticado",
+          statusCode: 401,
+          code: "USER_NOT_AUTHENTICATED",
+          details: "Usuário não autenticado"
+        });
       }
 
       const parsed = AddLossReasonSchema.safeParse(req.body);
 
       if (!parsed.success) {
-        console.error('❌ [OrdersController.addLossReason] Validação falhou');
-        console.error('❌ [OrdersController.addLossReason] Erros:', JSON.stringify(parsed.error.format(), null, 2));
-        console.error('❌ [OrdersController.addLossReason] Issues:', JSON.stringify(parsed.error.issues, null, 2));
-        
-        return res.status(400).json({
-          error: "Dados inválidos",
-          details: parsed.error.format(),
-          issues: parsed.error.issues,
-        });
+        throw new AppError({ message: "Dados inválidos", statusCode: 400, code: "INVALID_DATA", details: parsed.error.format() });
       }
 
       if (
@@ -266,12 +264,12 @@ export class OrdersController {
         currentUser.codRep &&
         parsed.data.submittedBy !== String(currentUser.codRep)
       ) {
-        return res.status(403).json({ error: "Vendedor só pode registrar motivo para si próprio" });
+        throw new AppError({ message: "Vendedor só pode registrar motivo de seus próprios pedidos	", statusCode: 403, code: "SELLER_CAN_ONLY_REGISTER_REASON_FOR_SELF", details: "Vendedor só pode registrar motivo para si próprio" });
       }
-      
+
       const useCase = new AddLossReasonUseCase();
       const lossReason = await useCase.execute(parsed.data);
-      
+
       return res.status(201).json({
         id: lossReason.id,
         orderId: lossReason.orderId,
@@ -281,6 +279,13 @@ export class OrdersController {
         submittedAt: lossReason.submittedAt,
       });
     } catch (err) {
+      if (err instanceof AppError) {
+        return res.status(err.statusCode).json({
+          error: err.message,
+          code: err.code,
+          details: err.details,
+        });
+      }
       return res.status(500).json({ error: "Erro ao adicionar motivo de perda" });
     }
   }
@@ -293,16 +298,12 @@ export class OrdersController {
     try {
       const currentUser = req.user;
       if (!currentUser) {
-        return res.status(401).json({ error: "Usuário não autenticado" });
+        throw new AppError({ message: "Usuário não autenticado", statusCode: 401, code: "USER_NOT_AUTHENTICATED", details: "Usuário não autenticado" });
       }
 
       const parsed = UpdateLossReasonSchema.safeParse(req.body);
       if (!parsed.success) {
-        return res.status(400).json({
-          error: "Dados inválidos",
-          details: parsed.error.format(),
-          issues: parsed.error.issues,
-        });
+        throw new AppError({ message: "Dados inválidos", statusCode: 400, code: "INVALID_DATA", details: parsed.error.format() });
       }
 
       if (
@@ -310,7 +311,7 @@ export class OrdersController {
         currentUser.codRep &&
         parsed.data.submittedBy !== String(currentUser.codRep)
       ) {
-        return res.status(403).json({ error: "Vendedor só pode atualizar motivo para si próprio" });
+        throw new AppError({ message: "Vendedor só pode atualizar motivo de seus próprios pedidos", statusCode: 403, code: "SELLER_CAN_ONLY_UPDATE_REASON_FOR_SELF", details: "Vendedor só pode atualizar motivo para si próprio" });
       }
 
       const useCase = new UpdateLossReasonUseCase();
