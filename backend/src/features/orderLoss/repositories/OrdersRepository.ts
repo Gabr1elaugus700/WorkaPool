@@ -9,6 +9,7 @@ import {
 } from "./IOrdersRepository";
 import { sqlPool } from "../../../database/sqlServer";
 import { PedidosSapiensFiltersDTO } from "../../pedidos";
+import { PaginationParams } from "../../../utils/Paginate";
 export class OrdersRepository implements IOrdersRepository {
   constructor(private prisma: PrismaClient = new PrismaClient()) {}
 
@@ -103,7 +104,7 @@ export class OrdersRepository implements IOrdersRepository {
       include: {
         lossReason: true,
         products: true,
-      },
+      }
     });
 
     return orders.map((order) => ({

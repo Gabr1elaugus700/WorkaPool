@@ -14,6 +14,7 @@ import {
   UpdateLossReasonSchema,
   GetLostOrdersFiltersSchema,
 } from "../schemas/orderSchemas";
+import { PaginationQuerySchema } from "../../../../schemas/paginationSchema";
 
 export class OrdersController {
   private static isPrivilegedRole(role?: string): boolean {
@@ -110,10 +111,17 @@ export class OrdersController {
    */
   static async getAll(req: Request, res: Response): Promise<Response> {
     try {
+      const parsed = PaginationQuerySchema.safeParse(req.query);
+      if (!parsed.success) {
+        throw new AppError({ message: "Filtros inválidos", statusCode: 400, code: "INVALID_FILTERS", details: parsed.error.format() });
+      }
+      
       const useCase = new GetAllOrdersUseCase();
-      const orders = await useCase.execute();
+      const orders = await useCase.execute(parsed.data);
 
+      
       return res.status(200).json(orders);
+      
     } catch (err) {
       if (err instanceof AppError) {
         return res.status(err.statusCode).json({
@@ -199,23 +207,20 @@ export class OrdersController {
       const currentUser = req.user;
 
       if (!id) {
-        return res.status(400).json({ error: "ID do pedido é obrigatório." });
+        throw new AppError({ message: "ID do pedido é obrigatório.", statusCode: 400, code: "ORDER_ID_REQUIRED", details: "ID do pedido é obrigatório." });
       }
       if (!currentUser) {
-        return res.status(401).json({ error: "Usuário não autenticado" });
+        throw new AppError({ message: "Usuário não autenticado", statusCode: 401, code: "USER_NOT_AUTHENTICATED", details: "Usuário não autenticado" });
       }
 
       if (!OrdersController.isPrivilegedRole(currentUser.role) && currentUser.role !== "VENDAS") {
-        return res.status(403).json({ error: "Acesso negado" });
+        throw new AppError({ message: "Acesso negado", statusCode: 403, code: "ACCESS_DENIED", details: "Acesso negado" });
       }
 
       const parsed = UpdateOrderStatusSchema.safeParse(req.body);
 
       if (!parsed.success) {
-        return res.status(400).json({
-          error: "Dados inválidos",
-          details: parsed.error.format(),
-        });
+        throw new AppError({ message: "Dados inválidos", statusCode: 400, code: "INVALID_DATA", details: parsed.error.format() });
       }
 
       const useCase = new UpdateOrderStatusUseCase();

@@ -9,30 +9,31 @@ export class CreateOrderUseCase {
     private readonly ordersRepository: IOrdersRepository = new OrdersRepository()
   ) { }
 
+  /**
+   * Cria um novo pedido
+   * @param data - Dados do pedido (orderNumber, status, idUser, codRep)
+   * @throws AppError - Se já existir um pedido com esse número
+   * @throws AppError - Se o pedido não for criado no banco de dados
+   * @returns Pedido criado
+   */
   async execute(data: CreateOrderDTO): Promise<Order> {
-    // console.log('🔶 [CreateOrderUseCase] Executando...');
-    // console.log('🔶 [CreateOrderUseCase] Dados recebidos:', JSON.stringify(data, null, 2));
 
-    // Verificar se já existe um pedido com esse número
     const existing = await this.ordersRepository.findByOrderNumber(data.orderNumber);
 
     if (existing) {
-      // console.warn('⚠️ [CreateOrderUseCase] Pedido já existe:', data.orderNumber);
       throw new AppError({ message: "Já existe um pedido com este número.", statusCode: 400, code: "ORDER_ALREADY_EXISTS", details: "Já existe um pedido com este número." });
     }
 
-    // console.log('🔶 [CreateOrderUseCase] Criando entidade Order...');
     const order = new Order({
       ...data,
       status: data.status as OrderStatus,
     });
 
-    // console.log('🔶 [CreateOrderUseCase] Order criado:', order);
-    // console.log('🔶 [CreateOrderUseCase] Salvando no banco...');
-
     await this.ordersRepository.create(order);
 
-    // console.log('✅ [CreateOrderUseCase] Pedido salvo com sucesso:', order.id);
+    if (!order) {
+      throw new AppError({ message: "Erro ao criar pedido no banco de dados.", statusCode: 500, code: "ERROR_CREATING_ORDER_IN_DATABASE", details: "Erro ao criar pedido no banco de dados." });
+    }
     return order;
   }
 }

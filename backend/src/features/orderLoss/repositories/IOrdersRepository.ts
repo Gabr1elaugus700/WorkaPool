@@ -3,6 +3,7 @@ import { OrderProduct } from "../entities/OrderProduct";
 import { LossReason } from "../entities/LossReason";
 import { LossReasonCode } from "../entities/Order";
 import { PedidoOrderLoss, PedidosSapiensFiltersDTO } from "../../pedidos";
+import { PaginationParams } from "../../../utils/Paginate";
 
 // Alias para compatibilidade - usa PedidoOrderLoss como base
 export type LostOrderFromSapiens = PedidoOrderLoss;
