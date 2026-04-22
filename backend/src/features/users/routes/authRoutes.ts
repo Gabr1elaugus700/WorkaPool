@@ -59,13 +59,21 @@
  *         description: Senha alterada
  */
 import express from "express";
+import { Role } from "@prisma/client";
 import { authController } from "../controllers/userController";
 import { validate } from "../../../middlewares/validate";
+import { authMiddleware, requireRoles } from "../../../middlewares/authMiddleware";
 import { registerSchema, loginSchema, changePasswordFirstLoginSchema } from "../schemas/userSchemas";
 
 const router = express.Router();
 
-router.post("/register", validate(registerSchema), authController.register);
+router.post(
+  "/register",
+  authMiddleware,
+  requireRoles([Role.ADMIN]),
+  validate(registerSchema),
+  authController.register
+);
 router.post("/login", validate(loginSchema), authController.login);
 router.post("/change-password-first-login", validate(changePasswordFirstLoginSchema), authController.changePasswordFirstLogin);
 

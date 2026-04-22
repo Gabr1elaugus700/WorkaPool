@@ -5,9 +5,9 @@ export const registerSchema = z.object({
   body: z.object({
     user: z.string().min(3, "Usuário deve ter pelo menos 3 caracteres"),
     password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
-    role: z.enum(["ADMIN", "USER", "VENDAS", "LOGISTICA", "ALMOX", "GERENTE_DPTO"]).optional(),
-    name: z.string().min(1, "Nome é obrigatório").optional(),
-    codRep: z.number().int().positive().optional()
+    role: z.enum(["ADMIN", "USER", "VENDAS", "LOGISTICA", "ALMOX", "GERENTE_DPTO"]).default("USER"),
+    name: z.string().min(1, "Nome é obrigatório"),
+    codRep: z.number().int().positive().default(999)
   })
 });
 
@@ -26,6 +26,13 @@ export const changePasswordFirstLoginSchema = z.object({
 });
 
 // Schemas para CRUD de usuários
+export const findAllUsersQuerySchema = z.object({
+  query: z.object({
+    page: z.coerce.number().int().positive().optional(),
+    pageSize: z.coerce.number().int().positive().max(100).optional()
+  })
+});
+
 export const updateUserSchema = z.object({
   params: z.object({
     id: z.string().uuid("ID deve ser um UUID válido")
@@ -53,6 +60,6 @@ export const getUserByIdSchema = z.object({
 // Schema para buscar departamentos de um usuário específico
 export const getUserDepartmentsSchema = z.object({
   params: z.object({
-    userId: z.string().uuid("ID do usuário deve ser um UUID válido")
+    id: z.string().uuid("ID do usuário deve ser um UUID válido")
   })
 });
