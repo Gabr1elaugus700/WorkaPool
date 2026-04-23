@@ -3,7 +3,7 @@ import { GetCargaByIdUseCase } from "../../useCases/GetCargaById.use-case";
 import { UpdatePedidoCargaUseCase } from "../../useCases/UpdatePedidoCarga.use-case";
 import { CreateCargaUseCase } from "../../useCases/CreateCarga.use-case";
 import { GetPedidosFechadosVendedorUseCase } from "../../useCases/GetPedidosFechadosVendedor.use-case";
-import { CreateCargaSchema } from "../schemas/cargoSchema";
+import { CreateCargaSchema, getCargasFechadasQuerySchema } from "../schemas/cargoSchema";
 import { GetAllCargasUseCase } from "../../useCases/GetAllCargas.use-case";
 import { UpdateCargaSituacaoUseCase } from "../../useCases/UpdateCargaSituacao.use-case";
 import { SituacaoCarga } from "../../entities/Carga";
@@ -11,6 +11,7 @@ import { UpdateCargaUseCase } from "../../useCases/UpdateCarga.use-case";
 import { GetPedidosCargaUseCase } from "../../useCases/GetPedidosCarga.use-case";
 import { CloseCargaUseCase } from "../../useCases/CloseCarga.use-case";
 import { GetCargasFechadasUseCase } from "../../useCases/GetCargasFechadas.use-case";
+import { AppError } from "../../../../utils/AppError";
 
 export class CargoController {
   static async createCarga(req: Request, res: Response): Promise<Response> {
@@ -54,28 +55,30 @@ export class CargoController {
       const { codCar } = req.body;
 
       if (codCar == null) {
-        return res.status(400).json({
-          error: "Código da carga é obrigatório para fechar a carga.",
-        });
+        throw new AppError({ message: "Código da carga é obrigatório para fechar a carga.", statusCode: 400, code: "MISSING_CAR_CODE", details: "Código da carga é obrigatório para fechar a carga." });
       }
 
-      console.log(`🔵 [Controller] Recebida requisição para fechar carga ${codCar}`);
+      // console.log(`🔵 [Controller] Recebida requisição para fechar carga ${codCar}`);
 
       const closeCargaUseCase = new CloseCargaUseCase();
       const result = await closeCargaUseCase.execute(Number(codCar));
       
-      console.log(`✅ [Controller] Carga ${codCar} fechada com sucesso. ${result.pedidosSalvos} pedidos salvos.`);
+      // console.log(`✅ [Controller] Carga ${codCar} fechada com sucesso. ${result.pedidosSalvos} pedidos salvos.`);
       
       return res.status(200).json({
         message: "Carga fechada com sucesso",
         carga: result.carga,
         pedidosSalvos: result.pedidosSalvos,
       });
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Erro ao fechar carga";
-      console.error(`❌ [Controller] Erro ao fechar carga:`, message);
-      return res.status(500).json({ error: message });
+    } catch (err: unknown) {
+      if (err instanceof AppError) {
+        return res.status(err.statusCode).json({
+          error: err.message,
+          code: err.code,
+          details: err.details,
+        });
+      }
+      return res.status(500).json({ error: "Erro ao fechar carga" });
     }
   }
 
@@ -147,12 +150,15 @@ export class CargoController {
       const cargas = await getAllCargasUseCase.execute(situacoes);
 
       return res.json(cargas);
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Erro Interno ao buscar cargas";
-      return res.status(500).json({ error: message });
+    } catch (err: unknown) {
+      if (err instanceof AppError) {
+        return res.status(err.statusCode).json({
+          error: err.message,
+          code: err.code,
+          details: err.details,
+        });
+      }
+      return res.status(500).json({ error: "Erro ao buscar cargas" });
     }
   }
 
@@ -163,17 +169,14 @@ export class CargoController {
       const parsedCodCar = Number(codCar);
 
       if (!codCar || Number.isNaN(parsedCodCar)) {
-        return res.status(400).json({ error: "Código da carga inválido." });
+        throw new AppError({ message: "Código da carga inválido.", statusCode: 400, code: "INVALID_CAR_CODE", details: "Código da carga inválido." });
       }
 
       const updateSituacaoSchema = CreateCargaSchema.pick({ situacao: true });
       const parsed = updateSituacaoSchema.safeParse({ situacao });
 
       if (!parsed.success) {
-        return res.status(400).json({
-          error: parsed.error.errors,
-          details: parsed.error.format(),
-        });
+        throw new AppError({ message: "Dados inválidos para atualização de situação.", statusCode: 400, code: "INVALID_DATA", details: parsed.error.format() });
       }
 
       const updateCargaSituacaoUseCase = new UpdateCargaSituacaoUseCase();
@@ -184,12 +187,15 @@ export class CargoController {
       return res
         .status(200)
         .json({ message: "Situação atualizada com sucesso." });
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Erro Interno ao atualizar situação";
-      return res.status(500).json({ error: message });
+    } catch (err: unknown) {
+      if (err instanceof AppError) {
+        return res.status(err.statusCode).json({
+          error: err.message,
+          code: err.code,
+          details: err.details,
+        });
+      }
+      return res.status(500).json({ error: "Erro ao atualizar situação" });
     }
   }
 
@@ -197,11 +203,9 @@ export class CargoController {
     try {
       const { id } = req.params;
       const parsed = CreateCargaSchema.safeParse(req.body);
+      
       if (!parsed.success) {
-        return res.status(400).json({
-          error: parsed.error.errors,
-          details: parsed.error.format(),
-        });
+        throw new AppError({ message: "Dados inválidos para atualização de carga.", statusCode: 400, code: "INVALID_DATA", details: parsed.error.format() });
       }
 
       const updateCargaUseCase = new UpdateCargaUseCase();
@@ -210,10 +214,15 @@ export class CargoController {
         parsed.data,
       );
       return res.status(200).json(cargo);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Erro Interno ao criar carga";
-      return res.status(500).json({ error: message });
+    } catch (err: unknown) {
+      if (err instanceof AppError) {
+        return res.status(err.statusCode).json({
+          error: err.message,
+          code: err.code,
+          details: err.details,
+        });
+      }
+      return res.status(500).json({ error: "Erro ao atualizar carga" });
     }
   }
 
@@ -224,20 +233,9 @@ export class CargoController {
     try {
       const { numPed } = req.params;
       const { codCar, posCar } = req.body;
-      
-      console.log("🔵 [Controller] updatePedidoCarga recebeu:", {
-        numPed,
-        codCar,
-        posCar,
-        params: req.params,
-        body: req.body
-      });
-      
+
       if (!numPed || codCar == null || posCar == null) {
-        console.log("❌ [Controller] Dados obrigatórios ausentes");
-        return res.status(400).json({
-          error: "Dados obrigatórios ausentes para atualização de carga.",
-        });
+        throw new AppError({ message: "Dados obrigatórios ausentes para atualização de carga.", statusCode: 400, code: "MISSING_REQUIRED_DATA", details: "Dados obrigatórios ausentes para atualização de carga." });
       }
 
       const updatePedidoCargaUseCase = new UpdatePedidoCargaUseCase();
@@ -247,16 +245,16 @@ export class CargoController {
         Number(posCar),
       );
       
-      console.log("✅ [Controller] Pedido atualizado com sucesso");
-      return res
-        .status(200)
-        .json({ message: "Pedido atualizado com sucesso." });
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Erro Interno ao atualizar pedido";
-      return res.status(500).json({ error: message });
+      return res.status(200).json({ message: "Pedido atualizado com sucesso." });
+    } catch (err: unknown) {
+      if (err instanceof AppError) {
+        return res.status(err.statusCode).json({
+          error: err.message,
+          code: err.code,
+          details: err.details,
+        });
+      }
+      return res.status(500).json({ error: "Erro ao atualizar pedido" });
     }
   }
 
@@ -297,21 +295,30 @@ export class CargoController {
     res: Response,
   ): Promise<Response> {
     try {
+      const parsed = getCargasFechadasQuerySchema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({
+          error: parsed.error.errors,
+          details: parsed.error.format(),
+        });
+      }
+      const params = parsed.data;
       console.log(`🔵 [Controller] Buscando cargas fechadas`);
 
       const getCargasFechadasUseCase = new GetCargasFechadasUseCase();
-      const cargasFechadas = await getCargasFechadasUseCase.execute();
+      const cargasFechadas = await getCargasFechadasUseCase.execute(params);
 
-      console.log(`✅ [Controller] Retornando ${cargasFechadas.length} cargas fechadas`);
 
       return res.json(cargasFechadas);
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Erro Interno ao buscar cargas fechadas";
-      console.error(`❌ [Controller] Erro ao buscar cargas fechadas:`, message);
-      return res.status(500).json({ error: message });
+    } catch (err: unknown) {
+      if (err instanceof AppError) {
+        return res.status(err.statusCode).json({
+          error: err.message,
+          code: err.code,
+          details: err.details,
+        });
+      }
+      return res.status(500).json({ error: "Erro ao buscar cargas fechadas" });
     }
   }
 }
