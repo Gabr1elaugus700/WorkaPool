@@ -43,27 +43,20 @@ const buildPedido = (id, numPed) => new Pedido_1.Pedido({
         const getCargaByCodCar = node_test_1.mock.fn(async () => carga);
         const getPedidosPorCarga = node_test_1.mock.fn(async () => pedidos);
         const closeCarga = node_test_1.mock.fn(async () => ({ carga, pedidosSalvos: pedidos.length }));
+        const validarCargaSapiens = node_test_1.mock.fn(async (numPed) => numPed === 1002);
         const mockRepository = {
             getCargaByCodCar,
             getPedidosPorCarga,
             closeCarga,
+            validarCargaSapiens,
         };
-        const getPedidoCargaSapiens = node_test_1.mock.fn(async (numPed) => {
-            if (numPed === 1002) {
-                return { numPed, sitPed: 8 };
-            }
-            return { numPed, sitPed: 0 };
-        });
-        const mockPedidoService = {
-            getPedidoCargaSapiens,
-        };
-        const useCase = new CloseCarga_use_case_1.CloseCargaUseCase(mockRepository, mockPedidoService);
+        const useCase = new CloseCarga_use_case_1.CloseCargaUseCase(mockRepository, {});
         // Act + Assert
         await strict_1.default.rejects(async () => useCase.execute(101), (error) => {
             strict_1.default.match(error.message, /Os seguintes pedidos não estão vinculados a nenhuma carga no sistema Sapiens: 1001, 1003/);
             return true;
         });
-        strict_1.default.strictEqual(getPedidoCargaSapiens.mock.calls.length, 3);
+        strict_1.default.strictEqual(validarCargaSapiens.mock.calls.length, 3);
         strict_1.default.strictEqual(closeCarga.mock.calls.length, 0);
     });
     (0, node_test_1.it)("deve fechar a carga quando todos os pedidos estão vinculados no Sapiens", async () => {
@@ -73,20 +66,18 @@ const buildPedido = (id, numPed) => new Pedido_1.Pedido({
         const getCargaByCodCar = node_test_1.mock.fn(async () => carga);
         const getPedidosPorCarga = node_test_1.mock.fn(async () => pedidos);
         const closeCarga = node_test_1.mock.fn(async () => ({ carga, pedidosSalvos: pedidos.length }));
+        const validarCargaSapiens = node_test_1.mock.fn(async () => true);
         const mockRepository = {
             getCargaByCodCar,
             getPedidosPorCarga,
             closeCarga,
+            validarCargaSapiens,
         };
-        const getPedidoCargaSapiens = node_test_1.mock.fn(async (numPed) => ({ numPed, sitPed: 8 }));
-        const mockPedidoService = {
-            getPedidoCargaSapiens,
-        };
-        const useCase = new CloseCarga_use_case_1.CloseCargaUseCase(mockRepository, mockPedidoService);
+        const useCase = new CloseCarga_use_case_1.CloseCargaUseCase(mockRepository, {});
         // Act
         const resultado = await useCase.execute(202);
         // Assert
-        strict_1.default.strictEqual(getPedidoCargaSapiens.mock.calls.length, 2);
+        strict_1.default.strictEqual(validarCargaSapiens.mock.calls.length, 2);
         strict_1.default.strictEqual(closeCarga.mock.calls.length, 1);
         strict_1.default.strictEqual(resultado.pedidosSalvos, 2);
         strict_1.default.deepStrictEqual(resultado.pedidosSemCargaSapiens, []);
@@ -99,27 +90,20 @@ const buildPedido = (id, numPed) => new Pedido_1.Pedido({
         const getCargaByCodCar = node_test_1.mock.fn(async () => carga);
         const getPedidosPorCarga = node_test_1.mock.fn(async () => pedidos);
         const closeCarga = node_test_1.mock.fn(async () => ({ carga, pedidosSalvos: pedidos.length }));
+        const validarCargaSapiens = node_test_1.mock.fn(async (numPed) => numPed !== 3001);
         const mockRepository = {
             getCargaByCodCar,
             getPedidosPorCarga,
             closeCarga,
+            validarCargaSapiens,
         };
-        const getPedidoCargaSapiens = node_test_1.mock.fn(async (numPed) => {
-            if (numPed === 3001) {
-                return { numPed, sitPed: 1 };
-            }
-            return { numPed, sitPed: 8 };
-        });
-        const mockPedidoService = {
-            getPedidoCargaSapiens,
-        };
-        const useCase = new CloseCarga_use_case_1.CloseCargaUseCase(mockRepository, mockPedidoService);
+        const useCase = new CloseCarga_use_case_1.CloseCargaUseCase(mockRepository, {});
         // Act + Assert
         await strict_1.default.rejects(async () => useCase.execute(303), (error) => {
             strict_1.default.match(error.message, /Os seguintes pedidos não estão vinculados a nenhuma carga no sistema Sapiens: 3001/);
             return true;
         });
-        strict_1.default.strictEqual(getPedidoCargaSapiens.mock.calls.length, 2);
+        strict_1.default.strictEqual(validarCargaSapiens.mock.calls.length, 2);
         strict_1.default.strictEqual(closeCarga.mock.calls.length, 0);
     });
 });

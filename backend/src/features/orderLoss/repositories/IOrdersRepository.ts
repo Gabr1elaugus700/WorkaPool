@@ -1,6 +1,7 @@
 import { Order } from "../entities/Order";
 import { OrderProduct } from "../entities/OrderProduct";
 import { LossReason } from "../entities/LossReason";
+import { LossReasonCode } from "../entities/Order";
 import { PedidoOrderLoss, PedidosSapiensFiltersDTO } from "../../pedidos";
 
 // Alias para compatibilidade - usa PedidoOrderLoss como base
@@ -32,4 +33,10 @@ export interface IOrdersRepository {
   // Operações com motivo de perda
   addLossReason(lossReason: LossReason): Promise<void>;
   getLossReasonByOrderId(orderId: string): Promise<LossReason | null>;
+  updateLossReason(
+    orderId: string,
+    code: LossReasonCode,
+    description: string,
+    submittedBy: string,
+  ): Promise<LossReason>;
 }

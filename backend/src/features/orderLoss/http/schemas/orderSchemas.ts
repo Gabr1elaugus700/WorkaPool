@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PaginationQuerySchema } from "../../../../schemas/paginationSchema";
 
 // Enums
 export const OrderStatusEnum = z.enum(["NEGOTIATING", "LOST", "WON", "CANCELLED"]);
@@ -31,6 +32,16 @@ export const AddLossReasonSchema = z.object({
 
 export type AddLossReasonDTO = z.infer<typeof AddLossReasonSchema>;
 
+// Update Loss Reason Schema (contrato do PUT /api/orders/loss-reason)
+export const UpdateLossReasonSchema = z.object({
+  orderId: z.string().uuid("O ID do pedido deve ser um UUID válido"),
+  code: LossReasonCodeEnum,
+  description: z.string().trim().min(10, "A descrição deve ter no mínimo 10 caracteres"),
+  submittedBy: z.string().min(1, "O código do responsável é obrigatório"),
+});
+
+export type UpdateLossReasonDTO = z.infer<typeof UpdateLossReasonSchema>;
+
 // Create Order Product Schema
 export const CreateOrderProductSchema = z.object({
   orderNumber: z.number().min(1, "O Numero do pedido é obrigatório"),
@@ -40,18 +51,23 @@ export const CreateOrderProductSchema = z.object({
 
 export type CreateOrderProductDTO = z.infer<typeof CreateOrderProductSchema>;
 
+
 // Query Filters for Lost Orders
-export const GetLostOrdersFiltersSchema = z.object({
-  codRep: z.string().optional(),
-  startDate: z
-    .string()
-    .regex(/^\d{2}-\d{2}-\d{4}$/, "startDate deve estar no formato DD-MM-YYYY")
-    .optional(),
-  endDate: z
-    .string()
-    .regex(/^\d{2}-\d{2}-\d{4}$/, "endDate deve estar no formato DD-MM-YYYY")
-    .optional(),
-}).refine(
+export const GetLostOrdersFiltersSchema = PaginationQuerySchema
+.merge(
+  z.object({
+    codRep: z.string().optional(),
+    startDate: z
+      .string()
+      .regex(/^\d{2}-\d{2}-\d{4}$/, "startDate deve estar no formato DD-MM-YYYY")
+      .optional(),
+    endDate: z
+      .string()
+      .regex(/^\d{2}-\d{2}-\d{4}$/, "endDate deve estar no formato DD-MM-YYYY")
+      .optional(),
+  })
+)
+.refine(
   ({ startDate, endDate }) => {
     if (!startDate || !endDate) return true;
     const [sDay, sMonth, sYear] = startDate.split("-").map(Number);

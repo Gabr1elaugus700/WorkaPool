@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { Order, OrderStatus } from "../entities/Order";
+import { LossReasonCode, Order, OrderStatus } from "../entities/Order";
 import { OrderProduct } from "../entities/OrderProduct";
 import { LossReason } from "../entities/LossReason";
 import {
@@ -9,6 +9,7 @@ import {
 } from "./IOrdersRepository";
 import { sqlPool } from "../../../database/sqlServer";
 import { PedidosSapiensFiltersDTO } from "../../pedidos";
+
 export class OrdersRepository implements IOrdersRepository {
   constructor(private prisma: PrismaClient = new PrismaClient()) {}
 
@@ -103,7 +104,7 @@ export class OrdersRepository implements IOrdersRepository {
       include: {
         lossReason: true,
         products: true,
-      },
+      }
     });
 
     return orders.map((order) => ({
@@ -266,6 +267,27 @@ export class OrdersRepository implements IOrdersRepository {
       description: lossReason.description,
       submittedBy: lossReason.submittedBy,
       submittedAt: lossReason.submittedAt,
+    });
+  }
+
+  async updateLossReason(
+    orderId: string,
+    code: LossReasonCode,
+    description: string,
+    submittedBy: string,
+  ): Promise<LossReason> {
+    const updated = await this.prisma.lossReason.update({
+      where: { orderId },
+      data: { code, description, submittedBy },
+    });
+
+    return new LossReason({
+      id: updated.id,
+      orderId: updated.orderId,
+      code: updated.code as any,
+      description: updated.description,
+      submittedBy: updated.submittedBy,
+      submittedAt: updated.submittedAt,
     });
   }
 }
