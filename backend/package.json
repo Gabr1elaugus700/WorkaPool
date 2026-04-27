@@ -38,10 +38,11 @@
     "node-cron": "^4.2.1",
     "puppeteer": "^24.13.0",
     "soap": "^1.1.11",
-    "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuidv4": "^6.2.13",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@prisma/client": "^6.8.2",
