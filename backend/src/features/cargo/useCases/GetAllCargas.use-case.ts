@@ -3,22 +3,13 @@ import { CargoRepository } from "../repositories/CargoRepository";
 import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
 import { toCargaComPesoDTO } from "../http/schemas/cargoSchema";
 import { SituacaoCarga } from "../entities/Carga";
-import { paginateArray, PaginationParams } from "../../../utils/Paginate";
 
-/**
- * Use Case: Busca todas as cargas
- * 
- * Fluxo:
- * 1. Busca todas as cargas (sem filtro)
- * 2. Para cada carga, busca pedidos e calcula peso total
- * 3. Retorna as cargas com peso total
- */
 export class GetAllCargasUseCase {
   constructor(
     private readonly cargoRepository: ICargoRepository = new CargoRepository(new PedidosRepository()),
   ) {}
 
-  async execute(situacoes?: string[], params?: PaginationParams) {
+  async execute(situacoes?: string[]) {
     let cargas;
 
     if (situacoes && situacoes.length > 0) {
@@ -45,6 +36,7 @@ export class GetAllCargasUseCase {
         return toCargaComPesoDTO(carga, pedidos);
       }),
     );
-    return paginateArray(cargasComPeso, params);
+
+    return cargasComPeso;
   }
 }

@@ -1,4 +1,3 @@
-import { AppError } from "../../../utils/AppError";
 import { IOrdersRepository } from "../repositories/IOrdersRepository";
 import { OrdersRepository } from "../repositories/OrdersRepository";
 
@@ -15,7 +14,7 @@ export class GetOrderByIdUseCase {
     const order = await this.ordersRepository.findById(id);
 
     if (!order) {
-      throw new AppError({ message: "Pedido não encontrado.", statusCode: 404, code: "ORDER_NOT_FOUND", details: "Pedido não encontrado." });
+      throw new Error("Pedido não encontrado.");
     }
 
     // Buscar produtos e motivo de perda

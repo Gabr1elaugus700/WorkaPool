@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { Carga } from "../../entities/Carga";
 import { Pedido } from "../../entities/Pedido";
-import { PaginationQuerySchema } from "../../../../schemas/paginationSchema";
 
 // Enums
 export const sitCargoEnum = z.enum(["ABERTA", "FECHADA", "CANCELADA", "SOLICITADA", "ENTREGUE"]);
@@ -56,12 +55,3 @@ export function toCargaComPesoDTO(
     quantidadePedidos: pedidos.length,
   };
 }
-
-
-export const getCargasFechadasQuerySchema = PaginationQuerySchema
-.merge(
-  z.object({
-    destino: z.string().optional(),
-    previsaoSaida: z.string().refine((date) => !isNaN(Date.parse(date)), "A previsão de saída deve ser uma data válida").optional(),
-  })
-)

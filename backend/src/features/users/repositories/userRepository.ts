@@ -1,45 +1,33 @@
-import { Prisma } from "@prisma/client"
-import prisma from "../../../config/prisma"
+import { PrismaClient, Prisma } from "@prisma/client"
+
+const prisma = new PrismaClient();
 
 export const userRepository = {
     create: async (data: Prisma.UserCreateInput) => {
         return await prisma.user.create({ data });
-    },
+        },
 
-    findByUser: async (user: string) => {
-        return await prisma.user.findUnique({ where: { user } });
-    },
-
-    findAll: async () => {
+        findAll: async () => {
         return await prisma.user.findMany({
             select: {
-                id: true,
-                name: true,
-                user: true,
-                role: true,
-                createdAt: true,
-                departamentos: {
-                    include: {
-                        departamento: { select: { id: true, name: true } }
-                    }
-                },
+            id: true,
+            name: true,
+            user: true,
+            role: true,
+            createdAt: true,
+            departamentos: {
+                include: {
+                departamento: { select: { id: true, name: true } }
+                }
             },
-            orderBy: {
-                name: "asc"
-            }
+            },
+            
         });
-    },
+        },
 
-    findById: async (id: string) => {
+        findById: async (id: string) => {
         return await prisma.user.findUnique({
             where: { id },
-            include: {
-                departamentos: {
-                    include: {
-                        departamento: { select: { id: true, name: true } }
-                    }
-                }
-            }
         });
     },
 

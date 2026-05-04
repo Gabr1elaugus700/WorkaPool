@@ -32,7 +32,5 @@ export class LossReason {
     this.description = description;
     this.submittedBy = submittedBy;
     this.submittedAt = submittedAt;
-
-
   }
 }

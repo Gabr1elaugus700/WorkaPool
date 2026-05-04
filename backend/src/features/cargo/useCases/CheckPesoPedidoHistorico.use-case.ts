@@ -1,6 +1,6 @@
 import { ICargoRepository } from "../repositories/ICargoRepository";
 import { CargoRepository } from "../repositories/CargoRepository";
-import { GetCargasBySituacaoUseCase } from "./GetCargasBySituacao.use-case";
+import { GetCargasBySituacaoUseCase } from "./GetCargaBySituacao.use-case";
 import { SituacaoCarga } from "../entities/Carga";
 import { CargaProcessor } from "../services/CargaProcessor";
 import { PesoCargaCalculator } from "../services/PesoCargaCalculator";
@@ -42,13 +42,13 @@ export class CheckPesoPedidoHistoricoUseCase {
       SituacaoCarga.ABERTA,
     );
 
-    console.log(`🔍 Verificando ${openCargas.data.length} carga(s) aberta(s)...`);
+    console.log(`🔍 Verificando ${openCargas.length} carga(s) aberta(s)...`);
 
     let totalRemovidos = 0;
     let totalReposicionados = 0;
     let totalSemHistorico = 0;
 
-    for (const carga of openCargas.data) {
+    for (const carga of openCargas) {
       console.log(`\n📦 Processando carga ${carga.codCar}...`);
 
       const resultado = await this.cargaProcessor.processarMudancasPesoPedidos(carga);
@@ -75,7 +75,7 @@ export class CheckPesoPedidoHistoricoUseCase {
 
     console.log(
       `\n✅ Verificação concluída:\n` +
-      `   📦 ${openCargas.data.length} carga(s) processada(s)\n` +
+      `   📦 ${openCargas.length} carga(s) processada(s)\n` +
       `   🚫 ${totalRemovidos} pedido(s) removido(s)\n` +
       `   🔄 ${totalReposicionados} pedido(s) reposicionado(s)\n` +
       `   📝 ${totalSemHistorico} histórico(s) criado(s)`

@@ -25,7 +25,5 @@ router.patch("/:id/status", authMiddleware, requireRoles(orderWriteRoles), Order
 
 // Adicionar motivo de perda
 router.post("/loss-reason", authMiddleware, requireRoles(orderWriteRoles), OrdersController.addLossReason);
-// Atualizar motivo de perda (somente se justificativa existir e estiver dentro da janela)
-router.put("/loss-reason", authMiddleware, requireRoles(orderWriteRoles), OrdersController.updateLossReason);
 
 export default router;
