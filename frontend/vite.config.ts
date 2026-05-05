@@ -46,6 +46,10 @@ export default defineConfig({
     port: 5858, // opcional, pode mudar a porta se quiser
     
   },
+  build: {
+    outDir: "dist-test",
+    // outDir: "dist", <-- alterar para produção
+  },                          
   preview: {
     port: 5858,
   }
