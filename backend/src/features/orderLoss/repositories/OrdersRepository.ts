@@ -8,6 +8,7 @@ import {
   OrderWithLossReason,
 } from "./IOrdersRepository";
 import { sqlPool } from "../../../database/sqlServer";
+import { AppError } from "../../../utils/AppError";
 import { PedidosSapiensFiltersDTO } from "../../pedidos";
 
 export class OrdersRepository implements IOrdersRepository {
@@ -207,7 +208,16 @@ export class OrdersRepository implements IOrdersRepository {
       return result.recordset as LostOrderFromSapiens[];
     } catch (error) {
       console.error("Erro ao buscar pedidos perdidos do SAPIENS:", error);
-      throw new Error("Erro ao buscar pedidos perdidos do SAPIENS");
+      throw new AppError({
+        message: "Erro ao buscar pedidos perdidos do SAPIENS",
+        statusCode: 500,
+        code: "ORDER_LOST_SAPIENS_FETCH_ERROR",
+        details: {
+          startDate: filters?.startDate,
+          endDate: filters?.endDate,
+          codRep: filters?.codRep,
+        },
+      });
     }
   }
 

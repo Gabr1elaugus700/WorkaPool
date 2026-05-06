@@ -1,3 +1,4 @@
+import { AppError } from "../../../utils/AppError";
 import { Order, OrderStatus } from "../entities/Order";
 import { IOrdersRepository } from "../repositories/IOrdersRepository";
 import { OrdersRepository } from "../repositories/OrdersRepository";
@@ -17,7 +18,12 @@ export class UpdateOrderStatusUseCase {
     const order = await this.ordersRepository.findById(orderId);
 
     if (!order) {
-      throw new Error("Pedido não encontrado.");
+      throw new AppError({
+        message: "Pedido não encontrado.",
+        statusCode: 404,
+        code: "ORDER_NOT_FOUND",
+        details: { orderId },
+      });
     }
 
     order.status = data.status as OrderStatus;

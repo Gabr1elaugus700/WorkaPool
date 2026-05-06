@@ -238,7 +238,17 @@ export class OrdersController {
         updatedAt: order.updatedAt,
       });
     } catch (err) {
-      return res.status(500).json({ error: "Erro ao atualizar status do pedido" });
+      if (err instanceof AppError) {
+        return res.status(err.statusCode).json({
+          error: err.message,
+          code: err.code,
+          details: err.details,
+        });
+      }
+      return res.status(500).json({
+        error: "Erro ao atualizar status do pedido",
+        code: "INTERNAL_ERROR",
+      });
     }
   }
 
