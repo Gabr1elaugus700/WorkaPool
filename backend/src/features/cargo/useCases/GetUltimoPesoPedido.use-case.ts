@@ -1,5 +1,6 @@
 import { IPedidosRepository } from "../../pedidos/repositories/IPedidosRepository";
 import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
+import { AppError } from "../../../utils/AppError";
 
 export class GetUltimoPesoPedidoUseCase {
   constructor(
@@ -10,7 +11,12 @@ export class GetUltimoPesoPedidoUseCase {
     const historico = await this.pedidosRepository.getLastHistoricoPeso(numPed);
 
     if (!historico) {
-      throw new Error(`Histórico do pedido ${numPed} não encontrado.`);
+      throw new AppError({
+        message: `Histórico do pedido ${numPed} não encontrado.`,
+        statusCode: 404,
+        code: "CARGO_HISTORICO_PESO_NOT_FOUND",
+        details: { numPed },
+      });
     }
 
     return historico;

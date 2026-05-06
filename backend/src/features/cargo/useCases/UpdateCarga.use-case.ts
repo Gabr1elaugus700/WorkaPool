@@ -3,6 +3,7 @@ import { ICargoRepository } from "../repositories/ICargoRepository";
 import { CargoRepository } from "../repositories/CargoRepository";
 import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
 import { CreateCargaDTO } from "../http/schemas/cargoSchema";
+import { AppError } from "../../../utils/AppError";
 
 export class UpdateCargaUseCase {
   constructor(
@@ -12,7 +13,12 @@ export class UpdateCargaUseCase {
   async execute(id: string, payload: CreateCargaDTO): Promise<Carga> {
     const carga = await this.cargoRepository.getCargaById(id);
     if (!carga) {
-      throw new Error(`Carga ${id} não encontrada.`);
+      throw new AppError({
+        message: `Carga ${id} não encontrada.`,
+        statusCode: 404,
+        code: "CARGO_NOT_FOUND",
+        details: { id },
+      });
     }
 
     carga.destino = payload.destino;
