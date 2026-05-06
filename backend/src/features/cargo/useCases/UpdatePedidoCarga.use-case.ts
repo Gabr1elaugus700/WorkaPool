@@ -2,6 +2,7 @@ import { ICargoRepository } from "../repositories/ICargoRepository";
 import { CargoRepository } from "../repositories/CargoRepository";
 import { IPedidosRepository } from "../../pedidos/repositories/IPedidosRepository";
 import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
+import { AppError } from "../../../utils/AppError";
 
 export class UpdatePedidoCargaUseCase {
   constructor(
@@ -9,20 +10,19 @@ export class UpdatePedidoCargaUseCase {
     private readonly pedidosRepository: IPedidosRepository = new PedidosRepository(),
   ) {}
   async execute(numPed: number, codCar: number, posCar: number) {
-    console.log("🟢 [UseCase] execute recebeu:", { numPed, codCar, posCar });
     
     if (numPed == null || codCar == null || posCar == null) {
-      console.log("❌ [UseCase] Dados obrigatórios ausentes");
-      throw new Error("Dados obrigatórios ausentes");
+      throw new AppError({
+        message: "Dados obrigatórios ausentes para atualizar pedido na carga",
+        statusCode: 400,
+        code: "CARGO_PEDIDO_DATA_REQUIRED",
+        details: { numPed, codCar, posCar },
+      });
     }
 
-    console.log("🟢 [UseCase] Chamando repository.updatePedidoCarga...");
     await this.cargoRepository.updatePedidoCarga(numPed, codCar, posCar);
-    console.log("✅ [UseCase] Repository executado com sucesso");
-
 
     if (codCar > 0) {
-      console.log("💾 [UseCase] Salvando histórico de peso do pedido...");
       
       try { 
         const { peso } = await this.pedidosRepository.getPedidoWeight(numPed);
@@ -31,7 +31,12 @@ export class UpdatePedidoCargaUseCase {
         const carga = await this.cargoRepository.getCargaByCodCar(codCar);
         if (!carga) {
           console.error("❌ [UseCase] Carga não encontrada:", codCar);
-          throw new Error(`Carga ${codCar} não encontrada`);
+          throw new AppError({
+            message: `Carga ${codCar} não encontrada`,
+            statusCode: 404,
+            code: "CARGO_NOT_FOUND",
+            details: { codCar },
+          });
         }
 
         // Salvar o histórico de peso
@@ -40,7 +45,6 @@ export class UpdatePedidoCargaUseCase {
           carga.id,
           peso
         );
-        console.log("✅ [UseCase] Histórico de peso salvo com sucesso");
       } catch (error) {
         console.error("❌ [UseCase] Erro ao salvar histórico de peso:", error);
         // Não falhar a operação se não conseguir salvar o histórico

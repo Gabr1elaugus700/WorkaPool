@@ -13,6 +13,7 @@ uploads/
 
 # Files
 *.txt
+.claude/
 
 # Logs
 logs/

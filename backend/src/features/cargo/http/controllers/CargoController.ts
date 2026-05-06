@@ -28,10 +28,19 @@ export class CargoController {
       const createCargaUseCase = new CreateCargaUseCase();
       const cargo = await createCargaUseCase.execute(parsed.data);
       return res.status(201).json(cargo);
-    } catch (error) {
+    } catch (err: unknown) {
+      if (err instanceof AppError) {
+        return res.status(err.statusCode).json({
+          error: err.message,
+          code: err.code,
+          details: err.details,
+        });
+      }
       const message =
-        error instanceof Error ? error.message : "Erro Interno ao criar carga";
-      return res.status(500).json({ error: message });
+        err instanceof Error ? err.message : "Erro interno ao criar carga";
+      return res
+        .status(500)
+        .json({ error: message, code: "INTERNAL_ERROR" });
     }
   }
   static async getCargaById(req: Request, res: Response): Promise<Response> {
@@ -43,10 +52,19 @@ export class CargoController {
       const getCargaByIdUseCase = new GetCargaByIdUseCase();
       const carga = await getCargaByIdUseCase.execute(Number(id));
       return res.json(carga);
-    } catch (error) {
+    } catch (err: unknown) {
+      if (err instanceof AppError) {
+        return res.status(err.statusCode).json({
+          error: err.message,
+          code: err.code,
+          details: err.details,
+        });
+      }
       const message =
-        error instanceof Error ? error.message : "Erro Interno ao buscar carga";
-      return res.status(500).json({ error: message });
+        err instanceof Error ? err.message : "Erro interno ao buscar carga";
+      return res
+        .status(500)
+        .json({ error: message, code: "INTERNAL_ERROR" });
     }
   }
 
@@ -78,7 +96,9 @@ export class CargoController {
           details: err.details,
         });
       }
-      return res.status(500).json({ error: "Erro ao fechar carga" });
+      return res
+        .status(500)
+        .json({ error: "Erro ao fechar carga", code: "INTERNAL_ERROR" });
     }
   }
 
@@ -100,12 +120,21 @@ export class CargoController {
       return res
         .status(200)
         .json({ message: "Pedido atualizado com sucesso." });
-    } catch (error) {
+    } catch (err: unknown) {
+      if (err instanceof AppError) {
+        return res.status(err.statusCode).json({
+          error: err.message,
+          code: err.code,
+          details: err.details,
+        });
+      }
       const message =
-        error instanceof Error
-          ? error.message
-          : "Erro Interno ao atualizar pedido";
-      return res.status(500).json({ error: message });
+        err instanceof Error
+          ? err.message
+          : "Erro interno ao atualizar pedido";
+      return res
+        .status(500)
+        .json({ error: message, code: "INTERNAL_ERROR" });
     }
   }
 
@@ -126,12 +155,21 @@ export class CargoController {
       );
       
       return res.json(pedidos);
-    } catch (error) {
+    } catch (err: unknown) {
+      if (err instanceof AppError) {
+        return res.status(err.statusCode).json({
+          error: err.message,
+          code: err.code,
+          details: err.details,
+        });
+      }
       const message =
-        error instanceof Error
-          ? error.message
-          : "Erro Interno ao buscar pedidos fechados";
-      return res.status(500).json({ error: message });
+        err instanceof Error
+          ? err.message
+          : "Erro interno ao buscar pedidos fechados";
+      return res
+        .status(500)
+        .json({ error: message, code: "INTERNAL_ERROR" });
     }
   }
 
@@ -158,7 +196,9 @@ export class CargoController {
           details: err.details,
         });
       }
-      return res.status(500).json({ error: "Erro ao buscar cargas" });
+      return res
+        .status(500)
+        .json({ error: "Erro ao buscar cargas", code: "INTERNAL_ERROR" });
     }
   }
 
@@ -195,7 +235,10 @@ export class CargoController {
           details: err.details,
         });
       }
-      return res.status(500).json({ error: "Erro ao atualizar situação" });
+      return res.status(500).json({
+        error: "Erro ao atualizar situação",
+        code: "INTERNAL_ERROR",
+      });
     }
   }
 
@@ -222,7 +265,10 @@ export class CargoController {
           details: err.details,
         });
       }
-      return res.status(500).json({ error: "Erro ao atualizar carga" });
+      return res.status(500).json({
+        error: "Erro ao atualizar carga",
+        code: "INTERNAL_ERROR",
+      });
     }
   }
 
@@ -254,7 +300,10 @@ export class CargoController {
           details: err.details,
         });
       }
-      return res.status(500).json({ error: "Erro ao atualizar pedido" });
+      return res.status(500).json({
+        error: "Erro ao atualizar pedido",
+        code: "INTERNAL_ERROR",
+      });
     }
   }
 
@@ -281,12 +330,21 @@ export class CargoController {
       }
 
       return res.json(pedidos);
-    } catch (error) {
+    } catch (err: unknown) {
+      if (err instanceof AppError) {
+        return res.status(err.statusCode).json({
+          error: err.message,
+          code: err.code,
+          details: err.details,
+        });
+      }
       const message =
-        error instanceof Error
-          ? error.message
-          : "Erro Interno ao buscar pedidos da carga";
-      return res.status(500).json({ error: message });
+        err instanceof Error
+          ? err.message
+          : "Erro interno ao buscar pedidos da carga";
+      return res
+        .status(500)
+        .json({ error: message, code: "INTERNAL_ERROR" });
     }
   }
 
@@ -318,7 +376,10 @@ export class CargoController {
           details: err.details,
         });
       }
-      return res.status(500).json({ error: "Erro ao buscar cargas fechadas" });
+      return res.status(500).json({
+        error: "Erro ao buscar cargas fechadas",
+        code: "INTERNAL_ERROR",
+      });
     }
   }
 }

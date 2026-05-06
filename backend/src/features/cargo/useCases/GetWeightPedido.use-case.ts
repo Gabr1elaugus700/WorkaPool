@@ -1,5 +1,6 @@
 import { IPedidosRepository } from "../../pedidos/repositories/IPedidosRepository";
 import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
+import { AppError } from "../../../utils/AppError";
 
 export class GetWeightPedidoUseCase {
   constructor(
@@ -10,7 +11,12 @@ export class GetWeightPedidoUseCase {
     const weightPedido = await this.pedidosRepository.getPedidoWeight(numPed);
 
     if (!weightPedido) {
-      throw new Error(`Peso do pedido ${numPed} não encontrado.`);
+      throw new AppError({
+        message: `Peso do pedido ${numPed} não encontrado.`,
+        statusCode: 404,
+        code: "CARGO_PESO_PEDIDO_NOT_FOUND",
+        details: { numPed },
+      });
     }
 
     return weightPedido;

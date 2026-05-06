@@ -6,7 +6,21 @@
       "source": "local",
       "contentHash": "69867b0e19be1fb556d2e697f0f18f1de0363d1aa2de9d36754d5b107156357c",
       "installedAt": "2026-04-10T19:12:25.655Z",
-      "updatedAt": "2026-04-10T19:12:25.681Z",
+      "updatedAt": "2026-04-10T19:12:25.708Z",
+      "agents": [
+        "cursor",
+        "claude-code",
+        "windsurf"
+      ],
+      "method": "copy",
+      "global": false
+    },
+    "decomposition-planning-roadmap": {
+      "name": "decomposition-planning-roadmap",
+      "source": "local",
+      "contentHash": "8de88d993b2556a6b38c26fd79c863f06bf7746faf87c0c9fd1b9a198a49e1ac",
+      "installedAt": "2026-05-05T18:14:58.341Z",
+      "updatedAt": "2026-05-05T18:14:58.355Z",
       "agents": [
         "cursor",
         "claude-code"
