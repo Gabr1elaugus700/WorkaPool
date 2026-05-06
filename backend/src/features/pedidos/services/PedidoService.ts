@@ -1,6 +1,7 @@
 import { PedidoCargo } from '../types/PedidoCargo.types';
 import { HistoricoPesoPedido } from '../entities/HistoricoPesoPedido';
 import { IPedidosRepository } from '../repositories/IPedidosRepository';
+import { AppError } from '../../../utils/AppError';
 
 /**
  * Serviço para operações relacionadas a pedidos individuais.
@@ -13,7 +14,7 @@ export class PedidoService {
    * Obtém o peso ATUAL cadastrado no sistema para o pedido.
    * @param pedido O pedido para consultar
    * @returns O peso atual cadastrado
-   * @throws Error se o peso for inválido
+   * @throws AppError se o peso for inválido
    */
   async pesoAtualPedido(pedido: PedidoCargo): Promise<number> {
     const numPed = Number(pedido.numPed);
@@ -22,7 +23,12 @@ export class PedidoService {
       .then((res) => res.peso);
 
     if (isNaN(pesoAtual) || pesoAtual == null) {
-      throw new Error(`Pedido ${numPed} possui peso inválido: ${pesoAtual}`);
+      throw new AppError({
+        message: `Pedido ${numPed} possui peso inválido`,
+        statusCode: 422,
+        code: 'PEDIDOS_INVALID_WEIGHT',
+        details: { numPed, pesoAtual },
+      });
     }
 
     return pesoAtual;

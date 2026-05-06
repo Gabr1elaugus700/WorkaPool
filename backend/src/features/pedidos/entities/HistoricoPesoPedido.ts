@@ -1,3 +1,5 @@
+import { AppError } from '../../../utils/AppError';
+
 export interface HistoricoPesoPedido {
   numPed: number;
   peso: number;
@@ -23,7 +25,12 @@ export class HistoricoPesoPedido {
 
   pesoAtual(): number {
     if (isNaN(this.peso) || this.peso === null || this.peso === undefined) {
-      throw new Error(`Peso inválido para pedido ${this.numPed}: ${this.peso}`);
+      throw new AppError({
+        message: `Peso inválido para pedido ${this.numPed}: ${this.peso}`,
+        statusCode: 422,
+        code: 'PEDIDOS_INVALID_WEIGHT',
+        details: { numPed: this.numPed, peso: this.peso },
+      });
     }
     return this.peso;
   }
