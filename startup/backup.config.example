@@ -1,0 +1,11 @@
+# Copie para backup.config (na mesma pasta) e ajuste o caminho.
+# O Google Drive no Windows costuma ser uma destas pastas:
+#
+#   %USERPROFILE%\Google Drive\Backups\WorkaPool
+#   %USERPROFILE%\Meu Drive\Backups\WorkaPool
+#   G:\Meu Drive\Backups\WorkaPool
+#
+# O script le DATABASE_URL de ..\backend\.env.production
+
+BACKUP_DIR=%USERPROFILE%\Google Drive\Backups\WorkaPool
+KEEP_DAYS=14
