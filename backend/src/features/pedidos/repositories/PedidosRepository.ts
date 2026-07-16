@@ -66,9 +66,12 @@ export class PedidosRepository implements IPedidosRepository {
       });
     }
 
+    const pedidos = mapRawToPedidos(result.recordset);
+    const pedido = pedidos[0];
+
     return {
-      numPed: Number(result.recordset[0].NUM_PED),
-      peso: Number(result.recordset[0].PESO),
+      numPed: Number(pedido.numPed),
+      peso: Number(pedido.peso),
     };
   }
 

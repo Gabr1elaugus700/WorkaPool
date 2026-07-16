@@ -75,13 +75,14 @@ export class PedidoService {
       };
     }
 
-    const pesoAnterior = historico.peso;
-    const diferenca = pesoAtual - pesoAnterior;
+    const pesoAtualComparavel = Math.round(pesoAtual);
+    const pesoAnterior = Math.round(historico.peso);
+    const diferenca = pesoAtualComparavel - pesoAnterior;
 
     return {
-      mudou: pesoAnterior !== pesoAtual,
+      mudou: diferenca !== 0,
       pesoAnterior,
-      pesoAtual,
+      pesoAtual: pesoAtualComparavel,
       aumentou: diferenca > 0,
       reducao: diferenca < 0,
       diferenca,
