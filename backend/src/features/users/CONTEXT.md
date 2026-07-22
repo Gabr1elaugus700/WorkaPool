@@ -9,7 +9,7 @@ An app login account with a Role and optional Representante linkage (codRep).
 _Avoid_: Cliente, Representante (when you mean the ERP person without an account)
 
 **Role**:
-Authorization profile: ADMIN, USER, VENDAS, LOGISTICA, ALMOX, GERENTE_DPTO.
+Authorization profile: ADMIN, USER, VENDAS, LOGISTICA, ALMOX, GERENTE_DPTO, and **MOTORISTA** (IBC unload / Custódia no Cliente — to be added to Prisma `Role` with the IBC feature).
 _Avoid_: Departamento (org unit ≠ permission set)
 
 **Representante**:
