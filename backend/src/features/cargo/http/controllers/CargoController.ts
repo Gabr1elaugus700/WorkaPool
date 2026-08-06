@@ -35,7 +35,7 @@ export class CargoController {
   }
   static async getCargaById(req: Request, res: Response): Promise<Response> {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id ?? "");
       if (!id) {
         return res.status(400).json({ error: "ID da carga é obrigatório." });
       }
@@ -81,7 +81,7 @@ export class CargoController {
 
   static async updatePedido(req: Request, res: Response): Promise<Response> {
     try {
-      const { numPed } = req.params;
+      const numPed = String(req.params.numPed ?? "");
       const { codCar, posCar } = req.body;
       if (!numPed || codCar == null || posCar == null) {
         return res.status(400).json({
@@ -112,11 +112,13 @@ export class CargoController {
   ): Promise<Response> {
     try {
       // Suporta tanto /pedidos-fechados/:codRep quanto /pedidos-fechados?codRep=X
-      const codRepParam = req.params.codRep;
-      const codRepQuery = req.query.codRep;
-      
+      const codRepParam =
+        req.params.codRep != null ? String(req.params.codRep) : undefined;
+      const codRepQuery =
+        req.query.codRep != null ? String(req.query.codRep) : undefined;
+
       const codRep = codRepParam || codRepQuery;
-      
+
       const getPedidosFechadosVendedorUseCase = new GetPedidosFechadosVendedorUseCase();
       const pedidos = await getPedidosFechadosVendedorUseCase.execute(
         codRep ? Number(codRep) : undefined
@@ -158,7 +160,7 @@ export class CargoController {
 
   static async updateSituacao(req: Request, res: Response): Promise<Response> {
     try {
-      const { codCar } = req.params;
+      const codCar = String(req.params.codCar ?? "");
       const { situacao } = req.body;
       const parsedCodCar = Number(codCar);
 
@@ -195,7 +197,7 @@ export class CargoController {
 
   static async updateCarga(req: Request, res: Response): Promise<Response> {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const parsed = CreateCargaSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({
@@ -222,7 +224,7 @@ export class CargoController {
     res: Response,
   ): Promise<Response> {
     try {
-      const { numPed } = req.params;
+      const numPed = String(req.params.numPed ?? "");
       const { codCar, posCar } = req.body;
       
       console.log("🔵 [Controller] updatePedidoCarga recebeu:", {
@@ -265,7 +267,7 @@ export class CargoController {
     res: Response,
   ): Promise<Response> {
     try {
-      const { codCar } = req.params;
+      const codCar = String(req.params.codCar ?? "");
       const { codRep } = req.query;
 
       if (!codCar) {

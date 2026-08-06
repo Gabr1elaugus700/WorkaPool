@@ -43,7 +43,7 @@ export class GoalsController {
 
   static async delete(req: Request, res: Response): Promise<Response> {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id ?? "");
 
       if (!id) {
         return res.status(400).json({ error: "ID da meta é obrigatório." });
@@ -71,7 +71,7 @@ export class GoalsController {
 
   static async findById(req: Request, res: Response): Promise<Response> {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id ?? "");
       if (!id) {
         return res.status(400).json({ error: "ID da meta é obrigatório." });
       }

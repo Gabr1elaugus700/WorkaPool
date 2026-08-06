@@ -23,7 +23,7 @@ export const vistoriaController = {
 
   findById: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const ordem = await vistoriaService.findById(id);
       return res.json(ordem);
     } catch (error: any) {
@@ -33,7 +33,7 @@ export const vistoriaController = {
 
   findByDepartamentoId: async (req: Request, res: Response) => {
     try {
-      const { departamento_id } = req.params;
+      const departamento_id = String(req.params.departamento_id);
       const ordens = await vistoriaService.findByDepartamentoId(departamento_id);
       return res.json(ordens);
     } catch (error: any) {
@@ -43,7 +43,7 @@ export const vistoriaController = {
 
   update: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const ordem = await vistoriaService.update(id, req.body);
       return res.json(ordem);
     } catch (error: any) {
@@ -53,7 +53,7 @@ export const vistoriaController = {
 
   delete: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       await vistoriaService.delete(id);
       return res.status(204).send();
     } catch (error: any) {

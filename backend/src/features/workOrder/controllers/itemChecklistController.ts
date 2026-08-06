@@ -26,7 +26,7 @@ export const itemChecklistController = {
 
   findById: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const ordem = await itemChecklistService.findById(id);
       return res.json(ordem);
     } catch (error: any) {
@@ -36,7 +36,7 @@ export const itemChecklistController = {
 
   update: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const ordem = await itemChecklistService.update(id, req.body);
       return res.json(ordem);
     } catch (error: any) {
@@ -46,7 +46,7 @@ export const itemChecklistController = {
 
   delete: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       await itemChecklistService.delete(id);
       return res.status(204).send();
     } catch (error: any) {

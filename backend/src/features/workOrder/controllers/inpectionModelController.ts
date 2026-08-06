@@ -23,7 +23,7 @@ export const checklistModeloController = {
 
   findById: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const ordem = await checklistModeloService.findById(id);
       return res.json(ordem);
     } catch (error: any) {
@@ -33,7 +33,7 @@ export const checklistModeloController = {
 
   update: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const ordem = await checklistModeloService.update(id, req.body);
       return res.json(ordem);
     } catch (error: any) {
@@ -43,7 +43,7 @@ export const checklistModeloController = {
 
   delete: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       await checklistModeloService.delete(id);
       return res.status(204).send();
     } catch (error: any) {

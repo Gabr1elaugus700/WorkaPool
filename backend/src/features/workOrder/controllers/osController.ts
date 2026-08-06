@@ -49,7 +49,7 @@ export const osController = {
 
   findById: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const ordem = await osService.findById(id);
       return res.json(ordem);
     } catch (error: any) {
@@ -59,7 +59,7 @@ export const osController = {
 
   update: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const ordem = await osService.update(id, req.body);
       return res.json(ordem);
     } catch (error: any) {
@@ -69,7 +69,7 @@ export const osController = {
 
   delete: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       await osService.delete(id);
       return res.status(204).send();
     } catch (error: any) {

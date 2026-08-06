@@ -23,7 +23,7 @@ export const checklistVistoriaController = {
 
   findById: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const ordem = await checklistVistoriaService.findById(id);
       return res.json(ordem);
     } catch (error: any) {
@@ -33,7 +33,7 @@ export const checklistVistoriaController = {
 
   update: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const ordem = await checklistVistoriaService.update(id, req.body);
       return res.json(ordem);
     } catch (error: any) {
@@ -43,7 +43,7 @@ export const checklistVistoriaController = {
 
   delete: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       await checklistVistoriaService.delete(id);
       return res.status(204).send();
     } catch (error: any) {
