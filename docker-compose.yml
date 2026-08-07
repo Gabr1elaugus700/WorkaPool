@@ -1,0 +1,74 @@
+name: ${COMPOSE_NAME:-workapool}
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: ${CONTAINER_NAME:-workapool_db}
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dev}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev}
+      POSTGRES_DB: ${POSTGRES_DB:-workapool_dev}
+    ports:
+      - "${POSTGRES_PORT:-5435}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - workapool-network
+
+  backend:
+    profiles: ["production"]
+    image: ${BACKEND_IMAGE:-workapool_backend}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ${BACKEND_CONTAINER_NAME:-workapool_backend}
+    restart: always
+    ports:
+      - "${BACKEND_PORT:-3001}:${PORT:-3001}"
+    depends_on:
+      - postgres
+    env_file:
+      - ${ENV_FILE:-./backend/.env.development}
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-dev_user}:${POSTGRES_PASSWORD:-dev_password}@postgres:5432/${POSTGRES_DB:-workapool_dev}
+    command:
+      [
+        "sh",
+        "-c",
+        "npx prisma generate --schema=${PRISMA_SCHEMA:-prisma/schema.dev.prisma} && npx prisma migrate deploy && npx tsx src/server.ts",
+      ]
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules
+    working_dir: /app
+    networks:
+      - workapool-network
+
+  frontend:
+    profiles: ["production"]
+    image: ${FRONTEND_IMAGE:-workapool_frontend}
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3001}
+    container_name: ${FRONTEND_CONTAINER_NAME:-workapool_frontend}
+    restart: always
+    ports:
+      - "${FRONTEND_PORT:-5858}:80"
+    depends_on:
+      - backend
+    networks:
+      - workapool-network
+  
+volumes:
+  postgres-data:
+    external: true
+    name: ${POSTGRES_DATA_VOLUME:-backend_postgres_dev_data}
+  backend_node_modules:
+
+networks:
+  workapool-network:
+    driver: bridge
