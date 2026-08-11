@@ -9,3 +9,4 @@ startup/telegram.log
 
 .env.compose.dev
 .env.compose.prod
+./startup/recovery/

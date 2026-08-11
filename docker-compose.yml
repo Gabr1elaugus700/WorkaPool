@@ -3,7 +3,7 @@ name: ${COMPOSE_NAME:-workapool}
 services:
   postgres:
     image: postgres:15
-    container_name: ${CONTAINER_NAME:-workapool_db}
+    container_name: ${POSTGRES_CONTAINER:-workapool_db_development}
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-dev}
@@ -18,11 +18,11 @@ services:
 
   backend:
     profiles: ["production"]
-    image: ${BACKEND_IMAGE:-workapool_backend}
+    image: ${BACKEND_IMAGE:-workapool_backend_development}
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: ${BACKEND_CONTAINER_NAME:-workapool_backend}
+    container_name: ${BACKEND_CONTAINER_NAME:-workapool_backend_development}
     restart: always
     ports:
       - "${BACKEND_PORT:-3001}:${PORT:-3001}"
@@ -32,17 +32,14 @@ services:
       - ${ENV_FILE:-./backend/.env.development}
     environment:
       NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${PORT:-3005}
       DATABASE_URL: postgresql://${POSTGRES_USER:-dev_user}:${POSTGRES_PASSWORD:-dev_password}@postgres:5432/${POSTGRES_DB:-workapool_dev}
     command:
       [
         "sh",
         "-c",
-        "npx prisma generate --schema=${PRISMA_SCHEMA:-prisma/schema.dev.prisma} && npx prisma migrate deploy && npx tsx src/server.ts",
+        "npx prisma generate --schema=${PRISMA_SCHEMA:-prisma/schema.dev.prisma} && npx prisma migrate deploy --schema=${PRISMA_SCHEMA:-prisma/schema.dev.prisma} && npx tsx src/server.ts",
       ]
-    volumes:
-      - ./backend:/app
-      - backend_node_modules:/app/node_modules
-    working_dir: /app
     networks:
       - workapool-network
 
@@ -53,7 +50,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3001}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:?VITE_API_BASE_URL missing — pass --env-file on build}
     container_name: ${FRONTEND_CONTAINER_NAME:-workapool_frontend}
     restart: always
     ports:
@@ -66,8 +63,7 @@ services:
 volumes:
   postgres-data:
     external: true
-    name: ${POSTGRES_DATA_VOLUME:-backend_postgres_dev_data}
-  backend_node_modules:
+    name: ${POSTGRES_DATA_VOLUME:-workapool_postgres_dev_data}
 
 networks:
   workapool-network:
