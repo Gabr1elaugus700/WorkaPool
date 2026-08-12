@@ -48,7 +48,7 @@ export const userController = {
 
   findById: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const user = await userService.findById(id);
       res.json(user);
     } catch (err: any) {
@@ -59,7 +59,7 @@ export const userController = {
   update: async (req: Request, res: Response) => {
     console.log("Request body received in update:", req.body);
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const updatedUser = await userService.update(id, req.body);
       res.json(updatedUser);
     } catch (err: any) {
@@ -69,7 +69,7 @@ export const userController = {
 
   delete: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       await userService.delete(id);
       res.status(204).send();
     } catch (err: any) {
@@ -80,7 +80,7 @@ export const userController = {
   // Buscar departamentos de um usuário específico (mantém no users pois é informação do usuário)
   getUserDepartments: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
 
       const departamentos = await userService.buscarDepartamentosDoUsuario(id);
       res.json(departamentos);

@@ -122,7 +122,7 @@ export class OrdersController {
    */
   static async getById(req: Request, res: Response): Promise<Response> {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id ?? "");
 
       if (!id) {
         return res.status(400).json({ error: "ID do pedido é obrigatório." });
@@ -141,7 +141,7 @@ export class OrdersController {
   static async getPerSellerOrders(req: Request, res: Response): Promise<Response> {
 
     try {
-      const { codRep } = req.params;
+      const codRep = String(req.params.codRep ?? "");
       const currentUser = req.user;
 
       if (!codRep) {
@@ -171,7 +171,7 @@ export class OrdersController {
    */
   static async updateStatus(req: Request, res: Response): Promise<Response> {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id ?? "");
       const currentUser = req.user;
 
       if (!id) {

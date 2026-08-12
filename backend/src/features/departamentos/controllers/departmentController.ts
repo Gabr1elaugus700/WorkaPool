@@ -29,7 +29,7 @@ export const departmentController = {
 
   findById: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const department = await departmentService.findById(id);
       res.json(department);
     } catch (err: any) {
@@ -39,7 +39,7 @@ export const departmentController = {
 
   update: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const updatedDepartment = await departmentService.update(id, req.body);
       res.json(updatedDepartment);
     } catch (err: any) {
@@ -49,7 +49,7 @@ export const departmentController = {
 
   delete: async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       await departmentService.delete(id);
       res.status(204).send();
     } catch (err: any) {
@@ -90,8 +90,8 @@ export const departmentController = {
 
   getUsers: async (req: Request, res: Response) => {
     try {
-      const { departamentoId } = req.params;
-      
+      const departamentoId = String(req.params.departamentoId);
+
       const usuarios = await departmentService.getUsers(departamentoId);
       res.json(usuarios);
     } catch (err: any) {
@@ -120,8 +120,8 @@ export const departmentController = {
 
   getManagers: async (req: Request, res: Response) => {
     try {
-      const { departamentoId } = req.params;
-      
+      const departamentoId = String(req.params.departamentoId);
+
       const gerentes = await departmentService.getManagers(departamentoId);
       res.json(gerentes);
     } catch (err: any) {

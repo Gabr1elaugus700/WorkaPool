@@ -86,7 +86,7 @@ export const fretesController = {
 
         console.log("Updating request with params:", req.params);
 
-        const { solicitacaoId } = req.params;
+        const solicitacaoId = String(req.params.solicitacaoId);
         const idNum = Number(solicitacaoId);
 
         if (isNaN(idNum)) {
@@ -137,7 +137,7 @@ export const fretesController = {
         }
     },
     getCaminhaoRota: async (req: Request, res: Response): Promise<any> => {
-        const { rotaId } = req.params;
+        const rotaId = String(req.params.rotaId);
         try {
             const caminhaoRota = await prisma.caminhaoRota.findMany({
                 where: { rota_base_id: Number(rotaId) },
