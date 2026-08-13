@@ -1,0 +1,24 @@
+---
+description: Delega proativamente captura de ideias/bugs/demandas ao subagent task-intake (Notion + GitHub issue).
+alwaysApply: true
+---
+
+# Task intake proativo
+
+Quando o usuário descrever uma solicitação para **registrar**, **anotar**, **criar task/issue**, ou relatar ideia/bug/melhoria/débito que claramente precisa virar acompanhamento — **delegue ao subagent `task-intake`** sem esperar o usuário pedir o subagent.
+
+## Disparar
+
+- "criar task", "anotar", "não quero perder", "registrar no Notion"
+- bug, melhoria, ideia, demanda, débito técnico descritos como pedido de captura
+- follow-up identificado no meio de uma implementação que **não** cabe no escopo atual
+
+## Não disparar
+
+- Pedido de implementar agora ("faz X", "implementa Y")
+- Pergunta exploratória sem intenção de registrar
+- Code review / debug / implementação em andamento sem pedido de captura
+
+## Como delegar
+
+Use o subagent `task-intake` (`.cursor/agents/task-intake.md`). Ele levanta requisitos, grava no Notion e cria GitHub issue quando for código.
