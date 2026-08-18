@@ -5,6 +5,7 @@ import { PedidoCargo } from '../types/PedidoCargo.types';
 import { mapRawToPedidos } from '../mappers/PedidoMapper';
 import { HistoricoPesoPedido } from '../entities/HistoricoPesoPedido';
 import { IPedidosRepository } from './IPedidosRepository';
+import { AppError } from '../../../utils/AppError';
 import {
   QUERY_GET_PEDIDOS_BY_REP,
   QUERY_GET_PEDIDO_WEIGHT,
@@ -57,12 +58,20 @@ export class PedidosRepository implements IPedidosRepository {
       .query<PedidoRaw>(QUERY_GET_PEDIDO_WEIGHT);
 
     if (result.recordset.length === 0) {
-      throw new Error(`Pedido ${numPed} não encontrado.`);
+      throw new AppError({
+        message: `Pedido ${numPed} não encontrado.`,
+        statusCode: 404,
+        code: 'PEDIDOS_NOT_FOUND',
+        details: { numPed, source: 'getPedidoWeight' },
+      });
     }
 
+    const pedidos = mapRawToPedidos(result.recordset);
+    const pedido = pedidos[0];
+
     return {
-      numPed: Number(result.recordset[0].NUM_PED),
-      peso: Number(result.recordset[0].PESO),
+      numPed: Number(pedido.numPed),
+      peso: Number(pedido.peso),
     };
   }
 
@@ -77,7 +86,12 @@ export class PedidosRepository implements IPedidosRepository {
       .query(QUERY_GET_PEDIDO_SITUACAO);
 
     if (result.recordset.length === 0) {
-      throw new Error(`Pedido ${numPed} não encontrado.`);
+      throw new AppError({
+        message: `Pedido ${numPed} não encontrado.`,
+        statusCode: 404,
+        code: 'PEDIDOS_NOT_FOUND',
+        details: { numPed, source: 'getPedidoSituacaoSapiens' },
+      });
     }
 
     return {
@@ -100,13 +114,18 @@ export class PedidosRepository implements IPedidosRepository {
     // Validar peso
     if (isNaN(peso) || peso === null || peso === undefined) {
       console.error('❌ [PedidosRepository] Peso inválido:', peso);
-      throw new Error(`Peso inválido para o pedido ${numPed}: ${peso}`);
+      throw new AppError({
+        message: `Peso inválido para o pedido ${numPed}: ${peso}`,
+        statusCode: 422,
+        code: 'PEDIDOS_INVALID_WEIGHT',
+        details: { numPed, peso },
+      });
     }
 
     await this.prisma.historicoPesoPedidos.create({
       data: {
         numPed,
-        peso: Math.round(peso), // Garantir que seja inteiro
+        peso,
         carga: {
           connect: { id: cargaId },
         },
@@ -131,7 +150,7 @@ export class PedidosRepository implements IPedidosRepository {
 
     return new HistoricoPesoPedido(
       result.numPed,
-      result.peso,
+      Number(result.peso),
       result.carga.codCar,
       result.createdAt,
     );

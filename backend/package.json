@@ -9,8 +9,10 @@
     "start": "cross-env NODE_ENV=production node dist/server.js",
     "start:dev": "cross-env NODE_ENV=development node dist/server.js",
     "prisma:generate": "dotenv -e .env.development -- prisma generate --schema=prisma/schema.dev.prisma",
+    "prisma:generate:test": "dotenv -e .env.test -- prisma generate --schema=prisma/schema.dev.prisma",
     "prisma:generate:prod": "dotenv -e .env.production -- prisma generate --schema=prisma/schema.prisma",
     "prisma:migrate": "dotenv -e .env.development -- prisma migrate dev --schema=prisma/schema.dev.prisma",
+    "prisma:migrate:test": "dotenv -e .env.test -- prisma migrate deploy --schema=prisma/schema.dev.prisma",
     "prisma:migrate:prod": "dotenv -e .env.production -- prisma migrate dev --schema=prisma/schema.prisma",
     "prisma:deploy:prod": "dotenv -e .env.production -- prisma migrate deploy --schema=prisma/schema.prisma",
     "prisma:reset": "dotenv -e .env.development -- prisma migrate reset --schema=prisma/schema.dev.prisma",
@@ -20,6 +22,8 @@
     "db:setup:prod": "npm run prisma:generate:prod && npm run prisma:deploy:prod",
     "deploy": "npm run build && npm run db:setup:prod && npm run start",
     "test": "cross-env NODE_ENV=test tsx --test test/unit/**/*.test.ts",
+    "test:integration": "dotenv -e .env.test -- cross-env NODE_ENV=test tsx --test test/integration/**/*.test.ts",
+    "test:all": "npm test && npm run test:integration",
     "test:watch": "cross-env NODE_ENV=test tsx --test --watch test/unit/**/*.test.ts"
   },
   "keywords": [],
@@ -38,10 +42,11 @@
     "node-cron": "^4.2.1",
     "puppeteer": "^24.13.0",
     "soap": "^1.1.11",
-    "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuidv4": "^6.2.13",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@prisma/client": "^6.8.2",

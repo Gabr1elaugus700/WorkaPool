@@ -2,6 +2,7 @@ import { Carga } from "../entities/Carga";
 import { ICargoRepository } from "../repositories/ICargoRepository";
 import { PedidoService } from "../../pedidos/services/PedidoService";
 import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
+import { AppError } from "../../../utils/AppError";
 
 export class CloseCargaUseCase {
     private readonly cargoRepository: ICargoRepository;
@@ -29,17 +30,32 @@ export class CloseCargaUseCase {
         
 
         if (codCar == null) {
-            throw new Error("Código da carga é obrigatório");
+            throw new AppError({
+                message: "Código da carga é obrigatório",
+                statusCode: 400,
+                code: "CARGO_COD_CAR_REQUIRED",
+                details: { codCar },
+            });
         }
 
         const carga = await this.cargoRepository.getCargaByCodCar(codCar);
         if (!carga) {
-            throw new Error(`Carga com código ${codCar} não encontrada`);
+            throw new AppError({
+                message: `Carga ${codCar} não encontrada`,
+                statusCode: 404,
+                code: "CARGO_NOT_FOUND",
+                details: { codCar },
+            });
         }
 
         const pedidos = await this.cargoRepository.getPedidosPorCarga(carga.codCar);
         if (pedidos.length === 0) {
-            throw new Error(`Carga ${codCar} não possui pedidos vinculados`);
+            throw new AppError({
+                message: `Carga ${codCar} não possui pedidos vinculados`,
+                statusCode: 409,
+                code: "CARGO_SEM_PEDIDOS_VINCULADOS",
+                details: { codCar },
+            });
         }
 
         const pedidosSemCarga: string[] = [];
@@ -54,7 +70,12 @@ export class CloseCargaUseCase {
            
         }
         if (pedidosSemCarga.length > 0) {
-            throw new Error(`Os seguintes pedidos não estão vinculados a nenhuma carga no sistema Sapiens: ${pedidosSemCarga.join(", ")}`);
+            throw new AppError({
+                message: `Os seguintes pedidos não estão vinculados a nenhuma carga no sistema Sapiens: ${pedidosSemCarga.join(", ")}`,
+                statusCode: 409,
+                code: "CARGO_PEDIDOS_FORA_DO_SAPIENS",
+                details: { codCar, pedidos: pedidosSemCarga },
+            });
         } else {
             console.log(`Os seguintes pedidos estão corretamente em alguma carga no sistema Sapiens: ${pedidosSemCarga.join(", ")}`);
         }

@@ -5,7 +5,6 @@ startup/email.log
 startup/sms.log
 startup/whatsapp.log
 startup/telegram.log
-startup/telegram.log
 
 .env.compose.dev
 .env.compose.prod

@@ -6,6 +6,7 @@ import { IPedidosRepository } from "../../pedidos/repositories/IPedidosRepositor
 import prismaInstance from "../../../config/prisma";
 
 import { sqlPool, sqlPoolConnect } from "../../../database/sqlServer";
+import { AppError } from "../../../utils/AppError";
 
 export class CargoRepository implements ICargoRepository {
   constructor(
@@ -73,14 +74,24 @@ export class CargoRepository implements ICargoRepository {
     // 1. Buscar a carga
     const carga = await this.getCargaByCodCar(codCar);
     if (!carga) {
-      throw new Error(`Carga ${codCar} não encontrada`);
+      throw new AppError({
+        message: `Carga ${codCar} não encontrada`,
+        statusCode: 404,
+        code: "CARGO_NOT_FOUND",
+        details: { codCar },
+      });
     }
 
     // 2. Buscar TODOS os pedidos REAIS dessa carga do SQL Server
     const pedidosReais = await this.getPedidosPorCarga(codCar);
 
     if (pedidosReais.length === 0) {
-      throw new Error(`Carga ${codCar} não possui pedidos para ser fechada`);
+      throw new AppError({
+        message: `Carga ${codCar} não possui pedidos para ser fechada`,
+        statusCode: 409,
+        code: "CARGO_SEM_PEDIDOS_VINCULADOS",
+        details: { codCar },
+      });
     }
 
     console.log(
@@ -157,7 +168,13 @@ export class CargoRepository implements ICargoRepository {
     // Delega para o repositório de pedidos
     console.log(`🔵 [Repository] Buscando pedidos para carga ${codCar}`);
     if (!this.pedidosRepository) {
-      throw new Error("Repositório de pedidos não inicializado");
+      throw new AppError({
+        message: "Repositório de pedidos não inicializado",
+        statusCode: 500,
+        code: "CARGO_REPOSITORY_NOT_INITIALIZED",
+        details: { method: "getPedidosPorCarga" },
+        isOperational: false,
+      });
     } 
 
     return await this.pedidosRepository.getPedidosByCarga(codCar);
@@ -220,9 +237,12 @@ export class CargoRepository implements ICargoRepository {
     });
 
     if (result.rowsAffected[0] === 0) {
-      throw new Error(
-        `Pedido ${numPed} não encontrado ou não pôde ser atualizado.`,
-      );
+      throw new AppError({
+        message: `Pedido ${numPed} não encontrado ou não pôde ser atualizado.`,
+        statusCode: 404,
+        code: "CARGO_PEDIDO_NOT_FOUND_OR_NOT_UPDATED",
+        details: { numPed, codCar, posCar },
+      });
     } else {
       console.log(
         `✅ [Repository] Pedido ${numPed} atualizado com sucesso para carga ${codCar} na posição ${posCar}.`,

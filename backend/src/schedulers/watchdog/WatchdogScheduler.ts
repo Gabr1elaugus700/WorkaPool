@@ -2,6 +2,10 @@ import * as cron from "node-cron";
 import { watchdogConfig } from "./watchdogConfig";
 import { CheckPesoPedidoHistoricoUseCase } from "../../features/cargo/useCases/CheckPesoPedidoHistorico.use-case";
 
+interface WatchdogSchedulerDependencies {
+  checkPesoPedidoUseCase?: Pick<CheckPesoPedidoHistoricoUseCase, "execute">;
+}
+
 /**
  * WatchdogScheduler
  * 
@@ -18,10 +22,16 @@ import { CheckPesoPedidoHistoricoUseCase } from "../../features/cargo/useCases/C
 export class WatchdogScheduler {
   private task: cron.ScheduledTask | null = null;
   private isRunning: boolean = false;
-  private checkPesoPedidoUseCase: CheckPesoPedidoHistoricoUseCase;
+  private taskInFlight: boolean = false;
+  private checkPesoPedidoUseCase: Pick<
+    CheckPesoPedidoHistoricoUseCase,
+    "execute"
+  >;
 
-  constructor() {
-    this.checkPesoPedidoUseCase = new CheckPesoPedidoHistoricoUseCase();
+  constructor(dependencies: WatchdogSchedulerDependencies = {}) {
+    this.checkPesoPedidoUseCase =
+      dependencies.checkPesoPedidoUseCase ??
+      new CheckPesoPedidoHistoricoUseCase();
   }
 
   /**
@@ -43,7 +53,7 @@ export class WatchdogScheduler {
       this.task = cron.schedule(
         watchdogConfig.cronExpression,
         async () => {
-          await this.executeTask();
+          await this.tick();
         },
         {
           timezone: watchdogConfig.timezone,
@@ -84,7 +94,13 @@ export class WatchdogScheduler {
    * Executa a verificação de peso dos pedidos em cargas abertas
    * Este método é chamado automaticamente a cada 2 minutos
    */
-  private async executeTask(): Promise<void> {
+  public async tick(): Promise<void> {
+    if (this.taskInFlight) {
+      console.log("⚠️  Watchdog ignorou tick: tarefa anterior ainda em execução");
+      return;
+    }
+
+    this.taskInFlight = true;
     const startTime = Date.now();
 
     try {
@@ -101,6 +117,8 @@ export class WatchdogScheduler {
       console.error(`❌ ===== WATCHDOG: Erro ao executar tarefa: ${errorMessage} =====`);
       console.error(error);
       console.log(""); // Linha em branco para separar logs
+    } finally {
+      this.taskInFlight = false;
     }
   }
 }

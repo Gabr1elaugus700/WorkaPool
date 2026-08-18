@@ -16,6 +16,15 @@ const orderWriteRoles: Role[] = [...orderReadRoles];
 router.get("/lost-sapiens", authMiddleware, requireRoles(orderReadRoles), OrdersController.getLostOrdersFromSapiens);
 
 // CRUD básico de pedidos
+/*
+- Criar pedido
+- Listar pedidos
+- Listar pedidos por vendedor
+- Buscar pedido por ID
+- Atualizar status do pedido
+- Adicionar motivo de perda
+- Atualizar motivo de perda (somente se justificativa existir e estiver dentro da janela)
+*/
 router.post("/", authMiddleware, requireRoles(orderWriteRoles), OrdersController.create);
 router.get("/", authMiddleware, requireRoles(orderReadRoles), OrdersController.getAll);
 router.get("/seller/:codRep", authMiddleware, requireRoles(orderReadRoles), OrdersController.getPerSellerOrders);

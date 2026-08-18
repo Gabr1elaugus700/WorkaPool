@@ -93,7 +93,7 @@ app.use("/api/cargo", cargoRoutes);
 app.use("/api/clientes-inativos", clientesInativos);
 
 //Produtos Em Estoque (5)
-app.use("/api/produ tosEstoque", produtosEstoque);
+app.use("/api/produtosEstoque", produtosEstoque);
 
 // Rota de consultas Banco de dados Prisma
 app.use("/api/auth", authRoutes);

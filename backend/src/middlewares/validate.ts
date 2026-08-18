@@ -1,8 +1,8 @@
-import { AnyZodObject } from "zod";
+import { z } from "zod";
 import { Request, Response, NextFunction } from "express";
 
 export const validate =
-  (schema: AnyZodObject) =>
+  (schema: z.ZodTypeAny) =>
   (req: Request, res: Response, next: NextFunction) => {
     try {
       schema.parse({
@@ -11,10 +11,11 @@ export const validate =
         params: req.params,
       });
       next();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const issues = err instanceof z.ZodError ? err.issues : [];
       return res.status(400).json({
         message: "Erro de validação",
-        errors: err.errors,
+        errors: issues,
       });
     }
   };

@@ -3,6 +3,7 @@ import { Carga } from "../entities/Carga";
 import { Pedido, SimulacaoPedidoNaCarga } from "../entities/Pedido";
 import { PedidoService } from "../../pedidos/services/PedidoService";
 import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
+import { AppError } from "../../../utils/AppError";
 
 type ResultadoValidacaoPedidoNaCarga = {
   podeAdicionar: boolean;
@@ -30,7 +31,12 @@ export class PesoCargaCalculator {
     const cargaData = await this.cargoRepository.getCargaById(cargaId);
 
     if (!cargaData) {
-      throw new Error(`Carga ${cargaId} não encontrada`);
+      throw new AppError({
+        message: `Carga ${cargaId} não encontrada`,
+        statusCode: 404,
+        code: "CARGO_NOT_FOUND",
+        details: { cargaId },
+      });
     }
 
     const pedidos = await this.cargoRepository.getPedidosPorCarga(carga.codCar);
@@ -89,7 +95,12 @@ export class PesoCargaCalculator {
     const pesoUsadoAtual = await this.calcularPesoUsado(pedidos);
 
     if (pesoAtualPedido == null || isNaN(pesoAtualPedido)) {
-      throw new Error(`Peso atual inválido para o pedido ${pedido.numPed}`);
+      throw new AppError({
+        message: `Peso atual inválido para o pedido ${pedido.numPed}`,
+        statusCode: 422,
+        code: "CARGO_PESO_PEDIDO_INVALIDO",
+        details: { numPed: pedido.numPed, peso: pesoAtualPedido },
+      });
     }
 
     const pesoAnteriorConsiderado = historico?.peso ?? pesoAtualPedido;
@@ -127,9 +138,12 @@ export class PesoCargaCalculator {
     const pesoPedido = await this.pedidoService.pesoAtualPedido(novoPedido);
 
     if (pesoPedido == null || isNaN(pesoPedido)) {
-      throw new Error(
-        `Pedido ${novoPedido.numPed} com peso inválido: ${pesoPedido}`,
-      );
+      throw new AppError({
+        message: `Pedido ${novoPedido.numPed} com peso inválido: ${pesoPedido}`,
+        statusCode: 422,
+        code: "CARGO_PESO_PEDIDO_INVALIDO",
+        details: { numPed: novoPedido.numPed, peso: pesoPedido },
+      });
     }
 
     const pesoTotalAposAdicionar =

@@ -2,7 +2,8 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
-    "outDir": "./dist",
+    "outDir": "./dist-test",
+    // "outDir": "./dist", <-- alterar para produção
     "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
