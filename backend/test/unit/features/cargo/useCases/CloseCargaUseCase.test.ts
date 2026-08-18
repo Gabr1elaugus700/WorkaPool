@@ -4,6 +4,15 @@ import { CloseCargaUseCase } from "../../../../../src/features/cargo/useCases/Cl
 import { Carga, SituacaoCarga } from "../../../../../src/features/cargo/entities/Carga";
 import { Pedido } from "../../../../../src/features/cargo/entities/Pedido";
 import { ICargoRepository } from "../../../../../src/features/cargo/repositories/ICargoRepository";
+import { PedidoService } from "../../../../../src/features/pedidos/services/PedidoService";
+import { AppError } from "../../../../../src/utils/AppError";
+
+type CloseCargaRepositoryMock = Pick<
+  ICargoRepository,
+  "getCargaByCodCar" | "getPedidosPorCarga" | "validarCargaSapiens" | "closeCarga"
+>;
+
+const mockPedidoService = {} as PedidoService;
 
 const buildCarga = (codCar: number): Carga =>
   new Carga({
@@ -45,40 +54,36 @@ describe("CloseCargaUseCase", () => {
 
     const getCargaByCodCar = mock.fn(async () => carga);
     const getPedidosPorCarga = mock.fn(async () => pedidos);
+    const validarCargaSapiens = mock.fn(async (numPed: number) => numPed === 1002);
     const closeCarga = mock.fn(async () => ({ carga, pedidosSalvos: pedidos.length }));
 
-    const mockRepository: ICargoRepository = {
+    const mockRepository: CloseCargaRepositoryMock = {
       getCargaByCodCar,
       getPedidosPorCarga,
+      validarCargaSapiens,
       closeCarga,
-    } as any;
+    };
 
-    const getPedidoCargaSapiens = mock.fn(async (numPed: number) => {
-      if (numPed === 1002) {
-        return { numPed, sitPed: 8 };
-      }
-      return { numPed, sitPed: 0 };
-    });
-
-    const mockPedidoService = {
-      getPedidoCargaSapiens,
-    } as any;
-
-    const useCase = new CloseCargaUseCase(mockRepository, mockPedidoService);
+    const useCase = new CloseCargaUseCase(
+      mockRepository as ICargoRepository,
+      mockPedidoService,
+    );
 
     // Act + Assert
     await assert.rejects(
       async () => useCase.execute(101),
-      (error: any) => {
-        assert.match(
+      (error: unknown) => {
+        assert.ok(error instanceof AppError);
+        assert.strictEqual(
           error.message,
-          /Os seguintes pedidos não estão vinculados a nenhuma carga no sistema Sapiens: 1001, 1003/,
+          "Os seguintes pedidos não estão vinculados a nenhuma carga no sistema Sapiens: 1001, 1003",
         );
+        assert.strictEqual(error.code, "CARGO_PEDIDOS_FORA_DO_SAPIENS");
         return true;
       },
     );
 
-    assert.strictEqual(getPedidoCargaSapiens.mock.calls.length, 3);
+    assert.strictEqual(validarCargaSapiens.mock.calls.length, 3);
     assert.strictEqual(closeCarga.mock.calls.length, 0);
   });
 
@@ -89,27 +94,26 @@ describe("CloseCargaUseCase", () => {
 
     const getCargaByCodCar = mock.fn(async () => carga);
     const getPedidosPorCarga = mock.fn(async () => pedidos);
+    const validarCargaSapiens = mock.fn(async () => true);
     const closeCarga = mock.fn(async () => ({ carga, pedidosSalvos: pedidos.length }));
 
-    const mockRepository: ICargoRepository = {
+    const mockRepository: CloseCargaRepositoryMock = {
       getCargaByCodCar,
       getPedidosPorCarga,
+      validarCargaSapiens,
       closeCarga,
-    } as any;
+    };
 
-    const getPedidoCargaSapiens = mock.fn(async (numPed: number) => ({ numPed, sitPed: 8 }));
-
-    const mockPedidoService = {
-      getPedidoCargaSapiens,
-    } as any;
-
-    const useCase = new CloseCargaUseCase(mockRepository, mockPedidoService);
+    const useCase = new CloseCargaUseCase(
+      mockRepository as ICargoRepository,
+      mockPedidoService,
+    );
 
     // Act
     const resultado = await useCase.execute(202);
 
     // Assert
-    assert.strictEqual(getPedidoCargaSapiens.mock.calls.length, 2);
+    assert.strictEqual(validarCargaSapiens.mock.calls.length, 2);
     assert.strictEqual(closeCarga.mock.calls.length, 1);
     assert.strictEqual(resultado.pedidosSalvos, 2);
     assert.deepStrictEqual(resultado.pedidosSemCargaSapiens, []);
@@ -123,40 +127,36 @@ describe("CloseCargaUseCase", () => {
 
     const getCargaByCodCar = mock.fn(async () => carga);
     const getPedidosPorCarga = mock.fn(async () => pedidos);
+    const validarCargaSapiens = mock.fn(async (numPed: number) => numPed !== 3001);
     const closeCarga = mock.fn(async () => ({ carga, pedidosSalvos: pedidos.length }));
 
-    const mockRepository: ICargoRepository = {
+    const mockRepository: CloseCargaRepositoryMock = {
       getCargaByCodCar,
       getPedidosPorCarga,
+      validarCargaSapiens,
       closeCarga,
-    } as any;
+    };
 
-    const getPedidoCargaSapiens = mock.fn(async (numPed: number) => {
-      if (numPed === 3001) {
-        return { numPed, sitPed: 1 };
-      }
-      return { numPed, sitPed: 8 };
-    });
-
-    const mockPedidoService = {
-      getPedidoCargaSapiens,
-    } as any;
-
-    const useCase = new CloseCargaUseCase(mockRepository, mockPedidoService);
+    const useCase = new CloseCargaUseCase(
+      mockRepository as ICargoRepository,
+      mockPedidoService,
+    );
 
     // Act + Assert
     await assert.rejects(
       async () => useCase.execute(303),
-      (error: any) => {
-        assert.match(
+      (error: unknown) => {
+        assert.ok(error instanceof AppError);
+        assert.strictEqual(
           error.message,
-          /Os seguintes pedidos não estão vinculados a nenhuma carga no sistema Sapiens: 3001/,
+          "Os seguintes pedidos não estão vinculados a nenhuma carga no sistema Sapiens: 3001",
         );
+        assert.strictEqual(error.code, "CARGO_PEDIDOS_FORA_DO_SAPIENS");
         return true;
       },
     );
 
-    assert.strictEqual(getPedidoCargaSapiens.mock.calls.length, 2);
+    assert.strictEqual(validarCargaSapiens.mock.calls.length, 2);
     assert.strictEqual(closeCarga.mock.calls.length, 0);
   });
 });

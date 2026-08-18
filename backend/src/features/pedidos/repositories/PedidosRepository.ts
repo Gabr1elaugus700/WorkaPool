@@ -125,7 +125,7 @@ export class PedidosRepository implements IPedidosRepository {
     await this.prisma.historicoPesoPedidos.create({
       data: {
         numPed,
-        peso: Math.round(peso), // Garantir que seja inteiro
+        peso,
         carga: {
           connect: { id: cargaId },
         },
@@ -150,7 +150,7 @@ export class PedidosRepository implements IPedidosRepository {
 
     return new HistoricoPesoPedido(
       result.numPed,
-      result.peso,
+      Number(result.peso),
       result.carga.codCar,
       result.createdAt,
     );

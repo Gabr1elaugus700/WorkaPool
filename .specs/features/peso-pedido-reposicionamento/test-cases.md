@@ -33,16 +33,16 @@ Unidades e arquivos envolvidos:
 
 - Runner: `node:test` (`describe`, `it`, `mock`, `after`), asserts com `node:assert/strict`.
 - Localização: `backend/test/unit/features/**`.
-- Mock de repositório via objeto que implementa `IPedidosRepository`/`ICargoRepository` com `mock.fn`, castado com `as any` (mesmo padrão de [PedidoProcessor.test.ts](../../../backend/test/unit/features/cargo/services/PedidoProcessor.test.ts) e [CloseCargaUseCase.test.ts](../../../backend/test/unit/features/cargo/useCases/CloseCargaUseCase.test.ts)).
+- Mocks e fakes implementam interfaces tipadas de `IPedidosRepository`/`ICargoRepository`, sem `any`.
 - Bloco `after` aguardando ticks/timeout para drenar promises pendentes (mesmo padrão dos testes atuais).
-- Proibido `any` em código de produção; nos testes segue-se o padrão existente de `as any` apenas para montar mocks parciais.
+- Proibido `any` em código de produção e testes.
 
 ## Arquivos de teste a criar
 
 | Arquivo | Unidade sob teste | Causa raiz coberta |
 | --- | --- | --- |
 | `backend/test/unit/features/pedidos/mappers/PedidoMapper.test.ts` | `mapRawToPedidos` | Causa 1 (agregação de peso) |
-| `backend/test/unit/features/pedidos/services/PedidoService.verificarMudancaPeso.test.ts` | `PedidoService.verificarMudancaPeso` | Causas 1 e 2 (detecção de mudança / arredondamento) |
+| `backend/test/unit/features/pedidos/services/PedidoService.verificarMudancaPeso.test.ts` | `PedidoService.verificarMudancaPeso` | Causas 1 e 2 (detecção de mudança / total exato) |
 | `backend/test/unit/features/cargo/services/CargaProcessor.reposicionamento.test.ts` | `CargaProcessor.processarMudancasPesoPedidos` | Reposicionamento e persistência de histórico |
 
 ## Suítes e Test Cases
@@ -73,18 +73,17 @@ Unidades e arquivos envolvidos:
 | TC-S1.3 | peso total atual `500`; histórico `peso: 500` | `verificarMudancaPeso(pedido)` | `{ mudou: false, aumentou: false, reducao: false, diferenca: 0 }` |
 | TC-S1.4 | peso total atual `500`; `getLastHistoricoPeso` retorna `null` | `verificarMudancaPeso(pedido)` | `{ mudou: false, pesoAnterior: null, pesoAtual: 500 }` (branch de histórico inicial) |
 
-### TC-S2 — `verificarMudancaPeso` não gera mudança falsa por arredondamento
+### TC-S2 — `verificarMudancaPeso` compara o total exato, sem arredondar
 
 **Unidade**: `PedidoService.verificarMudancaPeso`
-**Motivo**: cobre a Causa 2. Histórico é gravado com `Math.round`, mas a comparação usa o valor bruto do SQL. Estes testes fixam que peso atual e histórico devem ser comparados na **mesma granularidade**.
+**Motivo**: cobre a Causa 2. Histórico e peso atual devem ser o mesmo número (soma dos itens). Fração que `Math.round` colapsaria é mudança real até o histórico ficar exato.
 
 | ID | Given | When | Then |
 | --- | --- | --- | --- |
-| TC-S2.1 | peso atual `1234.6` (bruto do SQL); histórico `1235` (arredondado) | `verificarMudancaPeso(pedido)` | `mudou === false` (não pode disparar reprocessamento a cada ciclo) |
-| TC-S2.2 | peso atual `1234.4`; histórico `1234` | `verificarMudancaPeso(pedido)` | `mudou === false` |
-| TC-S2.3 | peso atual `1240.0`; histórico `1234` | `verificarMudancaPeso(pedido)` | `mudou === true`, `aumentou === true` (mudança real acima do arredondamento) |
-
-> Falha esperada no código atual: TC-S2.1 e TC-S2.2 retornam `mudou: true` hoje, evidenciando os históricos repetidos.
+| TC-S2.1 | peso atual `1355.5`; histórico `1355` | `verificarMudancaPeso(pedido)` | `mudou === true`, `pesoAtual === 1355.5`, `aumentou === true` |
+| TC-S2.2 | peso atual `1355.5`; histórico `1355.5` | `verificarMudancaPeso(pedido)` | `mudou === false` |
+| TC-S2.3 | peso atual `1234.6`; histórico `1235` | `verificarMudancaPeso(pedido)` | `mudou === true`, `pesoAtual === 1234.6` |
+| TC-S2.4 | peso atual `1240.0`; histórico `1234` | `verificarMudancaPeso(pedido)` | `mudou === true`, `aumentou === true` |
 
 ### TC-P1 — `CargaProcessor` reposiciona quando o peso aumenta e cabe
 
@@ -122,14 +121,29 @@ Unidades e arquivos envolvidos:
 | --- | --- | --- |
 | TC-G1.* | Causa 1 - agregação de peso | FIX-01 |
 | TC-S1.* | Causa 1 - detecção de mudança | FIX-01 |
-| TC-S2.* | Causa 2 - arredondamento | FIX-02 |
+| TC-S2.* | Causa 2 - total exato sem arredondar | FIX-02 |
 | TC-P1.* | Reposicionamento/persistência | FIX-01, FIX-02 |
 | TC-P2.* | Cálculo de posição | FIX-01 |
+
+## Casos de integração
+
+| Integration ID | Cenário | Arquivo | Status |
+| --- | --- | --- | --- |
+| INT-PESO-01 | Aumento que cabe reposiciona e salva o peso total | `processarMudancasPeso.integration.test.ts` | Done |
+| INT-PESO-02 | Aumento que excede remove e salva o peso total | `processarMudancasPeso.integration.test.ts` | Done |
+| INT-PESO-03 | Redução mantém a posição e salva o novo peso | `processarMudancasPeso.integration.test.ts` | Done |
+| INT-PESO-04 | Peso inalterado não gera escritas | `processarMudancasPeso.integration.test.ts` | Done |
+| INT-PESO-05 | Segundo ciclo é idempotente | `processarMudancasPeso.idempotencia.integration.test.ts` | Done |
+| INT-PESO-06 | Total exato 1355.5 já no histórico não reposiciona nem grava | `processarMudancasPeso.integration.test.ts` | Done |
+| INT-PESO-07 | Histórico legado 1355 grava 1355.5 uma vez; tick seguinte estável | `processarMudancasPeso.idempotencia.integration.test.ts` | Done |
+| INT-PRISMA-01 | Persistência Decimal e retorno do histórico mais recente | `historicoPesoPrisma.integration.test.ts` | Done |
+| INT-PRISMA-02 | FakeSapiens fornece peso e Prisma persiste o fluxo | `historicoPesoPrisma.integration.test.ts` | Done |
 
 ## Critérios de aceite dos testes
 
 1. Todos os TCs acima existem nos arquivos indicados e rodam em `node:test`.
-2. TC-S2.1 e TC-S2.2 falham no código atual e passam após a spec técnica (prova de correção da Causa 2).
+2. TC-S2.1 prova que `1355.5` vs `1355` é mudança real (`pesoAtual === 1355.5`); TC-S2.2 prova que totais exatamente iguais não disparam reprocessamento.
 3. TC-S1.1 e TC-P1.1 comprovam que peso agregado leva a `aumentou: true` e a reposicionamento (prova de correção da Causa 1).
-4. Nenhum teste depende de banco/SQL externo (100% unitário com mocks).
+4. Nenhum teste depende do SQL Server Sapiens; integrações de histórico usam exclusivamente o banco isolado `workapool_test`.
 5. Suíte completa executa sem promises pendentes (bloco `after` presente).
+6. `npm test`, `npm run test:integration` e `npm run test:all` passam.

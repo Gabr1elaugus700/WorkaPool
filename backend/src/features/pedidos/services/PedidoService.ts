@@ -75,14 +75,13 @@ export class PedidoService {
       };
     }
 
-    const pesoAtualComparavel = Math.round(pesoAtual);
-    const pesoAnterior = Math.round(historico.peso);
-    const diferenca = pesoAtualComparavel - pesoAnterior;
+    const pesoAnterior = historico.peso;
+    const diferenca = pesoAtual - pesoAnterior;
 
     return {
       mudou: diferenca !== 0,
       pesoAnterior,
-      pesoAtual: pesoAtualComparavel,
+      pesoAtual,
       aumentou: diferenca > 0,
       reducao: diferenca < 0,
       diferenca,
@@ -98,6 +97,13 @@ export class PedidoService {
     peso: number,
   ): Promise<void> {
     const numPed = Number(pedido.numPed);
+    const ultimoHistorico =
+      await this.pedidosRepository.getLastHistoricoPeso(numPed);
+
+    if (ultimoHistorico && ultimoHistorico.peso === peso) {
+      return;
+    }
+
     await this.pedidosRepository.createHistoricoPeso(numPed, cargaId, peso);
   }
 

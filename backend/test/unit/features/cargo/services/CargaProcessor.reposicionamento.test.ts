@@ -42,7 +42,7 @@ describe('CargaProcessor.processarMudancasPesoPedidos', () => {
     it('TC-P1.1 - aumentou e cabe => reposiciona e grava histórico', async () => {
       // Arrange
       const carga = buildCarga(10);
-      const pedidos = [buildPedido('1', 1)];
+      const pedidos = [buildPedido('1', 1), buildPedido('2', 2)];
 
       const getPedidosPorCarga = mock.fn(async (_codCar: number) => pedidos);
       const updatePedidoCarga = mock.fn(
@@ -59,14 +59,25 @@ describe('CargaProcessor.processarMudancasPesoPedidos', () => {
         calculaPesoDisponivel: mock.fn(async () => 5000),
       } as any;
 
-      const verificarMudancaPeso = mock.fn(async () => ({
-        mudou: true,
-        aumentou: true,
-        reducao: false,
-        pesoAnterior: 400,
-        pesoAtual: 500,
-        diferenca: 100,
-      }));
+      const verificarMudancaPeso = mock.fn(async (pedido: Pedido) =>
+        pedido.numPed === '1'
+          ? {
+              mudou: true,
+              aumentou: true,
+              reducao: false,
+              pesoAnterior: 400,
+              pesoAtual: 500,
+              diferenca: 100,
+            }
+          : {
+              mudou: false,
+              aumentou: false,
+              reducao: false,
+              pesoAnterior: 100,
+              pesoAtual: 100,
+              diferenca: 0,
+            },
+      );
       const salvarHistoricoPeso = mock.fn(
         async (_pedido: Pedido, _cargaId: string, _peso: number) => {},
       );
@@ -87,7 +98,7 @@ describe('CargaProcessor.processarMudancasPesoPedidos', () => {
       // Assert
       assert.strictEqual(updatePedidoCarga.mock.calls.length, 1);
       assert.strictEqual(updatePedidoCarga.mock.calls[0].arguments[0], 1);
-      assert.strictEqual(updatePedidoCarga.mock.calls[0].arguments[2], 2); // maxPosCar(1) + 1
+      assert.strictEqual(updatePedidoCarga.mock.calls[0].arguments[2], 3);
 
       assert.strictEqual(salvarHistoricoPeso.mock.calls.length, 1);
       assert.strictEqual(salvarHistoricoPeso.mock.calls[0].arguments[2], 500);

@@ -7,6 +7,13 @@ import { PesoCargaCalculator } from "../services/PesoCargaCalculator";
 import { PedidoService } from "../../pedidos/services/PedidoService";
 import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
 
+interface CheckPesoPedidoHistoricoDependencies {
+  cargoRepository?: ICargoRepository;
+  pedidoService?: PedidoService;
+  pesoCargaCalculator?: PesoCargaCalculator;
+  cargaProcessor?: CargaProcessor;
+}
+
 /**
  * Use Case: Verifica e processa mudanças de peso em pedidos de cargas abertas.
  * 
@@ -23,22 +30,35 @@ export class CheckPesoPedidoHistoricoUseCase {
   private readonly pesoCargaCalculator: PesoCargaCalculator;
   private readonly cargaProcessor: CargaProcessor;
 
-  constructor() {
-    this.cargoRepository = new CargoRepository(new PedidosRepository());
-    this.pedidoService = new PedidoService(new PedidosRepository());
-    this.pesoCargaCalculator = new PesoCargaCalculator(
-      this.cargoRepository,
-      this.pedidoService,
-    );
-    this.cargaProcessor = new CargaProcessor(
-      this.cargoRepository,
-      this.pesoCargaCalculator,
-      this.pedidoService,
-    );
+  constructor(dependencies: CheckPesoPedidoHistoricoDependencies = {}) {
+    let defaultPedidosRepository: PedidosRepository | undefined;
+    const getDefaultPedidosRepository = (): PedidosRepository => {
+      defaultPedidosRepository ??= new PedidosRepository();
+      return defaultPedidosRepository;
+    };
+
+    this.cargoRepository =
+      dependencies.cargoRepository ??
+      new CargoRepository(getDefaultPedidosRepository());
+    this.pedidoService =
+      dependencies.pedidoService ??
+      new PedidoService(getDefaultPedidosRepository());
+    this.pesoCargaCalculator =
+      dependencies.pesoCargaCalculator ??
+      new PesoCargaCalculator(this.cargoRepository, this.pedidoService);
+    this.cargaProcessor =
+      dependencies.cargaProcessor ??
+      new CargaProcessor(
+        this.cargoRepository,
+        this.pesoCargaCalculator,
+        this.pedidoService,
+      );
   }
 
   async execute() {
-    const openCargas = await new GetCargasBySituacaoUseCase().execute(
+    const openCargas = await new GetCargasBySituacaoUseCase(
+      this.cargoRepository,
+    ).execute(
       SituacaoCarga.ABERTA,
     );
 

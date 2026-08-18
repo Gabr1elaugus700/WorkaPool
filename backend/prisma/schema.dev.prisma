@@ -87,7 +87,7 @@ model HistoricoPesoPedidos {
   carga   Cargas @relation(fields: [cargaId], references: [id])
 
   numPed    Int
-  peso      Int
+  peso      Decimal  @db.Decimal(12, 3)
   createdAt DateTime @default(now())
 
   @@map("historico_peso_pedidos")

@@ -78,8 +78,10 @@ export class CargaProcessor {
               `✅ Pedido ${pedido.numPed} ainda cabe na carga\n` +
                 `   🔄 Movendo para última posição da carga...`,
             );
-            await this.moverPedidoParaFinal(carga, pedido);
-            pedidosReposicionados.push(Number(pedido.numPed));
+            const reposicionado = await this.moverPedidoParaFinal(carga, pedido);
+            if (reposicionado) {
+              pedidosReposicionados.push(Number(pedido.numPed));
+            }
           }
 
           await this.pedidoService.salvarHistoricoPeso(
@@ -122,9 +124,18 @@ export class CargaProcessor {
   /**
    * Move um pedido para a última posição da carga.
    */
-  private async moverPedidoParaFinal(carga: Carga, pedido: Pedido): Promise<void> {
+  private async moverPedidoParaFinal(
+    carga: Carga,
+    pedido: Pedido,
+  ): Promise<boolean> {
     const pedidosList = await this.cargoRepository.getPedidosPorCarga(carga.codCar);
     const maxPosCar = Math.max(...pedidosList.map((p) => p.poscar || 0), 0);
+    const posCarAtual = pedido.poscar ?? 0;
+
+    if (posCarAtual > 0 && posCarAtual === maxPosCar) {
+      return false;
+    }
+
     const novaPosCar = maxPosCar + 1;
 
     await this.cargoRepository.updatePedidoCarga(
@@ -134,6 +145,7 @@ export class CargaProcessor {
     );
 
     console.log(`✅ Pedido reposicionado para posição: ${novaPosCar}`);
+    return true;
   }
 
   /**

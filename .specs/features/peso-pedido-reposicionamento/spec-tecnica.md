@@ -32,40 +32,28 @@ Mas em `getPedidoWeight` apenas a **primeira** linha é usada:
 
 Como `PedidoService.verificarMudancaPeso` compara `pesoAtualPedido` (peso parcial) com o histórico (também gravado parcial), a mudança real de peso muitas vezes não é detectada -> `mudou: false` -> sem reposicionamento.
 
-### Causa raiz 2: comparação float vs histórico arredondado
+### Causa raiz 2: `Math.round` + coluna `Int` colapsa o total exato
 
-O histórico é persistido com `Math.round`:
+O histórico era persistido com `Math.round` em coluna Prisma `Int`. O total vivo do pedido continua fracionário (ex.: `1355.5`). No tick seguinte a comparação via `Math.round` trata `1355.5` vs `1355` como iguais **ou**, se a comparação for bruta contra o inteiro gravado, dispara `mudou` a cada ciclo.
 
-```125:125:backend/src/features/pedidos/repositories/PedidosRepository.ts
-        peso: Math.round(peso), // Garantir que seja inteiro
-```
-
-Mas a comparação usa o valor bruto do SQL:
-
-```78:82:backend/src/features/pedidos/services/PedidoService.ts
-    const pesoAnterior = historico.peso;
-    const diferenca = pesoAtual - pesoAnterior;
-
-    return {
-      mudou: pesoAnterior !== pesoAtual,
-```
-
-Quando o SQL retorna fracionário (ex.: `1234.6`) e o histórico guarda `1235`, `mudou` fica `true` a cada ciclo, geralmente caindo no branch `reducao` (que só regrava histórico), produzindo **vários registros com peso praticamente igual** e sem reposicionar.
+O contrato correto (issues #51/#52): peso do Pedido = soma exata dos itens. Nunca arredondar na comparação, na persistência ou nos fakes.
 
 ## Goals
 
 - `getPedidoWeight` retornar o **peso total agregado** do pedido, consistente com `mapRawToPedidos`.
-- `verificarMudancaPeso` comparar peso atual e histórico na **mesma granularidade** usada na persistência (inteiro arredondado).
+- `verificarMudancaPeso` e `salvarHistoricoPeso` compararem e gravarem o **total exato** (sem `Math.round`).
+- `historico_peso_pedidos.peso` persistir `Decimal`, não `Int`.
 - Preservar assinaturas públicas (`IPedidosRepository`, `PedidoService`, `CargaProcessor`) e o contrato de retorno.
 - Reposicionamento e histórico passarem a refletir mudanças reais de peso.
 
 ## Out of Scope
 
 - Alterar a regra de negócio de reposicionamento (mover para o final / remover) em si.
-- Alterar o schema Prisma de `HistoricoPesoPedidos` (tipo `Int` permanece).
-- Mudar a periodicidade do watchdog.
-- Refatorar `PesoCargaCalculator` além do necessário para consumir peso correto.
 - Deduplicar registros já existentes na tabela (limpeza de dados legados fica fora).
+- Mudar a periodicidade do watchdog.
+- Reabilitar o boot do watchdog em `server.ts`.
+- E2E contra SQL Server Sapiens real (FakeSapiens é o boundary).
+- Refatorar `PesoCargaCalculator` além do necessário para consumir peso correto.
 
 ## Design Decisions
 
@@ -91,39 +79,43 @@ return {
 
 **Rationale**: elimina o peso parcial na origem, corrigindo simultaneamente detecção de mudança, gravação de histórico e cálculo de capacidade em [PesoCargaCalculator](../../../backend/src/features/cargo/services/PesoCargaCalculator.ts) e [UpdatePedidoCarga.use-case.ts](../../../backend/src/features/cargo/useCases/UpdatePedidoCarga.use-case.ts), que também usam `getPedidoWeight`.
 
-### D2 - Comparar peso na mesma granularidade da persistência
+### D2 - Comparar e persistir o total exato (sem `Math.round`)
 
-Como o histórico é gravado com `Math.round`, a comparação em `verificarMudancaPeso` deve arredondar ambos os lados antes de decidir `mudou`/`aumentou`/`reducao`/`diferenca`.
+Arquivos:
 
-Arquivo: [backend/src/features/pedidos/services/PedidoService.ts](../../../backend/src/features/pedidos/services/PedidoService.ts)
+- [PedidoService.ts](../../../backend/src/features/pedidos/services/PedidoService.ts) — `verificarMudancaPeso` e `salvarHistoricoPeso`
+- [PedidosRepository.ts](../../../backend/src/features/pedidos/repositories/PedidosRepository.ts) — `createHistoricoPeso` / `getLastHistoricoPeso`
+- [schema.prisma](../../../backend/prisma/schema.prisma) e [schema.dev.prisma](../../../backend/prisma/schema.dev.prisma) — `peso Decimal @db.Decimal(12, 3)`
 
-Proposta (dentro de `verificarMudancaPeso`, após obter `pesoAtual` e `historico`):
+Comparação:
 
 ```typescript
-const pesoAtualComparavel = Math.round(pesoAtual);
-const pesoAnterior = Math.round(historico.peso);
-const diferenca = pesoAtualComparavel - pesoAnterior;
+const pesoAnterior = historico.peso;
+const diferenca = pesoAtual - pesoAnterior;
 
 return {
   mudou: diferenca !== 0,
   pesoAnterior,
-  pesoAtual: pesoAtualComparavel,
+  pesoAtual,
   aumentou: diferenca > 0,
   reducao: diferenca < 0,
   diferenca,
 };
 ```
 
-**Rationale**: evita `mudou` falso por diferença fracionária que desaparece no `Math.round` da persistência, eliminando os registros repetidos.
+Idempotência de `salvarHistoricoPeso`: só pula se `ultimoHistorico.peso === peso` (igualdade exata). `1355.5` vs `1355` é mudança real e grava `1355.5` uma vez; o tick seguinte com `1355.5` não faz nada.
 
-> Decisão de granularidade: adota-se `Math.round` (inteiro) para alinhar com a coluna `peso Int` do Prisma e com `createHistoricoPeso`. Não se altera a persistência; apenas a comparação passa a usar a mesma unidade.
+Na leitura Prisma, converter `Decimal` com `Number(result.peso)`.
+
+**Rationale**: a coluna `Int` + `Math.round` era o defeito. O total vivo nunca é inteiro por construção; gravar e comparar o mesmo número elimina o loop do watchdog.
 
 ## Componentes afetados
 
 | Arquivo | Mudança | Story |
 | --- | --- | --- |
-| [PedidosRepository.ts](../../../backend/src/features/pedidos/repositories/PedidosRepository.ts) | `getPedidoWeight` agrega via `mapRawToPedidos` | FIX-01 |
-| [PedidoService.ts](../../../backend/src/features/pedidos/services/PedidoService.ts) | `verificarMudancaPeso` compara peso arredondado | FIX-02 |
+| [PedidosRepository.ts](../../../backend/src/features/pedidos/repositories/PedidosRepository.ts) | `getPedidoWeight` agrega via `mapRawToPedidos`; `createHistoricoPeso` grava Decimal sem `Math.round` | FIX-01, FIX-02 |
+| [PedidoService.ts](../../../backend/src/features/pedidos/services/PedidoService.ts) | `verificarMudancaPeso` / `salvarHistoricoPeso` usam igualdade exata | FIX-02 |
+| [schema.prisma](../../../backend/prisma/schema.prisma) / [schema.dev.prisma](../../../backend/prisma/schema.dev.prisma) | `historico_peso_pedidos.peso` `Int` → `Decimal(12, 3)` | FIX-02 |
 
 Consumidores que se beneficiam sem alteração de assinatura:
 
@@ -143,35 +135,61 @@ Consumidores que se beneficiam sem alteração de assinatura:
 2. WHEN o pedido não existe THEN SHALL manter o `AppError` `404 PEDIDOS_NOT_FOUND` atual, sem regressão.
 3. WHEN o peso real do pedido aumenta em relação ao histórico THEN `verificarMudancaPeso` SHALL retornar `aumentou: true` e o `CargaProcessor` SHALL reposicionar o pedido.
 
-### P2: FIX-02 — Histórico não é regravado sem mudança real
+### P2: FIX-02 — Histórico persiste e compara o total exato
 
-**User Story**: Como operação logística, eu quero que o histórico de peso só registre mudanças reais, para não poluir `HistoricoPesoPedidos` com pesos repetidos.
+**User Story**: Como operação logística, eu quero que cada Pedido em carga aberta seja comparado e gravado pela soma exata dos itens (nunca arredondada), para o watchdog só reposicionar, remover ou regravar histórico quando o peso real mudou.
 
 **Acceptance Criteria**:
 
-1. WHEN o peso atual difere do histórico apenas por fração que some no `Math.round` THEN `verificarMudancaPeso` SHALL retornar `mudou: false`.
-2. WHEN `mudou: false` THEN o `CargaProcessor` SHALL pular o pedido sem chamar `salvarHistoricoPeso`.
-3. WHEN há mudança inteira real THEN `mudou: true` com `aumentou`/`reducao` coerentes com o sinal da diferença.
+1. WHEN o peso atual é `1355.5` e o histórico é `1355` THEN `verificarMudancaPeso` SHALL retornar `mudou: true` e `pesoAtual: 1355.5`.
+2. WHEN o peso atual é `1355.5` e o histórico é `1355.5` THEN `verificarMudancaPeso` SHALL retornar `mudou: false` e o `CargaProcessor` SHALL pular o pedido sem chamar `salvarHistoricoPeso`.
+3. WHEN `salvarHistoricoPeso` recebe `500.4` e o último histórico é `500` THEN SHALL criar um registro com `500.4`.
+4. WHEN há mudança real THEN `mudou: true` com `aumentou`/`reducao` coerentes com o sinal da diferença exata.
 
 ## Edge Cases
 
 - `peso = 0` continua válido (não vira erro) — coerente com [pedidos-error-standardization/spec.md](../pedidos-error-standardization/spec.md).
 - Pedido sem histórico (`getLastHistoricoPeso` retorna `null`) mantém o branch de registro inicial em `verificarMudancaPeso` e `CargaProcessor`.
 - Pedido com uma única linha no resultset: `mapRawToPedidos` retorna o mesmo peso, sem regressão.
-- Peso fracionário exatamente em `.5`: segue o comportamento de `Math.round` (arredonda para cima), consistente entre comparação e persistência.
+- Histórico legado arredondado (`1355`) vs total vivo `1355.5`: um tick grava `1355.5`; o seguinte não faz nada.
+- Pedido que já tem a maior `posCar` e o peso aumentou cabendo: não bumpa posição; grava histórico se o total exato mudou.
 
 ## Requirement Traceability
 
 | Requirement ID | Story | Arquivo | Test IDs | Status |
 | --- | --- | --- | --- | --- |
-| FIX-01 | Peso atual agregado | `PedidosRepository.ts` | TC-G1.*, TC-S1.*, TC-P1.1/1.2 | Pending |
-| FIX-02 | Comparação sem falso positivo | `PedidoService.ts` | TC-S2.*, TC-P1.4 | Pending |
+| FIX-01 | Peso atual agregado | `PedidosRepository.ts` | TC-G1.*, TC-S1.*, TC-P1.1/1.2, INT-PESO-01/02/05 | Done |
+| FIX-02 | Total exato sem `Math.round` | `PedidoService.ts`, Prisma Decimal | TC-S2.*, TC-P1.3/1.4, INT-PESO-03/04/05/06/07, INT-PRISMA-01 | Done |
+
+### Integrações concluídas
+
+| Integration ID | Cobertura | Status |
+| --- | --- | --- |
+| INT-PESO-01 | Aumento que cabe: reposiciona e grava o peso total | Done |
+| INT-PESO-02 | Aumento que excede: remove e grava o peso total | Done |
+| INT-PESO-03 | Redução: preserva posição e grava o novo peso | Done |
+| INT-PESO-04 | Sem mudança: não grava histórico nem atualiza carga | Done |
+| INT-PESO-05 | Segundo ciclo: não repete histórico nem reposicionamento | Done |
+| INT-PESO-06 | Total exato 1355.5 já no histórico: não reposiciona nem grava | Done |
+| INT-PESO-07 | Histórico legado 1355 → grava 1355.5 uma vez; tick seguinte estável | Done |
+| INT-PRISMA-01 | Histórico isolado em `workapool_test`: persistência Decimal e leitura do mais recente | Done |
+| INT-PRISMA-02 | Fluxo misto com Sapiens fake e persistência Prisma | Done |
+
+## Execução automatizada
+
+No diretório `backend`, `npm test` executa somente os testes unitários,
+`npm run test:integration` carrega `.env.test` e executa as integrações contra
+o banco isolado `workapool_test`, e `npm run test:all` executa as duas suítes em
+sequência. Os fluxos Sapiens usam `FakeSapiens`; nenhum dos comandos exige
+conexão com o SQL Server Sapiens.
 
 ## Success Criteria
 
 - `getPedidoWeight` de um pedido multi-derivação retorna o peso total (verificável via TC-G1 + inspeção do valor gravado no histórico).
-- Após uma alteração real de peso de um pedido em carga aberta, o watchdog reposiciona (novo `poscar`) e grava histórico com o novo peso.
+- Após uma alteração real de peso de um pedido em carga aberta, o watchdog reposiciona (novo `poscar`) e grava histórico com o novo peso **exato**.
+- `1355.5` é gravado como `1355.5`; o tick seguinte contra `1355.5` não reposiciona e não cria histórico.
 - Ciclos consecutivos do watchdog **sem** alteração real de peso não geram novos registros em `HistoricoPesoPedidos`.
+- Nenhum `Math.round` no peso do Pedido em produção ou fakes.
 - Suíte de testes da [test-cases.md](./test-cases.md) passa integralmente.
 - Sem alteração nas assinaturas de `IPedidosRepository`, `PedidoService` e `CargaProcessor`.
 

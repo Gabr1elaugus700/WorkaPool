@@ -20,17 +20,25 @@ const buildPedido = (numPed: string): PedidoCargo =>
 const buildHistorico = (peso: number): HistoricoPesoPedido =>
   new HistoricoPesoPedido(456, peso, 10, new Date('2026-01-01T00:00:00.000Z'));
 
+const unused = (): never => {
+  throw new Error('método não usado neste teste');
+};
+
 const buildService = (
   pesoAtual: number,
   historico: HistoricoPesoPedido | null,
 ): PedidoService => {
   const mockRepository: IPedidosRepository = {
+    getPedidos: unused,
+    getPedidosByCarga: unused,
     getPedidoWeight: mock.fn(async (numPed: number) => ({
       numPed,
       peso: pesoAtual,
     })),
+    getPedidoSituacaoSapiens: unused,
+    createHistoricoPeso: unused,
     getLastHistoricoPeso: mock.fn(async () => historico),
-  } as any;
+  };
 
   return new PedidoService(mockRepository);
 };
@@ -103,37 +111,44 @@ describe('PedidoService.verificarMudancaPeso', () => {
     });
   });
 
-  describe('TC-S2 - não gera mudança falsa por arredondamento', () => {
-    it('TC-S2.1 - peso atual 1234.6 vs histórico 1235 => mudou=false', async () => {
-      // Arrange
+  describe('TC-S2 - compara o peso total exato, sem arredondar', () => {
+    it('totais que diferem só na fração são mudança real', async () => {
+      const service = buildService(1355.5, buildHistorico(1355));
+
+      const resultado = await service.verificarMudancaPeso(buildPedido('456'));
+
+      assert.strictEqual(resultado.mudou, true);
+      assert.strictEqual(resultado.pesoAtual, 1355.5);
+      assert.strictEqual(resultado.pesoAnterior, 1355);
+      assert.strictEqual(resultado.aumentou, true);
+    });
+
+    it('totais exatamente iguais não são mudança', async () => {
+      const service = buildService(1355.5, buildHistorico(1355.5));
+
+      const resultado = await service.verificarMudancaPeso(buildPedido('456'));
+
+      assert.strictEqual(resultado.mudou, false);
+      assert.strictEqual(resultado.pesoAtual, 1355.5);
+      assert.strictEqual(resultado.aumentou, false);
+      assert.strictEqual(resultado.reducao, false);
+    });
+
+    it('peso atual 1234.6 vs histórico 1235 é mudança real', async () => {
       const service = buildService(1234.6, buildHistorico(1235));
 
-      // Act
       const resultado = await service.verificarMudancaPeso(buildPedido('456'));
 
-      // Assert
-      assert.strictEqual(resultado.mudou, false);
+      assert.strictEqual(resultado.mudou, true);
+      assert.strictEqual(resultado.pesoAtual, 1234.6);
+      assert.strictEqual(resultado.reducao, true);
     });
 
-    it('TC-S2.2 - peso atual 1234.4 vs histórico 1234 => mudou=false', async () => {
-      // Arrange
-      const service = buildService(1234.4, buildHistorico(1234));
-
-      // Act
-      const resultado = await service.verificarMudancaPeso(buildPedido('456'));
-
-      // Assert
-      assert.strictEqual(resultado.mudou, false);
-    });
-
-    it('TC-S2.3 - peso atual 1240.0 vs histórico 1234 => mudou=true, aumentou=true', async () => {
-      // Arrange
+    it('peso atual 1240.0 vs histórico 1234 => mudou=true, aumentou=true', async () => {
       const service = buildService(1240.0, buildHistorico(1234));
 
-      // Act
       const resultado = await service.verificarMudancaPeso(buildPedido('456'));
 
-      // Assert
       assert.strictEqual(resultado.mudou, true);
       assert.strictEqual(resultado.aumentou, true);
     });
