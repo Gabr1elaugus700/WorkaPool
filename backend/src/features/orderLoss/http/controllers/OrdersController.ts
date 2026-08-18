@@ -5,6 +5,7 @@ import { UpdateOrderStatusUseCase } from "../../useCases/UpdateOrderStatusUseCas
 import { AddLossReasonUseCase } from "../../useCases/AddLossReasonUseCase";
 import { GetAllOrdersUseCase } from "../../useCases/GetAllOrdersUseCase";
 import { GetOrderByIdUseCase } from "../../useCases/GetOrderByIdUseCase";
+import { AppError } from "../../../../utils/AppError";
 import {
   CreateOrderSchema,
   UpdateOrderStatusSchema,
