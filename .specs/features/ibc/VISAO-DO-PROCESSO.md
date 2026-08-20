@@ -82,14 +82,24 @@ O checklist (coloração, registro, bolsa, base, tampa, grade, etc.) pode ganhar
 
 ---
 
-### 2. Montagem da carga (pátio)
+### 2. Montagem da carga (pátio + logística)
 
-1. O operador abre a **carga** no WorkaPool (celular/web).  
-2. Informa **quais IBCs Aptos** estão subindo naquela carga.  
-3. Fecha o lançamento.  
+**Antes — logística fecha a carga:**
+
+1. A logística monta a carga (pedidos) e, ao fechar, **obrigatoriamente** informa **motorista** e **caminhão**.
+2. A carga passa a situação **FECHADA**.
+
+**Preparação — ALMOX vincula containers por pedido:**
+
+1. O ALMOX abre a carga no WorkaPool (pode começar a preparar ainda com carga **ABERTA** — progresso parcial visível).
+2. Para cada **pedido que usa container IBC** (`EMBALAGEM = 251001`), informa quantos containers sobem — escaneando QR (web) ou digitando o código (desktop).
+3. O vínculo é **por pedido** (quantidade total), não por item de pedido. Na prática, no caminhão os containers podem estar misturados — **não importa neste momento** qual # vai para qual cliente.
+4. Só quando a carga está **FECHADA** e **todos os pedidos com IBC** têm a quantidade suprida, o ALMOX **fecha a expedição**.
 
 Nesse momento o sistema entende: esses containers **não estão mais no pátio** — estão **em viagem**.  
-Ainda **não** sabemos em qual cliente cada um vai parar (isso o motorista confirma na entrega).
+Ainda **não** sabemos em qual cliente cada um ficou (isso o **motorista confirma na entrega**, lendo o QR).
+
+**Cargas sem pedido IBC:** aparecem na lista com indicador diferente, sem ação de vínculo.
 
 ---
 
@@ -97,13 +107,13 @@ Ainda **não** sabemos em qual cliente cada um vai parar (isso o motorista confi
 
 1. O motorista sabe a carga e os pedidos que está levando.  
 2. No cliente, abre a parada daquele cliente.  
-3. Vê **somente os pedidos que usam embalagem IBC** (pedido só de outro tipo de embalagem **não aparece**, para não confundir).  
+3. Vê **somente os pedidos que usam embalagem IBC** (`EMBALAGEM = 251001`; pedido só de outro tipo de embalagem **não aparece**, para não confundir).  
 4. Se o cliente tem **mais de um pedido com IBC** (ex.: pedido 1120 com 3 containers e 1121 com 2), lança **separado**:  
    - 3 QRs no 1120 → salva  
    - 2 QRs no 1121 → salva  
-5. A tela mostra **quantos eram esperados** naquele pedido (informação que já vem do pedido) e o motorista confirma lendo os QRs dos que **ficam** no cliente.
+5. A tela mostra **quantos eram esperados** naquele pedido (soma de `QUANTIDADE_EMBALAGEM`) e o motorista confirma lendo os QRs dos que **ficam** no cliente.
 
-**O que isso resolve:** se no pátio “achavam” que o container 1 era da Maria, mas o motorista descarregou no João, **vale o que foi lido no João**. A verdade é a entrega, não o chute da montagem.
+**O que isso resolve:** na preparação o pátio registra quantidades por pedido para controle, mas fisicamente os containers podem estar misturados no caminhão. **Na entrega, vale o que o motorista escaneou em cada cliente** — a verdade operacional é a descarga, não a preparação.
 
 Containers que **voltam no caminhão** (transbordo) **não** são marcados como “ficou no cliente”.
 
@@ -147,8 +157,8 @@ Container **Inapto não sobe em carga nova**.
 
 ## Exemplo narrado (uma viagem)
 
-1. Pátio inspeciona e libera H010, H011, H012.  
-2. Monta a carga 500 e vincula esses três → ficam **em viagem**.  
+1. Logística fecha a carga 500 (motorista + caminhão).  
+2. ALMOX vincula H010, H011, H012 por pedido → fecha expedição → ficam **em viagem**.  
 3. No cliente João: pedido 1120 esperava 2 IBCs; motorista lê H010 e H011 → ficam com João (empréstimo, 30 dias).  
 4. H012 fez **transbordo** (produto descarregado, container voltou no caminhão).  
 5. No pátio: entrada do H012 (com QR) → aguarda inspeção de novo.  
@@ -182,7 +192,10 @@ Container **Inapto não sobe em carga nova**.
 
 | Termo | Significado simples |
 | ----- | ------------------- |
-| **Em viagem** | Saiu na carga; ainda não confirmado no cliente nem na entrada do pátio |
+| **Preparação de expedição** | ALMOX vincula containers Aptos aos pedidos da carga (controle de quantidade) |
+| **Fechar expedição** | ALMOX confirma saída; containers passam a **em viagem** |
+| **CargaDespacho** | Motorista + caminhão informados pela logística ao fechar a carga |
+| **Em viagem** | Fechou expedição; ainda não confirmado no cliente nem na entrada do pátio |
 | **Custódia no cliente** | Motorista confirmou: este IBC ficou neste cliente neste pedido |
 | **Pendente de retorno** | Ficou no cliente nesta viagem e ainda não voltou com nosso QR |
 | **Apto / Inapto** | Pode ou não circular / subir em carga |
