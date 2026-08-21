@@ -1,9 +1,8 @@
 import { describe, it, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { mapRawToPedidos } from '../../../../../src/features/pedidos/mappers/PedidoMapper';
+import { CODIGO_EMBALAGEM_IBC } from '../../../../../src/features/pedidos/mappers/computePedidoIbcEligibility';
 import { PedidoRaw } from '../../../../../src/features/pedidos/types/PedidoRaw';
-
-const CODIGO_EMBALAGEM_IBC = 251001;
 
 const buildRow = (overrides: Partial<PedidoRaw> = {}): PedidoRaw => ({
   NUM_PED: '1120',

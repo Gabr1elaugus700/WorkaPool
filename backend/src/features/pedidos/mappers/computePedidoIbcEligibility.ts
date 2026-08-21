@@ -20,7 +20,7 @@ export type PedidoIbcLineInput = {
 };
 
 /** Código Sapiens (der.usu_codemb) que identifica linha de container IBC. */
-const CODIGO_EMBALAGEM_IBC = 251001;
+export const CODIGO_EMBALAGEM_IBC = 251001;
 
 /**
  * Agrega linhas brutas de um Pedido em elegibilidade IBC.

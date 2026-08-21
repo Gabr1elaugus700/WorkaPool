@@ -1,4 +1,5 @@
 import { PedidoBase, PedidoBaseProps } from '../entities/PedidoBase';
+import type { PedidoIbcEligibility } from '../mappers/computePedidoIbcEligibility';
 
 /**
  * Produto dentro de um pedido (contexto cargo/logística).
@@ -94,5 +95,14 @@ export class PedidoCargo extends PedidoBase {
     this.quantidadeEsperadaVenda = quantidadeEsperadaVenda;
     this.quantidadeEsperadaEmprestimo = quantidadeEsperadaEmprestimo;
     this.ibcInvalido = ibcInvalido;
+  }
+
+  applyIbcEligibility(eligibility: PedidoIbcEligibility): void {
+    this.isContainer = eligibility.isContainer;
+    this.quantidadeEsperadaTotal = eligibility.quantidadeEsperadaTotal;
+    this.quantidadeEsperadaVenda = eligibility.quantidadeEsperadaVenda;
+    this.quantidadeEsperadaEmprestimo =
+      eligibility.quantidadeEsperadaEmprestimo;
+    this.ibcInvalido = eligibility.ibcInvalido;
   }
 }
