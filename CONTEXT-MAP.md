@@ -22,7 +22,7 @@ WorkaPool is a monolith with multiple bounded contexts. Pedidos is a shared kern
 - **Pedidos → Order Loss**: Order Loss reads pedidos do ERP and tracks negotiation / perda
 - **Identity → Cargo / Order Loss / Metas**: User.role and User.codRep scope who sees and changes what
 - **Identity → Ordem de Serviço**: Departamento and Role gate facility tickets
-- **Pedidos → IBC**: IBC reads `EMBALAGEM` (251001), `QUANTIDADE_EMBALAGEM`, Embalagem inclusa, Cliente, and Representante from the Pedido; it does not own Pedido
+- **Pedidos → IBC**: IBC reads `CODIGO_EMBALAGEM` (251001), `VOLUME_EMBALAGEM`, `QUANTIDADE_PEDIDO`, `INCLUSO`, Cliente, and Representante from the Pedido (via pedidos-by-carga); computes expected counts in backend; it does not own Pedido
 - **Cargo → IBC**: `CargaDespacho` on cargo close (driver + truck); `AlocacaoIbc` links IBCs to Pedidos during preparation; `ExpedicaoIbc` closes expedition and moves IBC custody to Em viagem
 - **Identity → IBC**: MOTORISTA (dispatch + unload / Custódia no Cliente); ALMOX (preparação + Fechar expedição); LOGISTICA (Fechar Carga + CargaDespacho); VENDAS (avisos do próprio Representante)
 

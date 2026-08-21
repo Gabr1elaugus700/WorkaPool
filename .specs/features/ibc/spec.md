@@ -86,12 +86,12 @@ A empresa opera com containers IBC (empréstimo, venda, troca, transbordo) sem i
 **Acceptance Criteria**:
 
 1. WHEN LOGISTICA fecha uma Carga THEN o sistema SHALL exigir `CargaDespacho` (motorista + caminhão `Trucks`) e SHALL rejeitar sem eles
-2. WHEN ALMOX prepara expedição THEN o sistema SHALL permitir `AlocacaoIbc` por **Pedido** (`numPed`) — qtd esperada = `SUM(QUANTIDADE_EMBALAGEM)` onde `EMBALAGEM = 251001`
+2. WHEN ALMOX prepara expedição THEN o sistema SHALL permitir `AlocacaoIbc` por **Pedido** (`numPed`) — qtd esperada = soma no backend de `QUANTIDADE_PEDIDO / VOLUME_EMBALAGEM` onde `CODIGO_EMBALAGEM = 251001`
 3. WHEN a Carga está ABERTA THEN ALMOX MAY vincular/desvincular IBCs (progresso parcial visível); Fechar expedição SHALL NOT estar disponível
 4. WHEN a Carga está FECHADA e todos os pedidos IBC estão supridos THEN ALMOX MAY fechar expedição (`ExpedicaoIbc`)
 5. WHEN expedição fecha THEN IBCs alocados SHALL passar a **Em viagem** e alocações SHALL tornar-se imutáveis
 6. WHEN ALMOX tenta alocar IBC Inapto, Em viagem, já vinculado, ou acima do limite THEN o sistema SHALL recusar com motivo claro
-7. WHEN Carga não tem pedidos com `EMBALAGEM = 251001` THEN SHALL aparecer na lista sem ações
+7. WHEN Carga não tem pedidos com `CODIGO_EMBALAGEM = 251001` THEN SHALL aparecer na lista sem ações
 8. WHEN expedição fecha THEN o sistema SHALL NOT afirmar Custódia no Cliente (motorista confirma na descarga)
 
 **Independent Test**: Logística fecha carga com motorista/caminhão → ALMOX vincula 3 IBCs ao pedido 1120 → Fechar expedição → status Em viagem; tentar Inapto → erro.
@@ -108,12 +108,12 @@ A empresa opera com containers IBC (empréstimo, venda, troca, transbordo) sem i
 
 **Acceptance Criteria**:
 
-1. WHEN o motorista abre a Carga e o Cliente da parada THEN o sistema SHALL listar apenas **Pedidos com IBC** (`EMBALAGEM = 251001`)
+1. WHEN o motorista abre a Carga e o Cliente da parada THEN o sistema SHALL listar apenas **Pedidos com IBC** (`CODIGO_EMBALAGEM = 251001`)
 2. WHEN o Cliente tem Pedido sem embalagem IBC THEN esse Pedido SHALL NÃO aparecer na tela
-3. WHEN o Pedido tem quantidade N THEN a tela SHALL mostrar **Quantidade esperada** = N (`SUM(QUANTIDADE_EMBALAGEM)`; distinto de `EMBALAGEM`)
+3. WHEN o Pedido tem quantidade N THEN a tela SHALL mostrar **Quantidade esperada** = N (soma backend de `QUANTIDADE_PEDIDO / VOLUME_EMBALAGEM`; distinto de `CODIGO_EMBALAGEM`)
 4. WHEN o motorista salva scans do Pedido 1120 THEN o sistema SHALL registrar Custódia no Cliente (IBC + data + Cliente + Pedido) e Quantidade realizada
 5. WHEN há 2+ Pedidos com IBC no mesmo Cliente THEN o motorista SHALL lançar e salvar **por Pedido** (ex. 3 no 1120, depois 2 no 1121)
-6. WHEN **Embalagem inclusa** no Pedido THEN IBCs que ficaram SHALL ser modalidade **Venda**; Senão SHALL ser **Empréstimo** com Prazo de devolução (padrão 30 dias)
+6. WHEN linhas container com **INCLUSO = S** THEN IBCs correspondentes SHALL ser modalidade **Venda**; Senão (**INCLUSO ≠ S**) SHALL ser **Empréstimo** com Prazo de devolução (padrão 30 dias). Split Venda/Empréstimo pode coexistir no mesmo Pedido.
 
 **Independent Test**: Carga com João/1120 (3) e João/1121 (2) → dois lançamentos; Cliente certo no scan mesmo se o “plano mental” do pátio fosse outro.
 
@@ -226,7 +226,7 @@ A empresa opera com containers IBC (empréstimo, venda, troca, transbordo) sem i
 ## Clarifications locked (from grilling)
 
 - Foco = **container** only (sem validade de produto neste módulo)
-- **`EMBALAGEM = 251001`** ≠ **`QUANTIDADE_EMBALAGEM`** — campos distintos no item do Pedido (Sapiens)
-- Modalidade Venda vs Empréstimo via **Embalagem inclusa** no Pedido
+- **`CODIGO_EMBALAGEM = 251001`** ≠ **Quantidade esperada** — count = backend `QUANTIDADE_PEDIDO / VOLUME_EMBALAGEM` (termo `QUANTIDADE_EMBALAGEM` aposentado)
+- Modalidade Venda vs Empréstimo via **INCLUSO** (`S` / resto) só em linhas 251001; Troca só na entrada
 - Inspeção obrigatória a **cada** Entrada no pátio
-- **Expedição (ago/2026)**: `CargaDespacho` + `AlocacaoIbc` (por pedido) + `ExpedicaoIbc`; ALMOX prepara/fecha; LOGISTICA fecha carga; v1 sem reabrir carga — ver `.specs/features/ibc/context.md`
+- **Expedição (ago/2026)**: `CargaDespacho` + `AlocacaoIbc` (por pedido, cap = total) + `ExpedicaoIbc`; ALMOX prepara/fecha; LOGISTICA fecha carga; v1 sem reabrir carga — ver `.specs/features/ibc/context.md`

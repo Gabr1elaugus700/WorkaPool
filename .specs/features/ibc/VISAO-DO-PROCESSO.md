@@ -92,7 +92,7 @@ O checklist (coloração, registro, bolsa, base, tampa, grade, etc.) pode ganhar
 **Preparação — ALMOX vincula containers por pedido:**
 
 1. O ALMOX abre a carga no WorkaPool (pode começar a preparar ainda com carga **ABERTA** — progresso parcial visível).
-2. Para cada **pedido que usa container IBC** (`EMBALAGEM = 251001`), informa quantos containers sobem — escaneando QR (web) ou digitando o código (desktop).
+2. Para cada **pedido que usa container IBC** (`CODIGO_EMBALAGEM = 251001`), informa quantos containers sobem — escaneando QR (web) ou digitando o código (desktop).
 3. O vínculo é **por pedido** (quantidade total), não por item de pedido. Na prática, no caminhão os containers podem estar misturados — **não importa neste momento** qual # vai para qual cliente.
 4. Só quando a carga está **FECHADA** e **todos os pedidos com IBC** têm a quantidade suprida, o ALMOX **fecha a expedição**.
 
@@ -107,11 +107,11 @@ Ainda **não** sabemos em qual cliente cada um ficou (isso o **motorista confirm
 
 1. O motorista sabe a carga e os pedidos que está levando.  
 2. No cliente, abre a parada daquele cliente.  
-3. Vê **somente os pedidos que usam embalagem IBC** (`EMBALAGEM = 251001`; pedido só de outro tipo de embalagem **não aparece**, para não confundir).  
+3. Vê **somente os pedidos que usam embalagem IBC** (`CODIGO_EMBALAGEM = 251001`; pedido só de outro tipo de embalagem **não aparece**, para não confundir).  
 4. Se o cliente tem **mais de um pedido com IBC** (ex.: pedido 1120 com 3 containers e 1121 com 2), lança **separado**:  
    - 3 QRs no 1120 → salva  
    - 2 QRs no 1121 → salva  
-5. A tela mostra **quantos eram esperados** naquele pedido (soma de `QUANTIDADE_EMBALAGEM`) e o motorista confirma lendo os QRs dos que **ficam** no cliente.
+5. A tela mostra **quantos eram esperados** naquele pedido (soma no backend de `QUANTIDADE_PEDIDO / VOLUME_EMBALAGEM` nas linhas 251001) e o motorista confirma lendo os QRs dos que **ficam** no cliente.
 
 **O que isso resolve:** na preparação o pátio registra quantidades por pedido para controle, mas fisicamente os containers podem estar misturados no caminhão. **Na entrega, vale o que o motorista escaneou em cada cliente** — a verdade operacional é a descarga, não a preparação.
 
