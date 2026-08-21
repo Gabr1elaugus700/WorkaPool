@@ -66,6 +66,9 @@ export const QUERY_GET_PEDIDO_WEIGHT = `
 
 /**
  * Query para buscar pedidos por carga específica.
+ * Expõe campos Sapiens de embalagem IBC para cálculo no backend (#58):
+ * CODIGO_EMBALAGEM, VOLUME_EMBALAGEM, QUANTIDADE (QUANTIDADE_PEDIDO), INCLUSO.
+ * Não enriquecer QUERY_GET_PEDIDOS_BASE / BY_REP nesta fatia.
  */
 export const QUERY_GET_PEDIDOS_BY_CARGA = `
   SELECT
@@ -81,6 +84,9 @@ export const QUERY_GET_PEDIDOS_BY_CARGA = `
       ,ISNULL(grp.desgrp,'OUTROS PRODUTOS') AS [PRODUTOS]
       ,ipd.codder          AS [DERIVACAO]
       ,ipd.qtdped          AS [QUANTIDADE]
+      ,der.usu_codemb      AS [CODIGO_EMBALAGEM]
+      ,der.usu_qtdmve      AS [VOLUME_EMBALAGEM]
+      ,ipd.usu_embinc      AS [INCLUSO]
       ,ped.usu_codcar      AS [CODCAR]
       ,ped.usu_poscar      AS [POSCAR]
       ,ped.usu_sitcar      AS [SITCAR]
@@ -100,9 +106,9 @@ export const QUERY_GET_PEDIDOS_BY_CARGA = `
     AND ped.usu_codcar = @codCar
   GROUP BY ped.numped, ped.codcli, cli.nomcli, cli.cidcli, cli.sigufs,
            rep.aperep, rep.codrep, ped.pedblo, ipd.codder, ipd.qtdped,
+           der.usu_codemb, der.usu_qtdmve, ipd.usu_embinc,
            grp.desgrp, ped.usu_codcar, ped.usu_poscar, ped.usu_sitcar, ped.qtdori
 `;
-
 /**
  * Query para buscar situação de pedido no Sapiens.
  */

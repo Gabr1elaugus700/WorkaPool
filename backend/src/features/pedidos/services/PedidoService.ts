@@ -1,7 +1,11 @@
-import { PedidoCargo } from '../types/PedidoCargo.types';
 import { HistoricoPesoPedido } from '../entities/HistoricoPesoPedido';
 import { IPedidosRepository } from '../repositories/IPedidosRepository';
 import { AppError } from '../../../utils/AppError';
+
+/** Mínimo necessário para operações de peso / histórico por número de pedido. */
+type PedidoComNumero = {
+  numPed: string;
+};
 
 /**
  * Serviço para operações relacionadas a pedidos individuais.
@@ -16,7 +20,7 @@ export class PedidoService {
    * @returns O peso atual cadastrado
    * @throws AppError se o peso for inválido
    */
-  async pesoAtualPedido(pedido: PedidoCargo): Promise<number> {
+  async pesoAtualPedido(pedido: PedidoComNumero): Promise<number> {
     const numPed = Number(pedido.numPed);
     const pesoAtual = await this.pedidosRepository
       .getPedidoWeight(numPed)
@@ -40,7 +44,7 @@ export class PedidoService {
    * @returns O histórico mais recente ou null se não existir
    */
   async getUltimoHistoricoPeso(
-    pedido: PedidoCargo,
+    pedido: PedidoComNumero,
   ): Promise<HistoricoPesoPedido | null> {
     const numPed = Number(pedido.numPed);
     const historico =
@@ -53,7 +57,7 @@ export class PedidoService {
    * @param pedido O pedido para verificar
    * @returns Objeto com informações sobre a mudança de peso
    */
-  async verificarMudancaPeso(pedido: PedidoCargo): Promise<{
+  async verificarMudancaPeso(pedido: PedidoComNumero): Promise<{
     mudou: boolean;
     pesoAnterior: number | null;
     pesoAtual: number;
@@ -92,7 +96,7 @@ export class PedidoService {
    * Salva um novo registro de histórico de peso para o pedido.
    */
   async salvarHistoricoPeso(
-    pedido: PedidoCargo,
+    pedido: PedidoComNumero,
     cargaId: string,
     peso: number,
   ): Promise<void> {
