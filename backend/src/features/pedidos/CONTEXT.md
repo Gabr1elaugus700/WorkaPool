@@ -29,8 +29,8 @@ In Order Loss speech: a Pedido whose negotiation was lost (also: venda perdida, 
 _Avoid_: Pedido Fechado
 
 **PedidoCargo**:
-A Pedido seen through Cargo’s lens — weight, allocation to a carga, position in the load.
-_Avoid_: Pedido (alone) when cargo-specific fields are in play
+A Pedido seen through Cargo’s lens — weight, allocation to a carga, position in the load, and (via `QUERY_GET_PEDIDOS_BY_CARGA`) IBC eligibility (`isContainer`, expected counts, `ibcInvalido`).
+_Avoid_: Pedido (alone) when cargo-specific fields are in play; QUANTIDADE_EMBALAGEM (retired)
 
 **PedidoOrderLoss**:
 A Pedido seen through Order Loss’s lens — price, margin, freight, taxes for commercial analysis.

@@ -37,11 +37,16 @@ export interface PedidoCargoProps extends PedidoBaseProps {
   sitcar?: string | null;
   qtdOri: number;
   produtos?: ProdutoPedido[];
+  isContainer?: boolean;
+  quantidadeEsperadaTotal?: number;
+  quantidadeEsperadaVenda?: number;
+  quantidadeEsperadaEmprestimo?: number;
+  ibcInvalido?: boolean;
 }
 
 /**
  * Extensão de Pedido para o contexto de Cargo (logística).
- * Adiciona propriedades relacionadas a peso, carga e produtos.
+ * Adiciona propriedades relacionadas a peso, carga, produtos e elegibilidade IBC.
  */
 export class PedidoCargo extends PedidoBase {
   public bloqueado?: string;
@@ -52,6 +57,12 @@ export class PedidoCargo extends PedidoBase {
   public sitcar?: string | null;
   public qtdOri: number;
   public produtos?: ProdutoPedido[];
+  public isContainer: boolean;
+  public quantidadeEsperadaTotal: number;
+  public quantidadeEsperadaVenda: number;
+  public quantidadeEsperadaEmprestimo: number;
+  /** Pedido IBC inválido — sinal de alerta ALMOX; bloqueia AlocacaoIbc neste Pedido. */
+  public ibcInvalido: boolean;
 
   constructor({
     bloqueado,
@@ -62,6 +73,11 @@ export class PedidoCargo extends PedidoBase {
     sitcar,
     qtdOri,
     produtos,
+    isContainer = false,
+    quantidadeEsperadaTotal = 0,
+    quantidadeEsperadaVenda = 0,
+    quantidadeEsperadaEmprestimo = 0,
+    ibcInvalido = false,
     ...baseProps
   }: PedidoCargoProps) {
     super(baseProps);
@@ -73,5 +89,10 @@ export class PedidoCargo extends PedidoBase {
     this.sitcar = sitcar;
     this.qtdOri = qtdOri;
     this.produtos = produtos;
+    this.isContainer = isContainer;
+    this.quantidadeEsperadaTotal = quantidadeEsperadaTotal;
+    this.quantidadeEsperadaVenda = quantidadeEsperadaVenda;
+    this.quantidadeEsperadaEmprestimo = quantidadeEsperadaEmprestimo;
+    this.ibcInvalido = ibcInvalido;
   }
 }
