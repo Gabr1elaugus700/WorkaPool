@@ -57,12 +57,7 @@ export function mapRawToPedidos(rows: PedidoRaw[]): PedidoCargo[] {
   for (const [numPed, pedido] of map) {
     const lines = linesByPedido.get(numPed) ?? [];
     const eligibility = computePedidoIbcEligibility(lines);
-    pedido.isContainer = eligibility.isContainer;
-    pedido.quantidadeEsperadaTotal = eligibility.quantidadeEsperadaTotal;
-    pedido.quantidadeEsperadaVenda = eligibility.quantidadeEsperadaVenda;
-    pedido.quantidadeEsperadaEmprestimo =
-      eligibility.quantidadeEsperadaEmprestimo;
-    pedido.ibcInvalido = eligibility.ibcInvalido;
+    pedido.applyIbcEligibility(eligibility);
   }
 
   return Array.from(map.values());

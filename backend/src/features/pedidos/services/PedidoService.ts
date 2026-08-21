@@ -2,7 +2,10 @@ import { HistoricoPesoPedido } from '../entities/HistoricoPesoPedido';
 import { IPedidosRepository } from '../repositories/IPedidosRepository';
 import { AppError } from '../../../utils/AppError';
 
-/** Mínimo necessário para operações de peso / histórico por número de pedido. */
+/**
+ * Mínimo necessário para peso / histórico por número de pedido.
+ * Elegibilidade IBC vive em PedidoCargo via mapper — não acoplar este serviço a PedidoCargo.
+ */
 type PedidoComNumero = {
   numPed: string;
 };
