@@ -12,13 +12,21 @@ _Avoid_: Estoque (as if quantity alone answered custody/quality), Container gen�
 The last date this IBC asset may still be used in circulation. Property of the IBC itself.
 _Avoid_: Validade (alone), prazo de devolução, shelf life do produto
 
-**Embalagem IBC (Sapiens)**:
-ERP field `EMBALAGEM` on the Pedido item line. Value **251001** identifies IBC packaging on that line. Used to detect which pedidos/lines need containers. Distinct from `QUANTIDADE_EMBALAGEM`.
-_Avoid_: Volume (generic), treating packaging code as a quantity, legacy code 251004
+**CODIGO_EMBALAGEM (Sapiens)**:
+ERP field `der.usu_codemb` on the Pedido item line. Value **251001** identifies a container (IBC) line. Exposed via `QUERY_GET_PEDIDOS_BY_CARGA` (not the general pedidos BASE query).
+_Avoid_: treating packaging code as a quantity, legacy code 251004, invented name QUANTIDADE_EMBALAGEM
 
-**QUANTIDADE_EMBALAGEM (Sapiens)**:
-Numeric field on the Pedido item line: expected number of IBC containers for that line. At expedition preparation, **per pedido** expected total = sum of this field across all lines with `EMBALAGEM = 251001`.
-_Avoid_: Embalagem code, conflating with product quantity in liters/weight
+**VOLUME_EMBALAGEM (Sapiens)**:
+ERP field `der.usu_qtdmve` — packaging volume/capacity. Divisor in the container-count formula. Not the expected container count itself.
+_Avoid_: calling this “quantidade esperada”, conflating with CODIGO_EMBALAGEM
+
+**QUANTIDADE_PEDIDO (Sapiens)**:
+ERP field `ipd.qtdped` — ordered quantity on the line. Numerator in the container-count formula (only when CODIGO_EMBALAGEM = 251001).
+_Avoid_: treating raw qtdped as container count without dividing by VOLUME_EMBALAGEM
+
+**INCLUSO (Sapiens)**:
+ERP field `ipd.usu_embinc` on a **container** line only. After trim/upper: `"S"` → Venda count; any other value (incl. null/empty) → Empréstimo count. Ignored on non-251001 lines.
+_Avoid_: applying INCLUSO to non-container packaging, calling INCLUSO=N “Troca” at outbound
 
 **CargaDespacho**:
 Intermediate record when logistics **closes a Carga**: links the cargo to one driver (`User` with role `MOTORISTA`) and one truck (`Trucks`). Mandatory at close; 1:1 per cargo. Audit: who closed, when.
@@ -81,7 +89,7 @@ IBC custody state after **ExpedicaoIbc** is closed and before delivery confirmat
 _Avoid_: No Cliente, Em estoque / no pátio, Situação da Carga
 
 **Custódia no Cliente**:
-Confirmed at unload per **Pedido**, not only per Cliente. Driver opens the Cliente stop, sees only Pedidos on that Carga that use IBC packaging (`EMBALAGEM = 251001`), and for each Pedido scans/registers the IBCs that remain there, then saves (e.g. 3 IBCs for Pedido 1120, then 2 for Pedido 1121). Non-IBC Pedidos for the same Cliente are hidden. Records IBC + date + Cliente + Pedido.
+Confirmed at unload per **Pedido**, not only per Cliente. Driver opens the Cliente stop, sees only Pedidos com IBC on that Carga (`CODIGO_EMBALAGEM = 251001`), and for each Pedido scans/registers the IBCs that remain there, then saves (e.g. 3 IBCs for Pedido 1120, then 2 for Pedido 1121). Non-IBC Pedidos for the same Cliente are hidden. Records IBC + date + Cliente + Pedido.
 _Avoid_: AlocacaoIbc, Em viagem, dumping all of a Cliente’s IBCs without Pedido split when multiple IBC Pedidos exist
 
 **Entrada no pátio**:
@@ -89,20 +97,24 @@ Return processing after the trip: the operator gives entry to what came back. Kn
 _Avoid_: Custódia no Cliente, assuming all returns are the same modality
 
 **Pedido com IBC**:
-A Pedido with at least one item line where `EMBALAGEM = 251001`. Only these appear on the driver’s unload screen for that Cliente and on ALMOX expedition preparation.
-_Avoid_: showing every Pedido of the Cliente on the IBC unload screen, using product quantity to detect packaging type
+A Pedido with at least one valid container line (`CODIGO_EMBALAGEM = 251001` and valid count calculation). Only these appear on the driver’s unload screen and on ALMOX expedition preparation.
+_Avoid_: showing every Pedido of the Cliente on the IBC unload screen, using product quantity alone to detect packaging type
 
 **Quantidade esperada de IBC**:
-How many IBCs a Pedido com IBC should involve on this trip — `SUM(QUANTIDADE_EMBALAGEM)` across IBC lines. Shown during preparation and to the driver as the target (e.g. “esperado: 3”).
-_Avoid_: inventing the count only in the operator’s head, reading quantity from the embalagem code
+Backend-computed container target for a Pedido: for each 251001 line, `QUANTIDADE_PEDIDO / VOLUME_EMBALAGEM`, then sum. Also split into **quantidadeEsperadaVenda** (INCLUSO = S) and **quantidadeEsperadaEmprestimo** (otherwise). Allocation / Fechar expedição use the **total** in this slice.
+_Avoid_: computing in SQL for all pedidos, QUANTIDADE_EMBALAGEM, reading count from code 251001, silent rounding
+
+**Pedido IBC inválido**:
+A Pedido with a 251001 line where VOLUME_EMBALAGEM ≤ 0 or the division is not an integer. Blocked for AlocacaoIbc / Fechar expedição on that Pedido; ALMOX sees an alert; other Pedidos on the Carga proceed.
+_Avoid_: dropping the bad line and summing the rest, failing the whole Carga
 
 **Quantidade realizada de IBC**:
 How many IBCs were actually confirmed at unload for that Pedido (QR scans saved). Compared with Quantidade esperada for gaps and for post-trip Aviso ao Representante.
 _Avoid_: treating AlocacaoIbc counts as Custódia no Cliente
 
-**Embalagem inclusa**:
-Pedido/commercial flag that the IBC packaging is sold with the product. When true, IBCs left at the Cliente are **Venda** (no return obligation). When false, IBCs left at the Cliente are **Empréstimo** (Prazo de devolução applies). Inferred from the Pedido — not chosen by the driver at scan time.
-_Avoid_: asking the driver to pick Venda vs Empréstimo on every unload
+**INCLUSO → modalidade (outbound)**:
+On container lines only: `"S"` → counts toward **Venda**; anything else → **Empréstimo**. Troca is **not** selected here — Troca is return-side only. ERP write-back when Venda applies is a later column.
+_Avoid_: asking the driver to pick Venda vs Empréstimo on every unload, conflating INCLUSO=N with Troca
 
 **Aquisição do IBC**:
 How this asset entered the company pool: **compra** or **troca**. Set at cadastro. Inbound units that arrive without QR after a trip are registered by the patio operator as new IBCs with Aquisição = troca (Troca de IBC), not treated as anonymous stock.
