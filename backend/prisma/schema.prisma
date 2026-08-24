@@ -431,6 +431,7 @@ enum Role {
   LOGISTICA
   ALMOX
   GERENTE_DPTO
+  MOTORISTA
 }
 
 enum FuncaoDepartamento {
