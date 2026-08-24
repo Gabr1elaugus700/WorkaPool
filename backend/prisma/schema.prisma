@@ -28,14 +28,19 @@ model User {
   WorkOrders           WorkOrder[]
   workOrders           WorkOrder[]           @relation("WOAssigned")
   orders               Order[]
+  cargasDespachoComoMotorista CargaDespacho[] @relation("CargaDespachoMotorista")
+  cargasDespachoFechadasPor   CargaDespacho[] @relation("CargaDespachoFechadoPor")
+
+  @@index([role])
 }
 
 model Trucks {
-  id        String   @id @default(uuid())
-  name      String
-  capacity  Int
-  createdAt DateTime @default(now())
-  codRep    Int      @default(0)
+  id             String          @id @default(uuid())
+  name           String
+  capacity       Int
+  createdAt      DateTime        @default(now())
+  codRep         Int             @default(0)
+  cargasDespacho CargaDespacho[]
 }
 
 model Cargas {
@@ -50,6 +55,21 @@ model Cargas {
   closedAt             DateTime?
   CargasFechadas       CargasFechadas[]
   historicoPesoPedidos HistoricoPesoPedidos[]
+  despacho             CargaDespacho?
+}
+
+model CargaDespacho {
+  id           String   @id @default(uuid())
+  cargaId      String   @unique
+  motoristaId  String
+  caminhaoId   String
+  fechadoPorId String
+  fechadoEm    DateTime @default(now())
+
+  carga      Cargas @relation(fields: [cargaId], references: [id])
+  motorista  User   @relation("CargaDespachoMotorista", fields: [motoristaId], references: [id])
+  caminhao   Trucks @relation(fields: [caminhaoId], references: [id])
+  fechadoPor User   @relation("CargaDespachoFechadoPor", fields: [fechadoPorId], references: [id])
 }
 
 model HistoricoPesoPedidos {

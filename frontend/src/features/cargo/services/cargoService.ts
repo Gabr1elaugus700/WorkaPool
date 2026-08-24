@@ -92,18 +92,39 @@ export const cargoService = {
   },
 
   /**
-   * Fecha uma carga salvando todos os pedidos vinculados
+   * Fecha uma carga salvando todos os pedidos vinculados e CargaDespacho
    */
   closeCarga: async (
     codCar: number,
+    despacho: { motoristaId: string; caminhaoId: string },
   ): Promise<{ message: string; pedidosSalvos: number }> => {
     return apiFetchJson<{ message: string; pedidosSalvos: number }>(
       "/api/cargo/close-carga",
       {
         method: "POST",
-        body: JSON.stringify({ codCar }),
+        body: JSON.stringify({
+          codCar,
+          motoristaId: despacho.motoristaId,
+          caminhaoId: despacho.caminhaoId,
+        }),
       },
     );
+  },
+
+  /**
+   * Lista usuários com role MOTORISTA para CargaDespacho
+   */
+  listMotoristas: async (): Promise<
+    Array<{ id: string; name: string; role: string }>
+  > => {
+    return apiFetchJson("/api/cargo/motoristas");
+  },
+
+  /**
+   * Lista caminhões (Trucks) para CargaDespacho
+   */
+  listTrucks: async (): Promise<Array<{ id: string; name: string }>> => {
+    return apiFetchJson("/api/cargo/trucks");
   },
 
   /**

@@ -6,11 +6,16 @@ import { EditarCargaModal } from "./EditarCargaModal";
 import { Badge } from "@/components/ui/badge";
 import { canEditCarga } from "../utils/permissions";
 import { CapacityBar } from "./CapacityBar";
+import type { CargaDespachoCloseInput } from "../types/cargo.types";
 
 type Props = {
   carga: Carga;
   children: React.ReactNode;
-  onChangeSituacao: (id: string, novaSituacao: CargaSituacao) => void;
+  onChangeSituacao: (
+    id: string,
+    novaSituacao: CargaSituacao,
+    despacho?: CargaDespachoCloseInput,
+  ) => void;
   onUpdate: (cargaAtualizada: Carga) => void;
   userRole?: UserRole;
   codRepUsuarioLogado?: number;

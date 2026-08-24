@@ -48,5 +48,30 @@ test("Cargo Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(response.status, 400);
     assert.strictEqual(response.body.error, "Código da carga inválido.");
   });
-});
 
+  await t.test("POST /close-carga sem token deve retornar 401", async () => {
+    const response = await request(app)
+      .post("/api/cargo/close-carga")
+      .send({
+        codCar: 1,
+        motoristaId: "11111111-1111-1111-1111-111111111111",
+        caminhaoId: "22222222-2222-2222-2222-222222222222",
+      });
+
+    assert.strictEqual(response.status, 401);
+  });
+
+  await t.test("POST /close-carga com role ALMOX deve retornar 403", async () => {
+    const token = createToken("ALMOX");
+    const response = await request(app)
+      .post("/api/cargo/close-carga")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        codCar: 1,
+        motoristaId: "11111111-1111-1111-1111-111111111111",
+        caminhaoId: "22222222-2222-2222-2222-222222222222",
+      });
+
+    assert.strictEqual(response.status, 403);
+  });
+});
