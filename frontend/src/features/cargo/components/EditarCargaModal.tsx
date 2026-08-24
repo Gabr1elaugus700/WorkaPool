@@ -17,14 +17,23 @@ import {
   SelectContent,
 } from "@/components/ui/select";
 import { Pencil } from "lucide-react";
-import { Carga, CargaSituacao } from "../types/cargo.types";
+import {
+  Carga,
+  CargaDespachoCloseInput,
+  CargaSituacao,
+} from "../types/cargo.types";
 import { cargoService } from "../services/cargoService";
 import { toast } from "sonner";
+import { FecharCargaDespachoFields } from "./FecharCargaDespachoFields";
 
 type Props = {
   carga: Carga;
   onUpdated: (nova: Carga) => void;
-  onChangeSituacao?: (id: string, novaSituacao: CargaSituacao) => void;
+  onChangeSituacao?: (
+    id: string,
+    novaSituacao: CargaSituacao,
+    despacho?: CargaDespachoCloseInput,
+  ) => void;
 };
 
 export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) {
@@ -33,6 +42,8 @@ export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) 
     ...carga,
     previsaoSaida: new Date(carga.previsaoSaida).toISOString().slice(0, 10),
   });
+  const [motoristaId, setMotoristaId] = useState("");
+  const [caminhaoId, setCaminhaoId] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -44,6 +55,10 @@ export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) 
 
   const handleSituacaoChange = (value: CargaSituacao) => {
     setForm((prev) => ({ ...prev, situacao: value }));
+    if (value !== CargaSituacao.FECHADA) {
+      setMotoristaId("");
+      setCaminhaoId("");
+    }
   };
 
   const atualizarCarga = async () => {
@@ -51,33 +66,35 @@ export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) 
       const situacaoMudou = form.situacao !== carga.situacao;
       const novaSituacao = form.situacao;
 
-      // Validar peso máximo
       const pesoMaximo = Number(form.pesoMaximo);
       if (isNaN(pesoMaximo) || pesoMaximo <= 0) {
         toast.error("Peso máximo deve ser um número válido maior que zero");
         return;
       }
 
-      // Se a situação mudou para FECHADA, usa o fluxo de fechamento específico
-      if (situacaoMudou && novaSituacao === "FECHADA") {
-        console.log("🔵 Fechando carga - chamando closeCarga");
-        
+      if (situacaoMudou && novaSituacao === CargaSituacao.FECHADA) {
         if (!carga.codCar) {
           toast.error("Carga sem código válido");
           return;
         }
 
+        if (!motoristaId || !caminhaoId) {
+          toast.error("Selecione motorista e caminhão para fechar a carga");
+          return;
+        }
+
         setOpen(false);
 
-        // Chama o fluxo de fechamento que já atualiza a situação + salva pedidos
         if (onChangeSituacao) {
-          onChangeSituacao(carga.id, novaSituacao);
+          onChangeSituacao(carga.id, novaSituacao, {
+            motoristaId,
+            caminhaoId,
+          });
         }
-        
+
         return;
       }
 
-      // Para outras situações, atualiza normalmente
       const atualizada = await cargoService.updateCarga(carga.id, {
         destino: form.destino,
         pesoMax: pesoMaximo,
@@ -101,6 +118,9 @@ export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) 
       toast.error(error instanceof Error ? error.message : "Erro ao atualizar carga");
     }
   };
+
+  const precisaDespacho =
+    form.situacao === CargaSituacao.FECHADA && form.situacao !== carga.situacao;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -153,6 +173,15 @@ export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) 
               </SelectContent>
             </Select>
           </div>
+
+          {precisaDespacho ? (
+            <FecharCargaDespachoFields
+              motoristaId={motoristaId}
+              caminhaoId={caminhaoId}
+              onMotoristaChange={setMotoristaId}
+              onCaminhaoChange={setCaminhaoId}
+            />
+          ) : null}
 
           <Button onClick={atualizarCarga} className="w-full">
             Salvar alterações

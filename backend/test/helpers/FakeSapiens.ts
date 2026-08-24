@@ -1,6 +1,13 @@
+import { Role } from '@prisma/client';
 import { Carga, SituacaoCarga } from '../../src/features/cargo/entities/Carga';
 import { Pedido } from '../../src/features/cargo/entities/Pedido';
 import { ICargoRepository } from '../../src/features/cargo/repositories/ICargoRepository';
+import {
+  CargaDespachoRecord,
+  CargoTruckRef,
+  CargoUserRef,
+  CloseCargaDespachoInput,
+} from '../../src/features/cargo/types/CargaDespacho.types';
 import { HistoricoPesoPedido } from '../../src/features/pedidos/entities/HistoricoPesoPedido';
 import { mapRawToPedidos } from '../../src/features/pedidos/mappers/PedidoMapper';
 import { IPedidosRepository } from '../../src/features/pedidos/repositories/IPedidosRepository';
@@ -11,6 +18,9 @@ interface FakeSapiensSeed {
   cargas: Carga[];
   rows: PedidoRaw[];
   historicos?: HistoricoPesoPedido[];
+  users?: CargoUserRef[];
+  trucks?: CargoTruckRef[];
+  despachos?: CargaDespachoRecord[];
 }
 
 interface FakeSapiensWriteCounts {
@@ -23,6 +33,9 @@ export class FakeSapiens implements ICargoRepository, IPedidosRepository {
   private readonly cargas: Carga[];
   private readonly rows: PedidoRaw[];
   private readonly historicos: HistoricoPesoPedido[];
+  private readonly users: CargoUserRef[];
+  private readonly trucks: CargoTruckRef[];
+  private readonly despachos: CargaDespachoRecord[];
   private readonly writeCounts: FakeSapiensWriteCounts = {
     historicosCriados: 0,
     pedidosCargaAtualizados: 0,
@@ -33,6 +46,9 @@ export class FakeSapiens implements ICargoRepository, IPedidosRepository {
     this.cargas = [...seed.cargas];
     this.rows = seed.rows.map((row) => ({ ...row }));
     this.historicos = [...(seed.historicos ?? [])];
+    this.users = [...(seed.users ?? [])];
+    this.trucks = [...(seed.trucks ?? [])];
+    this.despachos = [...(seed.despachos ?? [])];
   }
 
   async getPedidos(codRep?: number, codCar?: number): Promise<PedidoCargo[]> {
@@ -126,15 +142,46 @@ export class FakeSapiens implements ICargoRepository, IPedidosRepository {
   }
 
   async closeCarga(
-    codCar: number,
-  ): Promise<{ carga: Carga; pedidosSalvos: number }> {
+    input: CloseCargaDespachoInput,
+  ): Promise<{ carga: Carga; pedidosSalvos: number; despacho: CargaDespachoRecord }> {
     const carga = await this.updateSituacaoCarga(
-      codCar,
+      input.codCar,
       SituacaoCarga.FECHADA,
     );
-    const pedidosSalvos = (await this.getPedidosByCarga(codCar)).length;
+    const pedidosSalvos = (await this.getPedidosByCarga(input.codCar)).length;
+    const despacho: CargaDespachoRecord = {
+      id: `despacho-${input.codCar}`,
+      cargaId: carga.id,
+      motoristaId: input.motoristaId,
+      caminhaoId: input.caminhaoId,
+      fechadoPorId: input.fechadoPorId,
+      fechadoEm: new Date(),
+    };
+    this.despachos.push(despacho);
 
-    return { carga, pedidosSalvos };
+    return { carga, pedidosSalvos, despacho };
+  }
+
+  async findUserById(id: string): Promise<CargoUserRef | null> {
+    return this.users.find((user) => user.id === id) ?? null;
+  }
+
+  async findTruckById(id: string): Promise<CargoTruckRef | null> {
+    return this.trucks.find((truck) => truck.id === id) ?? null;
+  }
+
+  async findDespachoByCargaId(
+    cargaId: string,
+  ): Promise<CargaDespachoRecord | null> {
+    return this.despachos.find((despacho) => despacho.cargaId === cargaId) ?? null;
+  }
+
+  async listMotoristas(): Promise<CargoUserRef[]> {
+    return this.users.filter((user) => user.role === Role.MOTORISTA);
+  }
+
+  async listTrucks(): Promise<CargoTruckRef[]> {
+    return [...this.trucks];
   }
 
   async deleteCarga(id: string): Promise<void> {
@@ -197,8 +244,39 @@ export class FakeSapiens implements ICargoRepository, IPedidosRepository {
     return this.cargas.find((carga) => carga.codCar === codCar) ?? null;
   }
 
-  async getCargasFechadas(): Promise<Carga[]> {
-    return this.getCargas(SituacaoCarga.FECHADA);
+  async getCargasFechadas(): Promise<
+    Array<{
+      id: string;
+      cargaId: string;
+      createdAt: Date;
+      carga: {
+        id: string;
+        codCar: number;
+        destino: string;
+        pesoMaximo: number;
+        situacao: string;
+        previsaoSaida: Date;
+        closedAt: Date | null;
+      };
+      pedidos: unknown;
+    }>
+  > {
+    const fechadas = await this.getCargas(SituacaoCarga.FECHADA);
+    return fechadas.map((carga) => ({
+      id: `fechada-${carga.id}`,
+      cargaId: carga.id,
+      createdAt: carga.closedAt ?? new Date(),
+      carga: {
+        id: carga.id,
+        codCar: carga.codCar,
+        destino: carga.destino,
+        pesoMaximo: carga.pesoMaximo,
+        situacao: carga.situacao,
+        previsaoSaida: carga.previsaoSaida,
+        closedAt: carga.closedAt ?? null,
+      },
+      pedidos: [],
+    }));
   }
 
   async validarCargaSapiens(numPed: number): Promise<boolean> {

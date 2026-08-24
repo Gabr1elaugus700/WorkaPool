@@ -1,4 +1,4 @@
-import { Carga, CargaSituacao } from "../types/cargo.types";
+import { Carga, CargaDespachoCloseInput, CargaSituacao } from "../types/cargo.types";
 import { UserRole } from "../types/roles.types";
 import CargaDropzone from "./CargaDropzone";
 import PedidoCard from "./PedidoCard";
@@ -12,7 +12,11 @@ type Props = {
   destinosFiltrados: string[];
   onFiltroChange: (destinos: string[]) => void;
   onNovaCarga: (novaCarga: Carga) => void;
-  onChangeSituacao: (id: string, novaSituacao: CargaSituacao) => void;
+  onChangeSituacao: (
+    id: string,
+    novaSituacao: CargaSituacao,
+    despacho?: CargaDespachoCloseInput,
+  ) => void;
   onUpdate: (cargaAtualizada: Carga) => void;
   userRole?: UserRole;
   codRepUsuarioLogado?: number;

@@ -3,7 +3,7 @@ import { GetCargaByIdUseCase } from "../../useCases/GetCargaById.use-case";
 import { UpdatePedidoCargaUseCase } from "../../useCases/UpdatePedidoCarga.use-case";
 import { CreateCargaUseCase } from "../../useCases/CreateCarga.use-case";
 import { GetPedidosFechadosVendedorUseCase } from "../../useCases/GetPedidosFechadosVendedor.use-case";
-import { CreateCargaSchema } from "../schemas/cargoSchema";
+import { CreateCargaSchema, CloseCargaSchema } from "../schemas/cargoSchema";
 import { GetAllCargasUseCase } from "../../useCases/GetAllCargas.use-case";
 import { UpdateCargaSituacaoUseCase } from "../../useCases/UpdateCargaSituacao.use-case";
 import { SituacaoCarga } from "../../entities/Carga";
@@ -11,6 +11,8 @@ import { UpdateCargaUseCase } from "../../useCases/UpdateCarga.use-case";
 import { GetPedidosCargaUseCase } from "../../useCases/GetPedidosCarga.use-case";
 import { CloseCargaUseCase } from "../../useCases/CloseCarga.use-case";
 import { GetCargasFechadasUseCase } from "../../useCases/GetCargasFechadas.use-case";
+import { ListMotoristasDespachoUseCase } from "../../useCases/ListMotoristasDespacho.use-case";
+import { ListTrucksDespachoUseCase } from "../../useCases/ListTrucksDespacho.use-case";
 import { AppError } from "../../../../utils/AppError";
 
 export class CargoController {
@@ -70,18 +72,35 @@ export class CargoController {
 
   static async closeCarga(req: Request, res: Response): Promise<Response> {
     try {
-      const { codCar } = req.body;
+      const parsed = CloseCargaSchema.safeParse(req.body);
 
-      if (codCar == null) {
+      if (!parsed.success) {
         return res.status(400).json({
-          error: "Código da carga é obrigatório para fechar a carga.",
+          error: "Motorista e caminhão são obrigatórios para fechar a carga",
+          code: "CARGO_DESPACHO_REQUIRED",
+          details: parsed.error.format(),
         });
       }
+
+      const fechadoPorId = req.user?.id;
+      if (!fechadoPorId) {
+        return res.status(401).json({
+          error: "Usuário não autenticado",
+          code: "CARGO_FECHADO_POR_REQUIRED",
+        });
+      }
+
+      const { codCar, motoristaId, caminhaoId } = parsed.data;
 
       console.log(`🔵 [Controller] Recebida requisição para fechar carga ${codCar}`);
 
       const closeCargaUseCase = new CloseCargaUseCase();
-      const result = await closeCargaUseCase.execute(Number(codCar));
+      const result = await closeCargaUseCase.execute({
+        codCar,
+        motoristaId,
+        caminhaoId,
+        fechadoPorId,
+      });
 
       console.log(`✅ [Controller] Carga ${codCar} fechada com sucesso. ${result.pedidosSalvos} pedidos salvos.`);
 
@@ -89,6 +108,7 @@ export class CargoController {
         message: "Carga fechada com sucesso",
         carga: result.carga,
         pedidosSalvos: result.pedidosSalvos,
+        despacho: result.despacho,
       });
     } catch (err: unknown) {
       if (err instanceof AppError) {
@@ -99,8 +119,49 @@ export class CargoController {
         });
       }
       const message =
-        err instanceof Error ? err.message : "Erro ao fechar carga";
-      console.error(`❌ [Controller] Erro ao fechar carga:`, message);
+        err instanceof Error ? err.message : "Erro interno ao fechar carga";
+      return res
+        .status(500)
+        .json({ error: message, code: "INTERNAL_ERROR" });
+    }
+  }
+
+  static async listMotoristas(_req: Request, res: Response): Promise<Response> {
+    try {
+      const useCase = new ListMotoristasDespachoUseCase();
+      const motoristas = await useCase.execute();
+      return res.status(200).json(motoristas);
+    } catch (err: unknown) {
+      if (err instanceof AppError) {
+        return res.status(err.statusCode).json({
+          error: err.message,
+          code: err.code,
+          details: err.details,
+        });
+      }
+      const message =
+        err instanceof Error ? err.message : "Erro interno ao listar motoristas";
+      return res
+        .status(500)
+        .json({ error: message, code: "INTERNAL_ERROR" });
+    }
+  }
+
+  static async listTrucks(_req: Request, res: Response): Promise<Response> {
+    try {
+      const useCase = new ListTrucksDespachoUseCase();
+      const trucks = await useCase.execute();
+      return res.status(200).json(trucks);
+    } catch (err: unknown) {
+      if (err instanceof AppError) {
+        return res.status(err.statusCode).json({
+          error: err.message,
+          code: err.code,
+          details: err.details,
+        });
+      }
+      const message =
+        err instanceof Error ? err.message : "Erro interno ao listar caminhões";
       return res
         .status(500)
         .json({ error: message, code: "INTERNAL_ERROR" });
