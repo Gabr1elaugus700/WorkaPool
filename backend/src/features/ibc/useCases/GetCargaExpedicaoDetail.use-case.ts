@@ -1,5 +1,6 @@
 import { IIbcExpedicaoRepository } from "../repositories/IIbcExpedicaoRepository";
 import { AlocacaoIbcRecord } from "../types/IbcExpedicao.types";
+import { isPedidoIbcElegivel } from "../services/isPedidoIbcElegivel";
 import { summarizeCargaExpedicao } from "../services/summarizeCargaExpedicao";
 import { AppError } from "../../../utils/AppError";
 
@@ -85,10 +86,7 @@ export class GetCargaExpedicaoDetailUseCase {
 
     const pedidosDetalhe: PedidoExpedicaoDetail[] = [];
     for (const pedido of pedidos) {
-      const isElegivel =
-        pedido.isContainer &&
-        !pedido.ibcInvalido &&
-        pedido.quantidadeEsperadaTotal > 0;
+      const isElegivel = isPedidoIbcElegivel(pedido);
       const showInvalidAlert = pedido.ibcInvalido;
 
       if (!isElegivel && !showInvalidAlert) {

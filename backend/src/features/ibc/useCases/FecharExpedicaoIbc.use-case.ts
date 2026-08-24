@@ -1,5 +1,6 @@
 import { PedidoCargo } from "../../pedidos/types/PedidoCargo.types";
 import { IIbcExpedicaoRepository } from "../repositories/IIbcExpedicaoRepository";
+import { isPedidoIbcElegivel } from "../services/isPedidoIbcElegivel";
 import { ExpedicaoIbcRecord } from "../types/IbcExpedicao.types";
 import { AppError } from "../../../utils/AppError";
 
@@ -82,9 +83,7 @@ export class FecharExpedicaoIbcUseCase {
     }
 
     const pedidos = await this.repository.getPedidosByCarga(codCar);
-    const pedidosElegiveis = pedidos.filter(
-      (p) => p.isContainer && !p.ibcInvalido && p.quantidadeEsperadaTotal > 0,
-    );
+    const pedidosElegiveis = pedidos.filter(isPedidoIbcElegivel);
 
     if (pedidosElegiveis.length === 0) {
       throw new AppError({

@@ -4,6 +4,7 @@ import {
   CargaExpedicaoRef,
   ExpedicaoIbcRecord,
 } from "../types/IbcExpedicao.types";
+import { isPedidoIbcElegivel } from "./isPedidoIbcElegivel";
 
 export type CargaExpedicaoListItem = {
   id: string;
@@ -18,12 +19,9 @@ export type CargaExpedicaoListItem = {
   podeFecharExpedicao: boolean;
 };
 
-function isPedidoIbcElegivel(pedido: PedidoCargo): boolean {
-  return (
-    pedido.isContainer &&
-    !pedido.ibcInvalido &&
-    pedido.quantidadeEsperadaTotal > 0
-  );
+/** Sinal de embalagem 251001 no pedido (válido ou Pedido IBC inválido). */
+function hasSinalContainerIbc(pedido: PedidoCargo): boolean {
+  return pedido.isContainer || pedido.ibcInvalido;
 }
 
 function computePodeFecharExpedicao(params: {
@@ -64,10 +62,11 @@ export function summarizeCargaExpedicao(params: {
     return sum + (countsByNumPed.get(String(pedido.numPed)) ?? 0);
   }, 0);
 
-  const semIbc = elegiveis.length === 0;
+  // semIbc = nenhum sinal 251001 (não “sem elegíveis”: só ibcInvalido ainda é acionável).
+  const semIbc = !params.pedidos.some(hasSinalContainerIbc);
   const temExpedicao = params.expedicao != null;
   const pedidosElegiveisCompletos =
-    !semIbc &&
+    elegiveis.length > 0 &&
     elegiveis.every((pedido) => {
       const alocado = countsByNumPed.get(String(pedido.numPed)) ?? 0;
       return alocado >= pedido.quantidadeEsperadaTotal;
