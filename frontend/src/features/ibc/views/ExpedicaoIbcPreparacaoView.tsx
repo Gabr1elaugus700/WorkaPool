@@ -3,10 +3,10 @@ import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
 import ExpedicaoIbcAsyncState from "../components/ExpedicaoIbcAsyncState";
 import ExpedicaoIbcPageHeader from "../components/ExpedicaoIbcPageHeader";
 import FecharExpedicaoButton from "../components/FecharExpedicaoButton";
@@ -15,11 +15,7 @@ import PedidoIbcProgress from "../components/PedidoIbcProgress";
 import { ibcExpedicaoService } from "../services/ibcExpedicaoService";
 import type { CargaExpedicaoDetalheDTO } from "../types/ibcExpedicao.types";
 import { canAccessExpedicaoIbc } from "../utils/canAccessExpedicaoIbc";
-
-function toError(err: unknown): Error {
-  if (err instanceof Error) return err;
-  return new Error(String(err));
-}
+import { toError } from "../utils/toError";
 
 function parseCodCar(raw: string | undefined): number | null {
   if (raw == null || raw === "") return null;
@@ -116,17 +112,7 @@ export default function ExpedicaoIbcPreparacaoView() {
   };
 
   if (!allowed) {
-    return (
-      <DefaultLayout>
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Acesso negado</AlertTitle>
-          <AlertDescription>
-            Apenas ALMOX e ADMIN podem acessar a Expedição IBC.
-          </AlertDescription>
-        </Alert>
-      </DefaultLayout>
-    );
+    return <ExpedicaoIbcAccessDeniedAlert />;
   }
 
   return (
