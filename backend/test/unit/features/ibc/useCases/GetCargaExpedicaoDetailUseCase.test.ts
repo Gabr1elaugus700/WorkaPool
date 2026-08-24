@@ -96,6 +96,37 @@ describe("GetCargaExpedicaoDetailUseCase", () => {
     assert.strictEqual(detail.podeFecharExpedicao, false);
   });
 
+  it("inclui Pedido IBC inválido e não marca semIbc (alerta ALMOX)", async () => {
+    const repo: Pick<
+      IIbcExpedicaoRepository,
+      | "getCargaByCodCar"
+      | "getPedidosByCarga"
+      | "listAlocacoesByCargaId"
+      | "findExpedicaoByCargaId"
+    > = {
+      getCargaByCodCar: mock.fn(async () => buildCarga()),
+      getPedidosByCarga: mock.fn(async () => [
+        buildPedido("1121", {
+          isContainer: false,
+          quantidadeEsperadaTotal: 0,
+          ibcInvalido: true,
+        }),
+      ]),
+      listAlocacoesByCargaId: mock.fn(async () => []),
+      findExpedicaoByCargaId: mock.fn(async () => null),
+    };
+
+    const useCase = new GetCargaExpedicaoDetailUseCase(
+      repo as IIbcExpedicaoRepository,
+    );
+    const detail = await useCase.execute({ codCar: 101 });
+
+    assert.strictEqual(detail.semIbc, false);
+    assert.strictEqual(detail.pedidos.length, 1);
+    assert.strictEqual(detail.pedidos[0].ibcInvalido, true);
+    assert.strictEqual(detail.quantidadeEsperadaTotal, 0);
+  });
+
   it("retorna 404 quando carga não existe", async () => {
     const repo: Pick<
       IIbcExpedicaoRepository,

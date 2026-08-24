@@ -126,6 +126,39 @@ describe("ListCargasExpedicaoUseCase", () => {
     assert.strictEqual(item.quantidadeEsperadaTotal, 0);
   });
 
+  it("não marca semIbc quando só há Pedido IBC inválido (251001) — permanece acionável", async () => {
+    const repo: Pick<
+      IIbcExpedicaoRepository,
+      | "listCargasAbertaOuFechada"
+      | "getPedidosByCarga"
+      | "listAlocacoesByCargaId"
+      | "findExpedicaoByCargaId"
+    > = {
+      listCargasAbertaOuFechada: mock.fn(async () => [
+        buildCarga({ id: "carga-3", codCar: 303, situacao: "ABERTA" }),
+      ]),
+      getPedidosByCarga: mock.fn(async () => [
+        buildPedido("1121", {
+          isContainer: false,
+          quantidadeEsperadaTotal: 0,
+          ibcInvalido: true,
+        }),
+      ]),
+      listAlocacoesByCargaId: mock.fn(async () => []),
+      findExpedicaoByCargaId: mock.fn(async () => null),
+    };
+
+    const useCase = new ListCargasExpedicaoUseCase(
+      repo as IIbcExpedicaoRepository,
+    );
+    const result = await useCase.execute();
+
+    const item = result.cargas[0];
+    assert.strictEqual(item.semIbc, false);
+    assert.strictEqual(item.quantidadeEsperadaTotal, 0);
+    assert.strictEqual(item.podeFecharExpedicao, false);
+  });
+
   it("marca podeFecharExpedicao quando FECHADA, completa e sem expedição", async () => {
     const repo: Pick<
       IIbcExpedicaoRepository,
