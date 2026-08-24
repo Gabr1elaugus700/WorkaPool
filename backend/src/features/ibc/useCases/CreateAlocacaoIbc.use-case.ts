@@ -122,14 +122,18 @@ export class CreateAlocacaoIbcUseCase {
 
     const alocacaoExistente = await this.repository.findAlocacaoByIbcId(ibc.id);
     if (alocacaoExistente) {
+      const mesmaCarga = alocacaoExistente.cargaId === carga.id;
       throw new AppError({
-        message: `IBC ${identificador} já está alocado em outra carga`,
+        message: mesmaCarga
+          ? `IBC ${identificador} já está alocado nesta carga`
+          : `IBC ${identificador} já está alocado em outra carga`,
         statusCode: 409,
         code: "IBC_JA_ALOCADO",
         details: {
           identificador,
           cargaId: alocacaoExistente.cargaId,
           alocacaoId: alocacaoExistente.id,
+          mesmaCarga,
         },
       });
     }
