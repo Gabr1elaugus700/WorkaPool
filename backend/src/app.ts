@@ -28,6 +28,7 @@ import checklistVistoria from "./features/workOrder/routes/chacklilstVistoriaRou
 
 import userRoutes from "./features/users/routes/userRoutes";
 import cargoRoutes from "./features/cargo/http/routes/CargoRoute";
+import ibcRoutes from "./features/ibc/http/routes/IbcRoute";
 
 // New Routes After Refactor
 import goals from "./features/goals/http/routes/goalsRoutes";
@@ -88,6 +89,9 @@ app.use("/api/vendedores", vendedoresRoutes);
 
 //Cargas
 app.use("/api/cargo", cargoRoutes);
+
+// IBC — preparação e expedição
+app.use("/api/ibc", ibcRoutes);
 
 //Clientes Perdidos
 app.use("/api/clientes-inativos", clientesInativos);
