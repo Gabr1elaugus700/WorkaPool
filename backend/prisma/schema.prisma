@@ -30,6 +30,8 @@ model User {
   orders               Order[]
   cargasDespachoComoMotorista CargaDespacho[] @relation("CargaDespachoMotorista")
   cargasDespachoFechadasPor   CargaDespacho[] @relation("CargaDespachoFechadoPor")
+  alocacoesIbc                AlocacaoIbc[]   @relation("AlocacaoIbcAlocadoPor")
+  expedicoesIbcFechadasPor    ExpedicaoIbc[]  @relation("ExpedicaoIbcFechadoPor")
 
   @@index([role])
 }
@@ -56,6 +58,8 @@ model Cargas {
   CargasFechadas       CargasFechadas[]
   historicoPesoPedidos HistoricoPesoPedidos[]
   despacho             CargaDespacho?
+  alocacoesIbc         AlocacaoIbc[]
+  expedicaoIbc         ExpedicaoIbc?
 }
 
 model CargaDespacho {
@@ -70,6 +74,53 @@ model CargaDespacho {
   motorista  User   @relation("CargaDespachoMotorista", fields: [motoristaId], references: [id])
   caminhao   Trucks @relation(fields: [caminhaoId], references: [id])
   fechadoPor User   @relation("CargaDespachoFechadoPor", fields: [fechadoPorId], references: [id])
+}
+
+enum IbcAptidao {
+  APTO
+  INAPTO
+}
+
+enum IbcCustodia {
+  PATIO
+  EM_VIAGEM
+}
+
+model Ibc {
+  id            String      @id @default(uuid())
+  identificador String      @unique
+  aptidao       IbcAptidao
+  custodia      IbcCustodia @default(PATIO)
+  createdAt     DateTime    @default(now())
+  alocacao      AlocacaoIbc?
+}
+
+model AlocacaoIbc {
+  id             String    @id @default(uuid())
+  ibcId          String    @unique
+  cargaId        String
+  numPed         String
+  alocadoPorId   String
+  alocadoEm      DateTime  @default(now())
+  expedicaoIbcId String?
+
+  ibc          Ibc           @relation(fields: [ibcId], references: [id])
+  carga        Cargas        @relation(fields: [cargaId], references: [id])
+  alocadoPor   User          @relation("AlocacaoIbcAlocadoPor", fields: [alocadoPorId], references: [id])
+  expedicaoIbc ExpedicaoIbc? @relation(fields: [expedicaoIbcId], references: [id])
+
+  @@index([cargaId, numPed])
+}
+
+model ExpedicaoIbc {
+  id           String   @id @default(uuid())
+  cargaId      String   @unique
+  fechadoPorId String
+  fechadoEm    DateTime @default(now())
+
+  carga      Cargas        @relation(fields: [cargaId], references: [id])
+  fechadoPor User          @relation("ExpedicaoIbcFechadoPor", fields: [fechadoPorId], references: [id])
+  alocacoes  AlocacaoIbc[]
 }
 
 model HistoricoPesoPedidos {
