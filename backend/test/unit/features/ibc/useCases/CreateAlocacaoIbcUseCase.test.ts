@@ -223,6 +223,50 @@ describe("CreateAlocacaoIbcUseCase", () => {
       (error: unknown) => {
         assert.ok(error instanceof AppError);
         assert.strictEqual(error.code, "IBC_JA_ALOCADO");
+        assert.match(error.message, /outra carga/);
+        const details = error.details as { mesmaCarga?: boolean };
+        assert.strictEqual(details.mesmaCarga, false);
+        return true;
+      },
+    );
+    assert.strictEqual(createAlocacao.mock.calls.length, 0);
+  });
+
+  it("rejeita alocação quando IBC já está vinculado nesta mesma carga", async () => {
+    const createAlocacao = mock.fn(async () => {
+      throw new Error("não deve criar");
+    });
+    const repo = buildHappyRepo({
+      findAlocacaoByIbcId: mock.fn(async () =>
+        buildAlocacao({
+          cargaId: CARGA_ID,
+          identificador: "H0102",
+          ibcId: "ibc-h0102",
+        }),
+      ),
+      findIbcByIdentificador: mock.fn(async () =>
+        buildIbc({ id: "ibc-h0102", identificador: "H0102" }),
+      ),
+      createAlocacao,
+    });
+    const useCase = new CreateAlocacaoIbcUseCase(
+      repo as IIbcExpedicaoRepository,
+    );
+
+    await assert.rejects(
+      async () =>
+        useCase.execute({
+          codCar: COD_CAR,
+          numPed: "1120",
+          identificador: "H0102",
+          alocadoPorId: ALOCADO_POR_ID,
+        }),
+      (error: unknown) => {
+        assert.ok(error instanceof AppError);
+        assert.strictEqual(error.code, "IBC_JA_ALOCADO");
+        assert.match(error.message, /nesta carga/);
+        const details = error.details as { mesmaCarga?: boolean };
+        assert.strictEqual(details.mesmaCarga, true);
         return true;
       },
     );
