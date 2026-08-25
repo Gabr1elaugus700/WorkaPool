@@ -47,8 +47,7 @@ export default defineConfig({
     
   },
   build: {
-    outDir: "dist-test",
-    // outDir: "dist", <-- alterar para produção
+    outDir: "dist",
   },                          
   preview: {
     port: 5858,
