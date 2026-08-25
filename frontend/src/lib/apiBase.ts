@@ -2,10 +2,13 @@ import axios from 'axios';
 
 // Função para obter a URL base dinamicamente
 export const getBaseUrl = (): string => {
-   if (window.location.hostname === 'pooltecnica.no-ip.biz') {
-    return 'http://pooltecnica.no-ip.biz:3030';
+  // Build de produção (Docker/nginx): sempre mesma origem.
+  // /api e /uploads são proxied pelo nginx → backend na rede Docker.
+  // Serve LAN (IP:5173) e externo (no-ip:5173) sem CORS nem porta da API aberta.
+  if (import.meta.env.PROD) {
+    return "";
   }
-  return import.meta.env.VITE_API_BASE_URL || 'http://192.168.0.32:3030';
+  return import.meta.env.VITE_API_BASE_URL || "http://192.168.0.32:3030";
 };
 
 // Usar variável de ambiente com fallback
