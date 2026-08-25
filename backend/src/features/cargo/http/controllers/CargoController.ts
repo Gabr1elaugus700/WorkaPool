@@ -107,42 +107,6 @@ export class CargoController {
     }
   }
 
-  static async updatePedido(req: Request, res: Response): Promise<Response> {
-    try {
-      const numPed = String(req.params.numPed ?? "");
-      const { codCar, posCar } = req.body;
-      if (!numPed || codCar == null || posCar == null) {
-        return res.status(400).json({
-          error: "Dados obrigatórios ausentes para atualização de carga.",
-        });
-      }
-      const updatePedidoCargaUseCase = new UpdatePedidoCargaUseCase();
-      await updatePedidoCargaUseCase.execute(
-        Number(numPed),
-        Number(codCar),
-        Number(posCar),
-      );
-      return res
-        .status(200)
-        .json({ message: "Pedido atualizado com sucesso." });
-    } catch (err: unknown) {
-      if (err instanceof AppError) {
-        return res.status(err.statusCode).json({
-          error: err.message,
-          code: err.code,
-          details: err.details,
-        });
-      }
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Erro interno ao atualizar pedido";
-      return res
-        .status(500)
-        .json({ error: message, code: "INTERNAL_ERROR" });
-    }
-  }
-
   static async getPedidos(
     req: Request,
     res: Response,
@@ -290,54 +254,74 @@ export class CargoController {
     }
   }
 
-  static async updatePedidoCarga(
-    req: Request,
-    res: Response,
-  ): Promise<Response> {
-    try {
-      const numPed = String(req.params.numPed ?? "");
-      const { codCar, posCar } = req.body;
+  static createUpdatePedidoCargaHandler(
+    deps: {
+      createUseCase?: () => UpdatePedidoCargaUseCase;
+    } = {},
+  ) {
+    const createUseCase =
+      deps.createUseCase ?? (() => new UpdatePedidoCargaUseCase());
 
-      console.log("🔵 [Controller] updatePedidoCarga recebeu:", {
-        numPed,
-        codCar,
-        posCar,
-        params: req.params,
-        body: req.body
-      });
+    return async (req: Request, res: Response): Promise<Response> => {
+      try {
+        const numPed = String(req.params.numPed ?? "");
+        const { codCar, posCar } = req.body;
 
-      if (!numPed || codCar == null || posCar == null) {
-        console.log("❌ [Controller] Dados obrigatórios ausentes");
-        return res.status(400).json({
-          error: "Dados obrigatórios ausentes para atualização de carga.",
+        console.log("🔵 [Controller] updatePedidoCarga recebeu:", {
+          numPed,
+          codCar,
+          posCar,
+          params: req.params,
+          body: req.body,
+        });
+
+        if (!numPed || codCar == null || posCar == null) {
+          console.log("❌ [Controller] Dados obrigatórios ausentes");
+          return res.status(400).json({
+            error: "Dados obrigatórios ausentes para atualização de carga.",
+          });
+        }
+
+        const role = req.user?.role;
+        if (!role) {
+          return res.status(401).json({
+            error: "Usuário não autenticado",
+            code: "UNAUTHORIZED",
+          });
+        }
+
+        const updatePedidoCargaUseCase = createUseCase();
+        await updatePedidoCargaUseCase.execute(
+          Number(numPed),
+          Number(codCar),
+          Number(posCar),
+          role,
+        );
+
+        console.log("✅ [Controller] Pedido atualizado com sucesso");
+        return res
+          .status(200)
+          .json({ message: "Pedido atualizado com sucesso." });
+      } catch (err: unknown) {
+        if (err instanceof AppError) {
+          return res.status(err.statusCode).json({
+            error: err.message,
+            code: err.code,
+            details: err.details,
+          });
+        }
+        const message =
+          err instanceof Error ? err.message : "Erro ao atualizar pedido";
+        return res.status(500).json({
+          error: message,
+          code: "INTERNAL_ERROR",
         });
       }
-
-      const updatePedidoCargaUseCase = new UpdatePedidoCargaUseCase();
-      await updatePedidoCargaUseCase.execute(
-        Number(numPed),
-        Number(codCar),
-        Number(posCar),
-      );
-
-      console.log("✅ [Controller] Pedido atualizado com sucesso");
-      return res.status(200).json({ message: "Pedido atualizado com sucesso." });
-    } catch (err: unknown) {
-      if (err instanceof AppError) {
-        return res.status(err.statusCode).json({
-          error: err.message,
-          code: err.code,
-          details: err.details,
-        });
-      }
-      const message =
-        err instanceof Error ? err.message : "Erro ao atualizar pedido";
-      return res.status(500).json({
-        error: message,
-        code: "INTERNAL_ERROR",
-      });
-    }
+    };
   }
+
+  static updatePedidoCarga =
+    CargoController.createUpdatePedidoCargaHandler();
 
   static async getPedidosPorCarga(
     req: Request,
