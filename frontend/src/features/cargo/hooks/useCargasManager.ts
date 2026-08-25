@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Carga, CargaSituacao, Pedido, CargaComPesoDTO } from "../types/cargo.types";
 import { cargoService } from "../services/cargoService";
 import { canMovePedido } from "../utils/permissions";
+import { cargoCapacity } from "../utils/cargoCapacity";
 import { UserRole } from "../types/roles.types";
 
 /**
@@ -142,9 +143,20 @@ export function useCargasManager(
         return toast.error("Pedido já está na carga selecionada.");
       }
 
-      // Valida peso máximo (usando peso REAL da carga + peso do novo pedido)
-      const novoPeso = cargaDestino.pesoAtual + pedido.peso;
-      if (novoPeso > cargaDestino.pesoMaximo) {
+      // Valida peso máximo (full item-sum; privileged roles may overfill)
+      const pedidoWeight =
+        pedido.produtos && pedido.produtos.length > 0
+          ? cargoCapacity.pedidoFromItems(pedido.produtos)
+          : pedido.peso;
+
+      if (
+        !cargoCapacity.mayAddPedido({
+          role: userRole,
+          occupiedWeight: cargaDestino.pesoAtual,
+          pedidoWeight,
+          pesoMaximo: cargaDestino.pesoMaximo,
+        })
+      ) {
         toast.error(
           `Carga excede o peso máximo de ${cargaDestino.pesoMaximo}kg!`
         );
