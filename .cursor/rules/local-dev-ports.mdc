@@ -1,0 +1,35 @@
+---
+description: Portas fixas do ambiente local — nunca hardcodar/alterar no código fonte
+alwaysApply: true
+---
+
+# Portas do desenvolvimento local
+
+Ambiente local é **imutável**. Nunca alterar essas portas no código-fonte, em fallbacks hardcoded, Dockerfiles de prod, ou "correções rápidas" de URL.
+
+| Serviço   | Porta | Como sobe                          |
+|-----------|-------|------------------------------------|
+| Frontend  | 5858  | `npm run dev` em `frontend/` (Vite) |
+| Backend   | 3001  | `npm run dev` em `backend/`         |
+| Postgres  | 5435  | Docker/compose de desenvolvimento   |
+
+## API base URL — não mexer no fallback de produção
+
+- `frontend/src/lib/apiBase.ts` mantém fallback LAN de **produção** (`:3030`). **Não trocar** para `:3001`.
+- Imagem Docker do frontend usa `VITE_API_BASE_URL` no **build**. Hardcode de porta de dev no source quebra deploy.
+- Dev local aponta para o backend via `frontend/.env` (gitignored), ex.:
+
+```env
+VITE_API_BASE_URL=http://192.168.0.32:3001
+```
+
+## ❌ Proibido
+
+- Alterar porta do Vite (`5858`), `PORT` do backend local (`3001`), ou DB local (`5435`) no código
+- Trocar o fallback de `apiBase.ts` para porta de desenvolvimento
+- Assumir que `:3030` é o backend local (é API/container de produção)
+
+## ✅ Correto
+
+- Bug "Cannot GET /api/..." no front local → conferir se o Vite usa `VITE_API_BASE_URL` → `:3001`, não o fallback `:3030`
+- Novas rotas: testar contra backend local `:3001` + DB `:5435`
