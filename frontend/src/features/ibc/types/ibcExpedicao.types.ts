@@ -79,3 +79,9 @@ export type FecharExpedicaoIbcResultDTO = {
   fechadoEm?: string;
   ibcsEmViagem?: number;
 };
+
+export type IbcRealtimeNotification = {
+  event: "CARGA_FECHADA";
+  cargaId: string;
+  codCar: number;
+};

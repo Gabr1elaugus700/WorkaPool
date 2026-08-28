@@ -5,6 +5,7 @@ import { createOverviewCustomerSyncRuntime } from "./features/overviewCustomer/s
 import { createGrpproSyncRuntime } from "./features/grppro/sync/createGrpproSyncRuntime";
 import { OverviewCustomerSyncScheduler } from "./schedulers/overviewCustomerSync/OverviewCustomerSyncScheduler";
 import { GrpproSyncScheduler } from "./schedulers/grpproSync/GrpproSyncScheduler";
+import { IbcEventConsumer } from "./features/ibc/realtime/IbcEventConsumer";
 
 console.log("🧪 DATABASE_URL carregado:", process.env.DATABASE_URL);
 
@@ -30,4 +31,19 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`📡 Servidor: ${process.env.API_SERVER_URL + ":" + process.env.PORT}`);
   console.log(`📚 Swagger: ${process.env.API_SERVER_URL + ":" + process.env.PORT + "/api/docs"}`);
   console.log(`❤️  Health Check: ${process.env.API_SERVER_URL + ":" + process.env.PORT + "/health"}`);
+
+  try {
+    const consumer = new IbcEventConsumer();
+    void consumer.start().catch((error: unknown) => {
+      console.error(
+        "IBC event consumer indisponível:",
+        error instanceof Error ? error.message : error,
+      );
+    });
+  } catch (error: unknown) {
+    console.error(
+      "IBC event consumer não configurado:",
+      error instanceof Error ? error.message : error,
+    );
+  }
 });

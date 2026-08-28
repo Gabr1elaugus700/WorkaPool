@@ -27,6 +27,13 @@ router.get(
 );
 
 router.get(
+  "/events",
+  authMiddleware,
+  requireRoles(ibcReadRoles),
+  IbcController.streamEvents,
+);
+
+router.get(
   "/cargas-expedicao/:codCar",
   authMiddleware,
   requireRoles(ibcReadRoles),
