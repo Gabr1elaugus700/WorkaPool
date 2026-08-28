@@ -1,4 +1,5 @@
 import { PrismaClient, Role } from "@prisma/client";
+import { randomUUID } from "node:crypto";
 import { Carga, SituacaoCarga } from "../entities/Carga";
 import { Pedido } from "../entities/Pedido";
 import { ICargoRepository } from "./ICargoRepository";
@@ -123,6 +124,7 @@ export class CargoRepository implements ICargoRepository {
     );
 
     const closedAt = new Date();
+    const eventId = randomUUID();
     const pedidosJson = pedidosReais.map((pedido) => ({
       numPed: pedido.numPed,
       codCli: pedido.codCli,
@@ -175,6 +177,20 @@ export class CargoRepository implements ICargoRepository {
           },
         });
       }
+
+      await tx.outboxEvent.create({
+        data: {
+          id: eventId,
+          eventType: "CARGA_FECHADA",
+          aggregateType: "Cargas",
+          aggregateId: carga.id,
+          occurredAt: closedAt,
+          payload: {
+            cargaId: carga.id,
+            codCar,
+          },
+        },
+      });
 
       return createdDespacho;
     });

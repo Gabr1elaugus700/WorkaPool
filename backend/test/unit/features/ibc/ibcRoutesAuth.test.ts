@@ -24,6 +24,11 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(response.status, 401);
   });
 
+  await t.test("GET /events sem token deve retornar 401", async () => {
+    const response = await request(app).get("/api/ibc/events");
+    assert.strictEqual(response.status, 401);
+  });
+
   await t.test("POST /alocacoes sem token deve retornar 401", async () => {
     const response = await request(app)
       .post("/api/ibc/alocacoes")

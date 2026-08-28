@@ -6,35 +6,35 @@
  * - production: usa @prisma/client
  */
 
-const isDevelopment = process.env.NODE_ENV === 'development';
+import { PrismaClient as ProductionPrismaClient } from "@prisma/client";
 
-// Importa o client correto baseado no ambiente
-let PrismaClient: any;
-let Prisma: any;
+const isDevelopment = process.env.NODE_ENV === "development";
 
-if (isDevelopment) {
-  // DEV: usa schema.dev.prisma
-  const devPrisma = require('../generated/prisma-dev');
-  PrismaClient = devPrisma.PrismaClient;
-  Prisma = devPrisma.Prisma;
-} else {
-  // PROD: usa client padrão gerado em node_modules/@prisma/client
-  const prodPrisma = require('@prisma/client');
-  PrismaClient = prodPrisma.PrismaClient;
-  Prisma = prodPrisma.Prisma;
-}
+type PrismaClientConstructor = new (
+  ...args: ConstructorParameters<typeof ProductionPrismaClient>
+) => ProductionPrismaClient;
 
-// Singleton instance
-let prismaInstance: any = null;
+const loadPrismaClientConstructor = (): PrismaClientConstructor => {
+  if (isDevelopment) {
+    const devPrisma = require("../generated/prisma-dev") as {
+      PrismaClient: PrismaClientConstructor;
+    };
+    return devPrisma.PrismaClient;
+  }
 
-export function getPrismaClient() {
+  return ProductionPrismaClient;
+};
+
+let prismaInstance: ProductionPrismaClient | null = null;
+
+export function getPrismaClient(): ProductionPrismaClient {
   if (!prismaInstance) {
+    const PrismaClient = loadPrismaClientConstructor();
     prismaInstance = new PrismaClient({
-      log: ['error'], // Apenas erros (sem queries)
+      log: ["error"],
     });
   }
   return prismaInstance;
 }
 
-export { PrismaClient, Prisma };
 export default getPrismaClient();

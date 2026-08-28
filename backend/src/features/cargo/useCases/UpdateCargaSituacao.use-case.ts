@@ -19,6 +19,15 @@ export class UpdateCargaSituacaoUseCase {
             });
         }
 
+        if (situacao === SituacaoCarga.FECHADA) {
+            throw new AppError({
+                message: "Use o fluxo de fechamento para fechar a carga",
+                statusCode: 409,
+                code: "CARGO_CLOSE_DEDICATED_FLOW_REQUIRED",
+                details: { codCar, situacao },
+            });
+        }
+
             
         const cargaAtualizada = await this.cargoRepository.updateSituacaoCarga(codCar, situacao);
         return cargaAtualizada;

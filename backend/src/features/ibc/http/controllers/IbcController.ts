@@ -7,6 +7,7 @@ import { RemoveAlocacaoIbcUseCase } from "../../useCases/RemoveAlocacaoIbc.use-c
 import { FecharExpedicaoIbcUseCase } from "../../useCases/FecharExpedicaoIbc.use-case";
 import { ListCargasExpedicaoUseCase } from "../../useCases/ListCargasExpedicao.use-case";
 import { GetCargaExpedicaoDetailUseCase } from "../../useCases/GetCargaExpedicaoDetail.use-case";
+import { ibcSseGateway } from "../../realtime/ibcSseGateway";
 
 function respondAppError(res: Response, err: unknown, fallbackMessage: string): Response {
   if (err instanceof AppError) {
@@ -21,6 +22,19 @@ function respondAppError(res: Response, err: unknown, fallbackMessage: string): 
 }
 
 export class IbcController {
+  static streamEvents(req: Request, res: Response): void {
+    res.status(200);
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no");
+    res.flushHeaders();
+    res.write(": connected\n\n");
+
+    const removeClient = ibcSseGateway.addClient(res);
+    req.on("close", removeClient);
+  }
+
   static async listCargasExpedicao(
     _req: Request,
     res: Response,

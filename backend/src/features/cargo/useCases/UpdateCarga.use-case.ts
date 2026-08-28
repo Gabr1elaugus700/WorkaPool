@@ -21,6 +21,15 @@ export class UpdateCargaUseCase {
       });
     }
 
+    if (payload.situacao === "FECHADA") {
+      throw new AppError({
+        message: "Use o fluxo de fechamento para fechar a carga",
+        statusCode: 409,
+        code: "CARGO_CLOSE_DEDICATED_FLOW_REQUIRED",
+        details: { id },
+      });
+    }
+
     carga.destino = payload.destino;
     carga.pesoMaximo = payload.pesoMax;
     carga.previsaoSaida = new Date(payload.previsaoSaida);

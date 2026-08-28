@@ -16,6 +16,47 @@ services:
     networks:
       - workapool-network
 
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: ${RABBITMQ_CONTAINER:-workapool_rabbitmq}
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:?RABBITMQ_USER is required}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:?RABBITMQ_VHOST is required}
+    ports:
+      - "${RABBITMQ_AMQP_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - workapool-network
+
+  rabbitmq-test:
+    profiles: ["test"]
+    image: rabbitmq:4-management
+    container_name: ${RABBITMQ_TEST_CONTAINER:-workapool_rabbitmq_test}
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_TEST_USER:?RABBITMQ_TEST_USER is required}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_TEST_PASSWORD:?RABBITMQ_TEST_PASSWORD is required}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_TEST_VHOST:?RABBITMQ_TEST_VHOST is required}
+    ports:
+      - "${RABBITMQ_TEST_PORT:-5676}:5672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - rabbitmq-test-data:/var/lib/rabbitmq
+    networks:
+      - workapool-network
+
   backend:
     profiles: ["production"]
     image: ${BACKEND_IMAGE:-workapool_backend_development}
@@ -27,19 +68,54 @@ services:
     ports:
       - "${BACKEND_PORT:-3001}:${PORT:-3001}"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     env_file:
       - ${ENV_FILE:-./backend/.env.development}
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${PORT:-3005}
       DATABASE_URL: postgresql://${POSTGRES_USER:-dev_user}:${POSTGRES_PASSWORD:-dev_password}@postgres:5432/${POSTGRES_DB:-workapool_dev}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:?RABBITMQ_USER is required}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST:?RABBITMQ_VHOST is required}
     command:
       [
         "sh",
         "-c",
         "npx prisma generate --schema=${PRISMA_SCHEMA:-prisma/schema.dev.prisma} && npx prisma migrate deploy --schema=${PRISMA_SCHEMA:-prisma/schema.dev.prisma} && npx tsx src/server.ts",
       ]
+    networks:
+      - workapool-network
+
+  worker:
+    profiles: ["production"]
+    image: ${WORKER_IMAGE:-workapool_worker}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ${WORKER_CONTAINER_NAME:-workapool_worker}
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - ${ENV_FILE:-./backend/.env.development}
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-dev_user}:${POSTGRES_PASSWORD:-dev_password}@postgres:5432/${POSTGRES_DB:-workapool_dev}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:?RABBITMQ_USER is required}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST:?RABBITMQ_VHOST is required}
+    command: ["sh", "-c", "npx tsx src/worker.ts"]
     networks:
       - workapool-network
 
@@ -64,6 +140,10 @@ volumes:
   postgres-data:
     external: true
     name: ${POSTGRES_DATA_VOLUME:-workapool_postgres_dev_data}
+  rabbitmq-data:
+    name: ${RABBITMQ_DATA_VOLUME:-workapool_rabbitmq_data}
+  rabbitmq-test-data:
+    name: ${RABBITMQ_TEST_DATA_VOLUME:-workapool_rabbitmq_test_data}
 
 networks:
   workapool-network:

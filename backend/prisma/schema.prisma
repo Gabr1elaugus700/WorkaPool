@@ -62,6 +62,34 @@ model Cargas {
   expedicaoIbc         ExpedicaoIbc?
 }
 
+model OutboxEvent {
+  id            String    @id @default(uuid())
+  eventType     String
+  aggregateType String
+  aggregateId   String
+  payload       Json
+  occurredAt    DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  publishedAt   DateTime?
+  attempts      Int       @default(0)
+  lastError     String?   @db.Text
+  lockedAt      DateTime?
+
+  @@index([publishedAt])
+  @@index([eventType])
+  @@index([aggregateType, aggregateId])
+}
+
+model ProcessedEvent {
+  id            String   @id @default(uuid())
+  consumerName  String
+  eventId       String
+  processedAt   DateTime @default(now())
+
+  @@unique([consumerName, eventId])
+  @@index([eventId])
+}
+
 model CargaDespacho {
   id           String   @id @default(uuid())
   cargaId      String   @unique

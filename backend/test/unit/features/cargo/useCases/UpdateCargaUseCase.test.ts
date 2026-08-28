@@ -71,7 +71,7 @@ describe("UpdateCargaUseCase", () => {
       destino: "Teste - 5",
       pesoMax: 5000,
       previsaoSaida: "2026-04-14",
-      situacao: SituacaoCarga.FECHADA,
+      situacao: SituacaoCarga.SOLICITADA,
     };
 
     const getCargaById = mock.fn(async () => carga);
