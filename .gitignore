@@ -7,6 +7,9 @@ startup/whatsapp.log
 startup/telegram.log
 
 frontend/dist-test/
+**/coverage/
+quality-gate-report.md
+quality-gate-result.json
 .env.compose.dev
 .env.compose.prod
 ./startup/recovery/
