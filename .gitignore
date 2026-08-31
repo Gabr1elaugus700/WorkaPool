@@ -9,4 +9,5 @@ startup/telegram.log
 frontend/dist-test/
 .env.compose.dev
 .env.compose.prod
+.env.compose.test
 ./startup/recovery/

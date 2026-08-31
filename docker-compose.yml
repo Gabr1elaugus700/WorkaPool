@@ -87,7 +87,7 @@ services:
       [
         "sh",
         "-c",
-        "npx prisma generate --schema=${PRISMA_SCHEMA:-prisma/schema.dev.prisma} && npx prisma migrate deploy --schema=${PRISMA_SCHEMA:-prisma/schema.dev.prisma} && npx tsx src/server.ts",
+        "npx prisma generate --schema=${PRISMA_SCHEMA:-prisma/schema.prisma} && npx prisma migrate deploy --schema=${PRISMA_SCHEMA:-prisma/schema.prisma} && npx tsx src/server.ts",
       ]
     networks:
       - workapool-network
@@ -108,7 +108,7 @@ services:
     env_file:
       - ${ENV_FILE:-./backend/.env.development}
     environment:
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-development}
       DATABASE_URL: postgresql://${POSTGRES_USER:-dev_user}:${POSTGRES_PASSWORD:-dev_password}@postgres:5432/${POSTGRES_DB:-workapool_dev}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
