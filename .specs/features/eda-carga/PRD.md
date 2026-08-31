@@ -42,7 +42,7 @@ Gestão de Cargas
 O browser não consulta RabbitMQ. O evento apenas informa que o conjunto de cargas pode ter mudado; a API consulta o estado atual no PostgreSQL.
 
 ## Evento `CARGA_FECHADA`
-
+  
 O evento é gerado quando uma carga é fechada com sucesso no fluxo de Gestão de Cargas.
 
 Contrato mínimo:

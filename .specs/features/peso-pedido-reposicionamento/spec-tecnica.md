@@ -85,7 +85,7 @@ Arquivos:
 
 - [PedidoService.ts](../../../backend/src/features/pedidos/services/PedidoService.ts) — `verificarMudancaPeso` e `salvarHistoricoPeso`
 - [PedidosRepository.ts](../../../backend/src/features/pedidos/repositories/PedidosRepository.ts) — `createHistoricoPeso` / `getLastHistoricoPeso`
-- [schema.prisma](../../../backend/prisma/schema.prisma) e [schema.dev.prisma](../../../backend/prisma/schema.dev.prisma) — `peso Decimal @db.Decimal(12, 3)`
+- [schema.prisma](../../../backend/prisma/schema.prisma) — `peso Decimal @db.Decimal(12, 3)`
 
 Comparação:
 
@@ -115,7 +115,7 @@ Na leitura Prisma, converter `Decimal` com `Number(result.peso)`.
 | --- | --- | --- |
 | [PedidosRepository.ts](../../../backend/src/features/pedidos/repositories/PedidosRepository.ts) | `getPedidoWeight` agrega via `mapRawToPedidos`; `createHistoricoPeso` grava Decimal sem `Math.round` | FIX-01, FIX-02 |
 | [PedidoService.ts](../../../backend/src/features/pedidos/services/PedidoService.ts) | `verificarMudancaPeso` / `salvarHistoricoPeso` usam igualdade exata | FIX-02 |
-| [schema.prisma](../../../backend/prisma/schema.prisma) / [schema.dev.prisma](../../../backend/prisma/schema.dev.prisma) | `historico_peso_pedidos.peso` `Int` → `Decimal(12, 3)` | FIX-02 |
+| [schema.prisma](../../../backend/prisma/schema.prisma) | `historico_peso_pedidos.peso` `Int` → `Decimal(12, 3)` | FIX-02 |
 
 Consumidores que se beneficiam sem alteração de assinatura:
 
