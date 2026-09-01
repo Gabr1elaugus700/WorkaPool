@@ -95,6 +95,7 @@ export type MotoristaDespacho = {
 export type TruckDespacho = {
   id: string;
   name: string;
+  plate?: string;
 };
 
 /** Carga com campos calculados para o frontend */
