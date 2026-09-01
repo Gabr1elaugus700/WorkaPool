@@ -89,6 +89,7 @@ Desenvolvimento **vertical por capacidade** (API + UI da fatia), não o ciclo in
 - Spec: IBC-03 (expedição)
 - Issues: #36 (bloqueada por #32, #35, #33) · test suite #56
 - Inclui extensão do módulo **Cargo** (`CargaDespacho` no `closeCarga`)
+- Cadastro operacional de caminhões: [Frota spec](../frota/spec.md) (`Trucks`, `/api/trucks`, tela `/frota`, regra `active`)
 
 **Fora destas camadas**: custódia motorista (#37), entrada/troca (#38), aviso representante (#39), ficha QR (#40), empréstimos atrasados (#41)
 
