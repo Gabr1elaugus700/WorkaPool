@@ -5,18 +5,19 @@ export const getBaseUrl = (): string => {
   // Build de produção (Docker/nginx): sempre mesma origem.
   // /api e /uploads são proxied pelo nginx → backend na rede Docker.
   // Serve LAN (IP:5173) e externo (no-ip:5173) sem CORS nem porta da API aberta.
-  if (import.meta.env.PROD) {
+  if (import.meta.env?.PROD) {
     return "";
   }
-  return import.meta.env.VITE_API_BASE_URL || "http://192.168.0.32:3030";
+  return import.meta.env?.VITE_API_BASE_URL || "http://192.168.0.32:3030";
 };
 
 // Usar variável de ambiente com fallback
 const baseURL = getBaseUrl();
+const viteEnv = import.meta.env ?? {};
 
 export const apiBase = axios.create({
   baseURL,
-  timeout: Number(import.meta.env.VITE_API_TIMEOUT) || 10000,
+  timeout: Number(viteEnv.VITE_API_TIMEOUT) || 10000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -26,7 +27,7 @@ export const apiBase = axios.create({
 console.log('🌐 API Base URL:', baseURL);
 
 // Interceptor para logs (apenas em desenvolvimento)
-if (import.meta.env.DEV) {
+if (viteEnv.DEV) {
   apiBase.interceptors.request.use(
     (config) => {
       console.log('📤 Requisição:', config.method?.toUpperCase(), config.url);

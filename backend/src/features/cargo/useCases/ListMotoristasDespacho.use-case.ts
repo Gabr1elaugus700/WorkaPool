@@ -1,4 +1,6 @@
 import { ICargoRepository } from "../repositories/ICargoRepository";
+import { CargoRepository } from "../repositories/CargoRepository";
+import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
 import { CargoUserRef } from "../types/CargaDespacho.types";
 
 export class ListMotoristasDespachoUseCase {
@@ -9,10 +11,6 @@ export class ListMotoristasDespachoUseCase {
   }
 
   private createDefaultRepository(): ICargoRepository {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { CargoRepository } = require("../repositories/CargoRepository");
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { PedidosRepository } = require("../../pedidos/repositories/PedidosRepository");
     return new CargoRepository(new PedidosRepository());
   }
 
