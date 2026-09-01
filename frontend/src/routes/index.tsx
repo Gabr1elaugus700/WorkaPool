@@ -20,6 +20,7 @@ import UsersView from "@/features/users/views/usersView";
 import OverviewSyncAdminView from "@/features/overviewCustomer/views/OverviewSyncAdminView";
 import OverviewCustomerDetailView from "@/features/overviewCustomer/views/OverviewCustomerDetailView";
 import OverviewCustomerPortfolioView from "@/features/overviewCustomer/views/OverviewCustomerPortfolioView";
+import FrotaPage from "../pages/FrotaPage";
 
 const AppRoutes = () => {
   return (
@@ -65,6 +66,14 @@ const AppRoutes = () => {
             element={
               <PrivateRoute>
                 <VistoriaView />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/frota"
+            element={
+              <PrivateRoute>
+                <FrotaPage />
               </PrivateRoute>
             }
           />
