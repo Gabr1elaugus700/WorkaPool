@@ -43,7 +43,6 @@ export const fleetService = {
     return users.map((user) => ({
       id: user.id,
       name: user.name,
-      user: user.name,
       role: user.role ?? "MOTORISTA",
     }));
   },

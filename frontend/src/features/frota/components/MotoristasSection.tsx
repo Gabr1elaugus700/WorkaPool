@@ -32,14 +32,13 @@ export function MotoristasSection({ motoristas }: Props) {
         <TableHeader>
           <TableRow>
             <TableHead>Nome</TableHead>
-            <TableHead>Usuário</TableHead>
             <TableHead>Role</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {motoristas.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={3} className="text-center text-muted-foreground">
+              <TableCell colSpan={2} className="text-center text-muted-foreground">
                 Nenhum motorista cadastrado
               </TableCell>
             </TableRow>
@@ -47,7 +46,6 @@ export function MotoristasSection({ motoristas }: Props) {
             motoristas.map((motorista) => (
               <TableRow key={motorista.id}>
                 <TableCell>{motorista.name}</TableCell>
-                <TableCell>{motorista.user}</TableCell>
                 <TableCell>{motorista.role ?? "MOTORISTA"}</TableCell>
               </TableRow>
             ))

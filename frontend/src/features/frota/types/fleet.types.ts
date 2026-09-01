@@ -24,6 +24,5 @@ export type UpdateFleetTruckInput = Partial<CreateFleetTruckInput>;
 export type FleetMotorista = {
   id: string;
   name: string;
-  user: string;
   role?: string;
 };
