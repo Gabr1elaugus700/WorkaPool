@@ -40,6 +40,10 @@ model Trucks {
   id             String          @id @default(uuid())
   name           String
   capacity       Int
+  plate          String          @unique
+  type           String?
+  axles          Int?
+  active         Boolean         @default(true)
   createdAt      DateTime        @default(now())
   codRep         Int             @default(0)
   cargasDespacho CargaDespacho[]
