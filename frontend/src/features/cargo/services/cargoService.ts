@@ -123,7 +123,9 @@ export const cargoService = {
   /**
    * Lista caminhões (Trucks) para CargaDespacho
    */
-  listTrucks: async (): Promise<Array<{ id: string; name: string }>> => {
+  listTrucks: async (): Promise<
+    Array<{ id: string; name: string; plate?: string }>
+  > => {
     return apiFetchJson("/api/cargo/trucks");
   },
 

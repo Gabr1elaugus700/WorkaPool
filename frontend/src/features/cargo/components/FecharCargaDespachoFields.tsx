@@ -102,7 +102,7 @@ export function FecharCargaDespachoFields({
           <SelectContent>
             {trucks.map((truck) => (
               <SelectItem key={truck.id} value={truck.id}>
-                {truck.name}
+                {truck.plate ? `${truck.name} (${truck.plate})` : truck.name}
               </SelectItem>
             ))}
           </SelectContent>
