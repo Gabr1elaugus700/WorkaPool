@@ -25,4 +25,6 @@ export type CargoUserRef = {
 export type CargoTruckRef = {
   id: string;
   name: string;
+  plate: string;
+  active: boolean;
 };

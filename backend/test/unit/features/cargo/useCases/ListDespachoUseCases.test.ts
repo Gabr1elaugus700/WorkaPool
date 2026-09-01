@@ -24,8 +24,8 @@ describe("Listagens para CargaDespacho", () => {
 
   it("listTrucks retorna caminhões da tabela Trucks", async () => {
     const listTrucks = mock.fn(async () => [
-      { id: "t1", name: "Truck A" },
-      { id: "t2", name: "Truck B" },
+      { id: "t1", name: "Truck A", plate: "ABC1D23", active: true },
+      { id: "t2", name: "Truck B", plate: "DEF4G56", active: true },
     ]);
     const useCase = new ListTrucksDespachoUseCase({
       listTrucks,
@@ -34,8 +34,8 @@ describe("Listagens para CargaDespacho", () => {
     const result = await useCase.execute();
 
     assert.deepStrictEqual(result, [
-      { id: "t1", name: "Truck A" },
-      { id: "t2", name: "Truck B" },
+      { id: "t1", name: "Truck A", plate: "ABC1D23", active: true },
+      { id: "t2", name: "Truck B", plate: "DEF4G56", active: true },
     ]);
     assert.strictEqual(listTrucks.mock.calls.length, 1);
   });
