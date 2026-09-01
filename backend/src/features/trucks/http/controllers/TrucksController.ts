@@ -5,6 +5,7 @@ import { GetTruckByIdUseCase } from "../../useCases/GetTruckByIdUseCase";
 import { ListTrucksUseCase } from "../../useCases/ListTrucksUseCase";
 import { UpdateTruckUseCase } from "../../useCases/UpdateTruckUseCase";
 import { TruckRecord } from "../../types/Truck.types";
+import { listTrucksQuerySchema } from "../schemas/truckSchemas";
 
 function toTruckResponse(truck: TruckRecord) {
   return {
@@ -36,12 +37,7 @@ function handleError(err: unknown, res: Response): Response {
 export class TrucksController {
   static async list(req: Request, res: Response): Promise<Response> {
     try {
-      const active =
-        req.query.active === "true"
-          ? true
-          : req.query.active === "false"
-            ? false
-            : undefined;
+      const { active } = listTrucksQuerySchema.parse(req.query);
       const useCase = new ListTrucksUseCase();
       const trucks = await useCase.execute({ active });
       return res.status(200).json(trucks.map(toTruckResponse));

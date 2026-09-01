@@ -21,6 +21,7 @@ import OverviewSyncAdminView from "@/features/overviewCustomer/views/OverviewSyn
 import OverviewCustomerDetailView from "@/features/overviewCustomer/views/OverviewCustomerDetailView";
 import OverviewCustomerPortfolioView from "@/features/overviewCustomer/views/OverviewCustomerPortfolioView";
 import FrotaPage from "../pages/FrotaPage";
+import { FROTA_ACCESS_ROLES } from "@/features/frota/utils/frotaAccessRoles";
 
 const AppRoutes = () => {
   return (
@@ -72,7 +73,7 @@ const AppRoutes = () => {
           <Route
             path="/frota"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={FROTA_ACCESS_ROLES}>
                 <FrotaPage />
               </PrivateRoute>
             }

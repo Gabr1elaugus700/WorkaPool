@@ -20,9 +20,3 @@ export type CreateFleetTruckInput = {
 };
 
 export type UpdateFleetTruckInput = Partial<CreateFleetTruckInput>;
-
-export type FleetMotorista = {
-  id: string;
-  name: string;
-  role?: string;
-};

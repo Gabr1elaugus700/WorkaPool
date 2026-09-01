@@ -2,13 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { fleetService } from "../services/fleetService";
-import type { CreateFleetTruckInput, FleetMotorista, FleetTruck } from "../types/fleet.types";
+import type { MotoristaDespacho } from "@/features/cargo/types/cargo.types";
+import type { CreateFleetTruckInput, FleetTruck } from "../types/fleet.types";
 import { MotoristasSection } from "../components/MotoristasSection";
 import { TrucksTable } from "../components/TrucksTable";
 
 export function FrotaView() {
   const [trucks, setTrucks] = useState<FleetTruck[]>([]);
-  const [motoristas, setMotoristas] = useState<FleetMotorista[]>([]);
+  const [motoristas, setMotoristas] = useState<MotoristaDespacho[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

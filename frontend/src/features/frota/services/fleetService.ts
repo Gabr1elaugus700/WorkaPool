@@ -1,48 +1,39 @@
 import { apiFetchJson } from "@/lib/apiFetch";
+import type { MotoristaDespacho } from "@/features/cargo/types/cargo.types";
 import type {
   CreateFleetTruckInput,
-  FleetMotorista,
   FleetTruck,
   UpdateFleetTruckInput,
 } from "../types/fleet.types";
-import { mapFleetTruckResponse } from "./fleetMappers";
-
-export { mapFleetTruckResponse } from "./fleetMappers";
 
 export const fleetService = {
   listTrucks: async (active?: boolean): Promise<FleetTruck[]> => {
     const query =
       active === undefined ? "" : `?active=${active ? "true" : "false"}`;
-    const data = await apiFetchJson<FleetTruck[]>(`/api/trucks${query}`);
-    return data.map(mapFleetTruckResponse);
+    return apiFetchJson<FleetTruck[]>(`/api/trucks${query}`);
   },
 
   createTruck: async (input: CreateFleetTruckInput): Promise<FleetTruck> => {
-    const data = await apiFetchJson<FleetTruck>("/api/trucks", {
+    return apiFetchJson<FleetTruck>("/api/trucks", {
       method: "POST",
       body: JSON.stringify(input),
     });
-    return mapFleetTruckResponse(data);
   },
 
   updateTruck: async (
     id: string,
     input: UpdateFleetTruckInput,
   ): Promise<FleetTruck> => {
-    const data = await apiFetchJson<FleetTruck>(`/api/trucks/${encodeURIComponent(id)}`, {
+    return apiFetchJson<FleetTruck>(`/api/trucks/${encodeURIComponent(id)}`, {
       method: "PUT",
       body: JSON.stringify(input),
     });
-    return mapFleetTruckResponse(data);
   },
 
-  listMotoristas: async (): Promise<FleetMotorista[]> => {
-    const users = await apiFetchJson<
-      Array<{ id: string; name: string; role?: string }>
-    >("/api/cargo/motoristas");
+  listMotoristas: async (): Promise<MotoristaDespacho[]> => {
+    const users = await apiFetchJson<MotoristaDespacho[]>("/api/cargo/motoristas");
     return users.map((user) => ({
-      id: user.id,
-      name: user.name,
+      ...user,
       role: user.role ?? "MOTORISTA",
     }));
   },

@@ -14,6 +14,20 @@ import {
   CloseCargaDespachoInput,
 } from "../types/CargaDespacho.types";
 
+function toCargoTruckRef(truck: {
+  id: string;
+  name: string;
+  plate: string;
+  active: boolean;
+}): CargoTruckRef {
+  return {
+    id: truck.id,
+    name: truck.name,
+    plate: truck.plate,
+    active: truck.active,
+  };
+}
+
 export class CargoRepository implements ICargoRepository {
   constructor(
     private pedidosRepository?: IPedidosRepository,
@@ -218,12 +232,7 @@ export class CargoRepository implements ICargoRepository {
     if (!truck) {
       return null;
     }
-    return {
-      id: truck.id,
-      name: truck.name,
-      plate: truck.plate,
-      active: truck.active,
-    };
+    return toCargoTruckRef(truck);
   }
 
   async findDespachoByCargaId(
@@ -264,12 +273,7 @@ export class CargoRepository implements ICargoRepository {
       select: { id: true, name: true, plate: true, active: true },
       orderBy: { name: "asc" },
     });
-    return trucks.map((truck) => ({
-      id: truck.id,
-      name: truck.name,
-      plate: truck.plate,
-      active: truck.active,
-    }));
+    return trucks.map(toCargoTruckRef);
   }
 
   async deleteCarga(id: string): Promise<void> {
