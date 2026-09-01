@@ -3,7 +3,9 @@ import {
   CargaComPesoDTO,
   CargaFechadaData,
   CargaSituacao,
+  MotoristaDespacho,
   Pedido,
+  TruckDespacho,
 } from "../types/cargo.types";
 
 export const cargoService = {
@@ -114,19 +116,15 @@ export const cargoService = {
   /**
    * Lista usuários com role MOTORISTA para CargaDespacho
    */
-  listMotoristas: async (): Promise<
-    Array<{ id: string; name: string; role: string }>
-  > => {
-    return apiFetchJson("/api/cargo/motoristas");
+  listMotoristas: async (): Promise<MotoristaDespacho[]> => {
+    return apiFetchJson<MotoristaDespacho[]>("/api/cargo/motoristas");
   },
 
   /**
    * Lista caminhões (Trucks) para CargaDespacho
    */
-  listTrucks: async (): Promise<
-    Array<{ id: string; name: string; plate?: string }>
-  > => {
-    return apiFetchJson("/api/cargo/trucks");
+  listTrucks: async (): Promise<TruckDespacho[]> => {
+    return apiFetchJson<TruckDespacho[]>("/api/cargo/trucks");
   },
 
   /**

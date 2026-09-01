@@ -81,6 +81,7 @@ Motoristas para despacho continuam em **`GET /api/cargo/motoristas`** (`CargoUse
 ## UI Frota (`/frota`)
 
 - Nav: link **Frota** visível para `ADMIN`, `LOGISTICA`, `GERENTE_DPTO`.
+- Rota `/frota`: `PrivateRoute` com `allowedRoles` — demais roles autenticados redirecionam para `/`.
 - **Caminhões:** tabela + dialog criar/editar (`TruckForm`, `TrucksTable`).
 - **Motoristas:** seção somente leitura (`MotoristasSection`); link para `/users` para cadastro completo.
 
@@ -125,4 +126,3 @@ A seção Motoristas reutiliza `/api/cargo/motoristas`. O payload expõe `id`, `
 
 - `backend/test/unit/features/trucks/*`
 - `backend/test/unit/features/cargo/useCases/CloseCargaUseCase.test.ts` (caminhão inativo)
-- `frontend/src/features/frota/services/fleetService.test.ts`

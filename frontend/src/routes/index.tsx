@@ -20,6 +20,7 @@ import OsListView from "@/features/workOrder/views/osView";
 import VistoriaView from "@/features/workOrder/views/vistoriaView";
 import UsersView from "@/features/users/views/usersView";
 import FrotaPage from "../pages/FrotaPage";
+import { FROTA_ACCESS_ROLES } from "@/features/frota/utils/frotaAccessRoles";
 
 const AppRoutes = () => {
   return (
@@ -71,7 +72,7 @@ const AppRoutes = () => {
           <Route
             path="/frota"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={FROTA_ACCESS_ROLES}>
                 <FrotaPage />
               </PrivateRoute>
             }

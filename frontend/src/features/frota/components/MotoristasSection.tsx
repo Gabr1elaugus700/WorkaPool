@@ -8,10 +8,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import type { FleetMotorista } from "../types/fleet.types";
+import type { MotoristaDespacho } from "@/features/cargo/types/cargo.types";
 
 type Props = {
-  motoristas: FleetMotorista[];
+  motoristas: MotoristaDespacho[];
 };
 
 export function MotoristasSection({ motoristas }: Props) {
@@ -39,14 +39,17 @@ export function MotoristasSection({ motoristas }: Props) {
           {motoristas.length === 0 ? (
             <TableRow>
               <TableCell colSpan={2} className="text-center text-muted-foreground">
-                Nenhum motorista cadastrado
+                <span>Nenhum motorista cadastrado. </span>
+                <Link to="/users" className="text-primary underline-offset-4 hover:underline">
+                  Cadastrar em Usuários
+                </Link>
               </TableCell>
             </TableRow>
           ) : (
             motoristas.map((motorista) => (
               <TableRow key={motorista.id}>
                 <TableCell>{motorista.name}</TableCell>
-                <TableCell>{motorista.role ?? "MOTORISTA"}</TableCell>
+                <TableCell>{motorista.role}</TableCell>
               </TableRow>
             ))
           )}
