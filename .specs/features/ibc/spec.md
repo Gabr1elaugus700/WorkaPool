@@ -33,7 +33,7 @@ A empresa opera com containers IBC (empréstimo, venda, troca, transbordo) sem i
 | Papel | Responsabilidade no módulo |
 | ----- | -------------------------- |
 | ALMOX (pátio) | Cadastro IBC, Preparação de expedição (`AlocacaoIbc`), Fechar expedição (`ExpedicaoIbc`), Entrada no pátio, Troca 1:1, Inspeção/Aptidão |
-| Logística | Fechar Carga com `CargaDespacho` (motorista + caminhão) |
+| Logística | Fechar Carga com `CargaDespacho` (motorista + caminhão); cadastro de caminhões em [Frota](../frota/spec.md) |
 | Motorista | Confirma Custódia no Cliente por Pedido (scan QR) |
 | Representante (vendedor) | Recebe Aviso quando IBC do Pedido ficou no Cliente |
 | Admin | Visão ampla, alertas, configuração de acesso |
@@ -85,7 +85,7 @@ A empresa opera com containers IBC (empréstimo, venda, troca, transbordo) sem i
 
 **Acceptance Criteria**:
 
-1. WHEN LOGISTICA fecha uma Carga THEN o sistema SHALL exigir `CargaDespacho` (motorista + caminhão `Trucks`) e SHALL rejeitar sem eles
+1. WHEN LOGISTICA fecha uma Carga THEN o sistema SHALL exigir `CargaDespacho` (motorista + caminhão `Trucks` **ativo**) e SHALL rejeitar sem eles ou com caminhão inativo (ver [Frota](../frota/spec.md))
 2. WHEN ALMOX prepara expedição THEN o sistema SHALL permitir `AlocacaoIbc` por **Pedido** (`numPed`) — qtd esperada = soma no backend de `QUANTIDADE_PEDIDO / VOLUME_EMBALAGEM` onde `CODIGO_EMBALAGEM = 251001`
 3. WHEN a Carga está ABERTA THEN ALMOX MAY vincular/desvincular IBCs (progresso parcial visível); Fechar expedição SHALL NOT estar disponível
 4. WHEN a Carga está FECHADA e todos os pedidos IBC estão supridos THEN ALMOX MAY fechar expedição (`ExpedicaoIbc`)
