@@ -1,0 +1,179 @@
+name: Codebase Quality Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+permissions:
+  contents: read
+  issues: write
+  security-events: write
+
+concurrency:
+  group: quality-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gate:
+    name: Compare base and PR quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: quality-gate
+          POSTGRES_PASSWORD: quality-gate
+          POSTGRES_DB: workapool_test
+        ports:
+          - 5435:5432
+        options: >-
+          --health-cmd "pg_isready -U quality-gate -d workapool_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout PR tooling
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Preserve quality gate script
+        run: cp .github/scripts/quality-gate.mjs "$RUNNER_TEMP/quality-gate.mjs"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            frontend/package-lock.json
+            backend/package-lock.json
+
+      - name: Checkout PR base
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+          clean: true
+
+      - name: Install base dependencies
+        run: |
+          npm ci --no-audit --fund=false
+          npm ci --prefix frontend --no-audit --fund=false
+          npm ci --prefix backend --no-audit --fund=false
+
+      - name: Generate base Prisma client
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://quality-gate:quality-gate@localhost:5435/workapool_test
+        run: npx prisma generate --schema=prisma/schema.prisma
+
+      - name: Migrate base test database
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://quality-gate:quality-gate@localhost:5435/workapool_test
+        run: npx prisma migrate deploy --schema=prisma/schema.prisma
+
+      - name: Collect base metrics
+        env:
+          GITHUB_SHA: ${{ github.event.pull_request.base.sha }}
+          DATABASE_URL: postgresql://quality-gate:quality-gate@localhost:5435/workapool_test
+        run: node "$RUNNER_TEMP/quality-gate.mjs" --output "$RUNNER_TEMP/base-metrics.json"
+
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          clean: true
+
+      - name: Install PR dependencies
+        run: |
+          npm ci --no-audit --fund=false
+          npm ci --prefix frontend --no-audit --fund=false
+          npm ci --prefix backend --no-audit --fund=false
+
+      - name: Generate PR Prisma client
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://quality-gate:quality-gate@localhost:5435/workapool_test
+        run: npx prisma generate --schema=prisma/schema.prisma
+
+      - name: Migrate PR test database
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://quality-gate:quality-gate@localhost:5435/workapool_test
+        run: npx prisma migrate deploy --schema=prisma/schema.prisma
+
+      - name: Collect PR metrics
+        env:
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
+          DATABASE_URL: postgresql://quality-gate:quality-gate@localhost:5435/workapool_test
+        run: node "$RUNNER_TEMP/quality-gate.mjs" --output "$RUNNER_TEMP/head-metrics.json"
+
+      - name: Initialize CodeQL
+        id: codeql-init
+        uses: github/codeql-action/init@v3
+        continue-on-error: true
+        with:
+          languages: javascript-typescript
+
+      - name: Analyze with CodeQL
+        id: codeql
+        uses: github/codeql-action/analyze@v3
+        continue-on-error: true
+        with:
+          category: "/language:javascript-typescript"
+
+      - name: Compare metrics and enforce gate
+        id: compare
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: |
+          node "$RUNNER_TEMP/quality-gate.mjs" \
+            --compare-base "$RUNNER_TEMP/base-metrics.json" \
+            --compare-head "$RUNNER_TEMP/head-metrics.json" \
+            --report quality-gate-report.md \
+            --output quality-gate-result.json
+
+      - name: Publish quality report
+        if: always()
+        run: |
+          if [ -f quality-gate-report.md ]; then
+            cat quality-gate-report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload quality report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-gate-report
+          path: |
+            quality-gate-report.md
+            quality-gate-result.json
+            ${{ runner.temp }}/base-metrics.json
+            ${{ runner.temp }}/head-metrics.json
+          if-no-files-found: warn
+
+      - name: Fail the pull request gate
+        if: steps.compare.outcome == 'failure' || steps.codeql-init.outcome == 'failure' || steps.codeql.outcome == 'failure'
+        run: |
+          echo "Quality Gate failed. Consulte o Summary e os artifacts desta execução."
+          exit 1
