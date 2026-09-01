@@ -229,12 +229,17 @@ export class CargoRepository implements ICargoRepository {
   async findTruckById(id: string): Promise<CargoTruckRef | null> {
     const truck = await this.prisma.trucks.findUnique({
       where: { id },
-      select: { id: true, name: true },
+      select: { id: true, name: true, plate: true, active: true },
     });
     if (!truck) {
       return null;
     }
-    return { id: truck.id, name: truck.name };
+    return {
+      id: truck.id,
+      name: truck.name,
+      plate: truck.plate,
+      active: truck.active,
+    };
   }
 
   async findDespachoByCargaId(
@@ -271,10 +276,16 @@ export class CargoRepository implements ICargoRepository {
 
   async listTrucks(): Promise<CargoTruckRef[]> {
     const trucks = await this.prisma.trucks.findMany({
-      select: { id: true, name: true },
+      where: { active: true },
+      select: { id: true, name: true, plate: true, active: true },
       orderBy: { name: "asc" },
     });
-    return trucks.map((truck) => ({ id: truck.id, name: truck.name }));
+    return trucks.map((truck) => ({
+      id: truck.id,
+      name: truck.name,
+      plate: truck.plate,
+      active: truck.active,
+    }));
   }
 
   async deleteCarga(id: string): Promise<void> {

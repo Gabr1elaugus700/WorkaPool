@@ -78,7 +78,9 @@ const buildHappyRepository = (
         : null,
     ),
     findTruckById: mock.fn(async (id: string) =>
-      id === CAMINHAO_ID ? { id: CAMINHAO_ID, name: "Truck 01" } : null,
+      id === CAMINHAO_ID
+        ? { id: CAMINHAO_ID, name: "Truck 01", plate: "ABC1D23", active: true }
+        : null,
     ),
     findDespachoByCargaId: mock.fn(async () => null),
     closeCarga: mock.fn(async () => ({
@@ -223,6 +225,39 @@ describe("CloseCargaUseCase", () => {
         assert.ok(error instanceof AppError);
         assert.strictEqual(error.statusCode, 400);
         assert.strictEqual(error.code, "CARGO_MOTORISTA_INVALIDO");
+        return true;
+      },
+    );
+
+    assert.strictEqual(closeCarga.mock.calls.length, 0);
+  });
+
+  it("rejeita caminhão (Trucks) inativo", async () => {
+    const carga = buildCarga(707);
+    const pedidos = [buildPedido("1", "7001")];
+    const closeCarga = mock.fn(async () => {
+      throw new Error("closeCarga não deve ser chamado");
+    });
+    const mockRepository = buildHappyRepository(carga, pedidos, {
+      closeCarga,
+      findTruckById: mock.fn(async () => ({
+        id: CAMINHAO_ID,
+        name: "Truck Inativo",
+        plate: "XYZ9Z99",
+        active: false,
+      })),
+    });
+    const useCase = new CloseCargaUseCase(
+      mockRepository as ICargoRepository,
+      mockPedidoService,
+    );
+
+    await assert.rejects(
+      async () => useCase.execute(despachoInput(707)),
+      (error: unknown) => {
+        assert.ok(error instanceof AppError);
+        assert.strictEqual(error.statusCode, 400);
+        assert.strictEqual(error.code, "CARGO_CAMINHAO_INATIVO");
         return true;
       },
     );

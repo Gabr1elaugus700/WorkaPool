@@ -153,6 +153,15 @@ export class CloseCargaUseCase {
       });
     }
 
+    if (!caminhao.active) {
+      throw new AppError({
+        message: "Caminhão inativo não pode ser usado no fechamento da carga",
+        statusCode: 400,
+        code: "CARGO_CAMINHAO_INATIVO",
+        details: { caminhaoId },
+      });
+    }
+
     const despachoInput: CloseCargaDespachoInput = {
       codCar,
       motoristaId,
