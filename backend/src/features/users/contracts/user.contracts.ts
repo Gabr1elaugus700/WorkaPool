@@ -5,6 +5,7 @@ import {
   updateUserSchema,
   deleteUserSchema,
   adminResetPasswordSchema,
+  setUserActiveParamsSchema,
   getUserDepartmentsSchema,
   paginatedUsersResponseSchema,
   userDepartmentsResponseSchema,
@@ -119,6 +120,36 @@ export const usersContracts: RouteContract[] = [
     },
     responses: {
       "200": { description: "Senha redefinida", schema: userResponseSchema },
+      "404": { description: "Usuário não encontrado", schema: appErrorSchema, componentName: "NotFoundError" },
+      ...baseErrorResponses,
+    },
+  },
+  {
+    method: "post",
+    path: "/api/users/{id}/deactivate",
+    summary: "Desativa um usuário (soft deactivate)",
+    tags: ["Users"],
+    validationSchema: setUserActiveParamsSchema,
+    request: {
+      params: setUserActiveParamsSchema.shape.params,
+    },
+    responses: {
+      "200": { description: "Usuário desativado", schema: userResponseSchema },
+      "404": { description: "Usuário não encontrado", schema: appErrorSchema, componentName: "NotFoundError" },
+      ...baseErrorResponses,
+    },
+  },
+  {
+    method: "post",
+    path: "/api/users/{id}/reactivate",
+    summary: "Reativa um usuário",
+    tags: ["Users"],
+    validationSchema: setUserActiveParamsSchema,
+    request: {
+      params: setUserActiveParamsSchema.shape.params,
+    },
+    responses: {
+      "200": { description: "Usuário reativado", schema: userResponseSchema },
       "404": { description: "Usuário não encontrado", schema: appErrorSchema, componentName: "NotFoundError" },
       ...baseErrorResponses,
     },

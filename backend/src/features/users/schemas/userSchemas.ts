@@ -77,6 +77,12 @@ export const deleteUserSchema = z.object({
   })
 });
 
+export const setUserActiveParamsSchema = z.object({
+  params: z.object({
+    id: z.string().uuid("ID deve ser um UUID válido"),
+  }),
+});
+
 export const adminResetPasswordSchema = z.object({
   params: z.object({
     id: z.string().uuid("ID deve ser um UUID válido"),
@@ -129,6 +135,7 @@ export const userResponseSchema = z.object({
   role: roleSchema,
   codRep: z.number(),
   mustChangePassword: z.boolean(),
+  isActive: z.boolean(),
 });
 
 export const paginatedUsersResponseSchema = z.object({

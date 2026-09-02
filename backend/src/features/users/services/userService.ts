@@ -34,6 +34,10 @@ export const userService = {
       throw new Error("Credenciais inválidas");
     }
 
+    if (!dbUser.isActive) {
+      throw new Error("Usuário inativo");
+    }
+
     const tokenPayload = {
       id: dbUser.id,
       role: dbUser.role,

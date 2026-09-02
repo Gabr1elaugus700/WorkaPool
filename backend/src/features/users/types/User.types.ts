@@ -16,6 +16,7 @@ export type UserPublicRecord = {
   name: string;
   codRep: number;
   mustChangePassword: boolean;
+  isActive: boolean;
 };
 
 export type CreateUserPersistInput = {
@@ -41,10 +42,16 @@ export type UpdateUserPersistInput = {
   codRep?: number;
   password?: string;
   mustChangePassword?: boolean;
+  isActive?: boolean;
 };
 
 export type AdminResetPasswordInput = {
   targetUserId: string;
   newPassword: string;
   mustChangePassword?: boolean;
+};
+
+export type SetUserActiveInput = {
+  targetUserId: string;
+  isActive: boolean;
 };
