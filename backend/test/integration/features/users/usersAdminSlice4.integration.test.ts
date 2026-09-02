@@ -15,10 +15,12 @@ import {
   assertTestDatabase,
   cleanupUsersFixtures,
   createRoleToken,
+  fixturePrefix,
   prisma,
-  USERS_DEPT_FIXTURE_PREFIX,
-  USERS_FIXTURE_PREFIX,
 } from "../../../helpers/usersIntegration";
+
+const SCOPE = "s4";
+const fixtures = fixturePrefix(SCOPE);
 
 function createDeptTestApp() {
   const app = express();
@@ -33,7 +35,7 @@ describe("Users admin slice 4 integration (#87)", () => {
   });
 
   afterEach(async () => {
-    await cleanupUsersFixtures();
+    await cleanupUsersFixtures(SCOPE);
   });
 
   after(async () => {
@@ -41,8 +43,8 @@ describe("Users admin slice 4 integration (#87)", () => {
   });
 
   it("PUT /api/departamentos/users/function updates function when link already exists", async () => {
-    const deptName = `${USERS_DEPT_FIXTURE_PREFIX}logistica`;
-    const username = `${USERS_FIXTURE_PREFIX}dept-func`;
+    const deptName = `${fixtures.dept}logistica`;
+    const username = `${fixtures.user}dept-func`;
     const adminToken = createRoleToken(Role.ADMIN);
 
     const department = await prisma.departamento.create({
