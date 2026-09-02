@@ -26,3 +26,17 @@ export type CreateUserPersistInput = {
   codRep: number;
   mustChangePassword: boolean;
 };
+
+export type UpdateUserInput = {
+  targetUserId: string;
+  actorUserId: string;
+  name?: string;
+  role?: Role;
+  codRep?: number;
+};
+
+export type UpdateUserPersistInput = {
+  name?: string;
+  role?: Role;
+  codRep?: number;
+};

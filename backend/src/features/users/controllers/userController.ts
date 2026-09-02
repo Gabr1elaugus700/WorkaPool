@@ -3,6 +3,7 @@ import { Role } from "@prisma/client";
 import { AppError } from "../../../utils/AppError";
 import { userService } from "../services/userService";
 import { CreateUserUseCase } from "../useCases/CreateUserUseCase";
+import { UpdateUserUseCase } from "../useCases/UpdateUserUseCase";
 
 function handleAppError(err: unknown, res: Response, fallbackStatus = 500): Response {
   if (err instanceof AppError) {
@@ -87,13 +88,24 @@ export const userController = {
   },
 
   update: async (req: Request, res: Response) => {
-    console.log("Request body received in update:", req.body);
     try {
       const id = String(req.params.id);
-      const updatedUser = await userService.update(id, req.body);
+      const actorUserId = req.user?.id;
+      if (!actorUserId) {
+        return res.status(401).json({ error: "Usuário não autenticado" });
+      }
+
+      const useCase = new UpdateUserUseCase();
+      const updatedUser = await useCase.execute({
+        targetUserId: id,
+        actorUserId,
+        name: req.body.name,
+        role: req.body.role,
+        codRep: req.body.codRep,
+      });
       res.json(updatedUser);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
+    } catch (err: unknown) {
+      return handleAppError(err, res, 400);
     }
   },
 
