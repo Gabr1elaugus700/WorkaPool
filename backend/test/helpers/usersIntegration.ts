@@ -2,6 +2,7 @@ import express, { Express } from "express";
 import jwt from "jsonwebtoken";
 import { PrismaClient, Role } from "@prisma/client";
 import userRoutes from "../../src/features/users/routes/userRoutes";
+import authRoutes from "../../src/features/users/routes/authRoutes";
 
 export const USERS_FIXTURE_PREFIX = "test-users-87-";
 
@@ -21,6 +22,14 @@ export function assertTestDatabase(): void {
 export function createUsersTestApp(): Express {
   const app = express();
   app.use(express.json());
+  app.use("/api/users", userRoutes);
+  return app;
+}
+
+export function createUsersAdminTestApp(): Express {
+  const app = express();
+  app.use(express.json());
+  app.use("/api/auth", authRoutes);
   app.use("/api/users", userRoutes);
   return app;
 }

@@ -43,6 +43,7 @@ export const createUserSchema = z.object({
     role: roleSchema,
     name: z.string().min(1, "Nome é obrigatório"),
     codRep: z.number().int().positive().optional(),
+    departamentoId: z.string().uuid("ID do departamento deve ser um UUID válido").optional(),
   }),
 });
 

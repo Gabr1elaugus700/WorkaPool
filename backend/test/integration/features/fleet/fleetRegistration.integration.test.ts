@@ -128,16 +128,20 @@ describe("Fleet registration integration (#84)", () => {
     assert.ok(!plates.includes(inactivePlate));
   });
 
-  it("POST /api/auth/register creates a User with role MOTORISTA", async () => {
+  it("POST /api/users creates a User with role MOTORISTA when called by ADMIN", async () => {
     const app = createFleetTestApp();
+    const adminToken = createRoleToken(Role.ADMIN);
     const username = `${FLEET_FIXTURE_PREFIX}motorista`;
 
-    const response = await request(app).post("/api/auth/register").send({
-      user: username,
-      password: "senha123",
-      role: "MOTORISTA",
-      name: "João Motorista",
-    });
+    const response = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        user: username,
+        password: "senha123",
+        role: "MOTORISTA",
+        name: "João Motorista",
+      });
 
     assert.equal(response.status, 201);
     assert.equal(response.body.role, "MOTORISTA");
@@ -151,11 +155,11 @@ describe("Fleet registration integration (#84)", () => {
 
   it("GET /api/cargo/motoristas is removed (404)", async () => {
     const app = createFleetTestApp();
-    const token = createRoleToken(Role.LOGISTICA);
+    const logisticaToken = createRoleToken(Role.LOGISTICA);
 
     const response = await request(app)
       .get("/api/cargo/motoristas")
-      .set("Authorization", `Bearer ${token}`);
+      .set("Authorization", `Bearer ${logisticaToken}`);
 
     assert.equal(response.status, 404);
   });
