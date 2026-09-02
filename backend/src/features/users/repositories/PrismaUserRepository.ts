@@ -8,6 +8,16 @@ import {
 
 const prisma = new PrismaClient();
 
+const userPublicSelect = {
+  id: true,
+  user: true,
+  role: true,
+  name: true,
+  codRep: true,
+  mustChangePassword: true,
+  isActive: true,
+} as const;
+
 function toUserPublicRecord(user: {
   id: string;
   user: string;
@@ -15,6 +25,7 @@ function toUserPublicRecord(user: {
   name: string;
   codRep: number;
   mustChangePassword: boolean;
+  isActive: boolean;
 }): UserPublicRecord {
   return {
     id: user.id,
@@ -23,6 +34,7 @@ function toUserPublicRecord(user: {
     name: user.name,
     codRep: user.codRep,
     mustChangePassword: user.mustChangePassword,
+    isActive: user.isActive,
   };
 }
 
@@ -30,14 +42,7 @@ export class PrismaUserRepository implements IUserRepository {
   async findByLogin(login: string): Promise<UserPublicRecord | null> {
     const user = await prisma.user.findUnique({
       where: { user: login },
-      select: {
-        id: true,
-        user: true,
-        role: true,
-        name: true,
-        codRep: true,
-        mustChangePassword: true,
-      },
+      select: userPublicSelect,
     });
 
     return user ? toUserPublicRecord(user) : null;
@@ -46,14 +51,7 @@ export class PrismaUserRepository implements IUserRepository {
   async findById(id: string): Promise<UserPublicRecord | null> {
     const user = await prisma.user.findUnique({
       where: { id },
-      select: {
-        id: true,
-        user: true,
-        role: true,
-        name: true,
-        codRep: true,
-        mustChangePassword: true,
-      },
+      select: userPublicSelect,
     });
 
     return user ? toUserPublicRecord(user) : null;
@@ -69,14 +67,7 @@ export class PrismaUserRepository implements IUserRepository {
         codRep: input.codRep,
         mustChangePassword: input.mustChangePassword,
       },
-      select: {
-        id: true,
-        user: true,
-        role: true,
-        name: true,
-        codRep: true,
-        mustChangePassword: true,
-      },
+      select: userPublicSelect,
     });
 
     return toUserPublicRecord(user);
@@ -86,14 +77,7 @@ export class PrismaUserRepository implements IUserRepository {
     const user = await prisma.user.update({
       where: { id },
       data,
-      select: {
-        id: true,
-        user: true,
-        role: true,
-        name: true,
-        codRep: true,
-        mustChangePassword: true,
-      },
+      select: userPublicSelect,
     });
 
     return toUserPublicRecord(user);

@@ -4,7 +4,7 @@ import { userController } from "../controllers/userController";
 import { validate } from "../../../middlewares/validate";
 import { authMiddleware, requireRoles } from "../../../middlewares/authMiddleware";
 import { usersContracts } from "../contracts/user.contracts";
-import { createUserSchema, adminResetPasswordSchema } from "../schemas/userSchemas";
+import { createUserSchema, adminResetPasswordSchema, setUserActiveParamsSchema } from "../schemas/userSchemas";
 
 const router = express.Router();
 const [findAllContract, findByIdContract, getDepartmentsContract, updateContract, deleteContract] =
@@ -53,6 +53,20 @@ router.post(
   requireRoles(adminRoles),
   validate(adminResetPasswordSchema),
   userController.resetPassword,
+);
+router.post(
+  "/:id/deactivate",
+  authMiddleware,
+  requireRoles(adminRoles),
+  validate(setUserActiveParamsSchema),
+  userController.deactivate,
+);
+router.post(
+  "/:id/reactivate",
+  authMiddleware,
+  requireRoles(adminRoles),
+  validate(setUserActiveParamsSchema),
+  userController.reactivate,
 );
 router.post(
   "/:id/delete",

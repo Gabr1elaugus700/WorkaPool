@@ -5,6 +5,7 @@ import { userService } from "../services/userService";
 import { CreateUserUseCase } from "../useCases/CreateUserUseCase";
 import { UpdateUserUseCase } from "../useCases/UpdateUserUseCase";
 import { AdminResetPasswordUseCase } from "../useCases/AdminResetPasswordUseCase";
+import { SetUserActiveUseCase } from "../useCases/SetUserActiveUseCase";
 
 function handleAppError(err: unknown, res: Response, fallbackStatus = 500): Response {
   if (err instanceof AppError) {
@@ -142,6 +143,34 @@ export const userController = {
         targetUserId: id,
         newPassword: password,
         mustChangePassword,
+      });
+      res.json(updatedUser);
+    } catch (err: unknown) {
+      return handleAppError(err, res, 400);
+    }
+  },
+
+  deactivate: async (req: Request, res: Response) => {
+    try {
+      const id = String(req.params.id);
+      const useCase = new SetUserActiveUseCase();
+      const updatedUser = await useCase.execute({
+        targetUserId: id,
+        isActive: false,
+      });
+      res.json(updatedUser);
+    } catch (err: unknown) {
+      return handleAppError(err, res, 400);
+    }
+  },
+
+  reactivate: async (req: Request, res: Response) => {
+    try {
+      const id = String(req.params.id);
+      const useCase = new SetUserActiveUseCase();
+      const updatedUser = await useCase.execute({
+        targetUserId: id,
+        isActive: true,
       });
       res.json(updatedUser);
     } catch (err: unknown) {

@@ -76,6 +76,7 @@ describe("CreateUserUseCase (#87 slice 2)", () => {
       name: input.name,
       codRep: input.codRep,
       mustChangePassword: input.mustChangePassword,
+      isActive: true,
     }));
     const repository = {
       findByLogin: mock.fn(async () => null),
