@@ -33,3 +33,7 @@ export type UpdateTruckInput = {
 export type ListTrucksFilter = {
   active?: boolean;
 };
+
+export type FleetStats = {
+  trucksOnTrip: number;
+};

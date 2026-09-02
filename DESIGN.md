@@ -15,12 +15,18 @@ colors:
   ring: "hsl(142.1 76.2% 36.3%)"
   destructive: "hsl(0 84.2% 60.2%)"
   destructive-foreground: "hsl(0 0% 98%)"
+  secondary: "hsl(240 4.8% 95.9%)"
+  secondary-foreground: "hsl(240 5.9% 10%)"
+  accent: "hsl(240 4.8% 95.9%)"
+  accent-foreground: "hsl(240 5.9% 10%)"
   carga-aberta: "#A7F3D0"
   carga-solicitada: "#FDE047"
   carga-fechada: "#16A34A"
   carga-cancelada: "#DC2626"
   order-mine: "hsl(160 55% 35%)"
   order-mine-bg: "hsl(160 55% 92%)"
+  order-other: "hsl(150 40% 50%)"
+  order-other-bg: "hsl(150 40% 94%)"
   order-blocked: "hsl(0 72% 51%)"
   order-blocked-bg: "hsl(0 72% 95%)"
   order-nostock: "hsl(30 90% 50%)"
@@ -28,7 +34,7 @@ colors:
 typography:
   display:
     fontFamily: "Inter, sans-serif"
-    fontSize: "1.5rem"
+    fontSize: "1.25rem"
     fontWeight: 700
     lineHeight: 1.2
     letterSpacing: "normal"
@@ -36,7 +42,7 @@ typography:
     fontFamily: "Inter, sans-serif"
     fontSize: "1.5rem"
     fontWeight: 600
-    lineHeight: 1
+    lineHeight: 1.25
     letterSpacing: "-0.025em"
   body:
     fontFamily: "Inter, sans-serif"
@@ -69,7 +75,7 @@ components:
     padding: "8px 16px"
     height: "40px"
   button-primary-hover:
-    backgroundColor: "{colors.primary}"
+    backgroundColor: "hsl(143.3 80.6% 40.5%)"
     textColor: "#000000"
     rounded: "{rounded.md}"
     padding: "8px 16px"
@@ -102,6 +108,20 @@ components:
     textColor: "{colors.primary-foreground}"
     rounded: "{rounded.full}"
     padding: "2px 10px"
+  badge-secondary:
+    backgroundColor: "{colors.secondary}"
+    textColor: "{colors.secondary-foreground}"
+    rounded: "{rounded.full}"
+    padding: "2px 10px"
+  alert-destructive:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.destructive}"
+    rounded: "{rounded.base}"
+    padding: "16px"
+  skeleton-default:
+    backgroundColor: "{colors.muted}"
+    rounded: "{rounded.md}"
+    padding: "0"
 ---
 
 # Design System: WorkaPool
@@ -121,6 +141,8 @@ The stack is **shadcn/ui + Radix** on Tailwind CSS variables (`frontend/src/styl
 - Semantic domain colors for **Carga** lifecycle and **order** negotiation states
 - shadcn component variants as the default extension point—not one-off inline styling
 - Portuguese (BR) labels with domain-precise terminology
+- Per-section async states (skeleton, alert + retry) on multi-resource Operate screens
+- Sonner toasts for action confirmation after mutations (create, update, close)
 
 ## Colors
 
@@ -147,6 +169,7 @@ A practical green-accent palette on cool neutrals, with reserved semantic hues f
 - **Carga Fechada** (`#16A34A`): Closed load — complete.
 - **Carga Cancelada** (`#DC2626`): Cancelled load — terminal error.
 - **Order Mine** (`hsl(160 55% 35%)` / bg `hsl(160 55% 92%)`): User-owned negotiation cards.
+- **Order Other** (`hsl(150 40% 50%)` / bg `hsl(150 40% 94%)`): Another rep's negotiation cards.
 - **Order Blocked** (`hsl(0 72% 51%)` / bg `hsl(0 72% 95%)`): Blocked or lost-with-urgency states.
 - **Order No Stock** (`hsl(30 90% 50%)` / bg `hsl(30 90% 94%)`): Stock-related warnings.
 
@@ -155,6 +178,8 @@ A practical green-accent palette on cool neutrals, with reserved semantic hues f
 **The Green Bar Rule.** The full-width primary navbar is the only large-field green surface. Page content stays neutral; green appears in buttons, badges, and status chips—not full-bleed section backgrounds.
 
 **The Status Color Rule.** Carga and order states use their dedicated tokens (`carga-*`, `order-*`). Do not improvise new hues for ABERTA, FECHADA, perdido, or bloqueado.
+
+**The Token Not Hex Rule.** Prefer Tailwind semantic classes (`text-carga-fechada`, `bg-order-mine-bg`) over inline hex (`text-[#16A34A]`). Hex values belong in tokens and DESIGN.md frontmatter—not scattered in components.
 
 ## Typography
 
@@ -166,8 +191,9 @@ A practical green-accent palette on cool neutrals, with reserved semantic hues f
 
 ### Hierarchy
 
-- **Display** (700, 1.5rem / 24px, line-height 1.2): Navbar wordmark "WorkaPool", rare page titles.
-- **Title** (600, 1.5rem / 24px, line-height 1, tracking-tight): Card titles (`CardTitle`), login heading.
+- **Display** (700, 1.25rem / 20px, line-height 1.2): Navbar wordmark "WorkaPool" (`text-xl font-bold text-white`).
+- **Page title** (600, 1.5rem / 24px, line-height 1.25): Top-of-page `h1` on Operate screens (`text-2xl font-semibold`).
+- **Title** (600, 1.5rem / 24px, line-height 1, tracking-tight): Card titles (`CardTitle` — also `text-2xl font-semibold`).
 - **Body** (400, 0.875rem / 14px on md+, 1rem / 16px on mobile inputs, line-height 1.5): Default UI copy, table cells, form text. Prefer 65–75ch for long prose blocks when they appear.
 - **Label** (500, 0.75rem / 12px): Mobile tab labels, badge text, compact metadata.
 
@@ -182,6 +208,9 @@ A practical green-accent palette on cool neutrals, with reserved semantic hues f
 - **Mobile (<md):** Fixed bottom tab bar (`pb-24` on main to clear it); three primary destinations (Home, Vistorias, Ordens).
 - **Spacing rhythm:** 4px base grid via Tailwind—`gap-4` / `p-4` (16px) for page sections; `p-6` (24px) inside cards.
 - **Density:** Operate-first; prefer stacked sections and scrollable tables over sparse hero layouts.
+- **Dashboard metrics:** Page headers may use a responsive grid of equal-height stat tiles (`grid-cols-2 lg:grid-cols-4`, `min-h-[5.5rem]`) with label + large tabular number—not full KPI cards with shadows.
+- **Split-pane Operate:** Primary work + secondary panel on desktop (`lg:grid-cols-[1fr_360px]`, `lg:items-stretch`); cards inside use `flex h-full flex-col` so columns match height. Stack single-column on mobile.
+- **Page structure:** `space-y-6 p-4` under `DefaultLayout`; page title block, then metric tiles (optional), then content grid.
 
 ## Elevation & Depth
 
@@ -247,10 +276,35 @@ Mostly **flat with light lift**. Depth is conveyed through white cards on a gray
 
 - **Style:** `text-sm`, full-width with horizontal scroll wrapper; header row `border-b`; zebra not used—rely on row borders.
 
+### Metric Summary Tiles
+
+- **Character:** Compact operational counters on page headers (frota, dashboards)—not marketing KPI cards.
+- **Layout:** Responsive grid; equal height via `min-h-[5.5rem]` and uniform padding (`p-4`); border + `bg-card`, no shadow.
+- **Label:** `text-xs font-medium text-muted-foreground`.
+- **Value:** `text-2xl font-semibold tabular-nums`; accent via semantic tokens (`text-primary` for fleet active, `text-carga-fechada` for in-transit counts).
+
+### Alerts
+
+- **Character:** Inline feedback for section-level errors—not full-page blocking states.
+- **Destructive:** `Alert variant="destructive"` + Lucide icon + `AlertTitle` / `AlertDescription`; optional outline retry button inside description.
+- **Default:** Neutral border for informational notices.
+
+### Skeleton Loading
+
+- **Style:** `animate-pulse rounded-md bg-muted`; row placeholders at `h-10 w-full` for tables (4–5 rows per section).
+- **Scope:** Per-section inside cards; never hide the entire page layout while one resource loads.
+
+### Empty States
+
+- **Character:** Centered icon (`text-muted-foreground/60`, 32–40px) + short title + helper text + primary CTA when the user can act.
+- **Tables:** Full-width cell with vertical stack (`py-6`–`py-8`); CTA triggers the same Dialog/form as the header action.
+
 ### Dialogs
 
 - **Overlay:** `bg-black/80` fade animation.
 - **Content:** Centered, `max-w-lg`, `p-6`, `shadow-lg`, zoom/slide entrance via `tailwindcss-animate`.
+- **Forms:** `DialogDescription` for impact context; grouped fields with `Separator` + section labels; `DialogFooter` with Cancel (outline) + Save—not full-width submit alone.
+- **Confirmations:** `AlertDialog` for irreversible or operational guardrails (e.g. desativar caminhão); destructive action label matches the verb ("Desativar").
 
 ## Do's and Don'ts
 
@@ -261,11 +315,14 @@ Mostly **flat with light lift**. Depth is conveyed through white cards on a gray
 - **Do** extend shadcn variants (`Button`, `Badge`, `Card`) before creating bespoke styled divs.
 - **Do** preserve the green navbar + neutral body pattern on new authenticated screens.
 - **Do** use `container mx-auto p-4` and bottom padding on mobile when adding fixed footers.
+- **Do** render layout shells immediately and load each card/section independently (skeleton → content or alert + retry).
+- **Do** use `toast.success` / `toast.error` (Sonner) after mutations; keep error copy in Portuguese.
 
 ### Don't:
 
 - **Don't** introduce marketing-style hero sections, gradients, or decorative illustration in operational views.
 - **Don't** assign new arbitrary colors to Carga or order states—use the established semantic palette.
+- **Don't** gate an entire Operate page on a single `loading && !error` check when sections can fail or load independently.
 - **Don't** add a second global stylesheet with competing `:root` tokens (`globals.css` vs `tailwind.css`—`main.tsx` loads `tailwind.css` as authority).
 - **Don't** hide critical actions behind icon-only buttons without tooltips or labels.
 - **Don't** use English UI copy on staff-facing surfaces unless mirroring an established ERP field name.

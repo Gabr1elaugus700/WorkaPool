@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { AppError } from "../../../../utils/AppError";
 import { CreateTruckUseCase } from "../../useCases/CreateTruckUseCase";
+import { GetFleetStatsUseCase } from "../../useCases/GetFleetStatsUseCase";
 import { GetTruckByIdUseCase } from "../../useCases/GetTruckByIdUseCase";
 import { ListTrucksUseCase } from "../../useCases/ListTrucksUseCase";
 import { UpdateTruckUseCase } from "../../useCases/UpdateTruckUseCase";
@@ -35,6 +36,16 @@ function handleError(err: unknown, res: Response): Response {
 }
 
 export class TrucksController {
+  static async stats(_req: Request, res: Response): Promise<Response> {
+    try {
+      const useCase = new GetFleetStatsUseCase();
+      const stats = await useCase.execute();
+      return res.status(200).json(stats);
+    } catch (err) {
+      return handleError(err, res);
+    }
+  }
+
   static async list(req: Request, res: Response): Promise<Response> {
     try {
       const { active } = listTrucksQuerySchema.parse(req.query);

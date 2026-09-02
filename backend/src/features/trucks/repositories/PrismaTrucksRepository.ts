@@ -108,4 +108,17 @@ export class PrismaTrucksRepository implements ITrucksRepository {
       mapPrismaError(error);
     }
   }
+
+  async getFleetStats(): Promise<{ trucksOnTrip: number }> {
+    const onTrip = await prisma.cargaDespacho.groupBy({
+      by: ["caminhaoId"],
+      where: {
+        carga: {
+          situacao: "FECHADA",
+        },
+      },
+    });
+
+    return { trucksOnTrip: onTrip.length };
+  }
 }

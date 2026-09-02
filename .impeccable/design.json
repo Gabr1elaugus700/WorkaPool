@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-01T18:45:00.000Z",
+  "generatedAt": "2026-09-02T10:33:00.000Z",
   "title": "Design System: WorkaPool",
   "extensions": {
     "colorMeta": {
@@ -17,6 +17,21 @@
           "hsl(143 75% 55%)",
           "hsl(143 65% 68%)",
           "hsl(143 50% 88%)"
+        ]
+      },
+      "primary-foreground": {
+        "role": "primary",
+        "displayName": "On Primary",
+        "canonical": "hsl(355.7 100% 97.3%)",
+        "tonalRamp": [
+          "hsl(355 30% 40%)",
+          "hsl(355 50% 55%)",
+          "hsl(355 70% 70%)",
+          "hsl(355 85% 82%)",
+          "hsl(355.7 100% 97.3%)",
+          "hsl(0 0% 98%)",
+          "hsl(0 0% 99%)",
+          "hsl(0 0% 100%)"
         ]
       },
       "background": {
@@ -49,6 +64,66 @@
           "hsl(220 5% 90%)"
         ]
       },
+      "card": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "hsl(0 0% 100%)",
+        "tonalRamp": [
+          "hsl(0 0% 85%)",
+          "hsl(0 0% 88%)",
+          "hsl(0 0% 91%)",
+          "hsl(0 0% 94%)",
+          "hsl(0 0% 96%)",
+          "hsl(0 0% 98%)",
+          "hsl(0 0% 99%)",
+          "hsl(0 0% 100%)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Field",
+        "canonical": "hsl(240 4.8% 95.9%)",
+        "tonalRamp": [
+          "hsl(240 5% 25%)",
+          "hsl(240 5% 35%)",
+          "hsl(240 5% 45%)",
+          "hsl(240 5% 55%)",
+          "hsl(240 5% 70%)",
+          "hsl(240 5% 82%)",
+          "hsl(240 5% 90%)",
+          "hsl(240 4.8% 95.9%)"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Muted Label",
+        "canonical": "hsl(240 3.8% 46.1%)",
+        "tonalRamp": [
+          "hsl(240 4% 18%)",
+          "hsl(240 4% 26%)",
+          "hsl(240 4% 34%)",
+          "hsl(240 4% 40%)",
+          "hsl(240 3.8% 46.1%)",
+          "hsl(240 4% 58%)",
+          "hsl(240 4% 72%)",
+          "hsl(240 4% 88%)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "hsl(240 5.9% 90%)",
+        "tonalRamp": [
+          "hsl(240 6% 35%)",
+          "hsl(240 6% 45%)",
+          "hsl(240 6% 55%)",
+          "hsl(240 6% 65%)",
+          "hsl(240 6% 75%)",
+          "hsl(240 6% 82%)",
+          "hsl(240 6% 86%)",
+          "hsl(240 5.9% 90%)"
+        ]
+      },
       "destructive": {
         "role": "semantic",
         "displayName": "Alert Red",
@@ -64,17 +139,74 @@
           "hsl(0 70% 94%)"
         ]
       },
+      "secondary": {
+        "role": "neutral",
+        "displayName": "Secondary Fill",
+        "canonical": "hsl(240 4.8% 95.9%)",
+        "tonalRamp": [
+          "hsl(240 5% 25%)",
+          "hsl(240 5% 35%)",
+          "hsl(240 5% 45%)",
+          "hsl(240 5% 55%)",
+          "hsl(240 5% 70%)",
+          "hsl(240 5% 82%)",
+          "hsl(240 5% 90%)",
+          "hsl(240 4.8% 95.9%)"
+        ]
+      },
       "carga-aberta": {
         "role": "semantic",
         "displayName": "Carga Aberta",
         "canonical": "#A7F3D0",
         "tonalRamp": ["#064E3B", "#047857", "#059669", "#10B981", "#34D399", "#6EE7B7", "#A7F3D0", "#D1FAE5"]
       },
+      "carga-solicitada": {
+        "role": "semantic",
+        "displayName": "Carga Solicitada",
+        "canonical": "#FDE047",
+        "tonalRamp": ["#713F12", "#854D0E", "#A16207", "#CA8A04", "#EAB308", "#FDE047", "#FEF08A", "#FEF9C3"]
+      },
       "carga-fechada": {
         "role": "semantic",
         "displayName": "Carga Fechada",
         "canonical": "#16A34A",
         "tonalRamp": ["#14532D", "#166534", "#15803D", "#16A34A", "#22C55E", "#4ADE80", "#86EFAC", "#DCFCE7"]
+      },
+      "carga-cancelada": {
+        "role": "semantic",
+        "displayName": "Carga Cancelada",
+        "canonical": "#DC2626",
+        "tonalRamp": ["#450A0A", "#7F1D1D", "#991B1B", "#B91C1C", "#DC2626", "#EF4444", "#F87171", "#FECACA"]
+      },
+      "order-mine": {
+        "role": "semantic",
+        "displayName": "Order Mine",
+        "canonical": "hsl(160 55% 35%)",
+        "tonalRamp": [
+          "hsl(160 55% 15%)",
+          "hsl(160 55% 22%)",
+          "hsl(160 55% 28%)",
+          "hsl(160 55% 32%)",
+          "hsl(160 55% 35%)",
+          "hsl(160 50% 48%)",
+          "hsl(160 45% 65%)",
+          "hsl(160 40% 85%)"
+        ]
+      },
+      "order-other": {
+        "role": "semantic",
+        "displayName": "Order Other",
+        "canonical": "hsl(150 40% 50%)",
+        "tonalRamp": [
+          "hsl(150 40% 18%)",
+          "hsl(150 40% 28%)",
+          "hsl(150 40% 38%)",
+          "hsl(150 40% 45%)",
+          "hsl(150 40% 50%)",
+          "hsl(150 38% 62%)",
+          "hsl(150 35% 78%)",
+          "hsl(150 30% 92%)"
+        ]
       },
       "order-blocked": {
         "role": "semantic",
@@ -90,16 +222,31 @@
           "hsl(0 65% 78%)",
           "hsl(0 60% 93%)"
         ]
+      },
+      "order-nostock": {
+        "role": "semantic",
+        "displayName": "Order No Stock",
+        "canonical": "hsl(30 90% 50%)",
+        "tonalRamp": [
+          "hsl(30 90% 20%)",
+          "hsl(30 90% 30%)",
+          "hsl(30 90% 38%)",
+          "hsl(30 90% 44%)",
+          "hsl(30 90% 50%)",
+          "hsl(30 85% 62%)",
+          "hsl(30 80% 78%)",
+          "hsl(30 75% 92%)"
+        ]
       }
     },
     "typographyMeta": {
       "display": {
         "displayName": "Display",
-        "purpose": "Navbar wordmark and rare page titles."
+        "purpose": "Navbar wordmark (text-xl font-bold)."
       },
       "title": {
         "displayName": "Title",
-        "purpose": "Card headers and form section headings."
+        "purpose": "Page h1 and CardTitle (text-2xl font-semibold)."
       },
       "body": {
         "displayName": "Body",
@@ -153,7 +300,7 @@
       "refersTo": "button-primary",
       "description": "Main call-to-action on forms and confirmations.",
       "html": "<button class=\"ds-btn-primary\" type=\"button\">Salvar</button>",
-      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 8px 16px; border: none; border-radius: calc(0.65rem - 2px); background: hsl(143.3 80.6% 45.1%); color: #000000; font-family: Inter, sans-serif; font-size: 0.875rem; font-weight: 500; line-height: 1; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary:hover { background: hsl(143.3 80.6% 40%); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(0 0% 97%), 0 0 0 4px hsl(142.1 76.2% 36.3%); } .ds-btn-primary:disabled { opacity: 0.5; pointer-events: none; }"
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 8px 16px; border: none; border-radius: calc(0.65rem - 2px); background: hsl(143.3 80.6% 45.1%); color: #000000; font-family: Inter, sans-serif; font-size: 0.875rem; font-weight: 500; line-height: 1; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary:hover { background: hsl(143.3 80.6% 40.5%); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(0 0% 97%), 0 0 0 4px hsl(142.1 76.2% 36.3%); } .ds-btn-primary:disabled { opacity: 0.5; pointer-events: none; }"
     },
     {
       "name": "Outline Button",
@@ -176,16 +323,56 @@
       "kind": "card",
       "refersTo": "card-default",
       "description": "Grouped content container for forms, lists, and summaries.",
-      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\"><div class=\"ds-card-title\">Login</div></div><div class=\"ds-card-content\"><p class=\"ds-card-body\">Conteúdo do card.</p></div></div>",
-      "css": ".ds-card { border-radius: 0.65rem; border: 1px solid hsl(240 5.9% 90%); background: hsl(0 0% 100%); color: hsl(220 20% 10%); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); overflow: hidden; font-family: Inter, sans-serif; } .ds-card-header { padding: 24px 24px 0; text-align: center; } .ds-card-title { font-size: 1.5rem; font-weight: 600; line-height: 1; letter-spacing: -0.025em; } .ds-card-content { padding: 24px; } .ds-card-body { margin: 0; font-size: 0.875rem; line-height: 1.5; color: hsl(240 3.8% 46.1%); }"
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\"><div class=\"ds-card-title\">Caminhões</div><div class=\"ds-card-desc\">Gerencie a frota disponível para despacho.</div></div><div class=\"ds-card-content\"><p class=\"ds-card-body\">Conteúdo do card.</p></div></div>",
+      "css": ".ds-card { border-radius: 0.65rem; border: 1px solid hsl(240 5.9% 90%); background: hsl(0 0% 100%); color: hsl(220 20% 10%); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); overflow: hidden; font-family: Inter, sans-serif; } .ds-card-header { padding: 24px 24px 0; } .ds-card-title { font-size: 1.5rem; font-weight: 600; line-height: 1; letter-spacing: -0.025em; } .ds-card-desc { margin-top: 6px; font-size: 0.875rem; color: hsl(240 3.8% 46.1%); } .ds-card-content { padding: 24px; } .ds-card-body { margin: 0; font-size: 0.875rem; line-height: 1.5; color: hsl(240 3.8% 46.1%); }"
+    },
+    {
+      "name": "Metric Summary Tile",
+      "kind": "custom",
+      "refersTo": "card-default",
+      "description": "Compact operational counter on page headers (frota, dashboards).",
+      "html": "<div class=\"ds-metric-tile\"><span class=\"ds-metric-label\">Em viagem</span><span class=\"ds-metric-value ds-metric-value-accent\">3</span></div>",
+      "css": ".ds-metric-tile { display: flex; min-height: 5.5rem; flex-direction: column; justify-content: space-between; border-radius: 0.65rem; border: 1px solid hsl(240 5.9% 90%); background: hsl(0 0% 100%); padding: 16px; font-family: Inter, sans-serif; box-shadow: none; } .ds-metric-label { font-size: 0.75rem; font-weight: 500; color: hsl(240 3.8% 46.1%); } .ds-metric-value { font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; color: hsl(220 20% 10%); } .ds-metric-value-accent { color: #16A34A; }"
+    },
+    {
+      "name": "Destructive Alert",
+      "kind": "custom",
+      "refersTo": "alert-destructive",
+      "description": "Section-level error with retry — does not block the full page.",
+      "html": "<div class=\"ds-alert-destructive\" role=\"alert\"><svg class=\"ds-alert-icon\" xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"/><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"/></svg><div class=\"ds-alert-body\"><div class=\"ds-alert-title\">Erro ao carregar</div><div class=\"ds-alert-desc\">Não foi possível carregar os dados.</div></div></div>",
+      "css": ".ds-alert-destructive { position: relative; width: 100%; border-radius: 0.65rem; border: 1px solid hsl(0 84.2% 60.2% / 0.5); background: hsl(0 0% 97%); padding: 16px 16px 16px 44px; color: hsl(0 84.2% 60.2%); font-family: Inter, sans-serif; } .ds-alert-icon { position: absolute; left: 16px; top: 16px; width: 16px; height: 16px; } .ds-alert-title { margin-bottom: 4px; font-weight: 500; line-height: 1; } .ds-alert-desc { font-size: 0.875rem; line-height: 1.625; }"
+    },
+    {
+      "name": "Skeleton Row",
+      "kind": "custom",
+      "refersTo": "skeleton-default",
+      "description": "Per-section table loading placeholder.",
+      "html": "<div class=\"ds-skeleton-stack\"><div class=\"ds-skeleton-row\"></div><div class=\"ds-skeleton-row\"></div><div class=\"ds-skeleton-row\"></div></div>",
+      "css": ".ds-skeleton-stack { display: flex; flex-direction: column; gap: 12px; } .ds-skeleton-row { height: 40px; width: 100%; border-radius: calc(0.65rem - 2px); background: hsl(240 4.8% 95.9%); animation: ds-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; } @keyframes ds-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }"
+    },
+    {
+      "name": "Table Empty State",
+      "kind": "custom",
+      "refersTo": "card-default",
+      "description": "Centered empty table cell with icon, copy, and optional CTA.",
+      "html": "<div class=\"ds-empty-state\"><svg class=\"ds-empty-icon\" xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><rect x=\"1\" y=\"3\" width=\"15\" height=\"13\" rx=\"2\"/><path d=\"M16 8h4l3 5v5h-7V8z\"/><circle cx=\"5.5\" cy=\"18.5\" r=\"2.5\"/><circle cx=\"18.5\" cy=\"18.5\" r=\"2.5\"/></svg><p class=\"ds-empty-title\">Nenhum caminhão cadastrado</p><p class=\"ds-empty-desc\">Cadastre o primeiro caminhão para começar.</p><button class=\"ds-btn-primary\" type=\"button\">Cadastrar primeiro caminhão</button></div>",
+      "css": ".ds-empty-state { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 32px 16px; text-align: center; font-family: Inter, sans-serif; } .ds-empty-icon { color: hsl(240 3.8% 46.1% / 0.6); } .ds-empty-title { margin: 0; font-weight: 500; color: hsl(220 20% 10%); } .ds-empty-desc { margin: 0; font-size: 0.875rem; color: hsl(240 3.8% 46.1%); }"
     },
     {
       "name": "Badge",
       "kind": "chip",
       "refersTo": "badge-default",
-      "description": "Compact status or count label.",
-      "html": "<span class=\"ds-badge\">Aberta</span>",
+      "description": "Compact status or count label — primary variant.",
+      "html": "<span class=\"ds-badge\">Ativo</span>",
       "css": ".ds-badge { display: inline-flex; align-items: center; border-radius: 9999px; border: 1px solid transparent; padding: 2px 10px; font-family: Inter, sans-serif; font-size: 0.75rem; font-weight: 600; line-height: 1.4; background: hsl(143.3 80.6% 45.1%); color: hsl(355.7 100% 97.3%); }"
+    },
+    {
+      "name": "Badge Secondary",
+      "kind": "chip",
+      "refersTo": "badge-secondary",
+      "description": "Inactive or neutral status labels.",
+      "html": "<span class=\"ds-badge-secondary\">Inativo</span>",
+      "css": ".ds-badge-secondary { display: inline-flex; align-items: center; border-radius: 9999px; border: 1px solid transparent; padding: 2px 10px; font-family: Inter, sans-serif; font-size: 0.75rem; font-weight: 600; line-height: 1.4; background: hsl(240 4.8% 95.9%); color: hsl(240 5.9% 10%); }"
     },
     {
       "name": "Carga Status Chip",
@@ -194,6 +381,14 @@
       "description": "Domain-specific status for carga lifecycle states.",
       "html": "<span class=\"ds-chip-carga-fechada\">Fechada</span>",
       "css": ".ds-chip-carga-fechada { display: inline-flex; align-items: center; border-radius: 9999px; padding: 2px 10px; font-family: Inter, sans-serif; font-size: 0.75rem; font-weight: 600; background: #16A34A; color: #ffffff; } .ds-chip-carga-aberta { display: inline-flex; align-items: center; border-radius: 9999px; padding: 2px 10px; font-family: Inter, sans-serif; font-size: 0.75rem; font-weight: 600; background: #A7F3D0; color: #064E3B; }"
+    },
+    {
+      "name": "Data Table",
+      "kind": "custom",
+      "refersTo": "card-default",
+      "description": "Operate-mode table for lists (caminhões, motoristas, cargas).",
+      "html": "<table class=\"ds-table\"><thead><tr><th>Nome</th><th>Status</th></tr></thead><tbody><tr><td>Volvo FH</td><td><span class=\"ds-badge\">Ativo</span></td></tr></tbody></table>",
+      "css": ".ds-table { width: 100%; border-collapse: collapse; font-family: Inter, sans-serif; font-size: 0.875rem; } .ds-table th { border-bottom: 1px solid hsl(240 5.9% 90%); padding: 12px 16px; text-align: left; font-weight: 500; color: hsl(240 3.8% 46.1%); } .ds-table td { border-bottom: 1px solid hsl(240 5.9% 90%); padding: 12px 16px; color: hsl(220 20% 10%); } .ds-table tbody tr:last-child td { border-bottom: none; }"
     },
     {
       "name": "Nav Link",
@@ -214,13 +409,15 @@
   ],
   "narrative": {
     "northStar": "The Operations Console",
-    "overview": "WorkaPool looks and behaves like a control room for daily operations—not a marketing site. Surfaces are light, information-dense, and organized around recurring jobs (cargas, pedidos, OS, metas). A confident Pool Green signals brand and primary action, while page bodies stay neutral so tables, cards, and status chips carry most of the visual signal.\n\nThe stack is shadcn/ui + Radix on Tailwind CSS variables. Inter is the sole type family. Layout follows a desktop top bar + mobile bottom tab pattern. Polish is functional: borders, shadow-sm, and ring focus states—not decorative motion or hero imagery.",
+    "overview": "WorkaPool looks and behaves like a control room for daily operations—not a marketing site. Surfaces are light, information-dense, and organized around recurring jobs (cargas, pedidos, OS, metas). A confident Pool Green (hsl(143.3 80.6% 45.1%)) signals brand and primary action, while page bodies stay neutral so tables, cards, and status chips carry most of the visual signal.\n\nThe stack is shadcn/ui + Radix on Tailwind CSS variables (frontend/src/styles/tailwind.css, frontend/tailwind.config.js). Inter is the sole type family. Layout follows a desktop top bar + mobile bottom tab pattern (DefaultLayout). Polish is functional: borders, shadow-sm, and ring focus states—not decorative motion or hero imagery.",
     "keyCharacteristics": [
       "Operate-mode density: tables, forms, and cards over empty marketing space",
       "Green structural chrome (navbar) on neutral work surfaces",
       "Semantic domain colors for Carga lifecycle and order negotiation states",
       "shadcn component variants as the default extension point—not one-off inline styling",
-      "Portuguese (BR) labels with domain-precise terminology"
+      "Portuguese (BR) labels with domain-precise terminology",
+      "Per-section async states (skeleton, alert + retry) on multi-resource Operate screens",
+      "Sonner toasts for action confirmation after mutations"
     ],
     "rules": [
       {
@@ -231,6 +428,11 @@
       {
         "name": "The Status Color Rule",
         "body": "Carga and order states use their dedicated tokens (carga-*, order-*). Do not improvise new hues for ABERTA, FECHADA, perdido, or bloqueado.",
+        "section": "colors"
+      },
+      {
+        "name": "The Token Not Hex Rule",
+        "body": "Prefer Tailwind semantic classes (text-carga-fechada, bg-order-mine-bg) over inline hex. Hex values belong in tokens and DESIGN.md frontmatter—not scattered in components.",
         "section": "colors"
       },
       {
@@ -249,11 +451,14 @@
       "Do keep labels and headings in Portuguese with domain terms from CONTEXT.md files.",
       "Do extend shadcn variants (Button, Badge, Card) before creating bespoke styled divs.",
       "Do preserve the green navbar + neutral body pattern on new authenticated screens.",
-      "Do use container mx-auto p-4 and bottom padding on mobile when adding fixed footers."
+      "Do use container mx-auto p-4 and bottom padding on mobile when adding fixed footers.",
+      "Do render layout shells immediately and load each card/section independently (skeleton → content or alert + retry).",
+      "Do use toast.success / toast.error (Sonner) after mutations; keep error copy in Portuguese."
     ],
     "donts": [
       "Don't introduce marketing-style hero sections, gradients, or decorative illustration in operational views.",
       "Don't assign new arbitrary colors to Carga or order states—use the established semantic palette.",
+      "Don't gate an entire Operate page on a single loading && !error check when sections can fail or load independently.",
       "Don't add a second global stylesheet with competing :root tokens (globals.css vs tailwind.css—main.tsx loads tailwind.css as authority).",
       "Don't hide critical actions behind icon-only buttons without tooltips or labels.",
       "Don't use English UI copy on staff-facing surfaces unless mirroring an established ERP field name."

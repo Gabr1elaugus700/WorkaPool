@@ -27,6 +27,13 @@ router.get(
 );
 
 router.get(
+  "/stats",
+  authMiddleware,
+  requireRoles(fleetWriteRoles),
+  TrucksController.stats,
+);
+
+router.get(
   "/:id",
   authMiddleware,
   requireRoles(fleetWriteRoles),
