@@ -77,6 +77,16 @@ export const deleteUserSchema = z.object({
   })
 });
 
+export const adminResetPasswordSchema = z.object({
+  params: z.object({
+    id: z.string().uuid("ID deve ser um UUID válido"),
+  }),
+  body: z.object({
+    password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+    mustChangePassword: z.boolean().optional(),
+  }),
+});
+
 export const getUserByIdSchema = z.object({
   params: z.object({
     id: z.string().uuid("ID deve ser um UUID válido")
