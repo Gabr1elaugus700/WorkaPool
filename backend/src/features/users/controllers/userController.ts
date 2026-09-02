@@ -4,6 +4,7 @@ import { AppError } from "../../../utils/AppError";
 import { userService } from "../services/userService";
 import { CreateUserUseCase } from "../useCases/CreateUserUseCase";
 import { UpdateUserUseCase } from "../useCases/UpdateUserUseCase";
+import { AdminResetPasswordUseCase } from "../useCases/AdminResetPasswordUseCase";
 
 function handleAppError(err: unknown, res: Response, fallbackStatus = 500): Response {
   if (err instanceof AppError) {
@@ -129,5 +130,22 @@ export const userController = {
     } catch (err: any) {
       res.status(400).json({ error: err.message });
     }
-  }
+  },
+
+  resetPassword: async (req: Request, res: Response) => {
+    try {
+      const id = String(req.params.id);
+      const { password, mustChangePassword } = req.body;
+
+      const useCase = new AdminResetPasswordUseCase();
+      const updatedUser = await useCase.execute({
+        targetUserId: id,
+        newPassword: password,
+        mustChangePassword,
+      });
+      res.json(updatedUser);
+    } catch (err: unknown) {
+      return handleAppError(err, res, 400);
+    }
+  },
 };

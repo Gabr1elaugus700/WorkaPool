@@ -39,4 +39,12 @@ export type UpdateUserPersistInput = {
   name?: string;
   role?: Role;
   codRep?: number;
+  password?: string;
+  mustChangePassword?: boolean;
+};
+
+export type AdminResetPasswordInput = {
+  targetUserId: string;
+  newPassword: string;
+  mustChangePassword?: boolean;
 };

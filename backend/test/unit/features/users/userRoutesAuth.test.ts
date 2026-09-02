@@ -54,4 +54,20 @@ test("User Routes - autenticação e autorização (issue #87 slice 1)", async (
       .send(validCreateUserBody);
     assert.strictEqual(response.status, 403);
   });
+
+  await t.test("POST /:id/reset-password com role VENDAS deve retornar 403", async () => {
+    const token = createToken("VENDAS");
+    const response = await request(app)
+      .post("/api/users/11111111-1111-1111-1111-111111111111/reset-password")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ password: "senha123" });
+    assert.strictEqual(response.status, 403);
+  });
+
+  await t.test("POST /:id/reset-password sem token deve retornar 401", async () => {
+    const response = await request(app)
+      .post("/api/users/11111111-1111-1111-1111-111111111111/reset-password")
+      .send({ password: "senha123" });
+    assert.strictEqual(response.status, 401);
+  });
 });
