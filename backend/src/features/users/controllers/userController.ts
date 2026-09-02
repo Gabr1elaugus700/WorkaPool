@@ -1,18 +1,29 @@
 import { Request, Response } from "express";
+import { Role } from "@prisma/client";
+import { AppError } from "../../../utils/AppError";
 import { userService } from "../services/userService";
+import { CreateUserUseCase } from "../useCases/CreateUserUseCase";
+
+function handleAppError(err: unknown, res: Response, fallbackStatus = 500): Response {
+  if (err instanceof AppError) {
+    return res.status(err.statusCode).json({
+      error: err.message,
+      code: err.code,
+      details: err.details,
+    });
+  }
+
+  const message = err instanceof Error ? err.message : "Erro interno";
+  return res.status(fallbackStatus).json({ error: message });
+}
 
 export const authController = {
-  register: async (req: Request, res: Response) => {
-    const { user, password, role, name, codRep } = req.body;
-
-    try {
-      const createdUser = await userService.register(user, password, role, name, codRep);
-      res.status(201).json(createdUser);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
-    }
+  register: async (_req: Request, res: Response) => {
+    return res.status(403).json({
+      error: "Cadastro público desabilitado. Solicite criação de conta ao administrador.",
+      code: "REGISTER_DISABLED",
+    });
   },
-
   login: async (req: Request, res: Response) => {
     const { user, password } = req.body;
 
@@ -37,14 +48,21 @@ export const authController = {
 
 export const userController = {
   create: async (req: Request, res: Response) => {
-    const { user, password, role, name, codRep } = req.body;
+    const { user, password, role, name, codRep, departamentoId } = req.body;
 
     try {
-      const createdUser = await userService.register(user, password, role, name, codRep);
+      const useCase = new CreateUserUseCase();
+      const createdUser = await useCase.execute({
+        user,
+        password,
+        role: role as Role,
+        name,
+        codRep,
+        departamentoId,
+      });
       res.status(201).json(createdUser);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Erro ao criar usuário";
-      res.status(400).json({ error: message });
+      return handleAppError(err, res, 400);
     }
   },
 
