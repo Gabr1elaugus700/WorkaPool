@@ -4,6 +4,7 @@ import { PrismaClient, Role } from "@prisma/client";
 import trucksRoutes from "../../src/features/trucks/http/routes/TrucksRoute";
 import cargoRoutes from "../../src/features/cargo/http/routes/CargoRoute";
 import authRoutes from "../../src/features/users/routes/authRoutes";
+import userRoutes from "../../src/features/users/routes/userRoutes";
 
 export const FLEET_FIXTURE_PREFIX = "test-fleet-84-";
 export const FLEET_PLATE_PREFIX = "TF84";
@@ -27,6 +28,7 @@ export function createFleetTestApp(): Express {
   app.use("/api/trucks", trucksRoutes);
   app.use("/api/cargo", cargoRoutes);
   app.use("/api/auth", authRoutes);
+  app.use("/api/users", userRoutes);
   return app;
 }
 

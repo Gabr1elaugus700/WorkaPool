@@ -128,16 +128,20 @@ describe("Fleet registration integration (#84)", () => {
     assert.ok(!plates.includes(inactivePlate));
   });
 
-  it("POST /api/auth/register creates a User with role MOTORISTA", async () => {
+  it("POST /api/users creates a User with role MOTORISTA when called by ADMIN", async () => {
     const app = createFleetTestApp();
+    const adminToken = createRoleToken(Role.ADMIN);
     const username = `${FLEET_FIXTURE_PREFIX}motorista`;
 
-    const response = await request(app).post("/api/auth/register").send({
-      user: username,
-      password: "senha123",
-      role: "MOTORISTA",
-      name: "João Motorista",
-    });
+    const response = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        user: username,
+        password: "senha123",
+        role: "MOTORISTA",
+        name: "João Motorista",
+      });
 
     assert.equal(response.status, 201);
     assert.equal(response.body.role, "MOTORISTA");
@@ -149,22 +153,26 @@ describe("Fleet registration integration (#84)", () => {
     assert.equal(persisted.name, "João Motorista");
   });
 
-  it("GET /api/cargo/motoristas includes a registered MOTORISTA", async () => {
+  it("GET /api/cargo/motoristas includes a MOTORISTA created by ADMIN", async () => {
     const app = createFleetTestApp();
-    const token = createRoleToken(Role.LOGISTICA);
+    const adminToken = createRoleToken(Role.ADMIN);
+    const logisticaToken = createRoleToken(Role.LOGISTICA);
     const username = `${FLEET_FIXTURE_PREFIX}listed`;
 
-    const registerResponse = await request(app).post("/api/auth/register").send({
-      user: username,
-      password: "senha123",
-      role: "MOTORISTA",
-      name: "Maria Motorista",
-    });
+    const registerResponse = await request(app)
+      .post("/api/users")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        user: username,
+        password: "senha123",
+        role: "MOTORISTA",
+        name: "Maria Motorista",
+      });
     assert.equal(registerResponse.status, 201);
 
     const response = await request(app)
       .get("/api/cargo/motoristas")
-      .set("Authorization", `Bearer ${token}`);
+      .set("Authorization", `Bearer ${logisticaToken}`);
 
     assert.equal(response.status, 200);
     const motorista = response.body.find(
