@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { IUserRepository } from "./IUserRepository";
 import {
   CreateUserPersistInput,
+  UpdateUserPersistInput,
   UserPublicRecord,
 } from "../types/User.types";
 
@@ -42,6 +43,22 @@ export class PrismaUserRepository implements IUserRepository {
     return user ? toUserPublicRecord(user) : null;
   }
 
+  async findById(id: string): Promise<UserPublicRecord | null> {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        user: true,
+        role: true,
+        name: true,
+        codRep: true,
+        mustChangePassword: true,
+      },
+    });
+
+    return user ? toUserPublicRecord(user) : null;
+  }
+
   async create(input: CreateUserPersistInput): Promise<UserPublicRecord> {
     const user = await prisma.user.create({
       data: {
@@ -52,6 +69,23 @@ export class PrismaUserRepository implements IUserRepository {
         codRep: input.codRep,
         mustChangePassword: input.mustChangePassword,
       },
+      select: {
+        id: true,
+        user: true,
+        role: true,
+        name: true,
+        codRep: true,
+        mustChangePassword: true,
+      },
+    });
+
+    return toUserPublicRecord(user);
+  }
+
+  async update(id: string, data: UpdateUserPersistInput): Promise<UserPublicRecord> {
+    const user = await prisma.user.update({
+      where: { id },
+      data,
       select: {
         id: true,
         user: true,

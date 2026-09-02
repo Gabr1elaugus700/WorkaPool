@@ -5,6 +5,7 @@ import userRoutes from "../../src/features/users/routes/userRoutes";
 import authRoutes from "../../src/features/users/routes/authRoutes";
 
 export const USERS_FIXTURE_PREFIX = "test-users-87-";
+export const USERS_DEPT_FIXTURE_PREFIX = "test-dept-87-";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 
@@ -39,7 +40,18 @@ export function createRoleToken(role: Role, id = "users-integration-admin"): str
 }
 
 export async function cleanupUsersFixtures(): Promise<void> {
+  await prisma.usuarioDepartamento.deleteMany({
+    where: {
+      OR: [
+        { usuario: { user: { startsWith: USERS_FIXTURE_PREFIX } } },
+        { departamento: { name: { startsWith: USERS_DEPT_FIXTURE_PREFIX } } },
+      ],
+    },
+  });
   await prisma.user.deleteMany({
     where: { user: { startsWith: USERS_FIXTURE_PREFIX } },
+  });
+  await prisma.departamento.deleteMany({
+    where: { name: { startsWith: USERS_DEPT_FIXTURE_PREFIX } },
   });
 }
