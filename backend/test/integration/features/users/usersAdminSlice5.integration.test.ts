@@ -13,9 +13,12 @@ import {
   cleanupUsersFixtures,
   createRoleToken,
   createUsersAdminTestApp,
+  fixturePrefix,
   prisma,
-  USERS_FIXTURE_PREFIX,
 } from "../../../helpers/usersIntegration";
+
+const SCOPE = "s5";
+const fixtures = fixturePrefix(SCOPE);
 
 describe("Users admin slice 5 integration (#87)", () => {
   before(async () => {
@@ -23,7 +26,7 @@ describe("Users admin slice 5 integration (#87)", () => {
   });
 
   afterEach(async () => {
-    await cleanupUsersFixtures();
+    await cleanupUsersFixtures(SCOPE);
   });
 
   after(async () => {
@@ -31,7 +34,7 @@ describe("Users admin slice 5 integration (#87)", () => {
   });
 
   it("ADMIN reset-password writes new hash; user authenticates with new password", async () => {
-    const username = `${USERS_FIXTURE_PREFIX}reset-hash`;
+    const username = `${fixtures.user}reset-hash`;
     const oldPassword = "oldpass1";
     const newPassword = "newpass1";
     const app = createUsersAdminTestApp();
@@ -77,7 +80,7 @@ describe("Users admin slice 5 integration (#87)", () => {
   });
 
   it("ADMIN reset-password with mustChangePassword true forces change on next login", async () => {
-    const username = `${USERS_FIXTURE_PREFIX}reset-mcp`;
+    const username = `${fixtures.user}reset-mcp`;
     const newPassword = "newpass2";
     const app = createUsersAdminTestApp();
     const adminToken = createRoleToken(Role.ADMIN);

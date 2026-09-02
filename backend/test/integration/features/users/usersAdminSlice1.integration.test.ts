@@ -14,9 +14,12 @@ import {
   cleanupUsersFixtures,
   createRoleToken,
   createUsersTestApp,
+  fixturePrefix,
   prisma,
-  USERS_FIXTURE_PREFIX,
 } from "../../../helpers/usersIntegration";
+
+const SCOPE = "s1";
+const fixtures = fixturePrefix(SCOPE);
 
 describe("Users admin slice 1 integration (#87)", () => {
   before(async () => {
@@ -24,7 +27,7 @@ describe("Users admin slice 1 integration (#87)", () => {
   });
 
   afterEach(async () => {
-    await cleanupUsersFixtures();
+    await cleanupUsersFixtures(SCOPE);
   });
 
   after(async () => {
@@ -32,7 +35,7 @@ describe("Users admin slice 1 integration (#87)", () => {
   });
 
   it("GET /api/users/:id never exposes password hash", async () => {
-    const username = `${USERS_FIXTURE_PREFIX}target`;
+    const username = `${fixtures.user}target`;
     const hashedPassword = await bcrypt.hash("senha-secreta", 10);
 
     const persisted = await prisma.user.create({

@@ -13,9 +13,12 @@ import {
   cleanupUsersFixtures,
   createRoleToken,
   createUsersAdminTestApp,
+  fixturePrefix,
   prisma,
-  USERS_FIXTURE_PREFIX,
 } from "../../../helpers/usersIntegration";
+
+const SCOPE = "s2";
+const fixtures = fixturePrefix(SCOPE);
 
 describe("Users admin slice 2 integration (#87)", () => {
   before(async () => {
@@ -23,7 +26,7 @@ describe("Users admin slice 2 integration (#87)", () => {
   });
 
   afterEach(async () => {
-    await cleanupUsersFixtures();
+    await cleanupUsersFixtures(SCOPE);
   });
 
   after(async () => {
@@ -31,7 +34,7 @@ describe("Users admin slice 2 integration (#87)", () => {
   });
 
   it("ADMIN creates user with temp password; first login returns mustChangePassword true", async () => {
-    const username = `${USERS_FIXTURE_PREFIX}first-login`;
+    const username = `${fixtures.user}first-login`;
     const tempPassword = "temp1234";
     const app = createUsersAdminTestApp();
     const adminToken = createRoleToken(Role.ADMIN);
@@ -58,7 +61,7 @@ describe("Users admin slice 2 integration (#87)", () => {
   });
 
   it("POST /api/auth/register does not create ADMIN account", async () => {
-    const username = `${USERS_FIXTURE_PREFIX}blocked-admin`;
+    const username = `${fixtures.user}blocked-admin`;
     const app = createUsersAdminTestApp();
 
     const response = await request(app).post("/api/auth/register").send({
