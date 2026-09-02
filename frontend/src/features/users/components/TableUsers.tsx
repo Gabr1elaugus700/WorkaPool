@@ -6,78 +6,94 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { User } from "../models/usersModel";
-import EditarButton from "./EditarButton";
-import { usersService } from "../services/usersService";
+} from "@/components/ui/table";
 import { useState } from "react";
-import EditUserModal from "./ModaEdit";
+import { toast } from "sonner";
+import type { User } from "../models/usersModel";
+import { usersService } from "../services/usersService";
+import EditarButton from "./EditarButton";
+import { UserForm } from "./UserForm";
 
+type Props = {
+  users: User[];
+  fetchUsers: () => void;
+};
 
-
-export default function TableUsers({ users, fetchUsers }: { users: User[]; fetchUsers: () => void }) {
+export default function TableUsers({ users, fetchUsers }: Props) {
   const [editUser, setEditUser] = useState<User | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const handleEdit = async (userId: string) => {
     try {
       const userData = await usersService.findById(userId);
-      setEditUser(userData);
-      setIsEditModalOpen(true);
+      const firstLink = Array.isArray(userData.departamentos)
+        ? userData.departamentos[0]
+        : undefined;
+      const funcaoFromLink =
+        firstLink && typeof firstLink !== "string" && "funcao" in firstLink
+          ? String((firstLink as { funcao?: string }).funcao ?? "")
+          : "";
+
+      setEditUser({
+        ...userData,
+        funcao: funcaoFromLink || userData.funcao || "FUNCIONARIO",
+      });
+      setIsEditOpen(true);
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      const message =
+        error instanceof Error ? error.message : "Erro ao carregar usuário";
+      toast.error(message);
     }
   };
-  console.log("Users in TableUsers:", users);
 
   return (
-    <div className="border-collapse border border-zinc-500 rounded-lg p-4 w-full">
-      <EditUserModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
+    <div className="w-full rounded-lg border border-border bg-card p-4 shadow-sm">
+      <UserForm
         user={editUser}
-        fetchUsers={fetchUsers}
+        open={isEditOpen}
+        onOpenChange={(open) => {
+          setIsEditOpen(open);
+          if (!open) {
+            setEditUser(null);
+          }
+        }}
+        onSuccess={fetchUsers}
       />
-      <Table >
-        <TableCaption>Lista de Usuários</TableCaption>
+      <Table>
+        <TableCaption>Lista de usuários</TableCaption>
         <TableHeader>
           <TableRow>
-            {/* <TableHead>ID</TableHead> */}
             <TableHead>Nome</TableHead>
             <TableHead>Login</TableHead>
             <TableHead>Acesso</TableHead>
             <TableHead>Dpto</TableHead>
             <TableHead>Função</TableHead>
             <TableHead>Ações</TableHead>
-
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              {/* <TableCell>{user.id}</TableCell> */}
-              <TableCell>{user.name}</TableCell>
-              <TableCell>{user.user}</TableCell>
-              <TableCell>{user.role}</TableCell>
-
-              <TableCell>
-                {user.departamentoNome ?? ""}
-              </TableCell>
-              <TableCell>{user.funcao}</TableCell>
-              <TableCell>
-                <EditarButton userId={user.id} onEdit={handleEdit} />
+          {users.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                Nenhum usuário encontrado. Crie o primeiro cadastro administrativo.
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>{user.name}</TableCell>
+                <TableCell>{user.user}</TableCell>
+                <TableCell>{user.role}</TableCell>
+                <TableCell>{user.departamentoNome ?? ""}</TableCell>
+                <TableCell>{user.funcao ?? ""}</TableCell>
+                <TableCell>
+                  <EditarButton userId={user.id} onEdit={handleEdit} />
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
-      <EditUserModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        user={editUser}
-        fetchUsers={fetchUsers}
-      />
     </div>
   );
 }
