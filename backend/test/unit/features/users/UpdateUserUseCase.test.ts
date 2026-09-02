@@ -12,6 +12,7 @@ const adminUser = {
   name: "Admin",
   codRep: 0,
   mustChangePassword: false,
+  isActive: true,
 };
 
 describe("UpdateUserUseCase (#87 slice 4)", () => {
