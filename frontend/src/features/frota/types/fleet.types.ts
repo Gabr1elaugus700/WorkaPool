@@ -20,3 +20,7 @@ export type CreateFleetTruckInput = {
 };
 
 export type UpdateFleetTruckInput = Partial<CreateFleetTruckInput>;
+
+export type FleetStats = {
+  trucksOnTrip: number;
+};

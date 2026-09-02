@@ -1,5 +1,6 @@
 import {
   CreateTruckInput,
+  FleetStats,
   ListTrucksFilter,
   TruckRecord,
   UpdateTruckInput,
@@ -11,4 +12,5 @@ export interface ITrucksRepository {
   findByPlate(plate: string): Promise<TruckRecord | null>;
   list(filter?: ListTrucksFilter): Promise<TruckRecord[]>;
   update(input: UpdateTruckInput): Promise<TruckRecord>;
+  getFleetStats(): Promise<FleetStats>;
 }
