@@ -36,6 +36,16 @@ export const changePasswordFirstLoginSchema = z.object({
 });
 
 // Schemas para CRUD de usuários
+export const createUserSchema = z.object({
+  body: z.object({
+    user: z.string().min(3, "Usuário deve ter pelo menos 3 caracteres"),
+    password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+    role: roleSchema,
+    name: z.string().min(1, "Nome é obrigatório"),
+    codRep: z.number().int().positive().optional(),
+  }),
+});
+
 export const findAllUsersQuerySchema = z.object({
   query: z.object({
     user: z.string().optional(),

@@ -28,6 +28,20 @@ export const userRepository = {
         findById: async (id: string) => {
         return await prisma.user.findUnique({
             where: { id },
+            select: {
+            id: true,
+            name: true,
+            user: true,
+            role: true,
+            createdAt: true,
+            codRep: true,
+            mustChangePassword: true,
+            departamentos: {
+                include: {
+                departamento: { select: { id: true, name: true } },
+                },
+            },
+            },
         });
     },
 

@@ -36,6 +36,18 @@ export const authController = {
 };
 
 export const userController = {
+  create: async (req: Request, res: Response) => {
+    const { user, password, role, name, codRep } = req.body;
+
+    try {
+      const createdUser = await userService.register(user, password, role, name, codRep);
+      res.status(201).json(createdUser);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao criar usuário";
+      res.status(400).json({ error: message });
+    }
+  },
+
   // CRUD básico de usuários
   findAll: async (_req: Request, res: Response) => {
     try {
