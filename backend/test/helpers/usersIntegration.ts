@@ -11,6 +11,13 @@ const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 
 export const prisma = new PrismaClient();
 
+export function fixturePrefix(scope: string): { user: string; dept: string } {
+  return {
+    user: `${USERS_FIXTURE_PREFIX}${scope}-`,
+    dept: `${USERS_DEPT_FIXTURE_PREFIX}${scope}-`,
+  };
+}
+
 export function assertTestDatabase(): void {
   const databaseUrl = new URL(process.env.DATABASE_URL ?? "");
   if (databaseUrl.pathname !== "/workapool_test") {
@@ -39,19 +46,21 @@ export function createRoleToken(role: Role, id = "users-integration-admin"): str
   return jwt.sign({ id, role }, JWT_SECRET);
 }
 
-export async function cleanupUsersFixtures(): Promise<void> {
+export async function cleanupUsersFixtures(scope: string): Promise<void> {
+  const { user, dept } = fixturePrefix(scope);
+
   await prisma.usuarioDepartamento.deleteMany({
     where: {
       OR: [
-        { usuario: { user: { startsWith: USERS_FIXTURE_PREFIX } } },
-        { departamento: { name: { startsWith: USERS_DEPT_FIXTURE_PREFIX } } },
+        { usuario: { user: { startsWith: user } } },
+        { departamento: { name: { startsWith: dept } } },
       ],
     },
   });
   await prisma.user.deleteMany({
-    where: { user: { startsWith: USERS_FIXTURE_PREFIX } },
+    where: { user: { startsWith: user } },
   });
   await prisma.departamento.deleteMany({
-    where: { name: { startsWith: USERS_DEPT_FIXTURE_PREFIX } },
+    where: { name: { startsWith: dept } },
   });
 }
