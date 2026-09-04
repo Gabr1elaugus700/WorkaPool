@@ -6,6 +6,7 @@ import { CreateUserUseCase } from "../useCases/CreateUserUseCase";
 import { UpdateUserUseCase } from "../useCases/UpdateUserUseCase";
 import { AdminResetPasswordUseCase } from "../useCases/AdminResetPasswordUseCase";
 import { SetUserActiveUseCase } from "../useCases/SetUserActiveUseCase";
+import { ListUsersUseCase } from "../useCases/ListUsersUseCase";
 
 function handleAppError(err: unknown, res: Response, fallbackStatus = 500): Response {
   if (err instanceof AppError) {
@@ -70,12 +71,16 @@ export const userController = {
   },
 
   // CRUD básico de usuários
-  findAll: async (_req: Request, res: Response) => {
+  findAll: async (req: Request, res: Response) => {
     try {
-      const users = await userService.findAll();
+      const includeInactive = req.query.includeInactive === "true";
+      const search = typeof req.query.search === "string" ? req.query.search : undefined;
+      const useCase = new ListUsersUseCase();
+      const users = await useCase.execute({ includeInactive, search });
       res.json(users);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro interno";
+      res.status(500).json({ error: message });
     }
   },
 
