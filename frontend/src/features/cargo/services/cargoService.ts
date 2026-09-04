@@ -3,7 +3,6 @@ import {
   CargaComPesoDTO,
   CargaFechadaData,
   CargaSituacao,
-  MotoristaDespacho,
   Pedido,
   TruckDespacho,
 } from "../types/cargo.types";
@@ -98,7 +97,7 @@ export const cargoService = {
    */
   closeCarga: async (
     codCar: number,
-    despacho: { motoristaId: string; caminhaoId: string },
+    despacho: { caminhaoId: string },
   ): Promise<{ message: string; pedidosSalvos: number }> => {
     return apiFetchJson<{ message: string; pedidosSalvos: number }>(
       "/api/cargo/close-carga",
@@ -106,18 +105,10 @@ export const cargoService = {
         method: "POST",
         body: JSON.stringify({
           codCar,
-          motoristaId: despacho.motoristaId,
           caminhaoId: despacho.caminhaoId,
         }),
       },
     );
-  },
-
-  /**
-   * Lista usuários com role MOTORISTA para CargaDespacho
-   */
-  listMotoristas: async (): Promise<MotoristaDespacho[]> => {
-    return apiFetchJson<MotoristaDespacho[]>("/api/cargo/motoristas");
   },
 
   /**

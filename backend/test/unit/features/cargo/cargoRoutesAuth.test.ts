@@ -72,4 +72,13 @@ test("Cargo Routes - autenticação e autorização", async (t) => {
 
     assert.strictEqual(response.status, 403);
   });
+
+  await t.test("GET /motoristas deve retornar 404 (rota removida)", async () => {
+    const token = createToken("LOGISTICA");
+    const response = await request(app)
+      .get("/api/cargo/motoristas")
+      .set("Authorization", `Bearer ${token}`);
+
+    assert.strictEqual(response.status, 404);
+  });
 });
