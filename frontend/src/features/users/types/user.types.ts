@@ -10,6 +10,8 @@ export const USER_ROLES = [
 
 export type UserRole = (typeof USER_ROLES)[number];
 
+export type UserDepartmentFuncao = "GERENTE" | "FUNCIONARIO";
+
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: "Admin",
   USER: "Usuário",
@@ -30,6 +32,21 @@ export function formatUserRoleLabel(role: string | undefined): string {
   return role;
 }
 
+export const USER_FUNCAO_LABELS: Record<UserDepartmentFuncao, string> = {
+  GERENTE: "Gerente",
+  FUNCIONARIO: "Funcionário",
+};
+
+export function formatUserFuncaoLabel(funcao: string | undefined): string {
+  if (!funcao) {
+    return "—";
+  }
+  if (funcao === "GERENTE" || funcao === "FUNCIONARIO") {
+    return USER_FUNCAO_LABELS[funcao];
+  }
+  return funcao;
+}
+
 export type CreateUserInput = {
   user: string;
   password: string;
@@ -44,8 +61,6 @@ export type UpdateUserInput = {
   role?: UserRole;
   codRep?: number;
 };
-
-export type UserDepartmentFuncao = "GERENTE" | "FUNCIONARIO";
 
 export type UserDepartmentLinkInput = {
   userId: string;

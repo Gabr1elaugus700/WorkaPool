@@ -15,7 +15,7 @@ export default function EditButton({ userId, userLogin, onEdit }: EditButtonProp
       onClick={() => onEdit(userId)}
       aria-label={`Editar ${userLogin}`}
     >
-      <Pencil className="h-4 w-4" />
+      <Pencil className="h-4 w-4" aria-hidden />
       Editar
     </Button>
   );
