@@ -469,18 +469,22 @@ export class CargoRepository implements ICargoRepository {
       pedidos: cf.pedidos,
     }));
   }
+  /**
+   * Confirma vínculo da carga customizada no Sapiens (`e120ped.usu_codcar`).
+   * Não usa `e135pes` (romaneio/pesagem) — pedidos alocados só via WorkaPool
+   * têm `usu_codcar` preenchido e ainda assim não aparecem em `e135pes`.
+   */
   async validarCargaSapiens(numPed: number): Promise<boolean> {
     await sqlPoolConnect;
     const result = await sqlPool
       .request()
       .input("numPed", numPed)
       .query(`
-        SELECT pes.numane, pes.numped FROM e135pes pes WHERE pes.numped = @numPed
+        SELECT ped.usu_codcar
+        FROM e120ped ped
+        WHERE ped.numped = @numPed
+          AND ISNULL(ped.usu_codcar, 0) > 0
       `);
-    if (result.recordset.length === 0) {
-      return false;
-    } else {
-      return true;
-    }
+    return result.recordset.length > 0;
   }
 }
