@@ -152,7 +152,6 @@ export class FakeSapiens implements ICargoRepository, IPedidosRepository {
     const despacho: CargaDespachoRecord = {
       id: `despacho-${input.codCar}`,
       cargaId: carga.id,
-      motoristaId: input.motoristaId,
       caminhaoId: input.caminhaoId,
       fechadoPorId: input.fechadoPorId,
       fechadoEm: new Date(),

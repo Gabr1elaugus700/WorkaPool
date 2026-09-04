@@ -90,7 +90,7 @@ export class CargoRepository implements ICargoRepository {
   async closeCarga(
     input: CloseCargaDespachoInput,
   ): Promise<{ carga: Carga; pedidosSalvos: number; despacho: CargaDespachoRecord }> {
-    const { codCar, motoristaId, caminhaoId, fechadoPorId } = input;
+    const { codCar, caminhaoId, fechadoPorId } = input;
     console.log(`🔵 [Repository] Iniciando fechamento da carga ${codCar}`);
 
     const carga = await this.getCargaByCodCar(codCar);
@@ -164,7 +164,6 @@ export class CargoRepository implements ICargoRepository {
       const createdDespacho = await tx.cargaDespacho.create({
         data: {
           cargaId: carga.id,
-          motoristaId,
           caminhaoId,
           fechadoPorId,
           fechadoEm: closedAt,
@@ -221,7 +220,6 @@ export class CargoRepository implements ICargoRepository {
       despacho: {
         id: despacho.id,
         cargaId: despacho.cargaId,
-        motoristaId: despacho.motoristaId,
         caminhaoId: despacho.caminhaoId,
         fechadoPorId: despacho.fechadoPorId,
         fechadoEm: despacho.fechadoEm,
@@ -263,7 +261,6 @@ export class CargoRepository implements ICargoRepository {
     return {
       id: despacho.id,
       cargaId: despacho.cargaId,
-      motoristaId: despacho.motoristaId,
       caminhaoId: despacho.caminhaoId,
       fechadoPorId: despacho.fechadoPorId,
       fechadoEm: despacho.fechadoEm,

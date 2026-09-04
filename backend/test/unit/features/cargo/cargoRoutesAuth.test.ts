@@ -54,7 +54,6 @@ test("Cargo Routes - autenticação e autorização", async (t) => {
       .post("/api/cargo/close-carga")
       .send({
         codCar: 1,
-        motoristaId: "11111111-1111-1111-1111-111111111111",
         caminhaoId: "22222222-2222-2222-2222-222222222222",
       });
 
@@ -68,7 +67,6 @@ test("Cargo Routes - autenticação e autorização", async (t) => {
       .set("Authorization", `Bearer ${token}`)
       .send({
         codCar: 1,
-        motoristaId: "11111111-1111-1111-1111-111111111111",
         caminhaoId: "22222222-2222-2222-2222-222222222222",
       });
 

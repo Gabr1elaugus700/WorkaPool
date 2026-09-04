@@ -76,7 +76,7 @@ export class CargoController {
 
       if (!parsed.success) {
         return res.status(400).json({
-          error: "Motorista e caminhão são obrigatórios para fechar a carga",
+          error: "Caminhão é obrigatório para fechar a carga",
           code: "CARGO_DESPACHO_REQUIRED",
           details: parsed.error.format(),
         });
@@ -90,14 +90,13 @@ export class CargoController {
         });
       }
 
-      const { codCar, motoristaId, caminhaoId } = parsed.data;
+      const { codCar, caminhaoId } = parsed.data;
 
       console.log(`🔵 [Controller] Recebida requisição para fechar carga ${codCar}`);
 
       const closeCargaUseCase = new CloseCargaUseCase();
       const result = await closeCargaUseCase.execute({
         codCar,
-        motoristaId,
         caminhaoId,
         fechadoPorId,
       });

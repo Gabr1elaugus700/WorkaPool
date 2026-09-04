@@ -51,7 +51,6 @@ model User {
   workOrdersAssignedBy WorkOrder[]  @relation("WOAssignedBy")
   inspections          Inspection[]
 
-  cargasDespachoComoMotorista CargaDespacho[] @relation("CargaDespachoMotorista")
   cargasDespachoFechadasPor   CargaDespacho[] @relation("CargaDespachoFechadoPor")
   alocacoesIbc                AlocacaoIbc[]   @relation("AlocacaoIbcAlocadoPor")
   expedicoesIbcFechadasPor    ExpedicaoIbc[]  @relation("ExpedicaoIbcFechadoPor")
@@ -129,13 +128,11 @@ model ProcessedEvent {
 model CargaDespacho {
   id           String   @id @default(uuid())
   cargaId      String   @unique
-  motoristaId  String
   caminhaoId   String
   fechadoPorId String
   fechadoEm    DateTime @default(now())
 
   carga      Cargas @relation(fields: [cargaId], references: [id])
-  motorista  User   @relation("CargaDespachoMotorista", fields: [motoristaId], references: [id])
   caminhao   Trucks @relation(fields: [caminhaoId], references: [id])
   fechadoPor User   @relation("CargaDespachoFechadoPor", fields: [fechadoPorId], references: [id])
 }
