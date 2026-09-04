@@ -76,17 +76,13 @@ export default function DefaultLayout({ children }: Props) {
               Expedição IBC
             </ButtonLink>
             
-            {/* <ButtonLink to="/">Início</ButtonLink>
-
-            
             <ButtonLink
               to="/users"
               allowedRoles={["ADMIN"]}
             >
               Usuários
-            </ButtonLink> */}
+            </ButtonLink>
 
-            
             <ButtonLink
               to="/os"
               // allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import DefaultLayout from "@/layout/DefaultLayout";
 import AddDptoButton from "@/features/departamentos/components/AddDptoButton";
@@ -6,6 +6,7 @@ import type { User } from "../models/usersModel";
 import { usersService } from "../services/usersService";
 import TableUsers from "../components/TableUsers";
 import { UserForm } from "../components/UserForm";
+import { UsersListFilters } from "../components/UsersListFilters";
 
 function mapUserRow(item: User): User {
   const firstLink = Array.isArray(item.departamentos) ? item.departamentos[0] : undefined;
@@ -28,11 +29,13 @@ function mapUserRow(item: User): User {
 export const UsersView = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [includeInactive, setIncludeInactive] = useState(false);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await usersService.getAll();
+      const data = await usersService.getAll({ search, includeInactive });
       setUsers(data.map(mapUserRow));
     } catch (error) {
       const message =
@@ -41,11 +44,11 @@ export const UsersView = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, includeInactive]);
 
   useEffect(() => {
     void fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
   return (
     <DefaultLayout>
@@ -57,6 +60,12 @@ export const UsersView = () => {
             <UserForm triggerLabel="Novo usuário" onSuccess={() => void fetchUsers()} />
           </div>
         </div>
+        <UsersListFilters
+          search={search}
+          includeInactive={includeInactive}
+          onSearchSubmit={setSearch}
+          onIncludeInactiveChange={setIncludeInactive}
+        />
         {loading ? (
           <div className="space-y-2 rounded-lg border border-border bg-card p-4">
             <div className="h-10 animate-pulse rounded-md bg-muted" />

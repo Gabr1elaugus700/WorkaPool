@@ -13,6 +13,8 @@ import type { User } from "../models/usersModel";
 import { usersService } from "../services/usersService";
 import EditarButton from "./EditarButton";
 import { UserForm } from "./UserForm";
+import { UsersResetPasswordDialog } from "./UsersResetPasswordDialog";
+import { UsersSetActiveButton } from "./UsersSetActiveButton";
 
 type Props = {
   users: User[];
@@ -66,6 +68,7 @@ export default function TableUsers({ users, fetchUsers }: Props) {
             <TableHead>Nome</TableHead>
             <TableHead>Login</TableHead>
             <TableHead>Acesso</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead>Dpto</TableHead>
             <TableHead>Função</TableHead>
             <TableHead>Ações</TableHead>
@@ -74,7 +77,7 @@ export default function TableUsers({ users, fetchUsers }: Props) {
         <TableBody>
           {users.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+              <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                 Nenhum usuário encontrado. Crie o primeiro cadastro administrativo.
               </TableCell>
             </TableRow>
@@ -84,10 +87,28 @@ export default function TableUsers({ users, fetchUsers }: Props) {
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.user}</TableCell>
                 <TableCell>{user.role}</TableCell>
+                <TableCell>{user.isActive === false ? "Inativo" : "Ativo"}</TableCell>
                 <TableCell>{user.departamentoNome ?? ""}</TableCell>
                 <TableCell>{user.funcao ?? ""}</TableCell>
                 <TableCell>
-                  <EditarButton userId={user.id} onEdit={handleEdit} />
+                  <div className="flex flex-wrap items-center gap-1">
+                    <EditarButton
+                      userId={user.id}
+                      userLogin={user.user}
+                      onEdit={handleEdit}
+                    />
+                    <UsersResetPasswordDialog
+                      userId={user.id}
+                      userLogin={user.user}
+                      onSuccess={fetchUsers}
+                    />
+                    <UsersSetActiveButton
+                      userId={user.id}
+                      userLogin={user.user}
+                      isActive={user.isActive !== false}
+                      onSuccess={fetchUsers}
+                    />
+                  </div>
                 </TableCell>
               </TableRow>
             ))
