@@ -279,7 +279,9 @@ export class FakeSapiens implements ICargoRepository, IPedidosRepository {
   }
 
   async validarCargaSapiens(numPed: number): Promise<boolean> {
-    return this.rows.some((row) => Number(row.NUM_PED) === numPed);
+    return this.rows.some(
+      (row) => Number(row.NUM_PED) === numPed && Number(row.CODCAR) > 0,
+    );
   }
 
   updateItemWeight(numPed: number, derivacao: string, peso: number): void {
