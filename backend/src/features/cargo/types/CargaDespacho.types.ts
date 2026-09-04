@@ -3,7 +3,6 @@ import { Role } from "@prisma/client";
 export type CargaDespachoRecord = {
   id: string;
   cargaId: string;
-  motoristaId: string;
   caminhaoId: string;
   fechadoPorId: string;
   fechadoEm: Date;
@@ -11,7 +10,6 @@ export type CargaDespachoRecord = {
 
 export type CloseCargaDespachoInput = {
   codCar: number;
-  motoristaId: string;
   caminhaoId: string;
   fechadoPorId: string;
 };

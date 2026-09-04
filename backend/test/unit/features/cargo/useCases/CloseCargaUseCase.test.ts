@@ -6,7 +6,6 @@ import { Pedido } from "../../../../../src/features/cargo/entities/Pedido";
 import { ICargoRepository } from "../../../../../src/features/cargo/repositories/ICargoRepository";
 import { PedidoService } from "../../../../../src/features/pedidos/services/PedidoService";
 import { AppError } from "../../../../../src/utils/AppError";
-import { Role } from "@prisma/client";
 
 type CloseCargaRepositoryMock = Pick<
   ICargoRepository,
@@ -14,14 +13,12 @@ type CloseCargaRepositoryMock = Pick<
   | "getPedidosPorCarga"
   | "validarCargaSapiens"
   | "closeCarga"
-  | "findUserById"
   | "findTruckById"
   | "findDespachoByCargaId"
 >;
 
 const mockPedidoService = {} as PedidoService;
 
-const MOTORISTA_ID = "motorista-1";
 const CAMINHAO_ID = "truck-1";
 const FECHADO_POR_ID = "logistica-1";
 
@@ -52,7 +49,6 @@ const buildPedido = (id: string, numPed: string): Pedido =>
 
 const despachoInput = (codCar: number) => ({
   codCar,
-  motoristaId: MOTORISTA_ID,
   caminhaoId: CAMINHAO_ID,
   fechadoPorId: FECHADO_POR_ID,
 });
@@ -72,11 +68,6 @@ const buildHappyRepository = (
     getCargaByCodCar: mock.fn(async () => carga),
     getPedidosPorCarga: mock.fn(async () => pedidos),
     validarCargaSapiens: mock.fn(async () => true),
-    findUserById: mock.fn(async (id: string) =>
-      id === MOTORISTA_ID
-        ? { id: MOTORISTA_ID, role: Role.MOTORISTA, name: "Motorista Teste" }
-        : null,
-    ),
     findTruckById: mock.fn(async (id: string) =>
       id === CAMINHAO_ID
         ? { id: CAMINHAO_ID, name: "Truck 01", plate: "ABC1D23", active: true }
@@ -89,7 +80,6 @@ const buildHappyRepository = (
       despacho: {
         id: "despacho-1",
         cargaId: carga.id,
-        motoristaId: MOTORISTA_ID,
         caminhaoId: CAMINHAO_ID,
         fechadoPorId: FECHADO_POR_ID,
         fechadoEm: new Date("2026-08-24T12:00:00.000Z"),
@@ -105,7 +95,57 @@ describe("CloseCargaUseCase", () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
   });
 
-  it("rejeita fechar carga sem motoristaId e caminhaoId; carga permanece ABERTA e sem CargaDespacho", async () => {
+  it("fecha carga com caminhão ativo e sem motoristaId; cria CargaDespacho só com truck", async () => {
+    const carga = buildCarga(808);
+    const pedidos = [buildPedido("1", "8001")];
+    const findUserById = mock.fn(async () => {
+      throw new Error("findUserById não deve ser chamado sem motorista");
+    });
+    const mockRepository = buildHappyRepository(carga, pedidos, {
+      closeCarga: mock.fn(async () => ({
+        carga: new Carga({
+          ...carga,
+          situacao: SituacaoCarga.FECHADA,
+          closedAt: new Date("2026-08-24T12:00:00.000Z"),
+        }),
+        pedidosSalvos: pedidos.length,
+        despacho: {
+          id: "despacho-1",
+          cargaId: carga.id,
+          caminhaoId: CAMINHAO_ID,
+          fechadoPorId: FECHADO_POR_ID,
+          fechadoEm: new Date("2026-08-24T12:00:00.000Z"),
+        },
+      })),
+    });
+    // Keep findUserById off the typed mock; assert via side channel if present
+    Object.assign(mockRepository, { findUserById });
+    const useCase = new CloseCargaUseCase(
+      mockRepository as ICargoRepository,
+      mockPedidoService,
+    );
+
+    const resultado = await useCase.execute({
+      codCar: 808,
+      caminhaoId: CAMINHAO_ID,
+      fechadoPorId: FECHADO_POR_ID,
+    });
+
+    assert.strictEqual(resultado.carga.situacao, SituacaoCarga.FECHADA);
+    assert.strictEqual(resultado.despacho.caminhaoId, CAMINHAO_ID);
+    assert.equal("motoristaId" in resultado.despacho, false);
+    assert.strictEqual(findUserById.mock.calls.length, 0);
+
+    const closeCall = mockRepository.closeCarga.mock.calls[0];
+    assert.ok(closeCall);
+    assert.deepStrictEqual(closeCall.arguments[0], {
+      codCar: 808,
+      caminhaoId: CAMINHAO_ID,
+      fechadoPorId: FECHADO_POR_ID,
+    });
+  });
+
+  it("rejeita fechar carga sem caminhaoId; carga permanece ABERTA e sem CargaDespacho", async () => {
     const carga = buildCarga(101);
     const pedidos = [buildPedido("1", "1001")];
     const closeCarga = mock.fn(async () => {
@@ -136,7 +176,7 @@ describe("CloseCargaUseCase", () => {
     assert.strictEqual(carga.situacao, SituacaoCarga.ABERTA);
   });
 
-  it("fecha carga com MOTORISTA e Trucks válidos e cria CargaDespacho com auditoria", async () => {
+  it("fecha carga com Trucks válido e cria CargaDespacho com auditoria", async () => {
     const carga = buildCarga(202);
     const pedidos = [buildPedido("1", "2001"), buildPedido("2", "2002")];
     const mockRepository = buildHappyRepository(carga, pedidos);
@@ -150,7 +190,6 @@ describe("CloseCargaUseCase", () => {
     assert.strictEqual(resultado.carga.situacao, SituacaoCarga.FECHADA);
     assert.strictEqual(resultado.pedidosSalvos, 2);
     assert.ok(resultado.despacho);
-    assert.strictEqual(resultado.despacho.motoristaId, MOTORISTA_ID);
     assert.strictEqual(resultado.despacho.caminhaoId, CAMINHAO_ID);
     assert.strictEqual(resultado.despacho.fechadoPorId, FECHADO_POR_ID);
     assert.ok(resultado.despacho.fechadoEm instanceof Date);
@@ -159,7 +198,6 @@ describe("CloseCargaUseCase", () => {
     assert.ok(closeCall);
     assert.deepStrictEqual(closeCall.arguments[0], {
       codCar: 202,
-      motoristaId: MOTORISTA_ID,
       caminhaoId: CAMINHAO_ID,
       fechadoPorId: FECHADO_POR_ID,
     });
@@ -176,7 +214,6 @@ describe("CloseCargaUseCase", () => {
       findDespachoByCargaId: mock.fn(async () => ({
         id: "despacho-existente",
         cargaId: carga.id,
-        motoristaId: MOTORISTA_ID,
         caminhaoId: CAMINHAO_ID,
         fechadoPorId: FECHADO_POR_ID,
         fechadoEm: new Date("2026-08-20T10:00:00.000Z"),
@@ -193,38 +230,6 @@ describe("CloseCargaUseCase", () => {
         assert.ok(error instanceof AppError);
         assert.strictEqual(error.statusCode, 409);
         assert.strictEqual(error.code, "CARGO_JA_FECHADA");
-        return true;
-      },
-    );
-
-    assert.strictEqual(closeCarga.mock.calls.length, 0);
-  });
-
-  it("rejeita motorista inexistente ou sem role MOTORISTA", async () => {
-    const carga = buildCarga(505);
-    const pedidos = [buildPedido("1", "5001")];
-    const closeCarga = mock.fn(async () => {
-      throw new Error("closeCarga não deve ser chamado");
-    });
-    const mockRepository = buildHappyRepository(carga, pedidos, {
-      closeCarga,
-      findUserById: mock.fn(async () => ({
-        id: MOTORISTA_ID,
-        role: Role.LOGISTICA,
-        name: "Não motorista",
-      })),
-    });
-    const useCase = new CloseCargaUseCase(
-      mockRepository as ICargoRepository,
-      mockPedidoService,
-    );
-
-    await assert.rejects(
-      async () => useCase.execute(despachoInput(505)),
-      (error: unknown) => {
-        assert.ok(error instanceof AppError);
-        assert.strictEqual(error.statusCode, 400);
-        assert.strictEqual(error.code, "CARGO_MOTORISTA_INVALIDO");
         return true;
       },
     );

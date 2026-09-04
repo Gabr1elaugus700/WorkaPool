@@ -1,4 +1,3 @@
-import { Role } from "@prisma/client";
 import { Carga, SituacaoCarga } from "../entities/Carga";
 import { ICargoRepository } from "../repositories/ICargoRepository";
 import { PedidoService } from "../../pedidos/services/PedidoService";
@@ -11,7 +10,6 @@ import {
 
 export type CloseCargaInput = {
   codCar: number;
-  motoristaId?: string | null;
   caminhaoId?: string | null;
   fechadoPorId: string;
 };
@@ -45,7 +43,7 @@ export class CloseCargaUseCase {
   }
 
   async execute(input: CloseCargaInput): Promise<CloseCargaResult> {
-    const { codCar, motoristaId, caminhaoId, fechadoPorId } = input;
+    const { codCar, caminhaoId, fechadoPorId } = input;
 
     if (codCar == null) {
       throw new AppError({
@@ -65,12 +63,12 @@ export class CloseCargaUseCase {
       });
     }
 
-    if (!motoristaId || !caminhaoId) {
+    if (!caminhaoId) {
       throw new AppError({
-        message: "Motorista e caminhão são obrigatórios para fechar a carga",
+        message: "Caminhão é obrigatório para fechar a carga",
         statusCode: 400,
         code: "CARGO_DESPACHO_REQUIRED",
-        details: { codCar, motoristaId, caminhaoId },
+        details: { codCar, caminhaoId },
       });
     }
 
@@ -133,16 +131,6 @@ export class CloseCargaUseCase {
       });
     }
 
-    const motorista = await this.cargoRepository.findUserById(motoristaId);
-    if (!motorista || motorista.role !== Role.MOTORISTA) {
-      throw new AppError({
-        message: "Motorista inválido: informe um usuário com role MOTORISTA",
-        statusCode: 400,
-        code: "CARGO_MOTORISTA_INVALIDO",
-        details: { motoristaId },
-      });
-    }
-
     const caminhao = await this.cargoRepository.findTruckById(caminhaoId);
     if (!caminhao) {
       throw new AppError({
@@ -164,7 +152,6 @@ export class CloseCargaUseCase {
 
     const despachoInput: CloseCargaDespachoInput = {
       codCar,
-      motoristaId,
       caminhaoId,
       fechadoPorId,
     };

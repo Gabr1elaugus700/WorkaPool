@@ -51,7 +51,6 @@ model User {
   inspections          Inspection[]
   overviewCustomerObservations OverviewCustomerObservation[]
 
-  cargasDespachoComoMotorista CargaDespacho[] @relation("CargaDespachoMotorista")
   cargasDespachoFechadasPor   CargaDespacho[] @relation("CargaDespachoFechadoPor")
 
   @@index([role])
@@ -97,13 +96,11 @@ model Cargas {
 model CargaDespacho {
   id           String   @id @default(uuid())
   cargaId      String   @unique
-  motoristaId  String
   caminhaoId   String
   fechadoPorId String
   fechadoEm    DateTime @default(now())
 
   carga      Cargas @relation(fields: [cargaId], references: [id])
-  motorista  User   @relation("CargaDespachoMotorista", fields: [motoristaId], references: [id])
   caminhao   Trucks @relation(fields: [caminhaoId], references: [id])
   fechadoPor User   @relation("CargaDespachoFechadoPor", fields: [fechadoPorId], references: [id])
 }
