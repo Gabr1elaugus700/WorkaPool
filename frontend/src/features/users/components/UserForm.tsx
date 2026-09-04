@@ -16,19 +16,9 @@ import { departamentosService } from "@/features/departamentos/services/departam
 import type { Departamento } from "@/features/departamentos/models/departamentosModel";
 import type { User } from "../models/usersModel";
 import { usersService } from "../services/usersService";
-import { USER_ROLES, type UserRole } from "../types/user.types";
+import { USER_ROLE_LABELS, USER_ROLES, type UserRole } from "../types/user.types";
 
 const ROLES_REQUIRING_DEPARTMENT: UserRole[] = ["GERENTE_DPTO", "ALMOX"];
-
-const roleLabels: Record<UserRole, string> = {
-  ADMIN: "Admin",
-  USER: "Usuário",
-  VENDAS: "Vendas",
-  LOGISTICA: "Logística",
-  ALMOX: "Almoxarifado",
-  GERENTE_DPTO: "Gerente de departamento",
-  MOTORISTA: "Motorista",
-};
 
 const userFormSchema = z
   .object({
@@ -168,7 +158,7 @@ export function UserForm({
             type: "select",
             options: USER_ROLES.map((role) => ({
               value: role,
-              label: roleLabels[role],
+              label: USER_ROLE_LABELS[role],
             })),
           },
           {
