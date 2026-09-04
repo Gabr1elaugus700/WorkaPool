@@ -32,3 +32,13 @@ export type UserDepartmentLinkInput = {
   departamentoId: string;
   funcao: UserDepartmentFuncao;
 };
+
+export type ListUsersQuery = {
+  search?: string;
+  includeInactive?: boolean;
+};
+
+export type ResetUserPasswordInput = {
+  password: string;
+  mustChangePassword?: boolean;
+};

@@ -2,6 +2,8 @@ import { PrismaClient } from "@prisma/client";
 import { IUserRepository } from "./IUserRepository";
 import {
   CreateUserPersistInput,
+  ListUserRecord,
+  ListUsersFilter,
   UpdateUserPersistInput,
   UserPublicRecord,
 } from "../types/User.types";
@@ -55,6 +57,42 @@ export class PrismaUserRepository implements IUserRepository {
     });
 
     return user ? toUserPublicRecord(user) : null;
+  }
+
+  async list(filter?: ListUsersFilter): Promise<ListUserRecord[]> {
+    const search = filter?.search?.trim();
+    const users = await prisma.user.findMany({
+      where: {
+        ...(filter?.includeInactive ? {} : { isActive: true }),
+        ...(search
+          ? {
+              OR: [
+                { name: { contains: search, mode: "insensitive" as const } },
+                { user: { contains: search, mode: "insensitive" as const } },
+              ],
+            }
+          : {}),
+      },
+      select: {
+        ...userPublicSelect,
+        createdAt: true,
+        departamentos: {
+          include: {
+            departamento: { select: { id: true, name: true } },
+          },
+        },
+      },
+      orderBy: { name: "asc" },
+    });
+
+    return users.map((user) => ({
+      ...toUserPublicRecord(user),
+      createdAt: user.createdAt,
+      departamentos: user.departamentos.map((link) => ({
+        funcao: link.funcao,
+        departamento: link.departamento,
+      })),
+    }));
   }
 
   async create(input: CreateUserPersistInput): Promise<UserPublicRecord> {

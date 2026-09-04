@@ -55,7 +55,9 @@ export const findAllUsersQuerySchema = z.object({
     codRep: z.number().int().positive().optional(),
     mustChangePassword: z.boolean().optional(),
     page: z.coerce.number().int().positive().optional(),
-    pageSize: z.coerce.number().int().positive().max(100).optional()
+    pageSize: z.coerce.number().int().positive().max(100).optional(),
+    includeInactive: z.enum(["true", "false"]).optional(),
+    search: z.string().optional(),
   })
 });
 

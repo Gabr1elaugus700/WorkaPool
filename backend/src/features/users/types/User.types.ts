@@ -55,3 +55,18 @@ export type SetUserActiveInput = {
   targetUserId: string;
   isActive: boolean;
 };
+
+export type ListUsersFilter = {
+  search?: string;
+  includeInactive?: boolean;
+};
+
+export type ListUserDepartmentLink = {
+  funcao: string;
+  departamento: { id: string; name: string };
+};
+
+export type ListUserRecord = UserPublicRecord & {
+  createdAt: Date;
+  departamentos: ListUserDepartmentLink[];
+};
