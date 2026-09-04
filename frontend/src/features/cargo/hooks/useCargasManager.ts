@@ -211,8 +211,8 @@ export function useCargasManager(
             return;
           }
 
-          if (!despacho?.motoristaId || !despacho?.caminhaoId) {
-            toast.error("Selecione motorista e caminhão para fechar a carga");
+          if (!despacho?.caminhaoId) {
+            toast.error("Selecione o caminhão para fechar a carga");
             return;
           }
 

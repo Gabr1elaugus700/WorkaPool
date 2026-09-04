@@ -11,7 +11,6 @@ import { UpdateCargaUseCase } from "../../useCases/UpdateCarga.use-case";
 import { GetPedidosCargaUseCase } from "../../useCases/GetPedidosCarga.use-case";
 import { CloseCargaUseCase } from "../../useCases/CloseCarga.use-case";
 import { GetCargasFechadasUseCase } from "../../useCases/GetCargasFechadas.use-case";
-import { ListMotoristasDespachoUseCase } from "../../useCases/ListMotoristasDespacho.use-case";
 import { ListTrucksDespachoUseCase } from "../../useCases/ListTrucksDespacho.use-case";
 import { AppError } from "../../../../utils/AppError";
 
@@ -119,27 +118,6 @@ export class CargoController {
       }
       const message =
         err instanceof Error ? err.message : "Erro interno ao fechar carga";
-      return res
-        .status(500)
-        .json({ error: message, code: "INTERNAL_ERROR" });
-    }
-  }
-
-  static async listMotoristas(_req: Request, res: Response): Promise<Response> {
-    try {
-      const useCase = new ListMotoristasDespachoUseCase();
-      const motoristas = await useCase.execute();
-      return res.status(200).json(motoristas);
-    } catch (err: unknown) {
-      if (err instanceof AppError) {
-        return res.status(err.statusCode).json({
-          error: err.message,
-          code: err.code,
-          details: err.details,
-        });
-      }
-      const message =
-        err instanceof Error ? err.message : "Erro interno ao listar motoristas";
       return res
         .status(500)
         .json({ error: message, code: "INTERNAL_ERROR" });

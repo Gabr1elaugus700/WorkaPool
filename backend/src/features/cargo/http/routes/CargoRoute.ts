@@ -19,7 +19,6 @@ const cargoCloseRoles: Role[] = [Role.ADMIN, Role.LOGISTICA, Role.GERENTE_DPTO];
 
 router.post("/", authMiddleware, requireRoles(cargoWriteRoles), CargoController.createCarga);
 router.post("/close-carga", authMiddleware, requireRoles(cargoCloseRoles), CargoController.closeCarga);
-router.get("/motoristas", authMiddleware, requireRoles(cargoWriteRoles), CargoController.listMotoristas);
 router.get("/trucks", authMiddleware, requireRoles(cargoWriteRoles), CargoController.listTrucks);
 
 router.patch("/:codCar/situacao", authMiddleware, requireRoles(cargoWriteRoles), CargoController.updateSituacao);

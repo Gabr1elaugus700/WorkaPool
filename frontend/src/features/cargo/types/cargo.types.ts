@@ -82,7 +82,6 @@ export enum CargaSituacao {
 
 /** Payload de CargaDespacho ao fechar carga */
 export type CargaDespachoCloseInput = {
-  motoristaId: string;
   caminhaoId: string;
 };
 

@@ -153,33 +153,14 @@ describe("Fleet registration integration (#84)", () => {
     assert.equal(persisted.name, "João Motorista");
   });
 
-  it("GET /api/cargo/motoristas includes a MOTORISTA created by ADMIN", async () => {
+  it("GET /api/cargo/motoristas is removed (404)", async () => {
     const app = createFleetTestApp();
-    const adminToken = createRoleToken(Role.ADMIN);
     const logisticaToken = createRoleToken(Role.LOGISTICA);
-    const username = `${FLEET_FIXTURE_PREFIX}listed`;
-
-    const registerResponse = await request(app)
-      .post("/api/users")
-      .set("Authorization", `Bearer ${adminToken}`)
-      .send({
-        user: username,
-        password: "senha123",
-        role: "MOTORISTA",
-        name: "Maria Motorista",
-      });
-    assert.equal(registerResponse.status, 201);
 
     const response = await request(app)
       .get("/api/cargo/motoristas")
       .set("Authorization", `Bearer ${logisticaToken}`);
 
-    assert.equal(response.status, 200);
-    const motorista = response.body.find(
-      (user: { id: string }) => user.id === registerResponse.body.id,
-    );
-    assert.ok(motorista);
-    assert.equal(motorista.name, "Maria Motorista");
-    assert.equal(motorista.role, "MOTORISTA");
+    assert.equal(response.status, 404);
   });
 });

@@ -42,7 +42,6 @@ export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) 
     ...carga,
     previsaoSaida: new Date(carga.previsaoSaida).toISOString().slice(0, 10),
   });
-  const [motoristaId, setMotoristaId] = useState("");
   const [caminhaoId, setCaminhaoId] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,7 +55,6 @@ export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) 
   const handleSituacaoChange = (value: CargaSituacao) => {
     setForm((prev) => ({ ...prev, situacao: value }));
     if (value !== CargaSituacao.FECHADA) {
-      setMotoristaId("");
       setCaminhaoId("");
     }
   };
@@ -78,8 +76,8 @@ export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) 
           return;
         }
 
-        if (!motoristaId || !caminhaoId) {
-          toast.error("Selecione motorista e caminhão para fechar a carga");
+        if (!caminhaoId) {
+          toast.error("Selecione o caminhão para fechar a carga");
           return;
         }
 
@@ -87,7 +85,6 @@ export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) 
 
         if (onChangeSituacao) {
           onChangeSituacao(carga.id, novaSituacao, {
-            motoristaId,
             caminhaoId,
           });
         }
@@ -176,9 +173,7 @@ export function EditarCargaModal({ carga, onUpdated, onChangeSituacao }: Props) 
 
           {precisaDespacho ? (
             <FecharCargaDespachoFields
-              motoristaId={motoristaId}
               caminhaoId={caminhaoId}
-              onMotoristaChange={setMotoristaId}
               onCaminhaoChange={setCaminhaoId}
             />
           ) : null}
