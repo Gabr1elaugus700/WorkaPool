@@ -16,6 +16,7 @@ enum Role {
   LOGISTICA
   ALMOX
   GERENTE_DPTO // Novo role para gerentes de departamento
+  MOTORISTA
 }
 
 enum FuncaoDepartamento {
@@ -32,6 +33,7 @@ model User {
   createdAt          DateTime @default(now())
   codRep             Int      @default(0)
   mustChangePassword Boolean  @default(true)
+  isActive           Boolean  @default(true)
 
   orders Order[]
 

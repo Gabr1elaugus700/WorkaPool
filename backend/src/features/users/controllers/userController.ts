@@ -1,18 +1,33 @@
 import { Request, Response } from "express";
+import { Role } from "@prisma/client";
+import { AppError } from "../../../utils/AppError";
 import { userService } from "../services/userService";
+import { CreateUserUseCase } from "../useCases/CreateUserUseCase";
+import { UpdateUserUseCase } from "../useCases/UpdateUserUseCase";
+import { AdminResetPasswordUseCase } from "../useCases/AdminResetPasswordUseCase";
+import { SetUserActiveUseCase } from "../useCases/SetUserActiveUseCase";
+import { ListUsersUseCase } from "../useCases/ListUsersUseCase";
+
+function handleAppError(err: unknown, res: Response, fallbackStatus = 500): Response {
+  if (err instanceof AppError) {
+    return res.status(err.statusCode).json({
+      error: err.message,
+      code: err.code,
+      details: err.details,
+    });
+  }
+
+  const message = err instanceof Error ? err.message : "Erro interno";
+  return res.status(fallbackStatus).json({ error: message });
+}
 
 export const authController = {
-  register: async (req: Request, res: Response) => {
-    const { user, password, role, name, codRep } = req.body;
-
-    try {
-      const createdUser = await userService.register(user, password, role, name, codRep);
-      res.status(201).json(createdUser);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
-    }
+  register: async (_req: Request, res: Response) => {
+    return res.status(403).json({
+      error: "Cadastro público desabilitado. Solicite criação de conta ao administrador.",
+      code: "REGISTER_DISABLED",
+    });
   },
-
   login: async (req: Request, res: Response) => {
     const { user, password } = req.body;
 
@@ -36,13 +51,36 @@ export const authController = {
 };
 
 export const userController = {
-  // CRUD básico de usuários
-  findAll: async (_req: Request, res: Response) => {
+  create: async (req: Request, res: Response) => {
+    const { user, password, role, name, codRep, departamentoId } = req.body;
+
     try {
-      const users = await userService.findAll();
+      const useCase = new CreateUserUseCase();
+      const createdUser = await useCase.execute({
+        user,
+        password,
+        role: role as Role,
+        name,
+        codRep,
+        departamentoId,
+      });
+      res.status(201).json(createdUser);
+    } catch (err: unknown) {
+      return handleAppError(err, res, 400);
+    }
+  },
+
+  // CRUD básico de usuários
+  findAll: async (req: Request, res: Response) => {
+    try {
+      const includeInactive = req.query.includeInactive === "true";
+      const search = typeof req.query.search === "string" ? req.query.search : undefined;
+      const useCase = new ListUsersUseCase();
+      const users = await useCase.execute({ includeInactive, search });
       res.json(users);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro interno";
+      res.status(500).json({ error: message });
     }
   },
 
@@ -57,13 +95,24 @@ export const userController = {
   },
 
   update: async (req: Request, res: Response) => {
-    console.log("Request body received in update:", req.body);
     try {
       const id = String(req.params.id);
-      const updatedUser = await userService.update(id, req.body);
+      const actorUserId = req.user?.id;
+      if (!actorUserId) {
+        return res.status(401).json({ error: "Usuário não autenticado" });
+      }
+
+      const useCase = new UpdateUserUseCase();
+      const updatedUser = await useCase.execute({
+        targetUserId: id,
+        actorUserId,
+        name: req.body.name,
+        role: req.body.role,
+        codRep: req.body.codRep,
+      });
       res.json(updatedUser);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
+    } catch (err: unknown) {
+      return handleAppError(err, res, 400);
     }
   },
 
@@ -87,5 +136,50 @@ export const userController = {
     } catch (err: any) {
       res.status(400).json({ error: err.message });
     }
-  }
+  },
+
+  resetPassword: async (req: Request, res: Response) => {
+    try {
+      const id = String(req.params.id);
+      const { password, mustChangePassword } = req.body;
+
+      const useCase = new AdminResetPasswordUseCase();
+      const updatedUser = await useCase.execute({
+        targetUserId: id,
+        newPassword: password,
+        mustChangePassword,
+      });
+      res.json(updatedUser);
+    } catch (err: unknown) {
+      return handleAppError(err, res, 400);
+    }
+  },
+
+  deactivate: async (req: Request, res: Response) => {
+    try {
+      const id = String(req.params.id);
+      const useCase = new SetUserActiveUseCase();
+      const updatedUser = await useCase.execute({
+        targetUserId: id,
+        isActive: false,
+      });
+      res.json(updatedUser);
+    } catch (err: unknown) {
+      return handleAppError(err, res, 400);
+    }
+  },
+
+  reactivate: async (req: Request, res: Response) => {
+    try {
+      const id = String(req.params.id);
+      const useCase = new SetUserActiveUseCase();
+      const updatedUser = await useCase.execute({
+        targetUserId: id,
+        isActive: true,
+      });
+      res.json(updatedUser);
+    } catch (err: unknown) {
+      return handleAppError(err, res, 400);
+    }
+  },
 };

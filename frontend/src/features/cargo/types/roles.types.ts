@@ -8,4 +8,5 @@ export type UserRole =
   | "LOGISTICA" 
   | "ALMOX" 
   | "GERENTE_DPTO" 
+  | "MOTORISTA"
   | "USER";

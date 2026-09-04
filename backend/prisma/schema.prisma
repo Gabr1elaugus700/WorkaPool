@@ -17,6 +17,7 @@ model User {
   createdAt            DateTime              @default(now())
   codRep               Int                   @default(0)
   mustChangePassword   Boolean               @default(true)
+  isActive             Boolean               @default(true)
   inspections          Inspection[]
   ordensAtribuidasPor  OrdemServico[]        @relation("OSAtribuidaPor")
   ordensAtribuidas     OrdemServico[]        @relation("OSAtribuida")
@@ -431,6 +432,7 @@ enum Role {
   LOGISTICA
   ALMOX
   GERENTE_DPTO
+  MOTORISTA
 }
 
 enum FuncaoDepartamento {

@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { roleSchema } from "./userSchemas";
 
 // Schemas para autenticação
 export const registerSchema = z.object({
   body: z.object({
     user: z.string().min(3, "Usuário deve ter pelo menos 3 caracteres"),
     password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
-    role: z.enum(["ADMIN", "USER", "VENDAS", "LOGISTICA", "ALMOX", "GERENTE_DPTO"]).optional(),
+    role: roleSchema.optional(),
     name: z.string().min(1, "Nome é obrigatório").optional(),
     codRep: z.number().int().positive().optional()
   })
@@ -32,7 +33,7 @@ export const updateUserSchema = z.object({
   }),
   body: z.object({
     name: z.string().min(1).optional(),
-    role: z.enum(["ADMIN", "USER", "VENDAS", "LOGISTICA", "ALMOX", "GERENTE_DPTO"]).optional(),
+    role: roleSchema.optional(),
     codRep: z.number().int().positive().optional(),
     mustChangePassword: z.boolean().optional()
   })
