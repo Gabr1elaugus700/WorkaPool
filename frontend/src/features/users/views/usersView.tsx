@@ -67,7 +67,9 @@ export const UsersView = () => {
           onIncludeInactiveChange={setIncludeInactive}
         />
         {loading ? (
-          <div className="space-y-2 rounded-lg border border-border bg-card p-4">
+          <div className="space-y-2 rounded-lg border border-border bg-card p-4 shadow-sm">
+            <div className="h-10 animate-pulse rounded-md bg-muted" />
+            <div className="h-10 animate-pulse rounded-md bg-muted" />
             <div className="h-10 animate-pulse rounded-md bg-muted" />
             <div className="h-10 animate-pulse rounded-md bg-muted" />
             <div className="h-10 animate-pulse rounded-md bg-muted" />
