@@ -7,10 +7,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { User } from "../models/usersModel";
 import { usersService } from "../services/usersService";
+import { formatUserRoleLabel } from "../types/user.types";
 import EditarButton from "./EditarButton";
 import { UserForm } from "./UserForm";
 import { UsersResetPasswordDialog } from "./UsersResetPasswordDialog";
@@ -86,8 +88,17 @@ export default function TableUsers({ users, fetchUsers }: Props) {
               <TableRow key={user.id}>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.user}</TableCell>
-                <TableCell>{user.role}</TableCell>
-                <TableCell>{user.isActive === false ? "Inativo" : "Ativo"}</TableCell>
+                <TableCell>
+                  <Badge variant="outline">{formatUserRoleLabel(user.role)}</Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={user.isActive === false ? "secondary" : "default"}
+                    className={user.isActive === false ? undefined : "bg-primary/90"}
+                  >
+                    {user.isActive === false ? "Inativo" : "Ativo"}
+                  </Badge>
+                </TableCell>
                 <TableCell>{user.departamentoNome ?? ""}</TableCell>
                 <TableCell>{user.funcao ?? ""}</TableCell>
                 <TableCell>
