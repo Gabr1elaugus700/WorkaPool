@@ -24,21 +24,21 @@ Grill concluído. Issue: [#36](https://github.com/Gabr1elaugus700/WorkaPool/issu
 
 | Papel | Ação neste intervalo |
 |-------|----------------------|
-| **LOGISTICA** | Fecha a Carga (`FECHADA`) com **`CargaDespacho`** obrigatório |
+| **LOGISTICA** | Fecha a Carga (`FECHADA`) com **`CargaDespacho`** obrigatório (caminhão) |
 | **ALMOX** | Prepara vínculos IBC↔Pedido; **Fechar expedição** (`ExpedicaoIbc`) |
-| **MOTORISTA** | Vinculado no fechamento da carga (User role `MOTORISTA`) |
+| **MOTORISTA** | Role permanece no Identity; **v1 sem gate no fechar carga** e sem UI de custódia IBC (grill set/2026) |
 
 ### Entidades
 
 | Entidade | Propósito |
 |----------|-----------|
-| **`CargaDespacho`** | Tabela intermediária: carga + motorista + caminhão (`Trucks`) + auditoria. 1:1 por carga. `Caminhao` (fretes) é **depreciado** — usar `Trucks`. |
+| **`CargaDespacho`** | Tabela intermediária: carga + caminhão (`Trucks`) + auditoria; `motoristaId` **opcional na v1**. 1:1 por carga. `Caminhao` (fretes) é **depreciado** — usar `Trucks`. Alinhamento de código: [#89](https://github.com/Gabr1elaugus700/WorkaPool/issues/89). |
 | **`AlocacaoIbc`** | Vínculo IBC ↔ **Pedido** (`numPed`) dentro de uma carga. **Não** vínculo por item de pedido. |
 | **`ExpedicaoIbc`** | Registro do fechamento da expedição; IBCs alocados passam a **Em viagem**; alocações ficam imutáveis. |
 
 ### Regras de negócio
 
-1. **Fechar carga** exige motorista + caminhão; sem `CargaDespacho` → rejeita.
+1. **Fechar carga** exige caminhão ativo (`Trucks`); sem `CargaDespacho` → rejeita. **v1:** `User` MOTORISTA **não** é obrigatório (decisão triage 2026-09-04 / epic #31 set/2026; implementação: #89). Código legado ainda pode exigir motorista até #89.
 2. **Preparação** pode começar em carga `ABERTA` (progresso parcial visível, ex. "2/3 IBCs").
 3. **Fechar expedição** só quando carga `FECHADA` + cada pedido com IBC tem qtd vinculada = qtd esperada.
 4. **Qtd esperada por pedido** = soma no backend de `QUANTIDADE_PEDIDO / VOLUME_EMBALAGEM` nas linhas com `CODIGO_EMBALAGEM = 251001`. Expor também split `quantidadeEsperadaVenda` (INCLUSO=S) e `quantidadeEsperadaEmprestimo` (resto). Alocação / Fechar expedição usam o **total** nesta fatia.
@@ -48,7 +48,7 @@ Grill concluído. Issue: [#36](https://github.com/Gabr1elaugus700/WorkaPool/issu
 8. **Desvincular** permitido antes de `ExpedicaoIbc`; após fechamento, imutável.
 9. **Desktop**: digitação manual do código; **web**: scan QR.
 10. **v1: sem reabrir carga** — alocações não revertem por reabertura.
-11. Atribuição física container→cliente **não** acontece na preparação (mesmo que o sistema registre por pedido para controle de qtd); motorista confirma na descarga (#37).
+11. Atribuição física container→cliente **não** acontece na preparação; na viagem v1 o motorista preenche o **Relatório de Viagem PDF** (#37), sem login — conciliação na volta é #38.
 12. **Pedido IBC inválido** (volume ≤ 0 ou divisão não inteira em linha 251001): bloqueia IBC naquele Pedido + **alerta ao ALMOX**; demais Pedidos da Carga seguem.
 13. **INCLUSO**: só em 251001; `"S"` → Venda; qualquer outro → Empréstimo. Troca **não** é modalidade de saída.
 
@@ -91,6 +91,6 @@ Desenvolvimento **vertical por capacidade** (API + UI da fatia), não o ciclo in
 - Inclui extensão do módulo **Cargo** (`CargaDespacho` no `closeCarga`)
 - Cadastro operacional de caminhões: [Frota spec](../frota/spec.md) (`Trucks`, `/api/trucks`, tela `/frota`, regra `active`)
 
-**Fora destas camadas**: custódia motorista (#37), entrada/troca (#38), aviso representante (#39), ficha QR (#40), empréstimos atrasados (#41)
+**Fora destas camadas**: Relatório de Viagem PDF (#37), Fechar Viagem/entrada/troca (#38), aviso representante (#39), ficha QR (#40 descontinuada), empréstimos atrasados (#41). Alinhamento motorista opcional no close: [#89](https://github.com/Gabr1elaugus700/WorkaPool/issues/89).
 
 Perguntas estacionadas até camada de viagem: aviso em Venda, scan fora da carga, reabrir carga.
