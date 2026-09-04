@@ -80,7 +80,7 @@ export function UsersResetPasswordDialog({ userId, userLogin, onSuccess }: Props
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" aria-label={`Redefinir senha de ${userLogin}`}>
-          <KeyRound className="h-4 w-4" />
+          <KeyRound className="h-4 w-4" aria-hidden />
           Redefinir senha
         </Button>
       </DialogTrigger>

@@ -25,6 +25,7 @@ type Props = {
 export function UsersSetActiveButton({ userId, userLogin, isActive, onSuccess }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const actionLabel = isActive ? "Inativar" : "Reativar";
+  const submittingLabel = isActive ? "Inativando…" : "Reativando…";
 
   const handleConfirm = async () => {
     setSubmitting(true);
@@ -39,7 +40,9 @@ export function UsersSetActiveButton({ userId, userLogin, isActive, onSuccess }:
       onSuccess();
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : `Erro ao ${actionLabel.toLowerCase()} usuário`;
+        error instanceof Error
+          ? error.message
+          : `Erro ao ${actionLabel.toLowerCase()} usuário. Tente novamente.`;
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -55,22 +58,24 @@ export function UsersSetActiveButton({ userId, userLogin, isActive, onSuccess }:
           disabled={submitting}
           aria-label={`${actionLabel} ${userLogin}`}
         >
-          {isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+          {isActive ? <UserX className="h-4 w-4" aria-hidden /> : <UserCheck className="h-4 w-4" aria-hidden />}
           {actionLabel}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{isActive ? "Inativar usuário?" : "Reativar usuário?"}</AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogDescription className="break-words">
             {isActive
               ? `${userLogin} não poderá entrar no WorkaPool enquanto estiver inativo.`
               : `${userLogin} voltará a poder entrar no WorkaPool.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={() => void handleConfirm()}>{actionLabel}</AlertDialogAction>
+          <AlertDialogCancel disabled={submitting}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction disabled={submitting} onClick={() => void handleConfirm()}>
+            {submitting ? submittingLabel : actionLabel}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

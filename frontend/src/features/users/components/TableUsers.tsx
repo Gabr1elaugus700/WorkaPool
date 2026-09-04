@@ -1,7 +1,6 @@
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -12,7 +11,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { User } from "../models/usersModel";
 import { usersService } from "../services/usersService";
-import { formatUserRoleLabel } from "../types/user.types";
+import { formatUserFuncaoLabel, formatUserRoleLabel } from "../types/user.types";
 import EditarButton from "./EditarButton";
 import { UserForm } from "./UserForm";
 import { UsersResetPasswordDialog } from "./UsersResetPasswordDialog";
@@ -63,69 +62,76 @@ export default function TableUsers({ users, fetchUsers }: Props) {
         }}
         onSuccess={fetchUsers}
       />
-      <Table>
-        <TableCaption>Lista de usuários</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>Login</TableHead>
-            <TableHead>Acesso</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Dpto</TableHead>
-            <TableHead>Função</TableHead>
-            <TableHead>Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.length === 0 ? (
+      <div className="w-full overflow-x-auto">
+        <Table className="text-sm">
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                Nenhum usuário encontrado. Crie o primeiro cadastro administrativo.
-              </TableCell>
+              <TableHead>Nome</TableHead>
+              <TableHead>Login</TableHead>
+              <TableHead>Acesso</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Departamento</TableHead>
+              <TableHead>Função</TableHead>
+              <TableHead>Ações</TableHead>
             </TableRow>
-          ) : (
-            users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{user.name}</TableCell>
-                <TableCell>{user.user}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">{formatUserRoleLabel(user.role)}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={user.isActive === false ? "secondary" : "default"}
-                    className={user.isActive === false ? undefined : "bg-primary/90"}
-                  >
-                    {user.isActive === false ? "Inativo" : "Ativo"}
-                  </Badge>
-                </TableCell>
-                <TableCell>{user.departamentoNome ?? ""}</TableCell>
-                <TableCell>{user.funcao ?? ""}</TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap items-center gap-1">
-                    <EditarButton
-                      userId={user.id}
-                      userLogin={user.user}
-                      onEdit={handleEdit}
-                    />
-                    <UsersResetPasswordDialog
-                      userId={user.id}
-                      userLogin={user.user}
-                      onSuccess={fetchUsers}
-                    />
-                    <UsersSetActiveButton
-                      userId={user.id}
-                      userLogin={user.user}
-                      isActive={user.isActive !== false}
-                      onSuccess={fetchUsers}
-                    />
-                  </div>
+          </TableHeader>
+          <TableBody>
+            {users.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                  Nenhum usuário encontrado. Crie o primeiro cadastro administrativo.
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ) : (
+              users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="max-w-[12rem] truncate font-medium" title={user.name}>
+                    {user.name}
+                  </TableCell>
+                  <TableCell className="max-w-[10rem] truncate" title={user.user}>
+                    {user.user}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{formatUserRoleLabel(user.role)}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={user.isActive === false ? "secondary" : "default"}
+                      className={user.isActive === false ? undefined : "bg-primary/90 text-black"}
+                    >
+                      {user.isActive === false ? "Inativo" : "Ativo"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="max-w-[10rem] truncate" title={user.departamentoNome}>
+                    {user.departamentoNome?.trim() ? user.departamentoNome : "—"}
+                  </TableCell>
+                  <TableCell>{formatUserFuncaoLabel(user.funcao)}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <EditarButton
+                        userId={user.id}
+                        userLogin={user.user}
+                        onEdit={handleEdit}
+                      />
+                      <UsersResetPasswordDialog
+                        userId={user.id}
+                        userLogin={user.user}
+                        onSuccess={fetchUsers}
+                      />
+                      <UsersSetActiveButton
+                        userId={user.id}
+                        userLogin={user.user}
+                        isActive={user.isActive !== false}
+                        onSuccess={fetchUsers}
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
