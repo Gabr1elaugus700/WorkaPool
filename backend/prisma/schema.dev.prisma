@@ -147,13 +147,33 @@ enum IbcCustodia {
   EM_VIAGEM
 }
 
+enum IbcTipoCadastro {
+  NOVO
+  TROCA
+}
+
+enum IbcAquisicao {
+  COMPRA
+  TROCA
+}
+
+enum IbcMotivoInaptidao {
+  AGUARDANDO_INSPECAO
+  DATA_LIMITE
+}
+
 model Ibc {
-  id            String      @id @default(uuid())
-  identificador String      @unique
-  aptidao       IbcAptidao
-  custodia      IbcCustodia @default(PATIO)
-  createdAt     DateTime    @default(now())
-  alocacao      AlocacaoIbc?
+  id               String              @id @default(uuid())
+  identificador    String              @unique
+  aptidao          IbcAptidao
+  custodia         IbcCustodia         @default(PATIO)
+  tipoCadastro     IbcTipoCadastro     @default(NOVO)
+  aquisicao        IbcAquisicao        @default(COMPRA)
+  motivoInaptidao  IbcMotivoInaptidao?
+  dataLimite       DateTime?
+  baixadoEm        DateTime?
+  createdAt        DateTime            @default(now())
+  alocacao         AlocacaoIbc?
 }
 
 model AlocacaoIbc {
