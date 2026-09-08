@@ -82,6 +82,46 @@ test("IBC Routes - autenticação e autorização", async (t) => {
   );
 
   await t.test(
+    "DELETE /alocacoes/:id sem token deve retornar 401",
+    async () => {
+      const response = await request(app).delete(
+        "/api/ibc/alocacoes/aloc-1",
+      );
+      assert.strictEqual(response.status, 401);
+    },
+  );
+
+  await t.test(
+    "POST /alocacoes com ALMOX autenticado passa requireRoles (não 403)",
+    async () => {
+      const token = createToken("ALMOX");
+      const response = await request(app)
+        .post("/api/ibc/alocacoes")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          codCar: 1,
+          numPed: "1120",
+          identificador: "H0045",
+        });
+      assert.notStrictEqual(response.status, 401);
+      assert.notStrictEqual(response.status, 403);
+    },
+  );
+
+  await t.test(
+    "POST /expedicoes com ALMOX autenticado passa requireRoles (não 403)",
+    async () => {
+      const token = createToken("ALMOX");
+      const response = await request(app)
+        .post("/api/ibc/expedicoes")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ codCar: 1 });
+      assert.notStrictEqual(response.status, 401);
+      assert.notStrictEqual(response.status, 403);
+    },
+  );
+
+  await t.test(
     "GET /cargas-expedicao/:codCar com codCar inválido deve retornar 400",
     async () => {
       const token = createToken("ALMOX");

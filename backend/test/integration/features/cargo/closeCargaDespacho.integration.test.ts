@@ -60,7 +60,7 @@ async function cleanupFixtures(): Promise<void> {
     where: { id: { startsWith: FIXTURE_PREFIX } },
   });
   await prisma.trucks.deleteMany({
-    where: { plate: FIXTURE_PLATE },
+    where: { plate: { startsWith: FIXTURE_PLATE } },
   });
   await prisma.user.deleteMany({
     where: { user: { startsWith: FIXTURE_PREFIX } },
@@ -154,5 +154,67 @@ describe("Close cargo persists CargaDespacho without motorista (#90)", () => {
        WHERE table_name = 'CargaDespacho' AND column_name = 'motoristaId'`,
     );
     assert.equal(motoristaColumns.length, 0);
+  });
+
+  it("rejects a second CargaDespacho for the same cargo (unique cargaId, truck only)", async () => {
+    const cargaId = `${FIXTURE_PREFIX}carga-unique`;
+    const user = await prisma.user.create({
+      data: {
+        user: `${FIXTURE_PREFIX}logistica-unique`,
+        password: "hashed",
+        role: Role.LOGISTICA,
+        name: "Logistica Unique",
+      },
+    });
+    const truckA = await prisma.trucks.create({
+      data: {
+        name: "Truck Unique A",
+        capacity: 20000,
+        plate: `${FIXTURE_PLATE}A`,
+        active: true,
+      },
+    });
+    const truckB = await prisma.trucks.create({
+      data: {
+        name: "Truck Unique B",
+        capacity: 20000,
+        plate: `${FIXTURE_PLATE}B`,
+        active: true,
+      },
+    });
+    await prisma.cargas.create({
+      data: {
+        id: cargaId,
+        codCar: FIXTURE_COD_CAR + 1,
+        destino: "Blumenau",
+        pesoMax: 10000,
+        custoMin: 0,
+        situacao: "FECHADA",
+        previsaoSaida: new Date("2026-09-04T10:00:00.000Z"),
+      },
+    });
+
+    await prisma.cargaDespacho.create({
+      data: {
+        cargaId,
+        caminhaoId: truckA.id,
+        fechadoPorId: user.id,
+      },
+    });
+
+    await assert.rejects(
+      () =>
+        prisma.cargaDespacho.create({
+          data: {
+            cargaId,
+            caminhaoId: truckB.id,
+            fechadoPorId: user.id,
+          },
+        }),
+      (error: { code?: string }) => error.code === "P2002",
+    );
+
+    const count = await prisma.cargaDespacho.count({ where: { cargaId } });
+    assert.equal(count, 1);
   });
 });
