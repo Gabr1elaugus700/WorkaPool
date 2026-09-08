@@ -2,11 +2,20 @@ import { Request, Response } from "express";
 import { AppError } from "../../../../utils/AppError";
 import { CreateAlocacaoIbcSchema } from "../schemas/CreateAlocacaoIbcSchema";
 import { FecharExpedicaoIbcSchema } from "../schemas/FecharExpedicaoIbcSchema";
+import {
+  IbcCadastroHttpSchemas,
+} from "../schemas/IbcCadastroSchema";
 import { CreateAlocacaoIbcUseCase } from "../../useCases/CreateAlocacaoIbc.use-case";
 import { RemoveAlocacaoIbcUseCase } from "../../useCases/RemoveAlocacaoIbc.use-case";
 import { FecharExpedicaoIbcUseCase } from "../../useCases/FecharExpedicaoIbc.use-case";
 import { ListCargasExpedicaoUseCase } from "../../useCases/ListCargasExpedicao.use-case";
 import { GetCargaExpedicaoDetailUseCase } from "../../useCases/GetCargaExpedicaoDetail.use-case";
+import { CreateNovoIbcUseCase } from "../../useCases/CreateNovoIbc.use-case";
+import { ListIbcPoolUseCase } from "../../useCases/ListIbcPool.use-case";
+import { ListIbcAlertsUseCase } from "../../useCases/ListIbcAlerts.use-case";
+import { PatchIbcDataLimiteUseCase } from "../../useCases/PatchIbcDataLimite.use-case";
+import { SoftDeleteIbcUseCase } from "../../useCases/SoftDeleteIbc.use-case";
+import { IbcCadastroRepository } from "../../repositories/IbcCadastroRepository";
 import { ibcSseGateway } from "../../realtime/ibcSseGateway";
 
 function respondAppError(res: Response, err: unknown, fallbackMessage: string): Response {
@@ -21,7 +30,101 @@ function respondAppError(res: Response, err: unknown, fallbackMessage: string): 
   return res.status(500).json({ error: message });
 }
 
+function cadastroRepository(): IbcCadastroRepository {
+  return new IbcCadastroRepository();
+}
+
 export class IbcController {
+  static async createNovoIbc(req: Request, res: Response): Promise<Response> {
+    try {
+      const parsed = IbcCadastroHttpSchemas.createNovo.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          error: "Dados inválidos para cadastro de IBC",
+          code: "IBC_CADASTRO_INVALID_BODY",
+          details: parsed.error.format(),
+        });
+      }
+
+      const useCase = new CreateNovoIbcUseCase(cadastroRepository());
+      const ibc = await useCase.execute({ dataLimite: parsed.data.dataLimite });
+      return res.status(201).json(ibc);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao cadastrar IBC");
+    }
+  }
+
+  static async listPool(req: Request, res: Response): Promise<Response> {
+    try {
+      const incluirBaixados =
+        String(req.query.incluirBaixados ?? "").toLowerCase() === "true";
+      const useCase = new ListIbcPoolUseCase(cadastroRepository());
+      const ibcs = await useCase.execute({ incluirBaixados });
+      return res.status(200).json(ibcs);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao listar pool de IBC");
+    }
+  }
+
+  static async listAlerts(_req: Request, res: Response): Promise<Response> {
+    try {
+      const useCase = new ListIbcAlertsUseCase(cadastroRepository());
+      const alerts = await useCase.execute();
+      return res.status(200).json(alerts);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao listar alertas de IBC");
+    }
+  }
+
+  static async patchDataLimite(req: Request, res: Response): Promise<Response> {
+    try {
+      const id = String(req.params.id ?? "").trim();
+      if (!id) {
+        return res.status(400).json({
+          error: "ID do IBC é obrigatório",
+          code: "IBC_ID_REQUIRED",
+        });
+      }
+
+      const parsed = IbcCadastroHttpSchemas.patchDataLimite.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          error: "Dados inválidos para atualização de data limite",
+          code: "IBC_PATCH_INVALID_BODY",
+          details: parsed.error.format(),
+        });
+      }
+
+      const useCase = new PatchIbcDataLimiteUseCase(cadastroRepository());
+      const ibc = await useCase.execute({
+        id,
+        dataLimite: parsed.data.dataLimite,
+        identificador: parsed.data.identificador,
+      });
+      return res.status(200).json(ibc);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao atualizar data limite do IBC");
+    }
+  }
+
+  static async softDelete(req: Request, res: Response): Promise<Response> {
+    try {
+      const id = String(req.params.id ?? "").trim();
+      if (!id) {
+        return res.status(400).json({
+          error: "ID do IBC é obrigatório",
+          code: "IBC_ID_REQUIRED",
+        });
+      }
+
+      const useCase = new SoftDeleteIbcUseCase(cadastroRepository());
+      const ibc = await useCase.execute({ id });
+      return res.status(200).json(ibc);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao baixar IBC");
+    }
+  }
+
   static streamEvents(req: Request, res: Response): void {
     res.status(200);
     res.setHeader("Content-Type", "text/event-stream");
