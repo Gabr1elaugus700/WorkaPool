@@ -145,4 +145,56 @@ test("IBC Routes - autenticação e autorização", async (t) => {
       assert.strictEqual(response.body.code, "IBC_ALOCACAO_INVALID_BODY");
     },
   );
+
+  await t.test("cadastro routes sem token retornam 401", async () => {
+    const create = await request(app)
+      .post("/api/ibc")
+      .send({ dataLimite: "2099-12-31" });
+    const list = await request(app).get("/api/ibc");
+    const alerts = await request(app).get("/api/ibc/alerts");
+    const patch = await request(app)
+      .patch("/api/ibc/ibc-1")
+      .send({ dataLimite: "2099-12-31" });
+    const softDelete = await request(app).delete("/api/ibc/ibc-1");
+
+    assert.strictEqual(create.status, 401);
+    assert.strictEqual(list.status, 401);
+    assert.strictEqual(alerts.status, 401);
+    assert.strictEqual(patch.status, 401);
+    assert.strictEqual(softDelete.status, 401);
+  });
+
+  await t.test("LOGISTICA não pode mutar cadastro", async () => {
+    const token = createToken("LOGISTICA");
+    const create = await request(app)
+      .post("/api/ibc")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ dataLimite: "2099-12-31" });
+    const patch = await request(app)
+      .patch("/api/ibc/ibc-1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ dataLimite: "2099-12-31" });
+    const softDelete = await request(app)
+      .delete("/api/ibc/ibc-1")
+      .set("Authorization", `Bearer ${token}`);
+
+    assert.strictEqual(create.status, 403);
+    assert.strictEqual(patch.status, 403);
+    assert.strictEqual(softDelete.status, 403);
+  });
+
+  await t.test("LOGISTICA pode ler pool e alerts", async () => {
+    const token = createToken("LOGISTICA");
+    const list = await request(app)
+      .get("/api/ibc")
+      .set("Authorization", `Bearer ${token}`);
+    const alerts = await request(app)
+      .get("/api/ibc/alerts")
+      .set("Authorization", `Bearer ${token}`);
+
+    assert.notStrictEqual(list.status, 401);
+    assert.notStrictEqual(list.status, 403);
+    assert.notStrictEqual(alerts.status, 401);
+    assert.notStrictEqual(alerts.status, 403);
+  });
 });

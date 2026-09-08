@@ -19,6 +19,41 @@ const ibcReadRoles: Role[] = [
 /** Mutações de preparação/expedição: somente ADMIN + ALMOX (LOGISTICA → 403). */
 const ibcWriteRoles: Role[] = [Role.ADMIN, Role.ALMOX];
 
+router.post(
+  "/",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcController.createNovoIbc,
+);
+
+router.get(
+  "/",
+  authMiddleware,
+  requireRoles(ibcReadRoles),
+  IbcController.listPool,
+);
+
+router.get(
+  "/alerts",
+  authMiddleware,
+  requireRoles(ibcReadRoles),
+  IbcController.listAlerts,
+);
+
+router.patch(
+  "/:id",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcController.patchDataLimite,
+);
+
+router.delete(
+  "/:id",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcController.softDelete,
+);
+
 router.get(
   "/cargas-expedicao",
   authMiddleware,
