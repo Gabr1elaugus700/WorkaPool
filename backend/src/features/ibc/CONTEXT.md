@@ -29,8 +29,8 @@ ERP field `ipd.usu_embinc` on a **container** line only. After trim/upper: `"S"`
 _Avoid_: applying INCLUSO to non-container packaging, calling INCLUSO=N “Troca” at outbound
 
 **CargaDespacho**:
-Intermediate record when logistics **closes a Carga**: links the cargo to one driver (`User` with role `MOTORISTA`) and one truck (`Trucks`). Mandatory at close; 1:1 per cargo. Audit: who closed, when.
-_Avoid_: Caminhao (deprecated freight table), closing cargo without driver/truck, multiple dispatches per cargo in v1
+Intermediate record when logistics **closes a Carga**: links the cargo to one truck (`Trucks`). Truck mandatory at close; motorista not required in v1 (#89). 1:1 per cargo. Audit: who closed, when.
+_Avoid_: Caminhao (deprecated freight table), closing cargo without truck, requiring motorista on close, multiple dispatches per cargo in v1
 
 **AlocacaoIbc**:
 Link between an IBC and a **Pedido** (`numPed`) within a Carga during yard preparation. Not item-level — if a pedido has multiple IBC lines, only the **total** container count matters at this stage. Mutable until `ExpedicaoIbc`; immutable after.

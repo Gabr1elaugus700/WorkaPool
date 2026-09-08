@@ -73,6 +73,23 @@ test("Cargo Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(response.status, 403);
   });
 
+  await t.test(
+    "POST /close-carga com LOGISTICA e payload truck-only passa requireRoles (não 403)",
+    async () => {
+      const token = createToken("LOGISTICA");
+      const response = await request(app)
+        .post("/api/cargo/close-carga")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          codCar: 1,
+          caminhaoId: "22222222-2222-2222-2222-222222222222",
+        });
+
+      assert.notStrictEqual(response.status, 401);
+      assert.notStrictEqual(response.status, 403);
+    },
+  );
+
   await t.test("GET /motoristas deve retornar 404 (rota removida)", async () => {
     const token = createToken("LOGISTICA");
     const response = await request(app)
