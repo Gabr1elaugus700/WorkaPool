@@ -68,7 +68,26 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
       identificador: ibc.identificador,
       aptidao: ibc.aptidao,
       custodia: ibc.custodia,
+      dataLimite: ibc.dataLimite,
       createdAt: ibc.createdAt,
+    };
+  }
+
+  async markIbcDataLimite(ibcId: string): Promise<IbcRecord> {
+    const updated = await this.prisma.ibc.update({
+      where: { id: ibcId },
+      data: {
+        aptidao: "INAPTO",
+        motivoInaptidao: "DATA_LIMITE",
+      },
+    });
+    return {
+      id: updated.id,
+      identificador: updated.identificador,
+      aptidao: updated.aptidao,
+      custodia: updated.custodia,
+      dataLimite: updated.dataLimite,
+      createdAt: updated.createdAt,
     };
   }
 

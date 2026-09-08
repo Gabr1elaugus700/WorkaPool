@@ -13,6 +13,7 @@ export interface IIbcExpedicaoRepository {
   listCargasAbertaOuFechada(): Promise<CargaExpedicaoRef[]>;
   getPedidosByCarga(codCar: number): Promise<PedidoCargo[]>;
   findIbcByIdentificador(identificador: string): Promise<IbcRecord | null>;
+  markIbcDataLimite(ibcId: string): Promise<IbcRecord>;
   findAlocacaoByIbcId(ibcId: string): Promise<AlocacaoIbcRecord | null>;
   findAlocacaoById(id: string): Promise<AlocacaoIbcRecord | null>;
   countAlocacoesByCargaAndNumPed(

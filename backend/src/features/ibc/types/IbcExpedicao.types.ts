@@ -7,6 +7,7 @@ export type IbcRecord = {
   identificador: string;
   aptidao: IbcAptidaoValue;
   custodia: IbcCustodiaValue;
+  dataLimite: Date | null;
   createdAt: Date;
 };
 
