@@ -55,6 +55,7 @@ const buildIbc = (overrides: Partial<IbcRecord> = {}): IbcRecord => ({
   identificador: "H0045",
   aptidao: "APTO",
   custodia: "PATIO",
+  dataLimite: new Date("2099-12-31T00:00:00.000Z"),
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
   ...overrides,
 });
@@ -81,6 +82,7 @@ type RepoMock = Pick<
   | "findAlocacaoByIbcId"
   | "countAlocacoesByCargaAndNumPed"
   | "createAlocacao"
+  | "markIbcDataLimite"
 >;
 
 const buildHappyRepo = (
@@ -95,6 +97,7 @@ const buildHappyRepo = (
     findAlocacaoByIbcId: mock.fn(async () => null),
     countAlocacoesByCargaAndNumPed: mock.fn(async () => 0),
     createAlocacao: mock.fn(async () => alocacao),
+    markIbcDataLimite: mock.fn(async () => ibc),
     ...overrides,
   };
 };
@@ -361,5 +364,55 @@ describe("CreateAlocacaoIbcUseCase", () => {
     });
 
     assert.strictEqual(result.alocacao.numPed, "1120");
+  });
+
+  it("allocation gate materializes DATA_LIMITE before rejecting", async () => {
+    const createAlocacao = mock.fn(async () => {
+      throw new Error("não deve criar");
+    });
+    const markIbcDataLimite = mock.fn(async () =>
+      buildIbc({
+        identificador: "HM0010",
+        aptidao: "INAPTO",
+        dataLimite: new Date("2020-01-01T00:00:00.000Z"),
+      }),
+    );
+    const repo = buildHappyRepo({
+      findIbcByIdentificador: mock.fn(async () =>
+        buildIbc({
+          id: "ibc-due",
+          identificador: "HM0010",
+          aptidao: "APTO",
+          custodia: "PATIO",
+          dataLimite: new Date("2020-01-01T00:00:00.000Z"),
+        }),
+      ),
+      markIbcDataLimite,
+      createAlocacao,
+    });
+    const useCase = new CreateAlocacaoIbcUseCase(
+      repo as IIbcExpedicaoRepository,
+    );
+
+    await assert.rejects(
+      async () =>
+        useCase.execute({
+          codCar: COD_CAR,
+          numPed: "1120",
+          identificador: "HM0010",
+          alocadoPorId: ALOCADO_POR_ID,
+        }),
+      (error: unknown) => {
+        assert.ok(error instanceof AppError);
+        assert.strictEqual(error.code, "IBC_INAPTO");
+        assert.strictEqual(error.statusCode, 409);
+        const details = error.details as { motivoInaptidao?: string };
+        assert.strictEqual(details.motivoInaptidao, "DATA_LIMITE");
+        return true;
+      },
+    );
+    assert.strictEqual(markIbcDataLimite.mock.calls.length, 1);
+    assert.deepEqual(markIbcDataLimite.mock.calls[0].arguments, ["ibc-due"]);
+    assert.strictEqual(createAlocacao.mock.calls.length, 0);
   });
 });

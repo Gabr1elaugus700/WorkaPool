@@ -20,6 +20,16 @@ export type CreateAlocacaoIbcResult = {
 
 const SITUACOES_PREPARACAO = new Set(["ABERTA", "FECHADA"]);
 
+function startOfUtcDay(date: Date): Date {
+  return new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+  );
+}
+
+function isDataLimiteDue(dataLimite: Date, now: Date): boolean {
+  return startOfUtcDay(dataLimite) <= startOfUtcDay(now);
+}
+
 export class CreateAlocacaoIbcUseCase {
   private readonly repository: IIbcExpedicaoRepository;
 
@@ -102,21 +112,35 @@ export class CreateAlocacaoIbcUseCase {
       });
     }
 
-    if (ibc.aptidao === "INAPTO") {
-      throw new AppError({
-        message: `IBC ${identificador} está Inapto e não pode ser alocado`,
-        statusCode: 409,
-        code: "IBC_INAPTO",
-        details: { identificador, aptidao: ibc.aptidao },
-      });
-    }
-
     if (ibc.custodia === "EM_VIAGEM") {
       throw new AppError({
         message: `IBC ${identificador} já está Em viagem`,
         statusCode: 409,
         code: "IBC_EM_VIAGEM",
         details: { identificador, custodia: ibc.custodia },
+      });
+    }
+
+    if (ibc.dataLimite != null && isDataLimiteDue(ibc.dataLimite, new Date())) {
+      await this.repository.markIbcDataLimite(ibc.id);
+      throw new AppError({
+        message: `IBC ${identificador} está Inapto e não pode ser alocado`,
+        statusCode: 409,
+        code: "IBC_INAPTO",
+        details: {
+          identificador,
+          aptidao: "INAPTO",
+          motivoInaptidao: "DATA_LIMITE",
+        },
+      });
+    }
+
+    if (ibc.aptidao === "INAPTO") {
+      throw new AppError({
+        message: `IBC ${identificador} está Inapto e não pode ser alocado`,
+        statusCode: 409,
+        code: "IBC_INAPTO",
+        details: { identificador, aptidao: ibc.aptidao },
       });
     }
 
