@@ -12,6 +12,7 @@ import DashboardTest from "../pages/dashboard";
 import CargasPage from "../pages/CargasPage";
 import ExpedicaoIbcPage from "../pages/ExpedicaoIbcPage";
 import ExpedicaoIbcPreparacaoPage from "../pages/ExpedicaoIbcPreparacaoPage";
+import CadastroIbcPage from "../pages/CadastroIbcPage";
 import ClientesInativos from "../pages/ClientesInativos";
 import { OrderLossView, SellerOrdersView } from "@/features/orderLoss";
 import Login from "@/auth/Login";
@@ -146,6 +147,14 @@ const AppRoutes = () => {
             element={
               <PrivateRoute>
                 <ExpedicaoIbcPreparacaoPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/cadastro-ibc"
+            element={
+              <PrivateRoute>
+                <CadastroIbcPage />
               </PrivateRoute>
             }
           />
