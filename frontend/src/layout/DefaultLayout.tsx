@@ -70,6 +70,12 @@ export default function DefaultLayout({ children }: Props) {
               Cargas
             </ButtonLink>
             <ButtonLink
+              to="/cadastro-ibc"
+              allowedRoles={["ALMOX", "ADMIN"]}
+            >
+              Cadastro IBC
+            </ButtonLink>
+            <ButtonLink
               to="/expedicao-ibc"
               allowedRoles={["ALMOX", "ADMIN"]}
             >
