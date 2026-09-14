@@ -1,4 +1,6 @@
+import { Badge } from "@/components/ui/badge";
 import type { IbcCadastroDTO } from "../types/ibcCadastro.types";
+import { ibcCadastroLabels } from "../utils/ibcCadastroLabels";
 
 type Props = {
   items: IbcCadastroDTO[];
@@ -23,15 +25,23 @@ export default function CadastroIbcPoolList({ items }: Props) {
       {items.map((ibc) => (
         <li
           key={ibc.id}
-          className="flex flex-col gap-0.5 py-3 sm:flex-row sm:items-baseline sm:justify-between"
+          className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
         >
           <span className="font-medium">{ibc.identificador}</span>
-          <span className="text-sm text-muted-foreground">
-            {ibc.aptidao}
-            {ibc.motivoInaptidao ? ` · ${ibc.motivoInaptidao}` : ""}
-            {" · limite "}
-            {formatDataLimite(ibc.dataLimite)}
-          </span>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <Badge
+              variant={ibc.aptidao === "APTO" ? "default" : "secondary"}
+              className="text-[10px]"
+            >
+              {ibcCadastroLabels.aptidao[ibc.aptidao]}
+            </Badge>
+            {ibc.motivoInaptidao ? (
+              <Badge variant="outline" className="text-[10px]">
+                {ibcCadastroLabels.motivoInaptidao[ibc.motivoInaptidao]}
+              </Badge>
+            ) : null}
+            <span>limite {formatDataLimite(ibc.dataLimite)}</span>
+          </div>
         </li>
       ))}
     </ul>

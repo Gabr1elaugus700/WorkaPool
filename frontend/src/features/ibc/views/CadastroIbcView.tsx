@@ -1,11 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
 import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
-import ExpedicaoIbcAsyncState from "../components/ExpedicaoIbcAsyncState";
 import CadastroIbcForm from "../components/CadastroIbcForm";
 import CadastroIbcPoolList from "../components/CadastroIbcPoolList";
 import CadastroIbcAlertsPanel from "../components/CadastroIbcAlertsPanel";
+import CadastroIbcSectionError from "../components/CadastroIbcSectionError";
+import CadastroIbcSectionSkeleton from "../components/CadastroIbcSectionSkeleton";
 import { ibcCadastroService } from "../services/ibcCadastroService";
 import { canAccessIbcCadastro } from "../utils/canAccessIbcCadastro";
 import { toError } from "../utils/toError";
@@ -31,29 +34,31 @@ export default function CadastroIbcView() {
 
   const createMutation = useMutation({
     mutationFn: ibcCadastroService.createNovo,
-    onSuccess: async () => {
+    onSuccess: async (created) => {
+      toast.success(`IBC ${created.identificador} cadastrado`);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: POOL_KEY }),
         queryClient.invalidateQueries({ queryKey: ALERTS_KEY }),
       ]);
     },
+    onError: (err) => {
+      toast.error(toError(err).message || "Falha ao cadastrar IBC");
+    },
   });
 
   if (!allowed) {
-    return <ExpedicaoIbcAccessDeniedAlert />;
+    return (
+      <ExpedicaoIbcAccessDeniedAlert targetPhrase="o Cadastro IBC" />
+    );
   }
 
-  const loading = poolQuery.isLoading || alertsQuery.isLoading;
-  const error = poolQuery.error ?? alertsQuery.error ?? createMutation.error;
+  const alertsCount = alertsQuery.data?.length;
+  const poolCount = poolQuery.data?.length;
 
   return (
-    <ExpedicaoIbcAsyncState
-      loading={loading}
-      error={error ? toError(error) : null}
-      loadingLabel="Carregando cadastro IBC…"
-    >
-      <DefaultLayout>
-        <div className="mb-6">
+    <DefaultLayout>
+      <div className="space-y-6 p-4">
+        <div>
           <h1 className="text-2xl font-semibold tracking-tight">Cadastro IBC</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Novo IBC nasce Inapto / Aguardando inspeção com identificador HM
@@ -61,29 +66,70 @@ export default function CadastroIbcView() {
           </p>
         </div>
 
-        <section className="mb-6 rounded-lg bg-card p-4 shadow-md sm:p-6">
-          <h2 className="mb-3 text-sm font-medium">Novo IBC</h2>
+        <section className="rounded-lg border border-border bg-card p-4 shadow-sm sm:p-6">
+          <h2 className="mb-3 text-base font-semibold tracking-tight">
+            Novo IBC
+          </h2>
           <CadastroIbcForm
             submitting={createMutation.isPending}
-            onSubmit={(dataLimite) => createMutation.mutateAsync({ dataLimite })}
+            onSubmit={async (dataLimite) => {
+              await createMutation.mutateAsync({ dataLimite });
+            }}
           />
-          {createMutation.isSuccess ? (
-            <p className="mt-3 text-sm text-muted-foreground">
-              Cadastrado: {createMutation.data.identificador}
-            </p>
+          {createMutation.isSuccess && createMutation.data ? (
+            <div
+              role="status"
+              className="mt-4 flex items-start gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm"
+            >
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <p>
+                IBC cadastrado:{" "}
+                <span className="font-semibold text-foreground">
+                  {createMutation.data.identificador}
+                </span>
+              </p>
+            </div>
           ) : null}
         </section>
 
-        <section className="mb-6 rounded-lg bg-card p-4 shadow-md sm:p-6">
-          <h2 className="mb-3 text-sm font-medium">Alertas</h2>
-          <CadastroIbcAlertsPanel alerts={alertsQuery.data ?? []} />
+        <section className="rounded-lg border border-border bg-muted/20 p-4 shadow-sm sm:p-6">
+          <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+            Alertas
+            {typeof alertsCount === "number" ? ` (${alertsCount})` : null}
+          </h2>
+          {alertsQuery.isLoading ? (
+            <CadastroIbcSectionSkeleton rows={3} />
+          ) : alertsQuery.error ? (
+            <CadastroIbcSectionError
+              message={toError(alertsQuery.error).message}
+              onRetry={() => {
+                void alertsQuery.refetch();
+              }}
+            />
+          ) : (
+            <CadastroIbcAlertsPanel alerts={alertsQuery.data ?? []} />
+          )}
         </section>
 
-        <section className="rounded-lg bg-card p-4 shadow-md sm:p-6">
-          <h2 className="mb-3 text-sm font-medium">Pool ativo</h2>
-          <CadastroIbcPoolList items={poolQuery.data ?? []} />
+        <section className="rounded-lg border border-border bg-muted/20 p-4 shadow-sm sm:p-6">
+          <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+            Pool ativo
+            {typeof poolCount === "number" ? ` (${poolCount})` : null}
+          </h2>
+          {poolQuery.isLoading ? (
+            <CadastroIbcSectionSkeleton />
+          ) : poolQuery.error ? (
+            <CadastroIbcSectionError
+              message={toError(poolQuery.error).message}
+              onRetry={() => {
+                void poolQuery.refetch();
+              }}
+            />
+          ) : (
+            <CadastroIbcPoolList items={poolQuery.data ?? []} />
+          )}
         </section>
-      </DefaultLayout>
-    </ExpedicaoIbcAsyncState>
+      </div>
+    </DefaultLayout>
   );
 }
