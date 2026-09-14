@@ -34,7 +34,7 @@ export const userService = {
       throw new Error("Credenciais inválidas");
     }
 
-    if (!dbUser.isActive) {
+    if (dbUser.isActive === false) {
       throw new Error("Usuário inativo");
     }
 
