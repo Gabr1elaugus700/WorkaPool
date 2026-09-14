@@ -1,0 +1,87 @@
+---
+description: Contratos de camada — Controller, Service, Repository e Frontend
+alwaysApply: true
+---
+
+# Layer Boundaries
+
+Separação estrita de responsabilidades. Nunca misturar camadas.
+
+## Backend
+
+### Controller
+- Apenas valida entrada e delega (use-case ou service)
+- Não contém regra de negócio
+- Não acessa Prisma (nem outro ORM/SQL) diretamente
+- Pode conhecer HTTP (`req`/`res`) e status codes
+
+```typescript
+// ❌ BAD — negócio + Prisma no controller
+const items = await prisma.order.findMany({ where: { status: 'OPEN' } });
+if (items.length > 10) return res.status(400).json({ error: 'limit' });
+
+// ✅ GOOD — valida e delega
+const input = schema.parse(req.body);
+const result = await createOrderUseCase.execute(input);
+return res.status(201).json(result);
+```
+
+### Service / UseCase
+- Contém regras de negócio e orquestração
+- Não conhece HTTP (sem `Request`, `Response`, `res.status`)
+- Não retorna `Response` — retorna dados/domínio ou lança erro tipado
+
+```typescript
+// ❌ BAD
+async execute(req: Request, res: Response) {
+  return res.json(await this.repo.save(req.body));
+}
+
+// ✅ GOOD
+async execute(input: CreateOrderInput): Promise<Order> {
+  if (input.qty <= 0) throw new AppError('INVALID_QTY', 400);
+  return this.repo.save(input);
+}
+```
+
+### Repository
+- Responsável só por persistência (Prisma/SQL/adapters)
+- Não contém regra comercial
+- Não conhece Express (`req`/`res`/middlewares)
+
+```typescript
+// ❌ BAD — regra de negócio no repository
+if (order.total > creditLimit) throw new Error('credit exceeded');
+
+// ✅ GOOD — só persistência
+async save(data: CreateOrderData): Promise<Order> {
+  return this.prisma.order.create({ data });
+}
+```
+
+## Frontend
+
+- Componentes de UI **não** fazem chamadas HTTP diretamente (`fetch`, `axios`, client API)
+- Chamadas passam por hooks e/ou `services` da feature
+- Views/pages orquestram via hook; children só recebem dados/callbacks
+
+```typescript
+// ❌ BAD — HTTP dentro do componente de UI
+function OrderList() {
+  const [data, setData] = useState([]);
+  useEffect(() => { fetch('/api/orders').then(...) }, []);
+}
+
+// ✅ GOOD — hook/service encapsula a chamada
+function OrderList() {
+  const { orders, isLoading } = useOrders();
+  // ...
+}
+```
+
+## Anti-patterns
+
+- Prisma/SQL em controller ou componente React
+- `res.status` / `Request` / `Response` em service, use-case ou repository
+- Regra comercial em repository
+- `fetch`/`api.get` em `components/` (exceto wrappers em `services/` / hooks)
