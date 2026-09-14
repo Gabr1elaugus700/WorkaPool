@@ -17,6 +17,7 @@ import FretesPage from "@/pages/FretesPage";
 import OsListView from "@/features/workOrder/views/osView";
 import VistoriaView from "@/features/workOrder/views/vistoriaView";
 import UsersView from "@/features/users/views/usersView";
+import OverviewSyncAdminView from "@/features/overviewCustomer/views/OverviewSyncAdminView";
 
 const AppRoutes = () => {
   return (
@@ -70,6 +71,14 @@ const AppRoutes = () => {
             element={
               <PrivateRoute>
                 <UsersView />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/overview/sync"
+            element={
+              <PrivateRoute>
+                <OverviewSyncAdminView />
               </PrivateRoute>
             }
           />
