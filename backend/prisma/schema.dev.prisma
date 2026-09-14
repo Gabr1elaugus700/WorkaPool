@@ -552,3 +552,60 @@ model LossReason {
   @@index([code])
   @@map("loss_reasons")
 }
+
+enum OverviewSyncRunStatus {
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+enum OverviewSyncStepStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+model OverviewCustomerSyncRun {
+  id           String                 @id @default(uuid())
+  status       OverviewSyncRunStatus
+  startedAt    DateTime
+  finishedAt   DateTime?
+  errorSummary String?                @db.Text
+  steps        OverviewCustomerSyncStep[]
+
+  @@index([status])
+  @@map("overview_customer_sync_run")
+}
+
+model OverviewCustomerSyncStep {
+  id           String                  @id @default(uuid())
+  runId        String
+  run          OverviewCustomerSyncRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  name         String
+  status       OverviewSyncStepStatus
+  attemptCount Int                     @default(0)
+  lastError    String?                 @db.Text
+  startedAt    DateTime?
+  finishedAt   DateTime?
+
+  @@unique([runId, name])
+  @@index([runId])
+  @@map("overview_customer_sync_step")
+}
+
+model OverviewCustomerSnapshot {
+  id          String   @id @default(uuid())
+  publishedAt DateTime
+  payload     Json
+
+  @@map("overview_customer_snapshot")
+}
+
+model OverviewCustomerSyncMeta {
+  id                   Int       @id @default(1)
+  lastSuccessfulSyncAt DateTime?
+  servedSnapshotId     String?
+
+  @@map("overview_customer_sync_meta")
+}
