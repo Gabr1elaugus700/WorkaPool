@@ -8,6 +8,7 @@ export type IbcCadastroDTO = {
   dataLimite: string | null;
   baixadoEm: string | null;
   createdAt: string;
+  loteId?: string | null;
 };
 
 export type IbcAlertDTO = {
@@ -17,4 +18,36 @@ export type IbcAlertDTO = {
 
 export type CreateNovoIbcInput = {
   dataLimite: string;
+};
+
+export type CreateLoteIbcInput = {
+  quantidade: number;
+  dataLimite: string;
+  numeroNf?: string | null;
+};
+
+export type IbcLoteDTO = {
+  id: string;
+  numeroNf: string | null;
+  dataLimite: string;
+  createdAt: string;
+};
+
+export type LoteSaldoWarningDTO =
+  | {
+      code: "OVER_SALDO";
+      vivos: number;
+      quantidade: number;
+      saldo: number;
+    }
+  | {
+      code: "SALDO_UNAVAILABLE";
+      vivos: number;
+      quantidade: number;
+    };
+
+export type CreateLoteIbcResultDTO = {
+  items: IbcCadastroDTO[];
+  lote: IbcLoteDTO;
+  warning?: LoteSaldoWarningDTO;
 };

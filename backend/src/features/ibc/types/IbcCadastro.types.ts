@@ -14,6 +14,19 @@ export type IbcCadastroRecord = {
   dataLimite: Date | null;
   baixadoEm: Date | null;
   createdAt: Date;
+  loteId?: string | null;
+};
+
+export type IbcLoteRecord = {
+  id: string;
+  numeroNf: string | null;
+  dataLimite: Date;
+  createdAt: Date;
+};
+
+export type CreateIbcLoteData = {
+  numeroNf: string | null;
+  dataLimite: Date;
 };
 
 export type CreateNovoIbcData = {
@@ -23,4 +36,5 @@ export type CreateNovoIbcData = {
   motivoInaptidao: "AGUARDANDO_INSPECAO";
   custodia: "PATIO";
   dataLimite: Date;
+  loteId?: string | null;
 };

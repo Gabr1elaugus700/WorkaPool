@@ -131,6 +131,14 @@ enum IbcMotivoInaptidao {
   DATA_LIMITE
 }
 
+model IbcLote {
+  id         String   @id @default(uuid())
+  numeroNf   String?
+  dataLimite DateTime
+  createdAt  DateTime @default(now())
+  ibcs       Ibc[]
+}
+
 model Ibc {
   id               String              @id @default(uuid())
   identificador    String              @unique
@@ -142,7 +150,11 @@ model Ibc {
   dataLimite       DateTime?
   baixadoEm        DateTime?
   createdAt        DateTime            @default(now())
+  loteId           String?
+  lote             IbcLote?            @relation(fields: [loteId], references: [id])
   alocacao         AlocacaoIbc?
+
+  @@index([loteId])
 }
 
 model AlocacaoIbc {

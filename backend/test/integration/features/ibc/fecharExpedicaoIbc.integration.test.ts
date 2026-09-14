@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { after, afterEach, before, describe, it } from "node:test";
 import { PrismaClient, Role } from "@prisma/client";
 import { IbcExpedicaoRepository } from "../../../../src/features/ibc/repositories/IbcExpedicaoRepository";
-import { ensureIbcExpedicaoSchema } from "../../../helpers/ensureIbcExpedicaoSchema";
+import { ensureIbcCadastroSchema } from "../../../helpers/ensureIbcCadastroSchema";
 
 const FIXTURE_PREFIX = "test-exp-63-";
 const FIXTURE_COD_CAR = 63001;
@@ -40,7 +40,7 @@ async function cleanupFixtures(): Promise<void> {
 describe("Fechar expedição persists atomically (#63)", () => {
   before(async () => {
     assertTestDatabase();
-    await ensureIbcExpedicaoSchema(prisma);
+    await ensureIbcCadastroSchema(prisma);
     await cleanupFixtures();
   });
 
