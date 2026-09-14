@@ -94,3 +94,70 @@ Desenvolvimento **vertical por capacidade** (API + UI da fatia), não o ciclo in
 **Fora destas camadas**: Relatório de Viagem PDF (#37), Fechar Viagem/entrada/troca (#38), aviso representante (#39), ficha QR (#40 descontinuada), empréstimos atrasados (#41). Alinhamento motorista opcional no close: [#89](https://github.com/Gabr1elaugus700/WorkaPool/issues/89).
 
 Perguntas estacionadas até camada de viagem: aviso em Venda, scan fora da carga, reabrir carga.
+
+## Locked — Orquestração ERP × WorkaPool (set/2026 grill)
+
+Grill fechado. Decisão-mãe: **SoT dual** — não sincronizar nem igualar os dois “estoques”.
+
+### Princípio
+
+| Sistema | Fonte da verdade |
+|---------|------------------|
+| **Sapiens (ERP)** | Posse fiscal/patrimonial do produto `codpro` **251001** (cadastro/entrada sempre via NF). |
+| **WorkaPool** | Identidade serializada + custódia + aptidão + obrigação de devolução. |
+
+- Totais **não precisam ser iguais**; precisam ser **reconciliáveis** (gap explicável por buckets).
+- WorkaPool é verdade da **quantidade física identificada**; ERP é verdade do **papel fiscal**.
+- **Escrita** de estoque/fiscal no ERP: **proibida**. Leitura do saldo ERP: **permitida** (consulta trazida pelo owner / webserver Sapiens).
+- `251001` é o **`codpro`** do produto-container no ERP. O mesmo número já aparece como `CODIGO_EMBALAGEM` (`der.usu_codemb`) na linha do químico — **não misturar as leituras**: saldo via estoque do `codpro`; qtd esperada na expedição continua na math de embalagem do pedido.
+
+### O que não fazer
+
+- Cap duro “WP ≤ saldo ERP”
+- Sincronizar os dois estoques como se fossem o mesmo número
+- Import automático NF → criar ativos sem operador
+- Lote de retorno / troca em massa
+
+### Ciclo de vida vs saldo ERP (hoje)
+
+| Evento | Saldo ERP (`251001`) |
+|--------|----------------------|
+| NF entrada (compra) | Sobe |
+| Venda (`INCLUSO=S`) | Desce |
+| Empréstimo (fica no cliente) | Não mexe |
+| Troca 1:1 (entra vazio sem NF) | Não mexe |
+| Baixa/descarte no pátio | Só se houver baixa manual no ERP |
+
+### Cadastro
+
+| Fluxo | Regra |
+|-------|--------|
+| **Lote (compra)** | UI: Entrada → N novos → `dataLimite` única do lote → **NF opcional** (rastro no WP) → gera N identificadores. Defaults iguais ao cadastro unitário: `Aquisição=COMPRA`, `tipoCadastro=NOVO`, `custodia=PATIO`, `AGUARDANDO_INSPECAO` (Inapto). |
+| **Unitário** | Continua (#32). |
+| **Troca** | **Sem lote.** Na volta (#38): X vazios para cadastrar; cada `#in` vinculado 1:1 a um `#out` pendente daquele cliente/viagem. |
+| **Estoque legado no pátio** | Serializar com um ou mais **lotes de compra** (mesmo sem NF histórica no fluxo). |
+
+### Aviso no lote (não bloqueio)
+
+Ao criar N: se `(IBCs vivos WP + N) > saldo ERP(251001)` → **avisa e deixa salvar**.
+
+**Vivos WP** = `baixadoEm IS NULL` e ainda no pool da empresa: pátio + em viagem + no cliente (empréstimo). **Fora:** baixados; **venda já baixada no pool WP**; outbound de troca já substituído.
+
+### Baixa por venda no pool WorkaPool
+
+**Não** no Fechar expedição.
+
+No **retorno do caminhão**, quando o ALMOX confere o Relatório de Viagem preenchido pelo motorista, marca o que ficou em cada cliente e faz o vínculo — momento do **Fechar Viagem** (#38). Aí o outbound em modalidade **Venda** sofre **baixa no estoque/pool do WorkaPool** (sai dos vivos). Empréstimo que ficou permanece vivo (Custódia no Cliente). Troca: `#out` sai do pool cobrável; `#in` entra como ativo novo.
+
+### Conciliação por buckets
+
+**Fora** da fatia do lote/cadastro. Depois que Empréstimo / Venda / Troca existirem de verdade (#38+): tela ERP vs WP por buckets (pátio, viagem, cliente, vendidos, troca, baixados, NF sem serializar / serial sem NF).
+
+### Issues
+
+- Epic: [#31](https://github.com/Gabr1elaugus700/WorkaPool/issues/31)
+- Cadastro unitário: [#32](https://github.com/Gabr1elaugus700/WorkaPool/issues/32)
+- Cadastro em lote + aviso: [#117](https://github.com/Gabr1elaugus700/WorkaPool/issues/117)
+- Seam saldo ERP `251001`: [#118](https://github.com/Gabr1elaugus700/WorkaPool/issues/118)
+- Fechar Viagem / baixa por venda / Troca 1:1: [#38](https://github.com/Gabr1elaugus700/WorkaPool/issues/38)
+- Conciliação buckets (P2): [#119](https://github.com/Gabr1elaugus700/WorkaPool/issues/119)
