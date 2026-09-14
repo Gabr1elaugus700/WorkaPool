@@ -150,6 +150,9 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     const create = await request(app)
       .post("/api/ibc")
       .send({ dataLimite: "2099-12-31" });
+    const createLote = await request(app)
+      .post("/api/ibc/lote")
+      .send({ quantidade: 2, dataLimite: "2099-12-31" });
     const list = await request(app).get("/api/ibc");
     const alerts = await request(app).get("/api/ibc/alerts");
     const patch = await request(app)
@@ -158,6 +161,7 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     const softDelete = await request(app).delete("/api/ibc/ibc-1");
 
     assert.strictEqual(create.status, 401);
+    assert.strictEqual(createLote.status, 401);
     assert.strictEqual(list.status, 401);
     assert.strictEqual(alerts.status, 401);
     assert.strictEqual(patch.status, 401);
@@ -170,6 +174,10 @@ test("IBC Routes - autenticação e autorização", async (t) => {
       .post("/api/ibc")
       .set("Authorization", `Bearer ${token}`)
       .send({ dataLimite: "2099-12-31" });
+    const createLote = await request(app)
+      .post("/api/ibc/lote")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ quantidade: 2, dataLimite: "2099-12-31" });
     const patch = await request(app)
       .patch("/api/ibc/ibc-1")
       .set("Authorization", `Bearer ${token}`)
@@ -179,6 +187,7 @@ test("IBC Routes - autenticação e autorização", async (t) => {
       .set("Authorization", `Bearer ${token}`);
 
     assert.strictEqual(create.status, 403);
+    assert.strictEqual(createLote.status, 403);
     assert.strictEqual(patch.status, 403);
     assert.strictEqual(softDelete.status, 403);
   });

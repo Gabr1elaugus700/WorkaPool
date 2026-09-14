@@ -124,6 +124,14 @@ _Avoid_: leaving pool origin blank, calling every inbound empty an Empréstimo r
 An IBC from this Carga/trip that was confirmed in Custódia no Cliente and has not returned with a company QR. Default pick-list when linking a Troca de IBC (#out → #in). Older Empréstimos at the same Cliente are a secondary path, not the default.
 _Avoid_: free search across the whole pool as the primary Troca UI, linking a return to an IBC still in the yard
 
+**Cadastro em lote**:
+Purchase batch: operator provides N, one shared `dataLimite`, optional NF trace; system creates N Novo IBCs (COMPRA / PATIO / AGUARDANDO_INSPECAO) with sequential HM ids. Soft-warns when vivos+N > ERP saldo for codpro 251001; never hard-blocks.
+_Avoid_: troca/return batch, hard cap vs ERP, ERP stock write-back
+
+**Saldo ERP IBC (codpro 251001)**:
+Read-only Sapiens stock of product-container via `e210est.qtdest` (`SUM` for company). Port returns available quantity or unavailable. Distinct from packaging-line `CODIGO_EMBALAGEM` math on pedidos.
+_Avoid_: treating packaging expected count as fiscal saldo, writing stock to ERP
+
 **Aguardando inspeção**:
 Aptidão state in which the IBC is **Inapto** until an operator completes Inspeção (checklist + score) on the aptidão screen. Applies on every cadastro and on **every Entrada no pátio** (Transbordo, Empréstimo devolvido, Troca) — no reuse / Preparação de expedição until Apto. Outbound IBC replaced in a Troca de IBC leaves the company pool.
 _Avoid_: putting a never-inspected or just-returned IBC Em viagem, treating Troca inbound as Apto by default, skipping verification on “known good” returns

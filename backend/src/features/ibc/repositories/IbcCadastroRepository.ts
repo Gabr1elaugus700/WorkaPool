@@ -1,8 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import prismaInstance from "../../../config/prisma";
 import {
+  CreateIbcLoteData,
   CreateNovoIbcData,
   IbcCadastroRecord,
+  IbcLoteRecord,
 } from "../types/IbcCadastro.types";
 import {
   IIbcCadastroRepository,
@@ -19,6 +21,7 @@ type IbcRow = {
   dataLimite: Date | null;
   baixadoEm: Date | null;
   createdAt: Date;
+  loteId?: string | null;
 };
 
 export class IbcCadastroRepository implements IIbcCadastroRepository {
@@ -37,6 +40,21 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
     return row?.identificador ?? null;
   }
 
+  async createIbcLote(data: CreateIbcLoteData): Promise<IbcLoteRecord> {
+    const created = await this.prisma.ibcLote.create({
+      data: {
+        numeroNf: data.numeroNf,
+        dataLimite: data.dataLimite,
+      },
+    });
+    return {
+      id: created.id,
+      numeroNf: created.numeroNf,
+      dataLimite: created.dataLimite,
+      createdAt: created.createdAt,
+    };
+  }
+
   async createNovoIbc(data: CreateNovoIbcData): Promise<IbcCadastroRecord> {
     const created = await this.prisma.ibc.create({
       data: {
@@ -47,6 +65,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
         motivoInaptidao: data.motivoInaptidao,
         custodia: data.custodia,
         dataLimite: data.dataLimite,
+        loteId: data.loteId ?? undefined,
       },
     });
     return this.toRecord(created);
@@ -66,6 +85,12 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
       orderBy: { identificador: "asc" },
     });
     return rows.map((row) => this.toRecord(row));
+  }
+
+  async countVivosWp(): Promise<number> {
+    return this.prisma.ibc.count({
+      where: { baixadoEm: null },
+    });
   }
 
   async markDataLimite(ibcId: string): Promise<IbcCadastroRecord> {
@@ -122,6 +147,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
       dataLimite: row.dataLimite,
       baixadoEm: row.baixadoEm,
       createdAt: row.createdAt,
+      loteId: row.loteId ?? null,
     };
   }
 }

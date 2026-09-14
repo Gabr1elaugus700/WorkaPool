@@ -26,6 +26,13 @@ router.post(
   IbcController.createNovoIbc,
 );
 
+router.post(
+  "/lote",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcController.createLoteIbc,
+);
+
 router.get(
   "/",
   authMiddleware,

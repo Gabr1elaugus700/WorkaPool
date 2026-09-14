@@ -11,11 +11,13 @@ import { FecharExpedicaoIbcUseCase } from "../../useCases/FecharExpedicaoIbc.use
 import { ListCargasExpedicaoUseCase } from "../../useCases/ListCargasExpedicao.use-case";
 import { GetCargaExpedicaoDetailUseCase } from "../../useCases/GetCargaExpedicaoDetail.use-case";
 import { CreateNovoIbcUseCase } from "../../useCases/CreateNovoIbc.use-case";
+import { CreateLoteIbcUseCase } from "../../useCases/CreateLoteIbc.use-case";
 import { ListIbcPoolUseCase } from "../../useCases/ListIbcPool.use-case";
 import { ListIbcAlertsUseCase } from "../../useCases/ListIbcAlerts.use-case";
 import { PatchIbcDataLimiteUseCase } from "../../useCases/PatchIbcDataLimite.use-case";
 import { SoftDeleteIbcUseCase } from "../../useCases/SoftDeleteIbc.use-case";
 import { IbcCadastroRepository } from "../../repositories/IbcCadastroRepository";
+import { createSapiensSaldoIbcErpPort } from "../../adapters/createSapiensSaldoIbcErpPort";
 import { ibcSseGateway } from "../../realtime/ibcSseGateway";
 
 function respondAppError(res: Response, err: unknown, fallbackMessage: string): Response {
@@ -51,6 +53,32 @@ export class IbcController {
       return res.status(201).json(ibc);
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao cadastrar IBC");
+    }
+  }
+
+  static async createLoteIbc(req: Request, res: Response): Promise<Response> {
+    try {
+      const parsed = IbcCadastroHttpSchemas.createLote.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          error: "Dados inválidos para cadastro em lote de IBC",
+          code: "IBC_LOTE_INVALID_BODY",
+          details: parsed.error.format(),
+        });
+      }
+
+      const useCase = new CreateLoteIbcUseCase(
+        cadastroRepository(),
+        createSapiensSaldoIbcErpPort(),
+      );
+      const result = await useCase.execute({
+        quantidade: parsed.data.quantidade,
+        dataLimite: parsed.data.dataLimite,
+        numeroNf: parsed.data.numeroNf,
+      });
+      return res.status(201).json(result);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao cadastrar lote de IBC");
     }
   }
 
