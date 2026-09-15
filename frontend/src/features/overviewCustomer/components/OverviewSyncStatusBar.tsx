@@ -5,6 +5,8 @@ type OverviewSyncStatusBarProps = {
   status: OverviewSyncStatus | undefined;
   isLoading: boolean;
   onRefresh: () => void;
+  onStartSync: () => void;
+  isStarting: boolean;
 };
 
 function formatTimestamp(value: string | null): string {
@@ -22,7 +24,11 @@ export function OverviewSyncStatusBar({
   status,
   isLoading,
   onRefresh,
+  onStartSync,
+  isStarting,
 }: OverviewSyncStatusBarProps) {
+  const hasActiveRun = Boolean(status?.activeRunId);
+
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4 rounded-md border border-border bg-muted/30 px-4 py-3">
       <div className="space-y-1">
@@ -37,9 +43,18 @@ export function OverviewSyncStatusBar({
           {status?.activeRunId ? ` · Run ativo: ${status.activeRunId}` : ""}
         </p>
       </div>
-      <Button type="button" onClick={onRefresh}>
-        Atualizar
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button type="button" onClick={onRefresh} variant="outline">
+          Atualizar
+        </Button>
+        <Button
+          type="button"
+          onClick={onStartSync}
+          disabled={isStarting || hasActiveRun}
+        >
+          {isStarting ? "Iniciando..." : "Executar sincronização"}
+        </Button>
+      </div>
     </div>
   );
 }

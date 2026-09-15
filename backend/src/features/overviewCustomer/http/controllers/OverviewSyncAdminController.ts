@@ -4,12 +4,14 @@ import type { GetOverviewSyncRunUseCase } from "../../useCases/GetOverviewSyncRu
 import type { GetOverviewSyncStatusUseCase } from "../../useCases/GetOverviewSyncStatusUseCase";
 import type { ListOverviewSyncRunsUseCase } from "../../useCases/ListOverviewSyncRunsUseCase";
 import type { RetryOverviewSyncFailedStepUseCase } from "../../useCases/RetryOverviewSyncFailedStepUseCase";
+import type { StartOverviewSyncUseCase } from "../../useCases/StartOverviewSyncUseCase";
 
 export type OverviewSyncAdminControllerDeps = {
   getStatus: GetOverviewSyncStatusUseCase;
   listRuns: ListOverviewSyncRunsUseCase;
   getRun: GetOverviewSyncRunUseCase;
   retryFailedStep: RetryOverviewSyncFailedStepUseCase;
+  startSync: StartOverviewSyncUseCase;
 };
 
 export class OverviewSyncAdminController {
@@ -85,18 +87,30 @@ export class OverviewSyncAdminController {
     }
   };
 
+  startSync = async (_req: Request, res: Response): Promise<Response> => {
+    try {
+      console.log("🔄 [overview-sync-admin] Manual sync trigger requested");
+      const result = await this.deps.startSync.execute();
+      return res.status(202).json(result);
+    } catch (error: unknown) {
+      return this.mapError(res, error, "Erro ao iniciar sync do Overview");
+    }
+  };
+
   private mapError(
     res: Response,
     error: unknown,
     fallbackMessage: string,
   ): Response {
     if (error instanceof AppError) {
+      console.error(`[overview-sync-admin] ${error.code}: ${error.message}`);
       return res.status(error.statusCode).json({
         error: error.message,
         code: error.code,
         details: error.details,
       });
     }
+    console.error("[overview-sync-admin] unexpected error", error);
     return res.status(500).json({
       error: fallbackMessage,
       code: "INTERNAL_ERROR",

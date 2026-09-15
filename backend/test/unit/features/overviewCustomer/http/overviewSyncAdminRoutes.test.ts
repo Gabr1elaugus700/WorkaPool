@@ -10,6 +10,7 @@ import { GetOverviewSyncRunUseCase } from "../../../../../src/features/overviewC
 import { GetOverviewSyncStatusUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewSyncStatusUseCase";
 import { ListOverviewSyncRunsUseCase } from "../../../../../src/features/overviewCustomer/useCases/ListOverviewSyncRunsUseCase";
 import { RetryOverviewSyncFailedStepUseCase } from "../../../../../src/features/overviewCustomer/useCases/RetryOverviewSyncFailedStepUseCase";
+import { StartOverviewSyncUseCase } from "../../../../../src/features/overviewCustomer/useCases/StartOverviewSyncUseCase";
 import { InMemoryOverviewCustomerSyncStore } from "../../../../helpers/InMemoryOverviewCustomerSyncStore";
 
 function createToken(role: string): string {
@@ -30,6 +31,7 @@ function createApp(
       listRuns: new ListOverviewSyncRunsUseCase(store),
       getRun: new GetOverviewSyncRunUseCase(store),
       retryFailedStep: new RetryOverviewSyncFailedStepUseCase(pipeline),
+      startSync: new StartOverviewSyncUseCase(pipeline),
     }),
   );
   return app;
@@ -102,6 +104,22 @@ describe("Overview sync admin HTTP", () => {
     assert.strictEqual(runResponse.body.run.steps.length, 1);
   });
 
+  it("starts a sync run via ADMIN endpoint", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    const app = createApp(store, [
+      { name: "dados-gerais-cliente", execute: async () => ({ ok: true }) },
+    ]);
+    const token = createToken("ADMIN");
+
+    const response = await request(app)
+      .post("/api/overview/sync/runs")
+      .set("Authorization", `Bearer ${token}`);
+
+    assert.strictEqual(response.status, 202);
+    assert.strictEqual(response.body.run.status, "SUCCEEDED");
+    assert.strictEqual(response.body.published, true);
+  });
+
   it("ADMIN retryFailedStep re-executes only the failed step via HTTP", async () => {
     const store = new InMemoryOverviewCustomerSyncStore();
     const counts = new Map<string, number>();
@@ -168,6 +186,20 @@ describe("Overview sync admin HTTP", () => {
 
     const response = await request(app)
       .post("/api/overview/sync/runs/run-1/steps/only-step/retry")
+      .set("Authorization", `Bearer ${token}`);
+
+    assert.strictEqual(response.status, 403);
+  });
+
+  it("rejects non-ADMIN start sync with 403", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    const app = createApp(store, [
+      { name: "only-step", execute: async () => ({ ok: true }) },
+    ]);
+    const token = createToken("USER");
+
+    const response = await request(app)
+      .post("/api/overview/sync/runs")
       .set("Authorization", `Bearer ${token}`);
 
     assert.strictEqual(response.status, 403);
