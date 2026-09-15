@@ -36,7 +36,7 @@ export class CreateNovoIbcUseCase {
     const highest = await this.repository.findHighestIdentificador();
     const identificador = highest
       ? allocateNextIbcIdentifier(highest)
-      : "HM0001";
+      : "HM00001";
 
     return this.repository.createNovoIbc({
       identificador,

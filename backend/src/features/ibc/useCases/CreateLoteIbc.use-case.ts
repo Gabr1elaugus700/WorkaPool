@@ -102,7 +102,7 @@ export class CreateLoteIbcUseCase {
     for (let i = 0; i < quantidade; i += 1) {
       const identificador = highest
         ? allocateNextIbcIdentifier(highest)
-        : "HM0001";
+        : "HM00001";
       highest = identificador;
 
       const created = await this.repository.createNovoIbc({

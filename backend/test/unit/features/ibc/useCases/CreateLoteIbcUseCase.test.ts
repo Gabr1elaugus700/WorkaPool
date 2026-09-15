@@ -47,7 +47,7 @@ const buildCreatedIbc = (
 });
 
 const buildRepo = (overrides: Partial<RepoMock> = {}): RepoMock => ({
-  findHighestIdentificador: mock.fn(async () => "HM0009"),
+  findHighestIdentificador: mock.fn(async () => "HM00009"),
   createNovoIbc: mock.fn(async (data: CreateNovoIbcData) => buildCreatedIbc(data)),
   countVivosWp: mock.fn(async () => 0),
   createIbcLote: mock.fn(async (data: CreateIbcLoteData) => buildLote(data)),
@@ -85,7 +85,7 @@ describe("CreateLoteIbcUseCase core (#117 / #121 slice 2)", () => {
 
   it("batch assigns sequential unique HM identifiers", async () => {
     const repo = buildRepo({
-      findHighestIdentificador: mock.fn(async () => "HM0009"),
+      findHighestIdentificador: mock.fn(async () => "HM00009"),
     });
     const useCase = new CreateLoteIbcUseCase(repo as IIbcCadastroRepository);
 
@@ -96,7 +96,7 @@ describe("CreateLoteIbcUseCase core (#117 / #121 slice 2)", () => {
 
     assert.deepEqual(
       result.items.map((i) => i.identificador),
-      ["HM0010", "HM0011", "HM0012"],
+      ["HM00010", "HM00011", "HM00012"],
     );
   });
 

@@ -33,7 +33,7 @@ const buildCreatedIbc = (
 });
 
 const buildRepo = (overrides: Partial<RepoMock> = {}): RepoMock => ({
-  findHighestIdentificador: mock.fn(async () => "HM0007"),
+  findHighestIdentificador: mock.fn(async () => "HM00007"),
   createNovoIbc: mock.fn(async (data: CreateNovoIbcData) => buildCreatedIbc(data)),
   ...overrides,
 });
@@ -49,7 +49,7 @@ describe("CreateNovoIbcUseCase", () => {
     assert.equal(result.aptidao, "INAPTO");
     assert.equal(result.motivoInaptidao, "AGUARDANDO_INSPECAO");
     assert.equal(result.custodia, "PATIO");
-    assert.equal(result.identificador, "HM0008");
+    assert.equal(result.identificador, "HM00008");
     assert.equal(result.dataLimite.toISOString(), FUTURE_DATA_LIMITE.toISOString());
   });
 
