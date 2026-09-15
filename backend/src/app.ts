@@ -32,6 +32,7 @@ import cargoRoutes from "./features/cargo/http/routes/CargoRoute";
 // New Routes After Refactor
 import goals from "./features/goals/http/routes/goalsRoutes";
 import ordersRoutes from "./features/orderLoss/http/routes/ordersRoutes";
+import { createOverviewCustomerRouter } from "./features/overviewCustomer/http/createOverviewCustomerRouter";
 import { createOverviewSyncAdminRouter } from "./features/overviewCustomer/http/createOverviewSyncAdminRouter";
 
 const app = express();
@@ -126,6 +127,7 @@ app.use("/api/orders", ordersRoutes);
 
 // Overview Customer - sync admin (ADMIN only)
 app.use("/api/overview/sync", createOverviewSyncAdminRouter());
+app.use("/api/overview/customers", createOverviewCustomerRouter());
 
 // Iniciar servidor
 app.use(
