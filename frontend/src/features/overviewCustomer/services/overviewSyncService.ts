@@ -3,6 +3,7 @@ import type {
   OverviewSyncRetryResult,
   OverviewSyncRunResponse,
   OverviewSyncRunsResponse,
+  OverviewSyncStartResult,
   OverviewSyncStatus,
 } from "../types/overviewSync.types";
 
@@ -31,5 +32,11 @@ export const OverviewSyncService = {
       `/api/overview/sync/runs/${encodeURIComponent(runId)}/steps/${encodeURIComponent(stepName)}/retry`,
       { method: "POST" },
     );
+  },
+
+  startSync: async (): Promise<OverviewSyncStartResult> => {
+    return apiFetchJson<OverviewSyncStartResult>("/api/overview/sync/runs", {
+      method: "POST",
+    });
   },
 };

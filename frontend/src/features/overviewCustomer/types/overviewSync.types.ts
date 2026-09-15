@@ -41,3 +41,8 @@ export type OverviewSyncRetryResult = {
   run: OverviewSyncRun;
   published: boolean;
 };
+
+export type OverviewSyncStartResult = {
+  run: OverviewSyncRun;
+  published: boolean;
+};

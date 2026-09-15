@@ -4,6 +4,7 @@ import DefaultLayout from "@/layout/DefaultLayout";
 import { OverviewSyncRunsTable } from "../components/OverviewSyncRunsTable";
 import { OverviewSyncStatusBar } from "../components/OverviewSyncStatusBar";
 import {
+  useStartOverviewSync,
   useOverviewSyncRuns,
   useOverviewSyncStatus,
   useRetryOverviewSyncFailedStep,
@@ -16,6 +17,7 @@ export function OverviewSyncAdminView() {
   const statusQuery = useOverviewSyncStatus();
   const runsQuery = useOverviewSyncRuns();
   const { retryFailedStep, isRetrying } = useRetryOverviewSyncFailedStep();
+  const { startSync, isStarting } = useStartOverviewSync();
 
   if (!isAdmin) {
     return (
@@ -50,6 +52,10 @@ export function OverviewSyncAdminView() {
           status={statusQuery.data}
           isLoading={statusQuery.isLoading}
           onRefresh={refresh}
+          onStartSync={() => {
+            void startSync();
+          }}
+          isStarting={isStarting}
         />
 
         {runsQuery.isLoading ? (

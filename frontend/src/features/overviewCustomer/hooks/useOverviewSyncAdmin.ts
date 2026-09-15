@@ -54,7 +54,7 @@ export function useRetryOverviewSyncFailedStep() {
         const message =
           error instanceof Error ? error.message : "Falha ao retentar step";
         toast.error(message);
-        throw error;
+        return null;
       } finally {
         setIsRetrying(false);
       }
@@ -63,4 +63,31 @@ export function useRetryOverviewSyncFailedStep() {
   );
 
   return { retryFailedStep, isRetrying };
+}
+
+export function useStartOverviewSync() {
+  const queryClient = useQueryClient();
+  const [isStarting, setIsStarting] = useState(false);
+
+  const startSync = useCallback(async () => {
+    setIsStarting(true);
+    try {
+      const result = await OverviewSyncService.startSync();
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: STATUS_KEY }),
+        queryClient.invalidateQueries({ queryKey: RUNS_KEY }),
+      ]);
+      toast.success("Sincronização iniciada com sucesso.");
+      return result;
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Falha ao iniciar sincronização";
+      toast.error(message);
+      return null;
+    } finally {
+      setIsStarting(false);
+    }
+  }, [queryClient]);
+
+  return { startSync, isStarting };
 }
