@@ -6,7 +6,7 @@ export function useOverviewCustomerMonthlyEvolution(customerCode: number | null)
     queryKey: ["overview-customer-monthly-evolution", customerCode],
     queryFn: async () => {
       if (customerCode == null) {
-        throw new Error("clienteId inválido");
+        throw new Error("Código do cliente inválido para consultar a evolução mensal.");
       }
       return OverviewCustomerService.getMonthlyEvolution(customerCode);
     },
