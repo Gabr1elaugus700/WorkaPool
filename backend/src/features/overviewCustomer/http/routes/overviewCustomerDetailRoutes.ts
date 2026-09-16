@@ -11,6 +11,7 @@ export function createOverviewCustomerDetailRoutes(
   const router = Router();
   const controller = new OverviewCustomerDetailController(deps);
 
+  router.get("/", authMiddleware, controller.list);
   router.get("/:clienteId", authMiddleware, controller.getByCustomerCode);
 
   return router;

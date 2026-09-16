@@ -1,13 +1,40 @@
 import type { Request, Response } from "express";
 import { AppError } from "../../../../utils/AppError";
 import type { GetOverviewCustomerDetailUseCase } from "../../useCases/GetOverviewCustomerDetailUseCase";
+import type { ListOverviewCustomersUseCase } from "../../useCases/ListOverviewCustomersUseCase";
 
 export type OverviewCustomerDetailControllerDeps = {
   getDetail: GetOverviewCustomerDetailUseCase;
+  listCustomers: ListOverviewCustomersUseCase;
 };
 
 export class OverviewCustomerDetailController {
   constructor(private readonly deps: OverviewCustomerDetailControllerDeps) {}
+
+  list = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const role = req.user?.role;
+      if (!role) {
+        return res.status(401).json({ error: "Usuário não autenticado" });
+      }
+
+      const rawPage = req.query.page;
+      const page = parsePage(rawPage);
+
+      const search = typeof req.query.search === "string" ? req.query.search : undefined;
+
+      const result = await this.deps.listCustomers.execute({
+        role,
+        codRep: req.user?.codRep,
+        search,
+        page,
+      });
+
+      return res.status(200).json(result);
+    } catch (error: unknown) {
+      return this.mapError(res, error);
+    }
+  };
 
   getByCustomerCode = async (req: Request, res: Response): Promise<Response> => {
     try {
@@ -50,4 +77,16 @@ export class OverviewCustomerDetailController {
       code: "INTERNAL_ERROR",
     });
   }
+}
+
+function parsePage(rawPage: Request["query"]["page"]): number {
+  if (typeof rawPage !== "string") {
+    return 1;
+  }
+
+  const parsed = Number.parseInt(rawPage, 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return 1;
+  }
+  return parsed;
 }

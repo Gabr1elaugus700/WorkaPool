@@ -19,6 +19,7 @@ import VistoriaView from "@/features/workOrder/views/vistoriaView";
 import UsersView from "@/features/users/views/usersView";
 import OverviewSyncAdminView from "@/features/overviewCustomer/views/OverviewSyncAdminView";
 import OverviewCustomerDetailView from "@/features/overviewCustomer/views/OverviewCustomerDetailView";
+import OverviewCustomerPortfolioView from "@/features/overviewCustomer/views/OverviewCustomerPortfolioView";
 
 const AppRoutes = () => {
   return (
@@ -72,6 +73,14 @@ const AppRoutes = () => {
             element={
               <PrivateRoute>
                 <UsersView />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/overview/customers"
+            element={
+              <PrivateRoute>
+                <OverviewCustomerPortfolioView />
               </PrivateRoute>
             }
           />
