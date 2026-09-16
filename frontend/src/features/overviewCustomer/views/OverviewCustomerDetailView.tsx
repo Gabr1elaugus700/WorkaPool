@@ -1,10 +1,12 @@
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { OverviewCustomerAccessDeniedState } from "../components/OverviewCustomerAccessDeniedState";
 import { OverviewCustomerCommercialSummaryCard } from "../components/OverviewCustomerCommercialSummaryCard";
 import { OverviewCustomerMonthlyEvolutionSection } from "../components/OverviewCustomerMonthlyEvolutionSection";
 import { OverviewCustomerPurchasedProductsSection } from "../components/OverviewCustomerPurchasedProductsSection";
+import { OverviewCustomerSectionCard } from "../components/OverviewCustomerSectionCard";
+import { OverviewCustomerStateMessage } from "../components/OverviewCustomerStateMessage";
 import { useOverviewCustomerDetail } from "../hooks/useOverviewCustomerDetail";
 import { useOverviewCustomerMonthlyEvolution } from "../hooks/useOverviewCustomerMonthlyEvolution";
 import { useOverviewCustomerPurchasedProducts } from "../hooks/useOverviewCustomerPurchasedProducts";
@@ -33,7 +35,12 @@ export function OverviewCustomerDetailView() {
   if (customerCode == null) {
     return (
       <DefaultLayout>
-        <p className="text-sm text-destructive">clienteId inválido.</p>
+        <OverviewCustomerSectionCard title="Detalhes do cliente" className="max-w-2xl">
+          <OverviewCustomerStateMessage
+            message="Código do cliente inválido para abrir os detalhes."
+            tone="destructive"
+          />
+        </OverviewCustomerSectionCard>
       </DefaultLayout>
     );
   }
@@ -41,7 +48,9 @@ export function OverviewCustomerDetailView() {
   if (detailQuery.isLoading) {
     return (
       <DefaultLayout>
-        <p className="text-sm text-muted-foreground">Carregando cliente…</p>
+        <OverviewCustomerSectionCard title="Detalhes do cliente" className="max-w-2xl">
+          <OverviewCustomerStateMessage message="Carregando os dados do cliente." />
+        </OverviewCustomerSectionCard>
       </DefaultLayout>
     );
   }
@@ -61,27 +70,27 @@ export function OverviewCustomerDetailView() {
     if (message.includes("not found")) {
       return (
         <DefaultLayout>
-          <section className="rounded-md border p-5">
-            <h1 className="text-xl font-semibold">Cliente não encontrado</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              O cliente ainda não foi sincronizado no Overview.
-            </p>
-            <a
-              href="/overview/customers"
-              className="mt-4 inline-block text-sm text-primary underline"
-            >
-              Voltar para lista de clientes
-            </a>
-          </section>
+          <OverviewCustomerSectionCard
+            title="Cliente não encontrado"
+            description="Este cliente ainda não foi sincronizado no Overview."
+            className="max-w-2xl"
+          >
+            <Link to="/overview/customers" className="text-sm text-primary underline">
+              Voltar para a lista de clientes
+            </Link>
+          </OverviewCustomerSectionCard>
         </DefaultLayout>
       );
     }
 
     return (
       <DefaultLayout>
-        <p className="text-sm text-destructive">
-          Não foi possível carregar os dados do cliente.
-        </p>
+        <OverviewCustomerSectionCard title="Detalhes do cliente" className="max-w-2xl">
+          <OverviewCustomerStateMessage
+            message="Não foi possível carregar os dados do cliente. Tente novamente."
+            tone="destructive"
+          />
+        </OverviewCustomerSectionCard>
       </DefaultLayout>
     );
   }
@@ -90,9 +99,12 @@ export function OverviewCustomerDetailView() {
   if (!detail) {
     return (
       <DefaultLayout>
-        <p className="text-sm text-destructive">
-          Não foi possível carregar os dados do cliente.
-        </p>
+        <OverviewCustomerSectionCard title="Detalhes do cliente" className="max-w-2xl">
+          <OverviewCustomerStateMessage
+            message="Não foi possível carregar os dados do cliente. Tente novamente."
+            tone="destructive"
+          />
+        </OverviewCustomerSectionCard>
       </DefaultLayout>
     );
   }
@@ -100,40 +112,42 @@ export function OverviewCustomerDetailView() {
   return (
     <DefaultLayout>
       <section className="space-y-4">
-        <header>
-          <h1 className="text-2xl font-semibold">{detail.customer.tradeName}</h1>
-          <p className="text-sm text-muted-foreground">
-            Cliente #{detail.customer.customerCode} - {detail.customer.city}/
-            {detail.customer.state}
-          </p>
-        </header>
-
-        <dl className="grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
-          <div>
-            <dt className="font-medium">Documento</dt>
-            <dd>{detail.customer.document}</dd>
-          </div>
-          <div>
-            <dt className="font-medium">Segmento</dt>
-            <dd>{detail.customer.segment ?? "-"}</dd>
-          </div>
-          <div>
-            <dt className="font-medium">Representante principal</dt>
-            <dd>{detail.customer.primaryCodRep ?? "-"}</dd>
-          </div>
-          <div>
-            <dt className="font-medium">Filial</dt>
-            <dd>{detail.customer.branchIndicator}</dd>
-          </div>
-          <div>
-            <dt className="font-medium">Primeira compra (NF faturada)</dt>
-            <dd>{detail.customer.firstInvoicedPurchaseAt ?? "-"}</dd>
-          </div>
-          <div>
-            <dt className="font-medium">Última compra (NF faturada)</dt>
-            <dd>{detail.customer.lastInvoicedPurchaseAt ?? "-"}</dd>
-          </div>
-        </dl>
+        <OverviewCustomerSectionCard
+          title={detail.customer.tradeName}
+          description={`Cliente #${detail.customer.customerCode} - ${detail.customer.city}/${detail.customer.state}`}
+          className="border-muted"
+        >
+          <dl className="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
+            <div>
+              <dt className="text-muted-foreground">Documento</dt>
+              <dd className="font-medium">{detail.customer.document}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Segmento</dt>
+              <dd className="font-medium">{detail.customer.segment ?? "Não informado"}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Representante principal</dt>
+              <dd className="font-medium">{detail.customer.primaryCodRep ?? "Não informado"}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Filial</dt>
+              <dd className="font-medium">{detail.customer.branchIndicator}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Primeira compra (NF faturada)</dt>
+              <dd className="font-medium">
+                {detail.customer.firstInvoicedPurchaseAt ?? "Não informado"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Última compra (NF faturada)</dt>
+              <dd className="font-medium">
+                {detail.customer.lastInvoicedPurchaseAt ?? "Não informado"}
+              </dd>
+            </div>
+          </dl>
+        </OverviewCustomerSectionCard>
 
         <OverviewCustomerCommercialSummaryCard summary={detail.commercialSummary} />
 
@@ -148,9 +162,9 @@ export function OverviewCustomerDetailView() {
           isError={purchasedProductsQuery.isError}
         />
 
-        <p className="text-xs text-muted-foreground">
+        <p className="px-1 text-xs text-muted-foreground">
           Última sincronização com sucesso:{" "}
-          {detail.sync.lastSuccessfulSyncAt ?? "indisponível"}
+          {detail.sync.lastSuccessfulSyncAt ?? "Não informado"}
         </p>
       </section>
     </DefaultLayout>
