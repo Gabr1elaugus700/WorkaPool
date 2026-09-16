@@ -6,6 +6,7 @@ import request from "supertest";
 import { createOverviewCustomerDetailRoutes } from "../../../../../src/features/overviewCustomer/http/routes/overviewCustomerDetailRoutes";
 import { GetOverviewCustomerDetailUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerDetailUseCase";
 import { GetOverviewCustomerMonthlyEvolutionUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerMonthlyEvolutionUseCase";
+import { GetOverviewCustomerPurchasedProductsUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerPurchasedProductsUseCase";
 import { ListOverviewCustomersUseCase } from "../../../../../src/features/overviewCustomer/useCases/ListOverviewCustomersUseCase";
 import { InMemoryOverviewCustomerSyncStore } from "../../../../helpers/InMemoryOverviewCustomerSyncStore";
 
@@ -22,6 +23,7 @@ function createApp(store: InMemoryOverviewCustomerSyncStore): Express {
       getDetail: new GetOverviewCustomerDetailUseCase(store),
       listCustomers: new ListOverviewCustomersUseCase(store),
       getMonthlyEvolution: new GetOverviewCustomerMonthlyEvolutionUseCase(store),
+      getPurchasedProducts: new GetOverviewCustomerPurchasedProductsUseCase(store),
     }),
   );
   return app;
@@ -204,6 +206,7 @@ describe("Overview customer detail HTTP", () => {
       purchaseFrequencyDays: 30,
       daysSinceLastPurchase: 12,
     });
+    assert.strictEqual("purchasedProducts" in response.body, false);
   });
 
   it("returns empty commercial summary when no resumo-comercial data exists", async () => {
@@ -396,6 +399,125 @@ describe("Overview customer detail HTTP", () => {
 
     const response = await request(app)
       .get("/api/overview/customers/123/monthly-evolution")
+      .set("Authorization", `Bearer ${createToken("VENDAS", 20)}`);
+
+    assert.strictEqual(response.status, 403);
+    assert.strictEqual(response.body.code, "OVERVIEW_CUSTOMER_FORBIDDEN");
+  });
+
+  it("returns purchased products payload for authorized users", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    store.seedSuccessfulSnapshot(
+      {
+        id: "snap-products-1",
+        publishedAt: new Date("2026-01-10T00:00:00.000Z"),
+        payload: {
+          customers: {
+            "123": {
+              customerCode: 123,
+              tradeName: "Cliente A",
+              document: "00.000.000/0001-00",
+              city: "Maringa",
+              state: "PR",
+              segment: "Construcao",
+              registrationDate: "2024-01-15",
+              primaryCodRep: 10,
+              firstInvoicedPurchaseAt: "2024-02-01",
+              lastInvoicedPurchaseAt: "2026-08-01",
+              branchIndicator: "MGA",
+            },
+          },
+          "produtos-comprados": {
+            customers: {
+              "123": [
+                {
+                  productCode: "101072",
+                  productName: "Produto A",
+                  quantity: 12,
+                  volume: 6,
+                  revenue: 280,
+                  averagePrice: 23.33,
+                  marginPercentWeightedByRevenue: 38.57,
+                  firstPurchaseAt: "2024-01-10",
+                  lastPurchaseAt: "2024-02-10",
+                  frequencyDays: 31,
+                  revenueShare: 73.68,
+                },
+              ],
+            },
+          },
+        },
+      },
+      new Date("2026-01-10T00:00:00.000Z"),
+    );
+    const app = createApp(store);
+
+    const response = await request(app)
+      .get("/api/overview/customers/123/purchased-products")
+      .set("Authorization", `Bearer ${createToken("ADMIN")}`);
+
+    assert.strictEqual(response.status, 200);
+    assert.deepStrictEqual(response.body, {
+      customerCode: 123,
+      products: [
+        {
+          productCode: "101072",
+          productName: "Produto A",
+          quantity: 12,
+          volume: 6,
+          revenue: 280,
+          averagePrice: 23.33,
+          marginPercentWeightedByRevenue: 38.57,
+          firstPurchaseAt: "2024-01-10",
+          lastPurchaseAt: "2024-02-10",
+          frequencyDays: 31,
+          revenueShare: 73.68,
+        },
+      ],
+    });
+  });
+
+  it("rejects unauthenticated purchased-products access with 401", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    const app = createApp(store);
+
+    const response = await request(app).get(
+      "/api/overview/customers/123/purchased-products",
+    );
+
+    assert.strictEqual(response.status, 401);
+  });
+
+  it("rejects unauthorized VENDAS on purchased-products with 403", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    store.seedSuccessfulSnapshot(
+      {
+        id: "snap-products-2",
+        publishedAt: new Date("2026-01-10T00:00:00.000Z"),
+        payload: {
+          customers: {
+            "123": {
+              customerCode: 123,
+              tradeName: "Cliente A",
+              document: "00.000.000/0001-00",
+              city: "Maringa",
+              state: "PR",
+              segment: "Construcao",
+              registrationDate: "2024-01-15",
+              primaryCodRep: 10,
+              firstInvoicedPurchaseAt: "2024-02-01",
+              lastInvoicedPurchaseAt: "2026-08-01",
+              branchIndicator: "MGA",
+            },
+          },
+        },
+      },
+      new Date("2026-01-10T00:00:00.000Z"),
+    );
+    const app = createApp(store);
+
+    const response = await request(app)
+      .get("/api/overview/customers/123/purchased-products")
       .set("Authorization", `Bearer ${createToken("VENDAS", 20)}`);
 
     assert.strictEqual(response.status, 403);

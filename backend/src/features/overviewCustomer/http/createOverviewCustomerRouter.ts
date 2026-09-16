@@ -4,6 +4,7 @@ import { createOverviewCustomerDetailRoutes } from "./routes/overviewCustomerDet
 import { GetOverviewCustomerDetailUseCase } from "../useCases/GetOverviewCustomerDetailUseCase";
 import { ListOverviewCustomersUseCase } from "../useCases/ListOverviewCustomersUseCase";
 import { GetOverviewCustomerMonthlyEvolutionUseCase } from "../useCases/GetOverviewCustomerMonthlyEvolutionUseCase";
+import { GetOverviewCustomerPurchasedProductsUseCase } from "../useCases/GetOverviewCustomerPurchasedProductsUseCase";
 
 export function createOverviewCustomerRouter(
   prisma = getPrismaClient(),
@@ -13,5 +14,6 @@ export function createOverviewCustomerRouter(
     getDetail: new GetOverviewCustomerDetailUseCase(store),
     listCustomers: new ListOverviewCustomersUseCase(store),
     getMonthlyEvolution: new GetOverviewCustomerMonthlyEvolutionUseCase(store),
+    getPurchasedProducts: new GetOverviewCustomerPurchasedProductsUseCase(store),
   });
 }

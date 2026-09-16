@@ -4,8 +4,10 @@ import { useParams } from "react-router-dom";
 import { OverviewCustomerAccessDeniedState } from "../components/OverviewCustomerAccessDeniedState";
 import { OverviewCustomerCommercialSummaryCard } from "../components/OverviewCustomerCommercialSummaryCard";
 import { OverviewCustomerMonthlyEvolutionSection } from "../components/OverviewCustomerMonthlyEvolutionSection";
+import { OverviewCustomerPurchasedProductsSection } from "../components/OverviewCustomerPurchasedProductsSection";
 import { useOverviewCustomerDetail } from "../hooks/useOverviewCustomerDetail";
 import { useOverviewCustomerMonthlyEvolution } from "../hooks/useOverviewCustomerMonthlyEvolution";
+import { useOverviewCustomerPurchasedProducts } from "../hooks/useOverviewCustomerPurchasedProducts";
 
 function parseCustomerCode(raw: string | undefined): number | null {
   if (!raw) {
@@ -26,6 +28,7 @@ export function OverviewCustomerDetailView() {
   );
   const detailQuery = useOverviewCustomerDetail(customerCode);
   const monthlyQuery = useOverviewCustomerMonthlyEvolution(customerCode);
+  const purchasedProductsQuery = useOverviewCustomerPurchasedProducts(customerCode);
 
   if (customerCode == null) {
     return (
@@ -138,6 +141,11 @@ export function OverviewCustomerDetailView() {
           rows={monthlyQuery.data?.monthly ?? []}
           isLoading={monthlyQuery.isLoading}
           isError={monthlyQuery.isError}
+        />
+        <OverviewCustomerPurchasedProductsSection
+          rows={purchasedProductsQuery.data?.products ?? []}
+          isLoading={purchasedProductsQuery.isLoading}
+          isError={purchasedProductsQuery.isError}
         />
 
         <p className="text-xs text-muted-foreground">

@@ -5,6 +5,8 @@ import { materializeOverviewCustomerCommercialSummary } from "./materializeOverv
 import { OverviewCustomerCommercialSummarySeniorQuery } from "./OverviewCustomerCommercialSummarySeniorQuery";
 import { materializeOverviewCustomerMonthlyEvolution } from "./materializeOverviewCustomerMonthlyEvolution";
 import { OverviewCustomerMonthlyEvolutionSeniorQuery } from "./OverviewCustomerMonthlyEvolutionSeniorQuery";
+import { materializeOverviewCustomerPurchasedProducts } from "./materializeOverviewCustomerPurchasedProducts";
+import { OverviewCustomerPurchasedProductsSeniorQuery } from "./OverviewCustomerPurchasedProductsSeniorQuery";
 
 const STEP_NAMES = [
   "dados-gerais-cliente",
@@ -33,6 +35,8 @@ export function createOverviewCustomerSyncSteps(
   > = new OverviewCustomerCommercialSummarySeniorQuery(),
   monthlyEvolutionQuery: Pick<OverviewCustomerMonthlyEvolutionSeniorQuery, "fetchSeed"> =
     new OverviewCustomerMonthlyEvolutionSeniorQuery(),
+  purchasedProductsQuery: Pick<OverviewCustomerPurchasedProductsSeniorQuery, "fetchSeed"> =
+    new OverviewCustomerPurchasedProductsSeniorQuery(),
 ): SeniorStepExecutor[] {
   const identityStep: SeniorStepExecutor = {
     name: STEP_NAMES[0],
@@ -82,11 +86,27 @@ export function createOverviewCustomerSyncSteps(
     },
   };
 
+  const purchasedProductsStep: SeniorStepExecutor = {
+    name: STEP_NAMES[3],
+    execute: async () => {
+      const seed = await purchasedProductsQuery.fetchSeed();
+      const snapshot = materializeOverviewCustomerPurchasedProducts(seed);
+
+      return {
+        customers: snapshot.customers,
+        metadata: {
+          customerCount: Object.keys(snapshot.customers).length,
+          generatedAt: new Date().toISOString(),
+        },
+      };
+    },
+  };
+
   return [
     identityStep,
     summaryStep,
     monthlyEvolutionStep,
-    createPendingWiringStep(STEP_NAMES[3]),
+    purchasedProductsStep,
     createPendingWiringStep(STEP_NAMES[4]),
   ];
 }
