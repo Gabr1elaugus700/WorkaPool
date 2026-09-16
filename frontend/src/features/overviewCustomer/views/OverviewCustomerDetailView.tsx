@@ -3,7 +3,9 @@ import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { OverviewCustomerAccessDeniedState } from "../components/OverviewCustomerAccessDeniedState";
 import { OverviewCustomerCommercialSummaryCard } from "../components/OverviewCustomerCommercialSummaryCard";
+import { OverviewCustomerMonthlyEvolutionSection } from "../components/OverviewCustomerMonthlyEvolutionSection";
 import { useOverviewCustomerDetail } from "../hooks/useOverviewCustomerDetail";
+import { useOverviewCustomerMonthlyEvolution } from "../hooks/useOverviewCustomerMonthlyEvolution";
 
 function parseCustomerCode(raw: string | undefined): number | null {
   if (!raw) {
@@ -23,6 +25,7 @@ export function OverviewCustomerDetailView() {
     [params.clienteId],
   );
   const detailQuery = useOverviewCustomerDetail(customerCode);
+  const monthlyQuery = useOverviewCustomerMonthlyEvolution(customerCode);
 
   if (customerCode == null) {
     return (
@@ -130,6 +133,12 @@ export function OverviewCustomerDetailView() {
         </dl>
 
         <OverviewCustomerCommercialSummaryCard summary={detail.commercialSummary} />
+
+        <OverviewCustomerMonthlyEvolutionSection
+          rows={monthlyQuery.data?.monthly ?? []}
+          isLoading={monthlyQuery.isLoading}
+          isError={monthlyQuery.isError}
+        />
 
         <p className="text-xs text-muted-foreground">
           Última sincronização com sucesso:{" "}

@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import request from "supertest";
 import { createOverviewCustomerDetailRoutes } from "../../../../../src/features/overviewCustomer/http/routes/overviewCustomerDetailRoutes";
 import { GetOverviewCustomerDetailUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerDetailUseCase";
+import { GetOverviewCustomerMonthlyEvolutionUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerMonthlyEvolutionUseCase";
 import { ListOverviewCustomersUseCase } from "../../../../../src/features/overviewCustomer/useCases/ListOverviewCustomersUseCase";
 import { InMemoryOverviewCustomerSyncStore } from "../../../../helpers/InMemoryOverviewCustomerSyncStore";
 
@@ -20,6 +21,7 @@ function createApp(store: InMemoryOverviewCustomerSyncStore): Express {
     createOverviewCustomerDetailRoutes({
       getDetail: new GetOverviewCustomerDetailUseCase(store),
       listCustomers: new ListOverviewCustomersUseCase(store),
+      getMonthlyEvolution: new GetOverviewCustomerMonthlyEvolutionUseCase(store),
     }),
   );
   return app;
