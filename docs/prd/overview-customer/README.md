@@ -10,6 +10,14 @@ Visão 360º do cliente no WorkaPool.
 | SQL Senior (entrada do sync) | [sql/](./sql/) |
 | Tickets (slices) | [#93](https://github.com/Gabr1elaugus700/WorkaPool/issues/93)–[#99](https://github.com/Gabr1elaugus700/WorkaPool/issues/99) |
 
+## Test suites planejadas
+
+- [Overview customer commercial summary](../../test-suites/overview-customer-commercial-summary.md)
+- [Overview customer identity and route auth](./TEST-SUITE-115.md)
+- [Overview customer portfolio list and search](./TEST-SUITE-116.md)
+- [Overview customer monthly evolution](../../test-suites/overview-customer-monthly-evolution.md)
+- [Overview customer purchased products](../../test-suites/overview-customer-purchased-products.md)
+
 ## SQL versionado
 
 Scripts de análise já validados, copiados para o repo para o worker noturno e para agents/CI **não** dependerem de pastas locais fora do git.
