@@ -16,6 +16,19 @@ export type OverviewCustomerIdentity = {
 
 export type OverviewCustomerDetailResponse = {
   customer: OverviewCustomerIdentity;
+  commercialSummary: {
+    revenueSinceJan2024: number;
+    revenueLast12Months: number;
+    orderCountSinceJan2024: number;
+    orderCountLast12Months: number;
+    averageTicketSinceJan2024: number;
+    averageTicketLast12Months: number;
+    volumeSinceJan2024: number;
+    volumeLast12Months: number;
+    marginPercentWeightedByRevenue: number | null;
+    purchaseFrequencyDays: number | null;
+    daysSinceLastPurchase: number | null;
+  };
   sync: {
     lastSuccessfulSyncAt: string | null;
     servedSnapshotId: string;

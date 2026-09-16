@@ -2,7 +2,11 @@ import { Role } from "@prisma/client";
 import { AppError } from "../../../utils/AppError";
 import type { OverviewCustomerSyncStore } from "../sync/ports";
 import { extractOverviewCustomerIdentitySnapshot } from "../sync/extractOverviewCustomerIdentitySnapshot";
-import type { OverviewCustomerIdentity } from "../models/OverviewCustomerIdentity";
+import type {
+  OverviewCustomerCommercialSummary,
+  OverviewCustomerIdentity,
+} from "../models/OverviewCustomerIdentity";
+import { extractOverviewCustomerCommercialSummarySnapshot } from "../sync/extractOverviewCustomerCommercialSummarySnapshot";
 
 export type GetOverviewCustomerDetailInput = {
   customerCode: number;
@@ -12,6 +16,7 @@ export type GetOverviewCustomerDetailInput = {
 
 export type OverviewCustomerDetailResult = {
   customer: OverviewCustomerIdentity;
+  commercialSummary: OverviewCustomerCommercialSummary;
   sync: {
     lastSuccessfulSyncAt: string | null;
     servedSnapshotId: string;
@@ -55,6 +60,13 @@ export class GetOverviewCustomerDetailUseCase {
       });
     }
 
+    const commercialSummarySnapshot = extractOverviewCustomerCommercialSummarySnapshot(
+      snapshot.payload,
+    );
+    const commercialSummary =
+      commercialSummarySnapshot?.customers[String(input.customerCode)] ??
+      emptyCommercialSummary();
+
     if (input.role === Role.VENDAS && customer.primaryCodRep !== input.codRep) {
       throw new AppError({
         message: "Acesso negado",
@@ -65,6 +77,7 @@ export class GetOverviewCustomerDetailUseCase {
 
     return {
       customer,
+      commercialSummary,
       sync: {
         lastSuccessfulSyncAt: lastSuccessfulSyncAt
           ? lastSuccessfulSyncAt.toISOString()
@@ -73,4 +86,20 @@ export class GetOverviewCustomerDetailUseCase {
       },
     };
   }
+}
+
+function emptyCommercialSummary(): OverviewCustomerCommercialSummary {
+  return {
+    revenueSinceJan2024: 0,
+    revenueLast12Months: 0,
+    orderCountSinceJan2024: 0,
+    orderCountLast12Months: 0,
+    averageTicketSinceJan2024: 0,
+    averageTicketLast12Months: 0,
+    volumeSinceJan2024: 0,
+    volumeLast12Months: 0,
+    marginPercentWeightedByRevenue: null,
+    purchaseFrequencyDays: null,
+    daysSinceLastPurchase: null,
+  };
 }
