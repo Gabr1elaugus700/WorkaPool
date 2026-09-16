@@ -2,6 +2,7 @@ import { describe, it, mock } from "node:test";
 import assert from "node:assert/strict";
 import { CreateLoteIbcUseCase } from "../../../../../src/features/ibc/useCases/CreateLoteIbc.use-case";
 import { IIbcCadastroRepository } from "../../../../../src/features/ibc/repositories/IIbcCadastroRepository";
+import { IIbcProdutoRepository } from "../../../../../src/features/ibc/repositories/IIbcProdutoRepository";
 import {
   CreateIbcLoteData,
   CreateNovoIbcData,
@@ -16,11 +17,12 @@ const PAST_DATA_LIMITE = new Date("2020-01-01T00:00:00.000Z");
 
 type RepoMock = Pick<
   IIbcCadastroRepository,
-  | "findHighestIdentificador"
+  | "findHighestIdentificadorByPrefix"
   | "createNovoIbc"
   | "countVivosWp"
   | "createIbcLote"
 >;
+type ProdutoRepoMock = Pick<IIbcProdutoRepository, "findById">;
 
 const buildLote = (data: CreateIbcLoteData): IbcLoteRecord => ({
   id: "lote-1",
@@ -40,6 +42,7 @@ const buildCreatedIbc = (
   motivoInaptidao: data.motivoInaptidao,
   custodia: data.custodia,
   dataLimite: data.dataLimite,
+  produtoId: data.produtoId,
   baixadoEm: null,
   createdAt: new Date("2026-09-14T12:00:00.000Z"),
   loteId: data.loteId ?? null,
@@ -47,10 +50,22 @@ const buildCreatedIbc = (
 });
 
 const buildRepo = (overrides: Partial<RepoMock> = {}): RepoMock => ({
-  findHighestIdentificador: mock.fn(async () => "HM00009"),
+  findHighestIdentificadorByPrefix: mock.fn(async () => "HMS00009"),
   createNovoIbc: mock.fn(async (data: CreateNovoIbcData) => buildCreatedIbc(data)),
   countVivosWp: mock.fn(async () => 0),
   createIbcLote: mock.fn(async (data: CreateIbcLoteData) => buildLote(data)),
+  ...overrides,
+});
+const buildProdutoRepo = (
+  overrides: Partial<ProdutoRepoMock> = {},
+): ProdutoRepoMock => ({
+  findById: mock.fn(async () => ({
+    id: "produto-1",
+    nome: "Soda",
+    abreviacao: "S",
+    createdAt: new Date("2026-09-14T11:00:00.000Z"),
+    updatedAt: new Date("2026-09-14T11:00:00.000Z"),
+  })),
   ...overrides,
 });
 
@@ -63,11 +78,16 @@ describe("CreateLoteIbcUseCase core (#117 / #121 slice 2)", () => {
         return buildCreatedIbc(data);
       }),
     });
-    const useCase = new CreateLoteIbcUseCase(repo as IIbcCadastroRepository);
+    const produtoRepo = buildProdutoRepo();
+    const useCase = new CreateLoteIbcUseCase(
+      repo as IIbcCadastroRepository,
+      produtoRepo as IIbcProdutoRepository,
+    );
 
     const result = await useCase.execute({
       quantidade: 3,
       dataLimite: FUTURE_DATA_LIMITE,
+      produtoId: "produto-1",
     });
 
     assert.equal(result.items.length, 3);
@@ -79,24 +99,30 @@ describe("CreateLoteIbcUseCase core (#117 / #121 slice 2)", () => {
       assert.equal(item.custodia, "PATIO");
       assert.equal(item.dataLimite?.toISOString(), FUTURE_DATA_LIMITE.toISOString());
       assert.equal(item.loteId, "lote-1");
+      assert.equal(item.produtoId, "produto-1");
     }
     assert.equal(created.length, 3);
   });
 
   it("batch assigns sequential unique HM identifiers", async () => {
     const repo = buildRepo({
-      findHighestIdentificador: mock.fn(async () => "HM00009"),
+      findHighestIdentificadorByPrefix: mock.fn(async () => "HMS00009"),
     });
-    const useCase = new CreateLoteIbcUseCase(repo as IIbcCadastroRepository);
+    const produtoRepo = buildProdutoRepo();
+    const useCase = new CreateLoteIbcUseCase(
+      repo as IIbcCadastroRepository,
+      produtoRepo as IIbcProdutoRepository,
+    );
 
     const result = await useCase.execute({
       quantidade: 3,
       dataLimite: FUTURE_DATA_LIMITE,
+      produtoId: "produto-1",
     });
 
     assert.deepEqual(
       result.items.map((i) => i.identificador),
-      ["HM00010", "HM00011", "HM00012"],
+      ["HMS00010", "HMS00011", "HMS00012"],
     );
   });
 
@@ -108,13 +134,18 @@ describe("CreateLoteIbcUseCase core (#117 / #121 slice 2)", () => {
       buildLote(data),
     );
     const repo = buildRepo({ createNovoIbc, createIbcLote });
-    const useCase = new CreateLoteIbcUseCase(repo as IIbcCadastroRepository);
+    const produtoRepo = buildProdutoRepo();
+    const useCase = new CreateLoteIbcUseCase(
+      repo as IIbcCadastroRepository,
+      produtoRepo as IIbcProdutoRepository,
+    );
 
     await assert.rejects(
       () =>
         useCase.execute({
           quantidade: 2,
           dataLimite: PAST_DATA_LIMITE,
+          produtoId: "produto-1",
         }),
       (error: unknown) => {
         assert.ok(error instanceof AppError);
@@ -131,7 +162,11 @@ describe("CreateLoteIbcUseCase core (#117 / #121 slice 2)", () => {
       buildCreatedIbc(data),
     );
     const repo = buildRepo({ createNovoIbc });
-    const useCase = new CreateLoteIbcUseCase(repo as IIbcCadastroRepository);
+    const produtoRepo = buildProdutoRepo();
+    const useCase = new CreateLoteIbcUseCase(
+      repo as IIbcCadastroRepository,
+      produtoRepo as IIbcProdutoRepository,
+    );
 
     for (const quantidade of [0, -1, 201]) {
       await assert.rejects(
@@ -139,6 +174,7 @@ describe("CreateLoteIbcUseCase core (#117 / #121 slice 2)", () => {
           useCase.execute({
             quantidade,
             dataLimite: FUTURE_DATA_LIMITE,
+            produtoId: "produto-1",
           }),
         (error: unknown) => {
           assert.ok(error instanceof AppError);
@@ -156,15 +192,18 @@ describe("CreateLoteIbcUseCase soft ERP warning (#117 / #121 slice 3)", () => {
     const repo = buildRepo({
       countVivosWp: mock.fn(async () => 10),
     });
+    const produtoRepo = buildProdutoRepo();
     const saldo = new FakeSaldoIbcErp({ status: "available", quantity: 12 });
     const useCase = new CreateLoteIbcUseCase(
       repo as IIbcCadastroRepository,
+      produtoRepo as IIbcProdutoRepository,
       saldo,
     );
 
     const result = await useCase.execute({
       quantidade: 5,
       dataLimite: FUTURE_DATA_LIMITE,
+      produtoId: "produto-1",
     });
 
     assert.equal(result.items.length, 5);
@@ -180,15 +219,18 @@ describe("CreateLoteIbcUseCase soft ERP warning (#117 / #121 slice 3)", () => {
     const repo = buildRepo({
       countVivosWp: mock.fn(async () => 10),
     });
+    const produtoRepo = buildProdutoRepo();
     const saldo = new FakeSaldoIbcErp({ status: "available", quantity: 20 });
     const useCase = new CreateLoteIbcUseCase(
       repo as IIbcCadastroRepository,
+      produtoRepo as IIbcProdutoRepository,
       saldo,
     );
 
     const result = await useCase.execute({
       quantidade: 5,
       dataLimite: FUTURE_DATA_LIMITE,
+      produtoId: "produto-1",
     });
 
     assert.equal(result.items.length, 5);
@@ -199,15 +241,18 @@ describe("CreateLoteIbcUseCase soft ERP warning (#117 / #121 slice 3)", () => {
     const repo = buildRepo({
       countVivosWp: mock.fn(async () => 3),
     });
+    const produtoRepo = buildProdutoRepo();
     const saldo = new FakeSaldoIbcErp({ status: "unavailable" });
     const useCase = new CreateLoteIbcUseCase(
       repo as IIbcCadastroRepository,
+      produtoRepo as IIbcProdutoRepository,
       saldo,
     );
 
     const result = await useCase.execute({
       quantidade: 2,
       dataLimite: FUTURE_DATA_LIMITE,
+      produtoId: "produto-1",
     });
 
     assert.equal(result.items.length, 2);
@@ -222,12 +267,17 @@ describe("CreateLoteIbcUseCase soft ERP warning (#117 / #121 slice 3)", () => {
 describe("CreateLoteIbcUseCase NF optional (#117 / #121 slice 4)", () => {
   it("stores optional NF number on the lote and links IBCs", async () => {
     const repo = buildRepo();
-    const useCase = new CreateLoteIbcUseCase(repo as IIbcCadastroRepository);
+    const produtoRepo = buildProdutoRepo();
+    const useCase = new CreateLoteIbcUseCase(
+      repo as IIbcCadastroRepository,
+      produtoRepo as IIbcProdutoRepository,
+    );
 
     const result = await useCase.execute({
       quantidade: 2,
       dataLimite: FUTURE_DATA_LIMITE,
       numeroNf: "123456",
+      produtoId: "produto-1",
     });
 
     assert.equal(result.lote.numeroNf, "123456");
@@ -236,14 +286,44 @@ describe("CreateLoteIbcUseCase NF optional (#117 / #121 slice 4)", () => {
 
   it("allows lote without NF", async () => {
     const repo = buildRepo();
-    const useCase = new CreateLoteIbcUseCase(repo as IIbcCadastroRepository);
+    const produtoRepo = buildProdutoRepo();
+    const useCase = new CreateLoteIbcUseCase(
+      repo as IIbcCadastroRepository,
+      produtoRepo as IIbcProdutoRepository,
+    );
 
     const result = await useCase.execute({
       quantidade: 2,
       dataLimite: FUTURE_DATA_LIMITE,
+      produtoId: "produto-1",
     });
 
     assert.equal(result.lote.numeroNf, null);
     assert.equal(result.items.length, 2);
+  });
+
+  it("rejects unknown produtoId", async () => {
+    const repo = buildRepo();
+    const produtoRepo = buildProdutoRepo({
+      findById: mock.fn(async () => null),
+    });
+    const useCase = new CreateLoteIbcUseCase(
+      repo as IIbcCadastroRepository,
+      produtoRepo as IIbcProdutoRepository,
+    );
+
+    await assert.rejects(
+      () =>
+        useCase.execute({
+          quantidade: 2,
+          dataLimite: FUTURE_DATA_LIMITE,
+          produtoId: "missing",
+        }),
+      (error: unknown) => {
+        assert.ok(error instanceof AppError);
+        assert.equal(error.code, "IBC_PRODUTO_NOT_FOUND");
+        return true;
+      },
+    );
   });
 });

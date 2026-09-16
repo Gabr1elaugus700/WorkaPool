@@ -34,14 +34,30 @@ function createToken(role: Role, id = "ibc-cadastro-almox"): string {
 }
 
 async function cleanupFixtures(): Promise<void> {
-  await prisma.$executeRawUnsafe(
-    `DELETE FROM "AlocacaoIbc" WHERE "ibcId" IN (SELECT id FROM "Ibc" WHERE "identificador" LIKE '${FIXTURE_PREFIX}%' OR "identificador" LIKE 'HM%')`,
-  ).catch(() => undefined);
+  await prisma.$executeRawUnsafe(`
+    DELETE FROM "AlocacaoIbc"
+    WHERE "ibcId" IN (
+      SELECT i.id
+      FROM "Ibc" i
+      LEFT JOIN "IbcProduto" p ON p.id = i."produtoId"
+      WHERE i."identificador" LIKE '${FIXTURE_PREFIX}%'
+         OR p.nome LIKE '${FIXTURE_PREFIX}%'
+    )
+  `).catch(() => undefined);
   await prisma.ibc.deleteMany({
     where: {
       OR: [
         { identificador: { startsWith: FIXTURE_PREFIX } },
-        { identificador: { startsWith: "HM" } },
+        { identificador: { startsWith: "TCA" } },
+        { produto: { is: { nome: { startsWith: FIXTURE_PREFIX } } } },
+      ],
+    },
+  });
+  await prisma.ibcProduto.deleteMany({
+    where: {
+      OR: [
+        { nome: { startsWith: FIXTURE_PREFIX } },
+        { abreviacao: { equals: "SA" } },
       ],
     },
   });
@@ -65,17 +81,27 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     await prisma.$disconnect();
   });
 
+  async function createProduto(token: string): Promise<string> {
+    const created = await request(createIbcTestApp())
+      .post("/api/ibc/produtos")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: `${FIXTURE_PREFIX}Soda`, abreviacao: "SA" });
+    assert.equal(created.status, 201);
+    return String(created.body.id);
+  }
+
   it("POST creates Novo IBC persisted with HM identifier", async () => {
     const app = createIbcTestApp();
     const token = createToken(Role.ALMOX);
+    const produtoId = await createProduto(token);
 
     const response = await request(app)
       .post("/api/ibc")
       .set("Authorization", `Bearer ${token}`)
-      .send({ dataLimite: FUTURE_DATA_LIMITE });
+      .send({ dataLimite: FUTURE_DATA_LIMITE, produtoId });
 
     assert.equal(response.status, 201);
-    assert.match(response.body.identificador, /^HM\d{4}$/);
+    assert.match(response.body.identificador, /^HMSA\d{5}$/);
     assert.equal(response.body.tipoCadastro, "NOVO");
     assert.equal(response.body.aptidao, "INAPTO");
     assert.equal(response.body.motivoInaptidao, "AGUARDANDO_INSPECAO");
@@ -87,6 +113,37 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     assert.ok(row);
     assert.equal(row.tipoCadastro, "NOVO");
     assert.equal(row.motivoInaptidao, "AGUARDANDO_INSPECAO");
+    assert.equal(row.produtoId, produtoId);
+  });
+
+  it("produto endpoints create, list and edit", async () => {
+    const app = createIbcTestApp();
+    const token = createToken(Role.ALMOX);
+
+    const created = await request(app)
+      .post("/api/ibc/produtos")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: `${FIXTURE_PREFIX}Acido`, abreviacao: "a" });
+    assert.equal(created.status, 201);
+    assert.equal(created.body.abreviacao, "A");
+
+    const list = await request(app)
+      .get("/api/ibc/produtos")
+      .set("Authorization", `Bearer ${token}`);
+    assert.equal(list.status, 200);
+    assert.ok(
+      list.body.some(
+        (row: { id: string; abreviacao: string }) =>
+          row.id === created.body.id && row.abreviacao === "A",
+      ),
+    );
+
+    const updated = await request(app)
+      .patch(`/api/ibc/produtos/${created.body.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: `${FIXTURE_PREFIX}Acido Novo`, abreviacao: "SO" });
+    assert.equal(updated.status, 200);
+    assert.equal(updated.body.abreviacao, "SO");
   });
 
   it("GET pool lists active IBCs and omits baixados by default", async () => {
@@ -95,7 +152,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
 
     const active = await prisma.ibc.create({
       data: {
-        identificador: "HM0101",
+        identificador: "TCA0101",
         aptidao: "INAPTO",
         motivoInaptidao: "AGUARDANDO_INSPECAO",
         custodia: "PATIO",
@@ -105,7 +162,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     });
     await prisma.ibc.create({
       data: {
-        identificador: "HM0102",
+        identificador: "TCA0102",
         aptidao: "INAPTO",
         motivoInaptidao: "AGUARDANDO_INSPECAO",
         custodia: "PATIO",
@@ -124,7 +181,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     const ids = response.body.map((row: { id: string }) => row.id);
     assert.ok(ids.includes(active.id));
     assert.equal(
-      response.body.some((row: { identificador: string }) => row.identificador === "HM0102"),
+      response.body.some((row: { identificador: string }) => row.identificador === "TCA0102"),
       false,
     );
   });
@@ -135,7 +192,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
 
     await prisma.ibc.create({
       data: {
-        identificador: "HM0201",
+        identificador: "TCA0201",
         aptidao: "INAPTO",
         motivoInaptidao: "AGUARDANDO_INSPECAO",
         custodia: "PATIO",
@@ -145,7 +202,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     });
     await prisma.ibc.create({
       data: {
-        identificador: "HM0202",
+        identificador: "TCA0202",
         aptidao: "INAPTO",
         motivoInaptidao: "AGUARDANDO_INSPECAO",
         custodia: "PATIO",
@@ -165,8 +222,8 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
         row.motivo,
       ]),
     );
-    assert.equal(byId.get("HM0201"), "AGUARDANDO_INSPECAO");
-    assert.equal(byId.get("HM0202"), "DATA_LIMITE");
+    assert.equal(byId.get("TCA0201"), "AGUARDANDO_INSPECAO");
+    assert.equal(byId.get("TCA0202"), "DATA_LIMITE");
   });
 
   it("PATCH data limite and DELETE soft-delete round-trip", async () => {
@@ -174,7 +231,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     const token = createToken(Role.ALMOX);
     const created = await prisma.ibc.create({
       data: {
-        identificador: "HM0301",
+        identificador: "TCA0301",
         aptidao: "INAPTO",
         motivoInaptidao: "AGUARDANDO_INSPECAO",
         custodia: "PATIO",
@@ -203,7 +260,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
       .set("Authorization", `Bearer ${token}`);
     assert.equal(
       listDefault.body.some(
-        (row: { identificador: string }) => row.identificador === "HM0301",
+        (row: { identificador: string }) => row.identificador === "TCA0301",
       ),
       false,
     );
@@ -212,7 +269,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
       .get("/api/ibc?incluirBaixados=true")
       .set("Authorization", `Bearer ${token}`);
     const baixado = listAudit.body.find(
-      (row: { identificador: string }) => row.identificador === "HM0301",
+      (row: { identificador: string }) => row.identificador === "TCA0301",
     );
     assert.ok(baixado);
     assert.ok(baixado.baixadoEm != null);

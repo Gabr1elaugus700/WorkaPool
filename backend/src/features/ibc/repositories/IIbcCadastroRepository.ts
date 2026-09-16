@@ -10,7 +10,7 @@ export type ListIbcsOptions = {
 };
 
 export interface IIbcCadastroRepository {
-  findHighestIdentificador(): Promise<string | null>;
+  findHighestIdentificadorByPrefix(prefix: string): Promise<string | null>;
   createNovoIbc(data: CreateNovoIbcData): Promise<IbcCadastroRecord>;
   createIbcLote(data: CreateIbcLoteData): Promise<IbcLoteRecord>;
   listActiveIbcs(): Promise<IbcCadastroRecord[]>;

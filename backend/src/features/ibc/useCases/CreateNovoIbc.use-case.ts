@@ -1,10 +1,13 @@
 import { allocateNextIbcIdentifier } from "../services/allocateNextIbcIdentifier";
 import { IIbcCadastroRepository } from "../repositories/IIbcCadastroRepository";
+import { IIbcProdutoRepository } from "../repositories/IIbcProdutoRepository";
 import { IbcCadastroRecord } from "../types/IbcCadastro.types";
 import { AppError } from "../../../utils/AppError";
+import { getIbcIdentifierPrefix } from "../services/getIbcIdentifierPrefix";
 
 export type CreateNovoIbcInput = {
   dataLimite: Date;
+  produtoId: string;
 };
 
 function startOfUtcDay(date: Date): Date {
@@ -15,9 +18,14 @@ function startOfUtcDay(date: Date): Date {
 
 export class CreateNovoIbcUseCase {
   private readonly repository: IIbcCadastroRepository;
+  private readonly produtoRepository: IIbcProdutoRepository;
 
-  constructor(repository: IIbcCadastroRepository) {
+  constructor(
+    repository: IIbcCadastroRepository,
+    produtoRepository: IIbcProdutoRepository,
+  ) {
     this.repository = repository;
+    this.produtoRepository = produtoRepository;
   }
 
   async execute(input: CreateNovoIbcInput): Promise<IbcCadastroRecord> {
@@ -33,10 +41,20 @@ export class CreateNovoIbcUseCase {
       });
     }
 
-    const highest = await this.repository.findHighestIdentificador();
+    const produto = await this.produtoRepository.findById(input.produtoId);
+    if (!produto) {
+      throw new AppError({
+        message: "Produto de container não encontrado",
+        statusCode: 404,
+        code: "IBC_PRODUTO_NOT_FOUND",
+      });
+    }
+
+    const prefix = getIbcIdentifierPrefix(produto.abreviacao);
+    const highest = await this.repository.findHighestIdentificadorByPrefix(prefix);
     const identificador = highest
       ? allocateNextIbcIdentifier(highest)
-      : "HM00001";
+      : `${prefix}00001`;
 
     return this.repository.createNovoIbc({
       identificador,
@@ -45,6 +63,7 @@ export class CreateNovoIbcUseCase {
       motivoInaptidao: "AGUARDANDO_INSPECAO",
       custodia: "PATIO",
       dataLimite: input.dataLimite,
+      produtoId: produto.id,
     });
   }
 }

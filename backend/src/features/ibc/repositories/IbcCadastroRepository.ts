@@ -22,6 +22,7 @@ type IbcRow = {
   baixadoEm: Date | null;
   createdAt: Date;
   loteId?: string | null;
+  produtoId?: string | null;
 };
 
 export class IbcCadastroRepository implements IIbcCadastroRepository {
@@ -31,9 +32,9 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
     this.prisma = prismaClient;
   }
 
-  async findHighestIdentificador(): Promise<string | null> {
+  async findHighestIdentificadorByPrefix(prefix: string): Promise<string | null> {
     const row = await this.prisma.ibc.findFirst({
-      where: { identificador: { startsWith: "HM" } },
+      where: { identificador: { startsWith: prefix } },
       orderBy: { identificador: "desc" },
       select: { identificador: true },
     });
@@ -66,6 +67,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
         custodia: data.custodia,
         dataLimite: data.dataLimite,
         loteId: data.loteId ?? undefined,
+        produtoId: data.produtoId,
       },
     });
     return this.toRecord(created);
@@ -148,6 +150,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
       baixadoEm: row.baixadoEm,
       createdAt: row.createdAt,
       loteId: row.loteId ?? null,
+      produtoId: row.produtoId ?? null,
     };
   }
 }

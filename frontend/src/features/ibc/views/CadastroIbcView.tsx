@@ -7,6 +7,7 @@ import { useAuth } from "@/auth/AuthContext";
 import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
 import CadastroIbcForm from "../components/CadastroIbcForm";
 import CadastroIbcLoteForm from "../components/CadastroIbcLoteForm";
+import CadastroProdutoModal from "../components/CadastroProdutoModal";
 import CadastroIbcLoteWarningBanner from "../components/CadastroIbcLoteWarningBanner";
 import CadastroIbcModeSelector, {
   type CadastroIbcMode,
@@ -22,6 +23,7 @@ import { toError } from "../utils/toError";
 
 const POOL_KEY = ["ibc", "pool"] as const;
 const ALERTS_KEY = ["ibc", "alerts"] as const;
+const PRODUTOS_KEY = ["ibc", "produtos"] as const;
 
 export default function CadastroIbcView() {
   const { user } = useAuth();
@@ -39,11 +41,17 @@ export default function CadastroIbcView() {
     queryFn: ibcCadastroService.listAlerts,
     enabled: allowed,
   });
+  const produtosQuery = useQuery({
+    queryKey: PRODUTOS_KEY,
+    queryFn: ibcCadastroService.listProdutos,
+    enabled: allowed,
+  });
 
   const invalidateLists = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: POOL_KEY }),
       queryClient.invalidateQueries({ queryKey: ALERTS_KEY }),
+      queryClient.invalidateQueries({ queryKey: PRODUTOS_KEY }),
     ]);
   };
 
@@ -68,6 +76,28 @@ export default function CadastroIbcView() {
       toast.error(toError(err).message || "Falha ao cadastrar lote de IBC");
     },
   });
+  const createProdutoMutation = useMutation({
+    mutationFn: ibcCadastroService.createProduto,
+    onSuccess: async (created) => {
+      toast.success(`Produto ${created.nome} (${created.abreviacao}) cadastrado`);
+      await invalidateLists();
+    },
+    onError: (err) => {
+      toast.error(toError(err).message || "Falha ao cadastrar produto");
+    },
+  });
+
+  const updateProdutoMutation = useMutation({
+    mutationFn: ({ id, nome, abreviacao }: { id: string; nome: string; abreviacao: string }) =>
+      ibcCadastroService.updateProduto(id, { nome, abreviacao }),
+    onSuccess: async () => {
+      toast.success("Produto atualizado");
+      await invalidateLists();
+    },
+    onError: (err) => {
+      toast.error(toError(err).message || "Falha ao atualizar produto");
+    },
+  });
 
   if (!allowed) {
     return (
@@ -77,6 +107,7 @@ export default function CadastroIbcView() {
 
   const alertsCount = alertsQuery.data?.length;
   const poolCount = poolQuery.data?.length;
+  const produtos = produtosQuery.data ?? [];
   const loteResult: CreateLoteIbcResultDTO | undefined =
     createLoteMutation.data;
   const submitting =
@@ -97,21 +128,43 @@ export default function CadastroIbcView() {
           <h2 className="mb-3 text-base font-semibold tracking-tight">
             Novo IBC
           </h2>
+          <div className="mb-3">
+            <CadastroProdutoModal
+              produtos={produtos}
+              disabled={submitting}
+              onCreate={async (input) => {
+                await createProdutoMutation.mutateAsync(input);
+              }}
+              onUpdate={async (id, input) => {
+                await updateProdutoMutation.mutateAsync({ id, ...input });
+              }}
+            />
+          </div>
           <CadastroIbcModeSelector
             mode={mode}
             disabled={submitting}
             onChange={setMode}
           />
+          {produtosQuery.isLoading ? (
+            <CadastroIbcSectionSkeleton rows={1} />
+          ) : null}
+          {!produtosQuery.isLoading && produtos.length === 0 ? (
+            <p className="mb-3 text-sm text-muted-foreground">
+              Cadastre ao menos um produto para liberar o cadastro de IBC.
+            </p>
+          ) : null}
           {mode === "unitario" ? (
             <CadastroIbcForm
               submitting={createMutation.isPending}
-              onSubmit={async (dataLimite) => {
-                await createMutation.mutateAsync({ dataLimite });
+              produtos={produtos}
+              onSubmit={async ({ dataLimite, produtoId }) => {
+                await createMutation.mutateAsync({ dataLimite, produtoId });
               }}
             />
           ) : (
             <CadastroIbcLoteForm
               submitting={createLoteMutation.isPending}
+              produtos={produtos}
               onSubmit={async (input) => {
                 await createLoteMutation.mutateAsync(input);
               }}

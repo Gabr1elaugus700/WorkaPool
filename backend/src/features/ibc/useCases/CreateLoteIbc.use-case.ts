@@ -1,11 +1,13 @@
 import { allocateNextIbcIdentifier } from "../services/allocateNextIbcIdentifier";
 import { IIbcCadastroRepository } from "../repositories/IIbcCadastroRepository";
+import { IIbcProdutoRepository } from "../repositories/IIbcProdutoRepository";
 import { ISaldoIbcErp } from "../ports/ISaldoIbcErp";
 import {
   IbcCadastroRecord,
   IbcLoteRecord,
 } from "../types/IbcCadastro.types";
 import { AppError } from "../../../utils/AppError";
+import { getIbcIdentifierPrefix } from "../services/getIbcIdentifierPrefix";
 
 export const IBC_LOTE_QUANTIDADE_BOUNDS = {
   min: 1,
@@ -16,6 +18,7 @@ export type CreateLoteIbcInput = {
   quantidade: number;
   dataLimite: Date;
   numeroNf?: string | null;
+  produtoId: string;
 };
 
 export type LoteSaldoWarning =
@@ -51,13 +54,16 @@ function normalizeNumeroNf(numeroNf: string | null | undefined): string | null {
 
 export class CreateLoteIbcUseCase {
   private readonly repository: IIbcCadastroRepository;
+  private readonly produtoRepository: IIbcProdutoRepository;
   private readonly saldoPort: ISaldoIbcErp | null;
 
   constructor(
     repository: IIbcCadastroRepository,
+    produtoRepository: IIbcProdutoRepository,
     saldoPort: ISaldoIbcErp | null = null,
   ) {
     this.repository = repository;
+    this.produtoRepository = produtoRepository;
     this.saldoPort = saldoPort;
   }
 
@@ -90,19 +96,28 @@ export class CreateLoteIbcUseCase {
     }
 
     const warning = await this.buildWarning(quantidade);
+    const produto = await this.produtoRepository.findById(input.produtoId);
+    if (!produto) {
+      throw new AppError({
+        message: "Produto de container não encontrado",
+        statusCode: 404,
+        code: "IBC_PRODUTO_NOT_FOUND",
+      });
+    }
 
     const lote = await this.repository.createIbcLote({
       numeroNf,
       dataLimite,
     });
 
-    let highest = await this.repository.findHighestIdentificador();
+    const prefix = getIbcIdentifierPrefix(produto.abreviacao);
+    let highest = await this.repository.findHighestIdentificadorByPrefix(prefix);
     const items: IbcCadastroRecord[] = [];
 
     for (let i = 0; i < quantidade; i += 1) {
       const identificador = highest
         ? allocateNextIbcIdentifier(highest)
-        : "HM00001";
+        : `${prefix}00001`;
       highest = identificador;
 
       const created = await this.repository.createNovoIbc({
@@ -113,6 +128,7 @@ export class CreateLoteIbcUseCase {
         custodia: "PATIO",
         dataLimite,
         loteId: lote.id,
+        produtoId: produto.id,
       });
       items.push(created);
     }

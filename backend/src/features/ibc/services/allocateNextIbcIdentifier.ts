@@ -1,5 +1,5 @@
 const IBC_IDENTIFIER_DIGITS = 5;
-const IBC_IDENTIFIER_PATTERN = /^(HM|NHM|HMS|NHS)(\d{4,5})$/;
+const IBC_IDENTIFIER_PATTERN = /^([A-Z]{2,6})(\d{5})$/;
 
 export function allocateNextIbcIdentifier(highestExisting: string): string {
   const match = IBC_IDENTIFIER_PATTERN.exec(highestExisting);

@@ -1,10 +1,12 @@
 import { apiFetchJson } from "@/lib/apiFetch";
 import type {
+  CreateIbcProdutoInput,
   CreateLoteIbcInput,
   CreateLoteIbcResultDTO,
   CreateNovoIbcInput,
   IbcAlertDTO,
   IbcCadastroDTO,
+  IbcProdutoDTO,
 } from "../types/ibcCadastro.types";
 
 export const ibcCadastroService = {
@@ -27,4 +29,22 @@ export const ibcCadastroService = {
 
   listAlerts: (): Promise<IbcAlertDTO[]> =>
     apiFetchJson<IbcAlertDTO[]>("/api/ibc/alerts"),
+
+  listProdutos: (): Promise<IbcProdutoDTO[]> =>
+    apiFetchJson<IbcProdutoDTO[]>("/api/ibc/produtos"),
+
+  createProduto: (input: CreateIbcProdutoInput): Promise<IbcProdutoDTO> =>
+    apiFetchJson<IbcProdutoDTO>("/api/ibc/produtos", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+
+  updateProduto: (
+    id: string,
+    input: CreateIbcProdutoInput,
+  ): Promise<IbcProdutoDTO> =>
+    apiFetchJson<IbcProdutoDTO>(`/api/ibc/produtos/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
 };

@@ -58,6 +58,9 @@ export async function ensureIbcCadastroSchema(
   await prisma.$executeRawUnsafe(
     `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "loteId" TEXT`,
   );
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "produtoId" TEXT`,
+  );
   await prisma.$executeRawUnsafe(`
     DO $$ BEGIN
       ALTER TABLE "Ibc" ADD CONSTRAINT "Ibc_loteId_fkey"
@@ -68,5 +71,33 @@ export async function ensureIbcCadastroSchema(
   `);
   await prisma.$executeRawUnsafe(
     `CREATE INDEX IF NOT EXISTS "Ibc_loteId_idx" ON "Ibc"("loteId")`,
+  );
+
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      CREATE TABLE "IbcProduto" (
+        "id" TEXT NOT NULL,
+        "nome" TEXT NOT NULL,
+        "abreviacao" TEXT NOT NULL,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) NOT NULL,
+        CONSTRAINT "IbcProduto_pkey" PRIMARY KEY ("id")
+      );
+    EXCEPTION WHEN duplicate_table OR duplicate_object THEN NULL;
+    END $$
+  `);
+  await prisma.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "IbcProduto_abreviacao_key" ON "IbcProduto"("abreviacao")`,
+  );
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      ALTER TABLE "Ibc" ADD CONSTRAINT "Ibc_produtoId_fkey"
+        FOREIGN KEY ("produtoId") REFERENCES "IbcProduto"("id")
+        ON DELETE SET NULL ON UPDATE CASCADE;
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$
+  `);
+  await prisma.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "Ibc_produtoId_idx" ON "Ibc"("produtoId")`,
   );
 }

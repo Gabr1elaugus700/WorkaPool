@@ -9,6 +9,7 @@ export type IbcCadastroDTO = {
   baixadoEm: string | null;
   createdAt: string;
   loteId?: string | null;
+  produtoId?: string | null;
 };
 
 export type IbcAlertDTO = {
@@ -18,12 +19,14 @@ export type IbcAlertDTO = {
 
 export type CreateNovoIbcInput = {
   dataLimite: string;
+  produtoId: string;
 };
 
 export type CreateLoteIbcInput = {
   quantidade: number;
   dataLimite: string;
   numeroNf?: string | null;
+  produtoId: string;
 };
 
 export type IbcLoteDTO = {
@@ -50,4 +53,17 @@ export type CreateLoteIbcResultDTO = {
   items: IbcCadastroDTO[];
   lote: IbcLoteDTO;
   warning?: LoteSaldoWarningDTO;
+};
+
+export type IbcProdutoDTO = {
+  id: string;
+  nome: string;
+  abreviacao: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateIbcProdutoInput = {
+  nome: string;
+  abreviacao: string;
 };

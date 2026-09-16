@@ -159,6 +159,13 @@ test("IBC Routes - autenticação e autorização", async (t) => {
       .patch("/api/ibc/ibc-1")
       .send({ dataLimite: "2099-12-31" });
     const softDelete = await request(app).delete("/api/ibc/ibc-1");
+    const createProduto = await request(app)
+      .post("/api/ibc/produtos")
+      .send({ nome: "Soda", abreviacao: "S" });
+    const listProdutos = await request(app).get("/api/ibc/produtos");
+    const updateProduto = await request(app)
+      .patch("/api/ibc/produtos/prod-1")
+      .send({ nome: "Soda A", abreviacao: "SA" });
 
     assert.strictEqual(create.status, 401);
     assert.strictEqual(createLote.status, 401);
@@ -166,6 +173,9 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(alerts.status, 401);
     assert.strictEqual(patch.status, 401);
     assert.strictEqual(softDelete.status, 401);
+    assert.strictEqual(createProduto.status, 401);
+    assert.strictEqual(listProdutos.status, 401);
+    assert.strictEqual(updateProduto.status, 401);
   });
 
   await t.test("LOGISTICA não pode mutar cadastro", async () => {
@@ -185,14 +195,24 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     const softDelete = await request(app)
       .delete("/api/ibc/ibc-1")
       .set("Authorization", `Bearer ${token}`);
+    const createProduto = await request(app)
+      .post("/api/ibc/produtos")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: "Soda", abreviacao: "S" });
+    const updateProduto = await request(app)
+      .patch("/api/ibc/produtos/prod-1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: "Soda A", abreviacao: "SA" });
 
     assert.strictEqual(create.status, 403);
     assert.strictEqual(createLote.status, 403);
     assert.strictEqual(patch.status, 403);
     assert.strictEqual(softDelete.status, 403);
+    assert.strictEqual(createProduto.status, 403);
+    assert.strictEqual(updateProduto.status, 403);
   });
 
-  await t.test("LOGISTICA pode ler pool e alerts", async () => {
+  await t.test("LOGISTICA pode ler pool, alerts e produtos", async () => {
     const token = createToken("LOGISTICA");
     const list = await request(app)
       .get("/api/ibc")
@@ -200,10 +220,15 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     const alerts = await request(app)
       .get("/api/ibc/alerts")
       .set("Authorization", `Bearer ${token}`);
+    const produtos = await request(app)
+      .get("/api/ibc/produtos")
+      .set("Authorization", `Bearer ${token}`);
 
     assert.notStrictEqual(list.status, 401);
     assert.notStrictEqual(list.status, 403);
     assert.notStrictEqual(alerts.status, 401);
     assert.notStrictEqual(alerts.status, 403);
+    assert.notStrictEqual(produtos.status, 401);
+    assert.notStrictEqual(produtos.status, 403);
   });
 });

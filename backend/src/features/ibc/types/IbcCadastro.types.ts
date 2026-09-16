@@ -15,6 +15,7 @@ export type IbcCadastroRecord = {
   baixadoEm: Date | null;
   createdAt: Date;
   loteId?: string | null;
+  produtoId?: string | null;
 };
 
 export type IbcLoteRecord = {
@@ -37,4 +38,13 @@ export type CreateNovoIbcData = {
   custodia: "PATIO";
   dataLimite: Date;
   loteId?: string | null;
+  produtoId: string;
+};
+
+export type IbcProdutoRecord = {
+  id: string;
+  nome: string;
+  abreviacao: string;
+  createdAt: Date;
+  updatedAt: Date;
 };
