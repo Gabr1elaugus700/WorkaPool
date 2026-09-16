@@ -1,6 +1,7 @@
 import { apiFetchJson } from "@/lib/apiFetch";
 import type { OverviewCustomerDetailResponse } from "../types/overviewCustomerDetail.types";
 import type { OverviewCustomerListResponse } from "../types/overviewCustomerList.types";
+import type { OverviewCustomerMonthlyEvolutionResponse } from "../types/overviewCustomerMonthlyEvolution.types";
 
 export const OverviewCustomerService = {
   getDetail: async (
@@ -8,6 +9,13 @@ export const OverviewCustomerService = {
   ): Promise<OverviewCustomerDetailResponse> => {
     return apiFetchJson<OverviewCustomerDetailResponse>(
       `/api/overview/customers/${encodeURIComponent(String(customerCode))}`,
+    );
+  },
+  getMonthlyEvolution: async (
+    customerCode: number,
+  ): Promise<OverviewCustomerMonthlyEvolutionResponse> => {
+    return apiFetchJson<OverviewCustomerMonthlyEvolutionResponse>(
+      `/api/overview/customers/${encodeURIComponent(String(customerCode))}/monthly-evolution`,
     );
   },
   list: async (params: { search?: string; page?: number }): Promise<OverviewCustomerListResponse> => {

@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { createOverviewCustomerSyncSteps } from "../../../../../src/features/overviewCustomer/sync/createOverviewCustomerSyncSteps";
 import type { OverviewCustomerIdentitySeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerIdentity";
 import type { OverviewCustomerCommercialSummarySeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerCommercialSummary";
+import type { OverviewCustomerMonthlyEvolutionSeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerMonthlyEvolution";
 
 describe("createOverviewCustomerSyncSteps", () => {
   it("builds identity and commercial-summary snapshots before pending steps", async () => {
@@ -47,6 +48,8 @@ describe("createOverviewCustomerSyncSteps", () => {
       fetchSeed: async () => seed,
     }, {
       fetchSeed: async () => summarySeed,
+    }, {
+      fetchSeed: async () => ({ rows: [] }),
     });
 
     assert.strictEqual(steps.length, 5);
@@ -72,9 +75,57 @@ describe("createOverviewCustomerSyncSteps", () => {
     assert.strictEqual(secondRecord.metadata.customerCount, 1);
     assert.strictEqual(secondRecord.customers["123"].orderCountLast12Months, 1);
 
-    const pendingResult = await steps[2].execute();
+    const monthlyResult = await steps[2].execute();
+    assert.ok(typeof monthlyResult === "object" && monthlyResult !== null);
+    const monthlyRecord = monthlyResult as { customers: Record<string, unknown> };
+    assert.deepStrictEqual(monthlyRecord.customers, {});
+
+    const pendingResult = await steps[3].execute();
     assert.ok(typeof pendingResult === "object" && pendingResult !== null);
     const pendingRecord = pendingResult as { status: string };
     assert.strictEqual(pendingRecord.status, "PENDING_WIRING");
+  });
+
+  it("wires monthly evolution sync step with customer snapshot output", async () => {
+    const identitySeed: OverviewCustomerIdentitySeed = {
+      customers: [],
+      sales: [],
+    };
+    const summarySeed: OverviewCustomerCommercialSummarySeed = { lines: [] };
+    const monthlySeed: OverviewCustomerMonthlyEvolutionSeed = {
+      rows: [
+        {
+          customerCode: 123,
+          month: "2024-01",
+          revenue: 500,
+          volume: 20,
+          orderCount: 3,
+          marginPercent: 15,
+        },
+      ],
+    };
+
+    const steps = createOverviewCustomerSyncSteps(
+      { fetchSeed: async () => identitySeed },
+      { fetchSeed: async () => summarySeed },
+      { fetchSeed: async () => monthlySeed },
+    );
+
+    const monthlyResult = await steps[2].execute();
+    assert.ok(typeof monthlyResult === "object" && monthlyResult !== null);
+    const monthlyRecord = monthlyResult as {
+      customers: Record<string, Array<{ month: string }>>;
+      metadata: { customerCount: number };
+    };
+    assert.strictEqual(monthlyRecord.metadata.customerCount, 1);
+    assert.deepStrictEqual(monthlyRecord.customers["123"], [
+      {
+        month: "2024-01",
+        revenue: 500,
+        volume: 20,
+        orderCount: 3,
+        marginPercent: 15,
+      },
+    ]);
   });
 });

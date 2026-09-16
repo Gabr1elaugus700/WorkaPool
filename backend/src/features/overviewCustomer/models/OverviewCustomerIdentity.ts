@@ -38,3 +38,15 @@ export type OverviewCustomerIdentitySnapshot = {
 export type OverviewCustomerCommercialSummarySnapshot = {
   customers: Record<string, OverviewCustomerCommercialSummary>;
 };
+
+export type OverviewCustomerMonthlyEvolutionRow = {
+  month: string;
+  revenue: number;
+  volume: number;
+  orderCount: number;
+  marginPercent: number | null;
+};
+
+export type OverviewCustomerMonthlyEvolutionSnapshot = {
+  customers: Record<string, OverviewCustomerMonthlyEvolutionRow[]>;
+};

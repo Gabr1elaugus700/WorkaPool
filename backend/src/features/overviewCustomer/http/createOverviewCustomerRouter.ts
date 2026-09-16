@@ -3,6 +3,7 @@ import { OverviewCustomerSyncRepository } from "../repositories/OverviewCustomer
 import { createOverviewCustomerDetailRoutes } from "./routes/overviewCustomerDetailRoutes";
 import { GetOverviewCustomerDetailUseCase } from "../useCases/GetOverviewCustomerDetailUseCase";
 import { ListOverviewCustomersUseCase } from "../useCases/ListOverviewCustomersUseCase";
+import { GetOverviewCustomerMonthlyEvolutionUseCase } from "../useCases/GetOverviewCustomerMonthlyEvolutionUseCase";
 
 export function createOverviewCustomerRouter(
   prisma = getPrismaClient(),
@@ -11,5 +12,6 @@ export function createOverviewCustomerRouter(
   return createOverviewCustomerDetailRoutes({
     getDetail: new GetOverviewCustomerDetailUseCase(store),
     listCustomers: new ListOverviewCustomersUseCase(store),
+    getMonthlyEvolution: new GetOverviewCustomerMonthlyEvolutionUseCase(store),
   });
 }

@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import request from "supertest";
 import { createOverviewCustomerDetailRoutes } from "../../../../../src/features/overviewCustomer/http/routes/overviewCustomerDetailRoutes";
 import { GetOverviewCustomerDetailUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerDetailUseCase";
+import { GetOverviewCustomerMonthlyEvolutionUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerMonthlyEvolutionUseCase";
 import { ListOverviewCustomersUseCase } from "../../../../../src/features/overviewCustomer/useCases/ListOverviewCustomersUseCase";
 import { InMemoryOverviewCustomerSyncStore } from "../../../../helpers/InMemoryOverviewCustomerSyncStore";
 
@@ -20,6 +21,7 @@ function createApp(store: InMemoryOverviewCustomerSyncStore): Express {
     createOverviewCustomerDetailRoutes({
       getDetail: new GetOverviewCustomerDetailUseCase(store),
       listCustomers: new ListOverviewCustomersUseCase(store),
+      getMonthlyEvolution: new GetOverviewCustomerMonthlyEvolutionUseCase(store),
     }),
   );
   return app;
@@ -289,5 +291,114 @@ describe("Overview customer detail HTTP", () => {
       .get("/api/overview/customers/123")
       .set("Authorization", `Bearer ${createToken("GERENTE_DPTO")}`);
     assert.strictEqual(manager.status, 200);
+  });
+
+  it("returns monthly evolution payload for authorized users", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    store.seedSuccessfulSnapshot(
+      {
+        id: "snap-monthly-1",
+        publishedAt: new Date("2026-01-10T00:00:00.000Z"),
+        payload: {
+          customers: {
+            "123": {
+              customerCode: 123,
+              tradeName: "Cliente A",
+              document: "00.000.000/0001-00",
+              city: "Maringa",
+              state: "PR",
+              segment: "Construcao",
+              registrationDate: "2024-01-15",
+              primaryCodRep: 10,
+              firstInvoicedPurchaseAt: "2024-02-01",
+              lastInvoicedPurchaseAt: "2026-08-01",
+              branchIndicator: "MGA",
+            },
+          },
+          "evolucao-mensal": {
+            customers: {
+              "123": [
+                {
+                  month: "2024-01",
+                  revenue: 1000,
+                  volume: 80,
+                  orderCount: 4,
+                  marginPercent: 22.5,
+                },
+              ],
+            },
+          },
+        },
+      },
+      new Date("2026-01-10T00:00:00.000Z"),
+    );
+    const app = createApp(store);
+
+    const response = await request(app)
+      .get("/api/overview/customers/123/monthly-evolution")
+      .set("Authorization", `Bearer ${createToken("ADMIN")}`);
+
+    assert.strictEqual(response.status, 200);
+    assert.deepStrictEqual(response.body, {
+      customerCode: 123,
+      monthly: [
+        {
+          month: "2024-01",
+          revenue: 1000,
+          volume: 80,
+          orderCount: 4,
+          marginPercent: 22.5,
+        },
+      ],
+    });
+  });
+
+  it("rejects unauthorized VENDAS access on monthly evolution with 403", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    store.seedSuccessfulSnapshot(
+      {
+        id: "snap-monthly-2",
+        publishedAt: new Date("2026-01-10T00:00:00.000Z"),
+        payload: {
+          customers: {
+            "123": {
+              customerCode: 123,
+              tradeName: "Cliente A",
+              document: "00.000.000/0001-00",
+              city: "Maringa",
+              state: "PR",
+              segment: "Construcao",
+              registrationDate: "2024-01-15",
+              primaryCodRep: 10,
+              firstInvoicedPurchaseAt: "2024-02-01",
+              lastInvoicedPurchaseAt: "2026-08-01",
+              branchIndicator: "MGA",
+            },
+          },
+          "evolucao-mensal": {
+            customers: {
+              "123": [
+                {
+                  month: "2024-01",
+                  revenue: 1000,
+                  volume: 80,
+                  orderCount: 4,
+                  marginPercent: 22.5,
+                },
+              ],
+            },
+          },
+        },
+      },
+      new Date("2026-01-10T00:00:00.000Z"),
+    );
+    const app = createApp(store);
+
+    const response = await request(app)
+      .get("/api/overview/customers/123/monthly-evolution")
+      .set("Authorization", `Bearer ${createToken("VENDAS", 20)}`);
+
+    assert.strictEqual(response.status, 403);
+    assert.strictEqual(response.body.code, "OVERVIEW_CUSTOMER_FORBIDDEN");
   });
 });

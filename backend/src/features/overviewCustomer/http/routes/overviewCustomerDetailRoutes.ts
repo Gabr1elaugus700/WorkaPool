@@ -12,6 +12,11 @@ export function createOverviewCustomerDetailRoutes(
   const controller = new OverviewCustomerDetailController(deps);
 
   router.get("/", authMiddleware, controller.list);
+  router.get(
+    "/:clienteId/monthly-evolution",
+    authMiddleware,
+    controller.getMonthlyEvolutionByCustomerCode,
+  );
   router.get("/:clienteId", authMiddleware, controller.getByCustomerCode);
 
   return router;
