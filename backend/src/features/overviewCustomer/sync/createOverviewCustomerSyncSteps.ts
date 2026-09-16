@@ -1,6 +1,8 @@
 import type { SeniorStepExecutor } from "./ports";
 import { materializeOverviewCustomerIdentity } from "./materializeOverviewCustomerIdentity";
 import { OverviewCustomerIdentitySeniorQuery } from "./OverviewCustomerIdentitySeniorQuery";
+import { materializeOverviewCustomerCommercialSummary } from "./materializeOverviewCustomerCommercialSummary";
+import { OverviewCustomerCommercialSummarySeniorQuery } from "./OverviewCustomerCommercialSummarySeniorQuery";
 
 const STEP_NAMES = [
   "dados-gerais-cliente",
@@ -21,7 +23,12 @@ function createPendingWiringStep(name: string): SeniorStepExecutor {
 }
 
 export function createOverviewCustomerSyncSteps(
-  identityQuery: OverviewCustomerIdentitySeniorQuery = new OverviewCustomerIdentitySeniorQuery(),
+  identityQuery: Pick<OverviewCustomerIdentitySeniorQuery, "fetchSeed"> =
+    new OverviewCustomerIdentitySeniorQuery(),
+  commercialSummaryQuery: Pick<
+    OverviewCustomerCommercialSummarySeniorQuery,
+    "fetchSeed"
+  > = new OverviewCustomerCommercialSummarySeniorQuery(),
 ): SeniorStepExecutor[] {
   const identityStep: SeniorStepExecutor = {
     name: STEP_NAMES[0],
@@ -39,9 +46,25 @@ export function createOverviewCustomerSyncSteps(
     },
   };
 
+  const summaryStep: SeniorStepExecutor = {
+    name: STEP_NAMES[1],
+    execute: async () => {
+      const seed = await commercialSummaryQuery.fetchSeed();
+      const snapshot = materializeOverviewCustomerCommercialSummary(seed);
+
+      return {
+        customers: snapshot.customers,
+        metadata: {
+          customerCount: Object.keys(snapshot.customers).length,
+          generatedAt: new Date().toISOString(),
+        },
+      };
+    },
+  };
+
   return [
     identityStep,
-    createPendingWiringStep(STEP_NAMES[1]),
+    summaryStep,
     createPendingWiringStep(STEP_NAMES[2]),
     createPendingWiringStep(STEP_NAMES[3]),
     createPendingWiringStep(STEP_NAMES[4]),

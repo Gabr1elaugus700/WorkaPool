@@ -2,6 +2,7 @@ import DefaultLayout from "@/layout/DefaultLayout";
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { OverviewCustomerAccessDeniedState } from "../components/OverviewCustomerAccessDeniedState";
+import { OverviewCustomerCommercialSummaryCard } from "../components/OverviewCustomerCommercialSummaryCard";
 import { useOverviewCustomerDetail } from "../hooks/useOverviewCustomerDetail";
 
 function parseCustomerCode(raw: string | undefined): number | null {
@@ -127,6 +128,8 @@ export function OverviewCustomerDetailView() {
             <dd>{detail.customer.lastInvoicedPurchaseAt ?? "-"}</dd>
           </div>
         </dl>
+
+        <OverviewCustomerCommercialSummaryCard summary={detail.commercialSummary} />
 
         <p className="text-xs text-muted-foreground">
           Última sincronização com sucesso:{" "}

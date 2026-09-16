@@ -2,9 +2,10 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { createOverviewCustomerSyncSteps } from "../../../../../src/features/overviewCustomer/sync/createOverviewCustomerSyncSteps";
 import type { OverviewCustomerIdentitySeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerIdentity";
+import type { OverviewCustomerCommercialSummarySeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerCommercialSummary";
 
 describe("createOverviewCustomerSyncSteps", () => {
-  it("builds identity snapshot on first step and keeps remaining steps as pending wiring", async () => {
+  it("builds identity and commercial-summary snapshots before pending steps", async () => {
     const seed: OverviewCustomerIdentitySeed = {
       customers: [
         {
@@ -27,9 +28,25 @@ describe("createOverviewCustomerSyncSteps", () => {
         },
       ],
     };
+    const summarySeed: OverviewCustomerCommercialSummarySeed = {
+      lines: [
+        {
+          customerCode: 123,
+          orderId: 9001,
+          issuedAt: "2026-08-01",
+          productCode: "101072",
+          quantityInvoiced: 4,
+          quantityReturned: 0,
+          unitPrice: 20,
+          lineMarginPercent: 30,
+        },
+      ],
+    };
 
     const steps = createOverviewCustomerSyncSteps({
       fetchSeed: async () => seed,
+    }, {
+      fetchSeed: async () => summarySeed,
     });
 
     assert.strictEqual(steps.length, 5);
@@ -45,6 +62,15 @@ describe("createOverviewCustomerSyncSteps", () => {
     assert.strictEqual(firstRecord.metadata.customerCount, 1);
     assert.strictEqual(firstRecord.customers["123"].customerCode, 123);
     assert.strictEqual(firstRecord.customers["123"].primaryCodRep, 10);
+
+    const secondResult = await steps[1].execute();
+    assert.ok(typeof secondResult === "object" && secondResult !== null);
+    const secondRecord = secondResult as {
+      customers: Record<string, { orderCountLast12Months: number }>;
+      metadata: { customerCount: number };
+    };
+    assert.strictEqual(secondRecord.metadata.customerCount, 1);
+    assert.strictEqual(secondRecord.customers["123"].orderCountLast12Months, 1);
 
     const pendingResult = await steps[2].execute();
     assert.ok(typeof pendingResult === "object" && pendingResult !== null);
