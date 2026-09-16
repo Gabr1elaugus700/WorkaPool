@@ -1,6 +1,7 @@
 import {
   CreateIbcLoteData,
   CreateNovoIbcData,
+  IbcStructuralChangeType,
   IbcCadastroRecord,
   IbcLoteRecord,
 } from "../types/IbcCadastro.types";
@@ -12,6 +13,14 @@ export type ListIbcsOptions = {
 export interface IIbcCadastroRepository {
   findHighestIdentificadorByPrefix(prefix: string): Promise<string | null>;
   createNovoIbc(data: CreateNovoIbcData): Promise<IbcCadastroRecord>;
+  createDerivedIbcFromSource(data: {
+    sourceIbcId: string;
+    identificador: string;
+    produtoId: string | null;
+    actorId: string;
+    observation: string | null;
+    changeType: IbcStructuralChangeType;
+  }): Promise<IbcCadastroRecord>;
   createIbcLote(data: CreateIbcLoteData): Promise<IbcLoteRecord>;
   listActiveIbcs(): Promise<IbcCadastroRecord[]>;
   listIbcs(options: ListIbcsOptions): Promise<IbcCadastroRecord[]>;

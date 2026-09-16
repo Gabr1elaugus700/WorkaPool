@@ -166,6 +166,12 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     const updateProduto = await request(app)
       .patch("/api/ibc/produtos/prod-1")
       .send({ nome: "Soda A", abreviacao: "SA" });
+    const convertStatus = await request(app)
+      .patch("/api/ibc/ibc-1/converter-nao-homologado")
+      .send({ confirmado: true });
+    const changeProduto = await request(app)
+      .patch("/api/ibc/ibc-1/produto")
+      .send({ produtoId: "8d7f903e-f53d-4c62-80b2-48f3c9655d71", confirmado: true });
 
     assert.strictEqual(create.status, 401);
     assert.strictEqual(createLote.status, 401);
@@ -176,6 +182,8 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(createProduto.status, 401);
     assert.strictEqual(listProdutos.status, 401);
     assert.strictEqual(updateProduto.status, 401);
+    assert.strictEqual(convertStatus.status, 401);
+    assert.strictEqual(changeProduto.status, 401);
   });
 
   await t.test("LOGISTICA não pode mutar cadastro", async () => {
@@ -203,6 +211,14 @@ test("IBC Routes - autenticação e autorização", async (t) => {
       .patch("/api/ibc/produtos/prod-1")
       .set("Authorization", `Bearer ${token}`)
       .send({ nome: "Soda A", abreviacao: "SA" });
+    const convertStatus = await request(app)
+      .patch("/api/ibc/ibc-1/converter-nao-homologado")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ confirmado: true });
+    const changeProduto = await request(app)
+      .patch("/api/ibc/ibc-1/produto")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ produtoId: "8d7f903e-f53d-4c62-80b2-48f3c9655d71", confirmado: true });
 
     assert.strictEqual(create.status, 403);
     assert.strictEqual(createLote.status, 403);
@@ -210,6 +226,8 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(softDelete.status, 403);
     assert.strictEqual(createProduto.status, 403);
     assert.strictEqual(updateProduto.status, 403);
+    assert.strictEqual(convertStatus.status, 403);
+    assert.strictEqual(changeProduto.status, 403);
   });
 
   await t.test("LOGISTICA pode ler pool, alerts e produtos", async () => {

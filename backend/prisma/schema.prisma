@@ -141,24 +141,30 @@ model IbcLote {
 }
 
 model Ibc {
-  id               String              @id @default(uuid())
-  identificador    String              @unique
-  aptidao          IbcAptidao
-  custodia         IbcCustodia         @default(PATIO)
-  tipoCadastro     IbcTipoCadastro     @default(NOVO)
-  aquisicao        IbcAquisicao        @default(COMPRA)
-  motivoInaptidao  IbcMotivoInaptidao?
-  dataLimite       DateTime?
-  baixadoEm        DateTime?
-  createdAt        DateTime            @default(now())
-  loteId           String?
-  produtoId        String?
-  lote             IbcLote?            @relation(fields: [loteId], references: [id])
-  produto          IbcProduto?         @relation(fields: [produtoId], references: [id])
-  alocacao         AlocacaoIbc?
+  id                   String                 @id @default(uuid())
+  identificador        String                 @unique
+  aptidao              IbcAptidao
+  custodia             IbcCustodia            @default(PATIO)
+  tipoCadastro         IbcTipoCadastro        @default(NOVO)
+  aquisicao            IbcAquisicao           @default(COMPRA)
+  motivoInaptidao      IbcMotivoInaptidao?
+  dataLimite           DateTime?
+  baixadoEm            DateTime?
+  createdAt            DateTime               @default(now())
+  loteId               String?
+  produtoId            String?
+  convertedToContainerId String?
+  lote                 IbcLote?               @relation(fields: [loteId], references: [id])
+  produto              IbcProduto?            @relation(fields: [produtoId], references: [id])
+  convertedToContainer Ibc?                   @relation("IbcConversionLink", fields: [convertedToContainerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  convertedFrom        Ibc[]                  @relation("IbcConversionLink")
+  alocacao             AlocacaoIbc?
+  conversionHistoryFrom IbcConversionHistory[] @relation("IbcConversionFrom")
+  conversionHistoryTo   IbcConversionHistory[] @relation("IbcConversionTo")
 
   @@index([loteId])
   @@index([produtoId])
+  @@index([convertedToContainerId])
 }
 
 model IbcProduto {
@@ -168,6 +174,22 @@ model IbcProduto {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   ibcs       Ibc[]
+}
+
+model IbcConversionHistory {
+  id              String   @id @default(uuid())
+  fromContainerId String
+  toContainerId   String
+  changeType      String
+  observation     String?
+  actorId         String
+  createdAt       DateTime @default(now())
+
+  fromContainer Ibc @relation("IbcConversionFrom", fields: [fromContainerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  toContainer   Ibc @relation("IbcConversionTo", fields: [toContainerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([fromContainerId])
+  @@index([toContainerId])
 }
 
 model AlocacaoIbc {

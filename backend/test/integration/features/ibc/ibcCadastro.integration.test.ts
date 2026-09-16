@@ -35,6 +35,20 @@ function createToken(role: Role, id = "ibc-cadastro-almox"): string {
 
 async function cleanupFixtures(): Promise<void> {
   await prisma.$executeRawUnsafe(`
+    DELETE FROM "IbcConversionHistory"
+    WHERE "fromContainerId" IN (
+      SELECT i.id FROM "Ibc" i
+      LEFT JOIN "IbcProduto" p ON p.id = i."produtoId"
+      WHERE i."identificador" LIKE '${FIXTURE_PREFIX}%'
+         OR p.nome LIKE '${FIXTURE_PREFIX}%'
+    ) OR "toContainerId" IN (
+      SELECT i.id FROM "Ibc" i
+      LEFT JOIN "IbcProduto" p ON p.id = i."produtoId"
+      WHERE i."identificador" LIKE '${FIXTURE_PREFIX}%'
+         OR p.nome LIKE '${FIXTURE_PREFIX}%'
+    )
+  `).catch(() => undefined);
+  await prisma.$executeRawUnsafe(`
     DELETE FROM "AlocacaoIbc"
     WHERE "ibcId" IN (
       SELECT i.id
@@ -81,11 +95,14 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     await prisma.$disconnect();
   });
 
-  async function createProduto(token: string): Promise<string> {
+  async function createProduto(
+    token: string,
+    input: { nome: string; abreviacao: string },
+  ): Promise<string> {
     const created = await request(createIbcTestApp())
       .post("/api/ibc/produtos")
       .set("Authorization", `Bearer ${token}`)
-      .send({ nome: `${FIXTURE_PREFIX}Soda`, abreviacao: "SA" });
+      .send(input);
     assert.equal(created.status, 201);
     return String(created.body.id);
   }
@@ -93,7 +110,10 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
   it("POST creates Novo IBC persisted with HM identifier", async () => {
     const app = createIbcTestApp();
     const token = createToken(Role.ALMOX);
-    const produtoId = await createProduto(token);
+    const produtoId = await createProduto(token, {
+      nome: `${FIXTURE_PREFIX}Soda`,
+      abreviacao: "SA",
+    });
 
     const response = await request(app)
       .post("/api/ibc")
@@ -144,6 +164,102 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
       .send({ nome: `${FIXTURE_PREFIX}Acido Novo`, abreviacao: "SO" });
     assert.equal(updated.status, 200);
     assert.equal(updated.body.abreviacao, "SO");
+  });
+
+  it("status conversion requires confirmation and creates lineage history", async () => {
+    const app = createIbcTestApp();
+    const token = createToken(Role.ALMOX);
+    const produtoId = await createProduto(token, {
+      nome: `${FIXTURE_PREFIX}Conv`,
+      abreviacao: "SC",
+    });
+
+    const created = await request(app)
+      .post("/api/ibc")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ dataLimite: FUTURE_DATA_LIMITE, produtoId });
+    assert.equal(created.status, 201);
+
+    const withoutConfirmation = await request(app)
+      .patch(`/api/ibc/${created.body.id}/converter-nao-homologado`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({});
+    assert.equal(withoutConfirmation.status, 400);
+    assert.equal(withoutConfirmation.body.code, "IBC_STATUS_CONFIRMATION_REQUIRED");
+
+    const converted = await request(app)
+      .patch(`/api/ibc/${created.body.id}/converter-nao-homologado`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ confirmado: true, observacao: "avaria visual" });
+    assert.equal(converted.status, 201);
+    assert.match(converted.body.identificador, /^NHMSC\d{5}$/);
+
+    const sourceRows = await prisma.$queryRawUnsafe<
+      Array<{ convertedToContainerId: string | null }>
+    >(
+      `SELECT "convertedToContainerId"
+       FROM "Ibc"
+       WHERE "id" = '${created.body.id}'`,
+    );
+    assert.equal(sourceRows[0]?.convertedToContainerId, converted.body.id);
+
+    const historyRows = await prisma.$queryRawUnsafe<
+      Array<{
+        fromContainerId: string;
+        toContainerId: string;
+        changeType: string;
+        observation: string | null;
+      }>
+    >(
+      `SELECT "fromContainerId","toContainerId","changeType","observation"
+       FROM "IbcConversionHistory"
+       WHERE "fromContainerId" = '${created.body.id}'`,
+    );
+    assert.equal(historyRows.length, 1);
+    assert.equal(historyRows[0].toContainerId, converted.body.id);
+    assert.equal(historyRows[0].changeType, "conversion");
+    assert.equal(historyRows[0].observation, "avaria visual");
+  });
+
+  it("product change creates a new record and product-change history", async () => {
+    const app = createIbcTestApp();
+    const token = createToken(Role.ALMOX);
+    const produtoOrigemId = await createProduto(token, {
+      nome: `${FIXTURE_PREFIX}Origem`,
+      abreviacao: "SO",
+    });
+    const produtoDestinoId = await createProduto(token, {
+      nome: `${FIXTURE_PREFIX}Destino`,
+      abreviacao: "NX",
+    });
+
+    const created = await request(app)
+      .post("/api/ibc")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ dataLimite: FUTURE_DATA_LIMITE, produtoId: produtoOrigemId });
+    assert.equal(created.status, 201);
+
+    const changed = await request(app)
+      .patch(`/api/ibc/${created.body.id}/produto`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        produtoId: produtoDestinoId,
+        confirmado: true,
+        observacao: "mudanca de produto operacional",
+      });
+    assert.equal(changed.status, 201);
+    assert.match(changed.body.identificador, /^HMNX\d{5}$/);
+    assert.equal(changed.body.produtoId, produtoDestinoId);
+
+    const historyRows = await prisma.$queryRawUnsafe<
+      Array<{ changeType: string; toContainerId: string }>
+    >(
+      `SELECT "changeType","toContainerId"
+       FROM "IbcConversionHistory"
+       WHERE "fromContainerId" = '${created.body.id}'`,
+    );
+    assert.ok(historyRows.some((row) => row.changeType === "product_change"));
+    assert.ok(historyRows.some((row) => row.toContainerId === changed.body.id));
   });
 
   it("GET pool lists active IBCs and omits baixados by default", async () => {

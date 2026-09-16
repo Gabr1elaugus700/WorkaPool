@@ -23,6 +23,7 @@ type IbcRow = {
   createdAt: Date;
   loteId?: string | null;
   produtoId?: string | null;
+  convertedToContainerId?: string | null;
 };
 
 export class IbcCadastroRepository implements IIbcCadastroRepository {
@@ -71,6 +72,56 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
       },
     });
     return this.toRecord(created);
+  }
+
+  async createDerivedIbcFromSource(data: {
+    sourceIbcId: string;
+    identificador: string;
+    produtoId: string | null;
+    actorId: string;
+    observation: string | null;
+    changeType: "conversion" | "product_change" | "status_change";
+  }): Promise<IbcCadastroRecord> {
+    return this.prisma.$transaction(async (tx) => {
+      const source = await tx.ibc.findUnique({
+        where: { id: data.sourceIbcId },
+      });
+
+      if (!source) {
+        throw new Error(`IBC source not found: ${data.sourceIbcId}`);
+      }
+
+      const created = await tx.ibc.create({
+        data: {
+          identificador: data.identificador,
+          aptidao: source.aptidao,
+          custodia: source.custodia,
+          tipoCadastro: source.tipoCadastro,
+          aquisicao: source.aquisicao,
+          motivoInaptidao: source.motivoInaptidao,
+          dataLimite: source.dataLimite,
+          produtoId: data.produtoId,
+        },
+      });
+
+      await tx.$executeRawUnsafe(
+        `UPDATE "Ibc" SET "convertedToContainerId" = $1 WHERE "id" = $2`,
+        created.id,
+        source.id,
+      );
+      await tx.$executeRawUnsafe(
+        `INSERT INTO "IbcConversionHistory" ("id","fromContainerId","toContainerId","changeType","actorId","observation","createdAt")
+         VALUES ($1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP)`,
+        crypto.randomUUID(),
+        source.id,
+        created.id,
+        data.changeType,
+        data.actorId,
+        data.observation,
+      );
+
+      return this.toRecord(created);
+    });
   }
 
   async listActiveIbcs(): Promise<IbcCadastroRecord[]> {
@@ -151,6 +202,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
       createdAt: row.createdAt,
       loteId: row.loteId ?? null,
       produtoId: row.produtoId ?? null,
+      convertedToContainerId: row.convertedToContainerId ?? null,
     };
   }
 }
