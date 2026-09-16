@@ -17,6 +17,11 @@ export function createOverviewCustomerDetailRoutes(
     authMiddleware,
     controller.getMonthlyEvolutionByCustomerCode,
   );
+  router.get(
+    "/:clienteId/purchased-products",
+    authMiddleware,
+    controller.getPurchasedProductsByCustomerCode,
+  );
   router.get("/:clienteId", authMiddleware, controller.getByCustomerCode);
 
   return router;

@@ -4,6 +4,7 @@ import { createOverviewCustomerSyncSteps } from "../../../../../src/features/ove
 import type { OverviewCustomerIdentitySeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerIdentity";
 import type { OverviewCustomerCommercialSummarySeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerCommercialSummary";
 import type { OverviewCustomerMonthlyEvolutionSeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerMonthlyEvolution";
+import type { OverviewCustomerPurchasedProductsSeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerPurchasedProducts";
 
 describe("createOverviewCustomerSyncSteps", () => {
   it("builds identity and commercial-summary snapshots before pending steps", async () => {
@@ -43,6 +44,21 @@ describe("createOverviewCustomerSyncSteps", () => {
         },
       ],
     };
+    const purchasedSeed: OverviewCustomerPurchasedProductsSeed = {
+      lines: [
+        {
+          customerCode: 123,
+          orderId: 9001,
+          issuedAt: "2026-08-01",
+          productCode: "101072",
+          productName: "Produto A",
+          quantityInvoiced: 4,
+          quantityReturned: 0,
+          unitPrice: 20,
+          lineMarginPercent: 30,
+        },
+      ],
+    };
 
     const steps = createOverviewCustomerSyncSteps({
       fetchSeed: async () => seed,
@@ -50,6 +66,8 @@ describe("createOverviewCustomerSyncSteps", () => {
       fetchSeed: async () => summarySeed,
     }, {
       fetchSeed: async () => ({ rows: [] }),
+    }, {
+      fetchSeed: async () => purchasedSeed,
     });
 
     assert.strictEqual(steps.length, 5);
@@ -80,10 +98,17 @@ describe("createOverviewCustomerSyncSteps", () => {
     const monthlyRecord = monthlyResult as { customers: Record<string, unknown> };
     assert.deepStrictEqual(monthlyRecord.customers, {});
 
-    const pendingResult = await steps[3].execute();
-    assert.ok(typeof pendingResult === "object" && pendingResult !== null);
-    const pendingRecord = pendingResult as { status: string };
-    assert.strictEqual(pendingRecord.status, "PENDING_WIRING");
+    const purchasedProductsResult = await steps[3].execute();
+    assert.ok(typeof purchasedProductsResult === "object" && purchasedProductsResult !== null);
+    const purchasedProductsRecord = purchasedProductsResult as {
+      customers: Record<string, Array<{ productCode: string }>>;
+      metadata: { customerCount: number };
+    };
+    assert.strictEqual(purchasedProductsRecord.metadata.customerCount, 1);
+    assert.strictEqual(
+      purchasedProductsRecord.customers["123"][0].productCode,
+      "101072",
+    );
   });
 
   it("wires monthly evolution sync step with customer snapshot output", async () => {
@@ -109,6 +134,7 @@ describe("createOverviewCustomerSyncSteps", () => {
       { fetchSeed: async () => identitySeed },
       { fetchSeed: async () => summarySeed },
       { fetchSeed: async () => monthlySeed },
+      { fetchSeed: async () => ({ lines: [] }) },
     );
 
     const monthlyResult = await steps[2].execute();
