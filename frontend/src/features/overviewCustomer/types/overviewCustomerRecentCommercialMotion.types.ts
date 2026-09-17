@@ -17,6 +17,8 @@ export type OverviewCustomerRecentCommercialMotionResponse = {
   lastInvoicedPurchaseAt: string | null;
   lastLostOrderAt: string | null;
   lastCommercialMovementAt: string | null;
+  invoicedCountLast12Months: number;
+  lostCountLast12Months: number;
   recentInvoicedOrders: OverviewCustomerRecentInvoicedOrder[];
   recentLostOrders: OverviewCustomerRecentLostOrder[];
 };

@@ -23,6 +23,11 @@ export function createOverviewCustomerDetailRoutes(
     controller.getPurchasedProductsByCustomerCode,
   );
   router.get(
+    "/:clienteId/recent-orders",
+    authMiddleware,
+    controller.getRecentCommercialMotionByCustomerCode,
+  );
+  router.get(
     "/:clienteId/recent-commercial-motion",
     authMiddleware,
     controller.getRecentCommercialMotionByCustomerCode,

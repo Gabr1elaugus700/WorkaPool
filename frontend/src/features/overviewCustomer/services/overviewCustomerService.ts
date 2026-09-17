@@ -31,7 +31,7 @@ export const OverviewCustomerService = {
     customerCode: number,
   ): Promise<OverviewCustomerRecentCommercialMotionResponse> => {
     return apiFetchJson<OverviewCustomerRecentCommercialMotionResponse>(
-      `/api/overview/customers/${encodeURIComponent(String(customerCode))}/recent-commercial-motion`,
+      `/api/overview/customers/${encodeURIComponent(String(customerCode))}/recent-orders`,
     );
   },
   list: async (params: { search?: string; page?: number }): Promise<OverviewCustomerListResponse> => {

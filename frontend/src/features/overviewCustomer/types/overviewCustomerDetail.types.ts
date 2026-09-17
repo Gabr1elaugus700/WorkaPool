@@ -13,6 +13,8 @@ export type OverviewCustomerIdentity = {
   lastInvoicedPurchaseAt: string | null;
   lastLostOrderAt: string | null;
   lastCommercialMovementAt: string | null;
+  invoicedCountLast12Months?: number;
+  lostCountLast12Months?: number;
   branchIndicator: BranchIndicator;
 };
 

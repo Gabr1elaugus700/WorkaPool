@@ -13,6 +13,8 @@ export type OverviewCustomerIdentity = {
   lastInvoicedPurchaseAt: string | null;
   lastLostOrderAt?: string | null;
   lastCommercialMovementAt?: string | null;
+  invoicedCountLast12Months?: number;
+  lostCountLast12Months?: number;
   branchIndicator: BranchIndicator;
   orderCountLast12Months?: number;
   revenueLast12Months?: number;
@@ -89,6 +91,8 @@ export type OverviewCustomerRecentCommercialMotion = {
   lastInvoicedPurchaseAt: string | null;
   lastLostOrderAt: string | null;
   lastCommercialMovementAt: string | null;
+  invoicedCountLast12Months: number;
+  lostCountLast12Months: number;
   recentInvoicedOrders: OverviewCustomerRecentInvoicedOrder[];
   recentLostOrders: OverviewCustomerRecentLostOrder[];
 };

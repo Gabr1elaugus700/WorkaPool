@@ -21,6 +21,8 @@ export type GetOverviewCustomerRecentCommercialMotionResult = {
   lastInvoicedPurchaseAt: string | null;
   lastLostOrderAt: string | null;
   lastCommercialMovementAt: string | null;
+  invoicedCountLast12Months: number;
+  lostCountLast12Months: number;
   recentInvoicedOrders: OverviewCustomerRecentInvoicedOrder[];
   recentLostOrders: OverviewCustomerRecentLostOrder[];
 };
@@ -51,21 +53,30 @@ export class GetOverviewCustomerRecentCommercialMotionUseCase {
     }
 
     const motionSnapshot = extractOverviewCustomerRecentCommercialMotionSnapshot(snapshot.payload);
-    const motion = motionSnapshot?.customers[String(input.customerCode)];
+    if (!motionSnapshot) {
+      throw notFound(input.customerCode);
+    }
+
+    const motion = motionSnapshot.customers[String(input.customerCode)];
+    if (!motion) {
+      throw notFound(input.customerCode);
+    }
 
     return {
       customerCode: input.customerCode,
       lastInvoicedPurchaseAt:
-        motion?.lastInvoicedPurchaseAt ?? customer.lastInvoicedPurchaseAt ?? null,
-      lastLostOrderAt: motion?.lastLostOrderAt ?? customer.lastLostOrderAt ?? null,
+        motion.lastInvoicedPurchaseAt ?? customer.lastInvoicedPurchaseAt ?? null,
+      lastLostOrderAt: motion.lastLostOrderAt ?? customer.lastLostOrderAt ?? null,
       lastCommercialMovementAt:
-        motion?.lastCommercialMovementAt ??
+        motion.lastCommercialMovementAt ??
         customer.lastCommercialMovementAt ??
-        motion?.lastInvoicedPurchaseAt ??
+        motion.lastInvoicedPurchaseAt ??
         customer.lastInvoicedPurchaseAt ??
         null,
-      recentInvoicedOrders: motion?.recentInvoicedOrders ?? [],
-      recentLostOrders: motion?.recentLostOrders ?? [],
+      invoicedCountLast12Months: motion.invoicedCountLast12Months,
+      lostCountLast12Months: motion.lostCountLast12Months,
+      recentInvoicedOrders: motion.recentInvoicedOrders,
+      recentLostOrders: motion.recentLostOrders,
     };
   }
 }

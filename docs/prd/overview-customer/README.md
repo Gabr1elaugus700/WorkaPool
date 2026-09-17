@@ -17,6 +17,7 @@ Visão 360º do cliente no WorkaPool.
 - [Overview customer portfolio list and search](./TEST-SUITE-116.md)
 - [Overview customer monthly evolution](../../test-suites/overview-customer-monthly-evolution.md)
 - [Overview customer purchased products](../../test-suites/overview-customer-purchased-products.md)
+- [Overview customer recent orders (invoiced / lost)](../../test-suites/overview-customer-recent-orders.md)
 
 ## SQL versionado
 
@@ -28,7 +29,7 @@ Scripts de análise já validados, copiados para o repo para o worker noturno e 
 | `sql/resumo-comercial.sql` | Resumo + frequência numérica (margem no sync: ponderada por item — ver PRD) |
 | `sql/evolucao-mensal.sql` | Série mensal |
 | `sql/produtos-comprados.sql` | Mix de produtos |
-| `sql/ultimo-pedido-cliente.sql` | Exploração de último pedido; datas canônicas no produto seguem o PRD (faturado / perdido / movimentação) |
+| `sql/ultimo-pedido-cliente.sql` | Exploração de último pedido; expandir para #99 (listas tipadas + datas canônicas) |
 
 ## Ordem de implementação
 

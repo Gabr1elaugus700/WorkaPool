@@ -54,10 +54,12 @@ describe("OverviewCustomerPurchasedProductsSection", () => {
         isError: false,
       }),
     );
-    assert.match(loaded, /Produtos comprados/);
+    assert.match(loaded, /Produtos comprados \(1\)/);
+    assert.match(loaded, /Buscar por nome ou código/i);
     assert.match(loaded, /Produto A/);
     assert.match(loaded, /101072/);
     assert.match(loaded, /R\$\s*280,00/);
     assert.match(loaded, /73,68%/);
+    assert.match(loaded, /2024-02-10/);
   });
 });

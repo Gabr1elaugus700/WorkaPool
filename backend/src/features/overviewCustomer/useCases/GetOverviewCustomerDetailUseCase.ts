@@ -81,6 +81,8 @@ export class GetOverviewCustomerDetailUseCase {
         lastLostOrderAt: customer.lastLostOrderAt ?? null,
         lastCommercialMovementAt:
           customer.lastCommercialMovementAt ?? customer.lastInvoicedPurchaseAt ?? null,
+        invoicedCountLast12Months: customer.invoicedCountLast12Months,
+        lostCountLast12Months: customer.lostCountLast12Months,
       },
       commercialSummary,
       sync: {
