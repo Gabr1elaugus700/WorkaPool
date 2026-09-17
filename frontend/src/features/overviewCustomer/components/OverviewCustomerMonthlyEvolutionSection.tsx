@@ -25,6 +25,7 @@ type OverviewCustomerMonthlyEvolutionSectionProps = {
   isError: boolean;
   isOpen: boolean;
   onToggle: () => void;
+  showToggle?: boolean;
 };
 
 export function OverviewCustomerMonthlyEvolutionSection({
@@ -33,6 +34,7 @@ export function OverviewCustomerMonthlyEvolutionSection({
   isError,
   isOpen,
   onToggle,
+  showToggle = true,
 }: OverviewCustomerMonthlyEvolutionSectionProps) {
   const title = "Evolução mensal do cliente";
 
@@ -43,16 +45,18 @@ export function OverviewCustomerMonthlyEvolutionSection({
       className="border-muted"
       contentClassName="space-y-3"
     >
-      <Button
-        type="button"
-        variant="outline"
-        onClick={onToggle}
-        className="w-full justify-between"
-        aria-expanded={isOpen}
-      >
-        {isOpen ? "Ocultar evolução mensal" : "Carregar evolução mensal"}
-        {isOpen ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
-      </Button>
+      {showToggle ? (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onToggle}
+          className="w-full justify-between"
+          aria-expanded={isOpen}
+        >
+          {isOpen ? "Ocultar evolução mensal" : "Carregar evolução mensal"}
+          {isOpen ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
+        </Button>
+      ) : null}
 
       {!isOpen ? (
         <OverviewCustomerStateMessage

@@ -1,8 +1,13 @@
 import DefaultLayout from "@/layout/DefaultLayout";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { OverviewCustomerAccessDeniedState } from "../components/OverviewCustomerAccessDeniedState";
-import { OverviewCustomerCommercialSummaryCard } from "../components/OverviewCustomerCommercialSummaryCard";
+import { OverviewCustomerDetailHero } from "../components/detail/OverviewCustomerDetailHero";
+import { OverviewCustomerDetailPageHeader } from "../components/detail/OverviewCustomerDetailPageHeader";
+import { OverviewCustomerDetailSyncFooter } from "../components/detail/OverviewCustomerDetailSyncFooter";
+import { OverviewCustomerDetailTabs } from "../components/detail/OverviewCustomerDetailTabs";
+import type { OverviewCustomerDetailTabId } from "../components/detail/overviewCustomerDetailTabs.constants";
+import { OverviewCustomerKpiGrid } from "../components/detail/OverviewCustomerKpiGrid";
 import { OverviewCustomerMonthlyEvolutionSection } from "../components/OverviewCustomerMonthlyEvolutionSection";
 import { OverviewCustomerPurchasedProductsSection } from "../components/OverviewCustomerPurchasedProductsSection";
 import { OverviewCustomerRecentCommercialMotionSection } from "../components/OverviewCustomerRecentCommercialMotionSection";
@@ -26,19 +31,16 @@ function parseCustomerCode(raw: string | undefined): number | null {
 
 export function OverviewCustomerDetailView() {
   const params = useParams<{ clienteId: string }>();
-  const [isMonthlyEvolutionOpen, setIsMonthlyEvolutionOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<OverviewCustomerDetailTabId>("overview");
   const customerCode = useMemo(
     () => parseCustomerCode(params.clienteId),
     [params.clienteId],
   );
   const detailQuery = useOverviewCustomerDetail(customerCode);
-  const monthlyQuery = useOverviewCustomerMonthlyEvolution(customerCode, isMonthlyEvolutionOpen);
+  const isHistoryTabActive = activeTab === "history";
+  const monthlyQuery = useOverviewCustomerMonthlyEvolution(customerCode, isHistoryTabActive);
   const purchasedProductsQuery = useOverviewCustomerPurchasedProducts(customerCode);
   const recentCommercialMotionQuery = useOverviewCustomerRecentCommercialMotion(customerCode);
-
-  useEffect(() => {
-    setIsMonthlyEvolutionOpen(false);
-  }, [customerCode]);
 
   if (customerCode == null) {
     return (
@@ -117,86 +119,75 @@ export function OverviewCustomerDetailView() {
     );
   }
 
+  const productCount = purchasedProductsQuery.data?.products.length ?? null;
+
   return (
     <DefaultLayout>
-      <section className="space-y-4">
-        <OverviewCustomerSectionCard
-          title={detail.customer.tradeName}
-          description={`Cliente #${detail.customer.customerCode} - ${detail.customer.city}/${detail.customer.state}`}
-          className="border-muted"
-        >
-          <dl className="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
-            <div>
-              <dt className="text-muted-foreground">Documento</dt>
-              <dd className="font-medium">{detail.customer.document}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Segmento</dt>
-              <dd className="font-medium">{detail.customer.segment ?? "Não informado"}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Representante principal</dt>
-              <dd className="font-medium">{detail.customer.primaryCodRep ?? "Não informado"}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Filial</dt>
-              <dd className="font-medium">{detail.customer.branchIndicator}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Primeira compra (NF faturada)</dt>
-              <dd className="font-medium">
-                {detail.customer.firstInvoicedPurchaseAt ?? "Não informado"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Última compra (NF faturada)</dt>
-              <dd className="font-medium">
-                {detail.customer.lastInvoicedPurchaseAt ?? "Não informado"}
-              </dd>
-            </div>
-          </dl>
-        </OverviewCustomerSectionCard>
-
-        <OverviewCustomerCommercialSummaryCard summary={detail.commercialSummary} />
-        <OverviewCustomerRecentCommercialMotionSection
-          lastInvoicedPurchaseAt={
-            recentCommercialMotionQuery.data?.lastInvoicedPurchaseAt ??
-            detail.customer.lastInvoicedPurchaseAt
-          }
-          lastLostOrderAt={
-            recentCommercialMotionQuery.data?.lastLostOrderAt ??
-            detail.customer.lastLostOrderAt
-          }
-          lastCommercialMovementAt={
-            recentCommercialMotionQuery.data?.lastCommercialMovementAt ??
-            detail.customer.lastCommercialMovementAt
-          }
-          recentInvoicedOrders={recentCommercialMotionQuery.data?.recentInvoicedOrders ?? []}
-          recentLostOrders={recentCommercialMotionQuery.data?.recentLostOrders ?? []}
-          isLoadingInvoiced={recentCommercialMotionQuery.isLoading}
-          isLoadingLost={recentCommercialMotionQuery.isLoading}
-          isErrorInvoiced={recentCommercialMotionQuery.isError}
-          isErrorLost={recentCommercialMotionQuery.isError}
+      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 px-3 py-6 md:px-6">
+        <OverviewCustomerDetailPageHeader
+          tradeName={detail.customer.tradeName}
+          customerCode={detail.customer.customerCode}
         />
-
-        <OverviewCustomerMonthlyEvolutionSection
-          rows={monthlyQuery.data?.monthly ?? []}
-          isLoading={monthlyQuery.isLoading}
-          isError={monthlyQuery.isError}
-          isOpen={isMonthlyEvolutionOpen}
-          onToggle={() => setIsMonthlyEvolutionOpen((previous) => !previous)}
+        <OverviewCustomerDetailHero
+          customer={detail.customer}
+          commercialSignals={{
+            marginPercentWeightedByRevenue:
+              detail.commercialSummary.marginPercentWeightedByRevenue,
+            purchaseFrequencyDays: detail.commercialSummary.purchaseFrequencyDays,
+            daysSinceLastPurchase: detail.commercialSummary.daysSinceLastPurchase,
+          }}
         />
-        <OverviewCustomerPurchasedProductsSection
-          rows={purchasedProductsQuery.data?.products ?? []}
-          isLoading={purchasedProductsQuery.isLoading}
-          isError={purchasedProductsQuery.isError}
+        <OverviewCustomerDetailTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          productCount={productCount}
+          overviewPanel={<OverviewCustomerKpiGrid summary={detail.commercialSummary} />}
+          historyPanel={
+            <OverviewCustomerMonthlyEvolutionSection
+              rows={monthlyQuery.data?.monthly ?? []}
+              isLoading={monthlyQuery.isLoading}
+              isError={monthlyQuery.isError}
+              isOpen
+              showToggle={false}
+              onToggle={() => undefined}
+            />
+          }
+          productsPanel={
+            <OverviewCustomerPurchasedProductsSection
+              rows={purchasedProductsQuery.data?.products ?? []}
+              isLoading={purchasedProductsQuery.isLoading}
+              isError={purchasedProductsQuery.isError}
+            />
+          }
+          motionPanel={
+            <OverviewCustomerRecentCommercialMotionSection
+              lastInvoicedPurchaseAt={
+                recentCommercialMotionQuery.data?.lastInvoicedPurchaseAt ??
+                detail.customer.lastInvoicedPurchaseAt
+              }
+              lastLostOrderAt={
+                recentCommercialMotionQuery.data?.lastLostOrderAt ??
+                detail.customer.lastLostOrderAt
+              }
+              lastCommercialMovementAt={
+                recentCommercialMotionQuery.data?.lastCommercialMovementAt ??
+                detail.customer.lastCommercialMovementAt
+              }
+              recentInvoicedOrders={
+                recentCommercialMotionQuery.data?.recentInvoicedOrders ?? []
+              }
+              recentLostOrders={recentCommercialMotionQuery.data?.recentLostOrders ?? []}
+              isLoadingInvoiced={recentCommercialMotionQuery.isLoading}
+              isLoadingLost={recentCommercialMotionQuery.isLoading}
+              isErrorInvoiced={recentCommercialMotionQuery.isError}
+              isErrorLost={recentCommercialMotionQuery.isError}
+            />
+          }
         />
-
-        <p className="px-1 text-xs text-muted-foreground">
-          Última sincronização com sucesso:{" "}
-          {detail.sync.lastSuccessfulSyncAt ?? "Não informado"}
-        </p>
-      </section>
+        <OverviewCustomerDetailSyncFooter
+          lastSuccessfulSyncAt={detail.sync.lastSuccessfulSyncAt}
+        />
+      </div>
     </DefaultLayout>
   );
 }
