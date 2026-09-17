@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { parseOrderLossCustomerCodeParam } from "@/features/overviewCustomer/utils/overviewCustomerOrderLoss.utils";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { SellersList } from "../components/SellersList";
 import FilterButtons from "../components/FilterButtons";
@@ -27,6 +29,11 @@ function normalizeCodRep(value: string | number | null | undefined): string {
 }
 
 export const OrderLossView = () => {
+  const [searchParams] = useSearchParams();
+  const customerCodeFilter = parseOrderLossCustomerCodeParam(
+    searchParams.get("customerCode"),
+  );
+
   const {
     data: sapiensOrders = [],
     isLoading: loadingSapiens,
@@ -42,6 +49,13 @@ export const OrderLossView = () => {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [dateFilter, setDateFilter] = useState<DateFilterType>("all");
 
+  const scopedSapiensOrders = useMemo(() => {
+    if (customerCodeFilter == null) {
+      return sapiensOrders;
+    }
+    return sapiensOrders.filter((order) => order.CODCLI === customerCodeFilter);
+  }, [customerCodeFilter, sapiensOrders]);
+
   const loading = loadingSapiens || loadingLocal;
   const error = toQueryError(errSapiens ?? errLocal);
 
@@ -49,7 +63,7 @@ export const OrderLossView = () => {
     const sellerMap = new Map<string, Seller>();
 
     const sapiensOrdersMap = new Map<string, LostOrderFromSapiens[]>();
-    sapiensOrders.forEach((order) => {
+    scopedSapiensOrders.forEach((order) => {
       const key = normalizeOrderNumberKey(order.NUMPED);
       if (!key) return;
       if (!sapiensOrdersMap.has(key)) {
@@ -65,7 +79,7 @@ export const OrderLossView = () => {
         .filter((key) => key !== ""),
     );
 
-    sapiensOrders.forEach((sapiensOrder) => {
+    scopedSapiensOrders.forEach((sapiensOrder) => {
       if (justifiedOrderNumbers.has(normalizeOrderNumberKey(sapiensOrder.NUMPED)))
         return;
 
@@ -117,7 +131,7 @@ export const OrderLossView = () => {
       const sellerId = normalizeCodRep(localOrder.order.codRep);
 
       if (!sellerMap.has(sellerId)) {
-        const sapiensRef = sapiensOrders.find(
+        const sapiensRef = scopedSapiensOrders.find(
           (s) => normalizeCodRep(s.CODREP) === sellerId,
         );
         sellerMap.set(sellerId, {
@@ -133,6 +147,10 @@ export const OrderLossView = () => {
         sapiensOrdersMap.get(
           normalizeOrderNumberKey(localOrder.order.orderNumber),
         ) || [];
+
+      if (customerCodeFilter != null && sapiensProducts.length === 0) {
+        return;
+      }
 
       const firstSapiensItem = sapiensProducts[0];
 
@@ -196,7 +214,7 @@ export const OrderLossView = () => {
     });
 
     return Array.from(sellerMap.values());
-  }, [sapiensOrders, localOrders]);
+  }, [customerCodeFilter, scopedSapiensOrders, localOrders]);
 
   const filteredSellers = useMemo(() => {
     const now = new Date();
@@ -290,6 +308,12 @@ export const OrderLossView = () => {
               activeFilter={activeFilter}
             />
           </div>
+
+          {customerCodeFilter != null ? (
+            <p className="mt-4 rounded-md border border-muted bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+              Filtrando pedidos perdidos do cliente #{customerCodeFilter}.
+            </p>
+          ) : null}
 
           <div className="mt-6">
             <FilterButtons

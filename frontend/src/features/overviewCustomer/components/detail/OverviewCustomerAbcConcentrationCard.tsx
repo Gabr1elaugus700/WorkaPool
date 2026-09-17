@@ -5,6 +5,7 @@ import { formatOverviewNumber } from "../../utils/overviewCustomerFormatters";
 import { buildAbcConcentrationRows } from "../../utils/overviewCustomerAnalytics.utils";
 import { OverviewCustomerSectionCard } from "../OverviewCustomerSectionCard";
 import { OverviewCustomerStateMessage } from "../OverviewCustomerStateMessage";
+import { OverviewCustomerSectionCardSkeleton } from "./OverviewCustomerSectionCardSkeleton";
 
 type OverviewCustomerAbcConcentrationCardProps = {
   products: OverviewCustomerPurchasedProduct[];
@@ -23,9 +24,12 @@ export function OverviewCustomerAbcConcentrationCard({
 
   if (isLoading) {
     return (
-      <OverviewCustomerSectionCard title={title} className="border-muted" contentClassName="py-1">
-        <OverviewCustomerStateMessage message="Carregando concentração de mix deste cliente." />
-      </OverviewCustomerSectionCard>
+      <OverviewCustomerSectionCardSkeleton
+        title={title}
+        description="Top produtos por participação no faturamento."
+        skeletonClassName="h-40"
+        loadingLabel="Carregando concentração de mix deste cliente."
+      />
     );
   }
 

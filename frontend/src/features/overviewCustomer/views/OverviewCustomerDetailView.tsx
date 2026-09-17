@@ -11,6 +11,7 @@ import type { OverviewCustomerDetailTabId } from "../components/detail/overviewC
 import { OVERVIEW_CUSTOMER_DETAIL_TABS } from "../components/detail/overviewCustomerDetailTabs.constants";
 import { OverviewCustomerMonthlyEvolutionChart } from "../components/detail/OverviewCustomerMonthlyEvolutionChart";
 import { OverviewCustomerMonthlyEvolutionSection } from "../components/OverviewCustomerMonthlyEvolutionSection";
+import { OverviewCustomerDetailFirstPaintSkeleton } from "../components/detail/OverviewCustomerDetailFirstPaintSkeleton";
 import { OverviewCustomerDetailMotionPanel } from "../components/detail/OverviewCustomerDetailMotionPanel";
 import { OverviewCustomerDetailProductsPanel } from "../components/detail/OverviewCustomerDetailProductsPanel";
 import { OverviewCustomerSectionCard } from "../components/OverviewCustomerSectionCard";
@@ -75,9 +76,7 @@ export function OverviewCustomerDetailView() {
   if (detailQuery.isLoading) {
     return (
       <DefaultLayout>
-        <OverviewCustomerSectionCard title="Detalhes do cliente" className="max-w-2xl">
-          <OverviewCustomerStateMessage message="Carregando os dados do cliente." />
-        </OverviewCustomerSectionCard>
+        <OverviewCustomerDetailFirstPaintSkeleton />
       </DefaultLayout>
     );
   }
@@ -205,6 +204,7 @@ export function OverviewCustomerDetailView() {
           }
           motionPanel={
             <OverviewCustomerDetailMotionPanel
+              customerCode={customerCode}
               lastInvoicedPurchaseAt={
                 recentCommercialMotionQuery.data?.lastInvoicedPurchaseAt ??
                 detail.customer.lastInvoicedPurchaseAt

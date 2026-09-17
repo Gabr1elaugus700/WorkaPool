@@ -1,14 +1,17 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import type {
   OverviewCustomerRecentInvoicedOrder,
   OverviewCustomerRecentLostOrder,
 } from "../../types/overviewCustomerRecentCommercialMotion.types";
+import { buildOverviewCustomerOrderLossHref } from "../../utils/overviewCustomerOrderLoss.utils";
 import { OverviewCustomerSectionCard } from "../OverviewCustomerSectionCard";
 import { OverviewCustomerCommercialMotionSummary } from "./OverviewCustomerCommercialMotionSummary";
 import { OverviewCustomerRecentInvoicedOrdersTable } from "./OverviewCustomerRecentInvoicedOrdersTable";
 import { OverviewCustomerRecentLostOrdersTable } from "./OverviewCustomerRecentLostOrdersTable";
 
 type OverviewCustomerDetailMotionPanelProps = {
+  customerCode: number;
   lastInvoicedPurchaseAt: string | null;
   lastLostOrderAt: string | null;
   lastCommercialMovementAt: string | null;
@@ -23,6 +26,7 @@ type OverviewCustomerDetailMotionPanelProps = {
 };
 
 export function OverviewCustomerDetailMotionPanel({
+  customerCode,
   lastInvoicedPurchaseAt,
   lastLostOrderAt,
   lastCommercialMovementAt,
@@ -62,12 +66,12 @@ export function OverviewCustomerDetailMotionPanel({
       <section className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">Pedidos perdidos recentes</h3>
-          <a
-            href="/order-loss"
+          <Link
+            to={buildOverviewCustomerOrderLossHref(customerCode)}
             className="text-xs text-primary underline underline-offset-2"
           >
             Ver no Order Loss
-          </a>
+          </Link>
         </div>
         <OverviewCustomerRecentLostOrdersTable
           rows={recentLostOrders}

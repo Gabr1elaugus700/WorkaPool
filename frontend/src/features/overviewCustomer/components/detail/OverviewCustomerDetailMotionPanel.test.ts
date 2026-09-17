@@ -2,13 +2,18 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router-dom";
 import { OverviewCustomerDetailMotionPanel } from "./OverviewCustomerDetailMotionPanel";
 
 describe("OverviewCustomerDetailMotionPanel", () => {
   it("renders summary, structured tables and order-loss link", () => {
     const markup = renderToStaticMarkup(
-      React.createElement(OverviewCustomerDetailMotionPanel, {
-        lastInvoicedPurchaseAt: "2026-08-01",
+      React.createElement(
+        MemoryRouter,
+        null,
+        React.createElement(OverviewCustomerDetailMotionPanel, {
+          customerCode: 4821,
+          lastInvoicedPurchaseAt: "2026-08-01",
         lastLostOrderAt: "2026-08-05",
         lastCommercialMovementAt: "2026-08-05",
         invoicedCountLast12Months: 4,
@@ -33,7 +38,8 @@ describe("OverviewCustomerDetailMotionPanel", () => {
         isLoadingLost: false,
         isErrorInvoiced: false,
         isErrorLost: false,
-      }),
+        }),
+      ),
     );
 
     assert.match(markup, /Movimentação comercial recente/i);
@@ -43,5 +49,6 @@ describe("OverviewCustomerDetailMotionPanel", () => {
     assert.match(markup, /1001/);
     assert.match(markup, /1002/);
     assert.match(markup, /Ver no Order Loss/i);
+    assert.match(markup, /customerCode=4821/);
   });
 });

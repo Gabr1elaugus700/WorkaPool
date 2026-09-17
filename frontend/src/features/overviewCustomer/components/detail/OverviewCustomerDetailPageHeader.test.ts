@@ -23,5 +23,7 @@ describe("OverviewCustomerDetailPageHeader", () => {
     assert.match(markup, /QUIBRAS QUIMICA/);
     assert.match(markup, /href="\/overview\/customers"/);
     assert.match(markup, /Voltar para carteira/);
+    assert.match(markup, /Exportar relatório/i);
+    assert.match(markup, /disabled/);
   });
 });

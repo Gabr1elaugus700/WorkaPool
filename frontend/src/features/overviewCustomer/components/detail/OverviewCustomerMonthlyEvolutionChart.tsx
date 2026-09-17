@@ -10,6 +10,7 @@ import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts"
 import type { OverviewCustomerMonthlyEvolutionRow } from "../../types/overviewCustomerMonthlyEvolution.types";
 import { OverviewCustomerSectionCard } from "../OverviewCustomerSectionCard";
 import { OverviewCustomerStateMessage } from "../OverviewCustomerStateMessage";
+import { OverviewCustomerSectionCardSkeleton } from "./OverviewCustomerSectionCardSkeleton";
 
 const chartConfig = {
   revenue: {
@@ -40,9 +41,11 @@ export function OverviewCustomerMonthlyEvolutionChart({
 
   if (isLoading) {
     return (
-      <OverviewCustomerSectionCard title={title} className="border-muted" contentClassName="py-1">
-        <OverviewCustomerStateMessage message="Carregando a evolução mensal deste cliente." />
-      </OverviewCustomerSectionCard>
+      <OverviewCustomerSectionCardSkeleton
+        title={title}
+        skeletonClassName={heightClass}
+        loadingLabel="Carregando a evolução mensal deste cliente."
+      />
     );
   }
 

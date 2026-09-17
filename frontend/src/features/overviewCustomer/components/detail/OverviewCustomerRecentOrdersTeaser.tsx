@@ -3,6 +3,7 @@ import React from "react";
 import type { OverviewCustomerRecentInvoicedOrder } from "../../types/overviewCustomerRecentCommercialMotion.types";
 import { OverviewCustomerSectionCard } from "../OverviewCustomerSectionCard";
 import { OverviewCustomerStateMessage } from "../OverviewCustomerStateMessage";
+import { OverviewCustomerSectionCardSkeleton } from "./OverviewCustomerSectionCardSkeleton";
 
 type OverviewCustomerRecentOrdersTeaserProps = {
   invoicedOrders: OverviewCustomerRecentInvoicedOrder[];
@@ -23,9 +24,12 @@ export function OverviewCustomerRecentOrdersTeaser({
 
   if (isLoading) {
     return (
-      <OverviewCustomerSectionCard title={title} className="border-muted" contentClassName="py-1">
-        <OverviewCustomerStateMessage message="Carregando pedidos faturados recentes deste cliente." />
-      </OverviewCustomerSectionCard>
+      <OverviewCustomerSectionCardSkeleton
+        title={title}
+        description="Últimas vitórias comerciais antes de abrir a movimentação completa."
+        skeletonClassName="h-20"
+        loadingLabel="Carregando pedidos faturados recentes deste cliente."
+      />
     );
   }
 
