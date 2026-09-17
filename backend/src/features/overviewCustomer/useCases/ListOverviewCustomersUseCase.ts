@@ -55,6 +55,13 @@ export class ListOverviewCustomersUseCase {
         code: "OVERVIEW_CUSTOMER_FORBIDDEN",
       });
     }
+    if (input.role === Role.VENDAS && typeof input.codRep !== "number") {
+      throw new AppError({
+        message: "Acesso negado",
+        statusCode: 403,
+        code: "OVERVIEW_CUSTOMER_FORBIDDEN",
+      });
+    }
 
     const snapshot = await this.store.getServedSnapshot();
     if (!snapshot) {
@@ -130,11 +137,14 @@ export class ListOverviewCustomersUseCase {
     const searchDigits = normalizedSearch.replace(/\D/g, "");
     const exactCode = Number.parseInt(normalizedSearch, 10);
     const hasExactCode = Number.isInteger(exactCode) && String(exactCode) === normalizedSearch;
+    if (hasExactCode) {
+      const exactCodeMatches = entries.filter(([, customer]) => customer.customerCode === exactCode);
+      if (exactCodeMatches.length > 0) {
+        return exactCodeMatches;
+      }
+    }
 
     return entries.filter(([, customer]) => {
-      if (hasExactCode && customer.customerCode === exactCode) {
-        return true;
-      }
       if (customer.tradeName.toLowerCase().includes(lowerSearch)) {
         return true;
       }
@@ -191,13 +201,15 @@ export class ListOverviewCustomersUseCase {
   }
 
   private emptyResult(page: number, sortField: SortField): ListOverviewCustomersResult {
+    const totalPages = 1;
+    const safePage = Math.min(Math.max(1, page), totalPages);
     return {
       items: [],
       pagination: {
-        page: Math.max(1, page),
+        page: safePage,
         pageSize: PAGE_SIZE,
         totalItems: 0,
-        totalPages: 1,
+        totalPages,
         hasNextPage: false,
       },
       sort: {
