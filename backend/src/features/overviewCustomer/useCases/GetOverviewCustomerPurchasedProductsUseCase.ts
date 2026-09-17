@@ -54,7 +54,15 @@ export class GetOverviewCustomerPurchasedProductsUseCase {
     const purchasedProductsSnapshot = extractOverviewCustomerPurchasedProductsSnapshot(
       snapshot.payload,
     );
-    const products = purchasedProductsSnapshot?.customers[String(input.customerCode)] ?? [];
+    if (!purchasedProductsSnapshot) {
+      throw this.notFound(input.customerCode);
+    }
+
+    const products = purchasedProductsSnapshot.customers[String(input.customerCode)];
+    if (!products) {
+      throw this.notFound(input.customerCode);
+    }
+
     return {
       customerCode: input.customerCode,
       products,
