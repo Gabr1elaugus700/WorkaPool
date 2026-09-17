@@ -103,6 +103,30 @@ describe("materializeOverviewCustomerRecentCommercialMotion", () => {
     );
   });
 
+  it("computes 12-month invoiced and lost counts from deduped orders", () => {
+    const now = new Date("2026-09-17T12:00:00.000Z");
+    const seed: OverviewCustomerRecentCommercialMotionSeed = {
+      invoicedOrders: [
+        { customerCode: 123, orderNumber: 100, invoiceDate: "2026-08-01" },
+        { customerCode: 123, orderNumber: 101, invoiceDate: "2026-07-01" },
+        { customerCode: 123, orderNumber: 102, invoiceDate: "2025-01-01" },
+        { customerCode: 123, orderNumber: 100, invoiceDate: "2026-08-01" },
+      ],
+      lostOrders: [
+        { customerCode: 123, orderNumber: 200, issueDate: "2026-06-01", sitped: 5 },
+        { customerCode: 123, orderNumber: 201, issueDate: "2025-01-01", sitped: 5 },
+        { customerCode: 123, orderNumber: 202, issueDate: "2026-05-01", sitped: 1 },
+      ],
+    };
+
+    const snapshot = materializeOverviewCustomerRecentCommercialMotion(seed, now);
+    const customer = snapshot.customers["123"];
+
+    assert.ok(customer);
+    assert.strictEqual(customer.invoicedCountLast12Months, 2);
+    assert.strictEqual(customer.lostCountLast12Months, 1);
+  });
+
   it("handles customers with only invoiced or only lost history", () => {
     const seed: OverviewCustomerRecentCommercialMotionSeed = {
       invoicedOrders: [

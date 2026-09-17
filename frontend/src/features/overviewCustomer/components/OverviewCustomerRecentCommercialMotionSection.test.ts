@@ -11,6 +11,8 @@ describe("OverviewCustomerRecentCommercialMotionSection", () => {
         lastInvoicedPurchaseAt: "2026-08-01",
         lastLostOrderAt: "2026-08-05",
         lastCommercialMovementAt: "2026-08-05",
+        invoicedCountLast12Months: 4,
+        lostCountLast12Months: 2,
         recentInvoicedOrders: [
           {
             orderNumber: 1001,
@@ -41,6 +43,31 @@ describe("OverviewCustomerRecentCommercialMotionSection", () => {
     assert.match(html, /Pedidos perdidos recentes/i);
     assert.match(html, /1001/);
     assert.match(html, /1002/);
+    assert.match(html, /Faturados \(12 meses\)/i);
+    assert.match(html, /Ver no Order Loss/i);
+  });
+
+  it("renders first-paint movement dates while lazy lists are still loading", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(OverviewCustomerRecentCommercialMotionSection, {
+        lastInvoicedPurchaseAt: "2026-08-01",
+        lastLostOrderAt: "2026-08-05",
+        lastCommercialMovementAt: "2026-08-05",
+        invoicedCountLast12Months: 3,
+        lostCountLast12Months: 1,
+        recentInvoicedOrders: [],
+        recentLostOrders: [],
+        isLoadingInvoiced: true,
+        isLoadingLost: true,
+        isErrorInvoiced: false,
+        isErrorLost: false,
+      }),
+    );
+
+    assert.match(html, /2026-08-01/);
+    assert.match(html, /2026-08-05/);
+    assert.match(html, /Carregando pedidos faturados recentes/i);
+    assert.match(html, /Carregando pedidos perdidos recentes/i);
   });
 
   it("renders non-blocking loading, empty and error states per slice", () => {
@@ -49,6 +76,8 @@ describe("OverviewCustomerRecentCommercialMotionSection", () => {
         lastInvoicedPurchaseAt: "2026-08-01",
         lastLostOrderAt: null,
         lastCommercialMovementAt: "2026-08-01",
+        invoicedCountLast12Months: null,
+        lostCountLast12Months: null,
         recentInvoicedOrders: [],
         recentLostOrders: [],
         isLoadingInvoiced: true,
@@ -66,6 +95,8 @@ describe("OverviewCustomerRecentCommercialMotionSection", () => {
         lastInvoicedPurchaseAt: "2026-08-01",
         lastLostOrderAt: "2026-08-05",
         lastCommercialMovementAt: "2026-08-05",
+        invoicedCountLast12Months: 2,
+        lostCountLast12Months: 1,
         recentInvoicedOrders: [
           {
             orderNumber: 1001,

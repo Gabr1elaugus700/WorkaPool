@@ -583,6 +583,105 @@ describe("Overview customer detail HTTP", () => {
     assert.strictEqual(response.body.code, "OVERVIEW_CUSTOMER_FORBIDDEN");
   });
 
+  it("rejects unauthenticated recent-orders access with 401", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    const app = createApp(store);
+
+    const response = await request(app).get("/api/overview/customers/123/recent-orders");
+
+    assert.strictEqual(response.status, 401);
+  });
+
+  it("returns 404 for unknown customer on recent-orders", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    store.seedSuccessfulSnapshot(
+      {
+        id: "snap-recent-404",
+        publishedAt: new Date("2026-01-10T00:00:00.000Z"),
+        payload: { customers: {} },
+      },
+      new Date("2026-01-10T00:00:00.000Z"),
+    );
+    const app = createApp(store);
+
+    const response = await request(app)
+      .get("/api/overview/customers/999999/recent-orders")
+      .set("Authorization", `Bearer ${createToken("ADMIN")}`);
+
+    assert.strictEqual(response.status, 404);
+  });
+
+  it("returns detail first paint movement dates without recent order lists", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    store.seedSuccessfulSnapshot(
+      {
+        id: "snap-detail-dates",
+        publishedAt: new Date("2026-01-10T00:00:00.000Z"),
+        payload: {
+          "dados-gerais-cliente": {
+            customers: {
+              "123": {
+                customerCode: 123,
+                tradeName: "Cliente A",
+                document: "00.000.000/0001-00",
+                city: "Maringa",
+                state: "PR",
+                segment: "Construcao",
+                registrationDate: "2024-01-15",
+                primaryCodRep: 10,
+                firstInvoicedPurchaseAt: "2024-02-01",
+                lastInvoicedPurchaseAt: "2026-07-01",
+                branchIndicator: "MGA",
+              },
+            },
+          },
+          "ultimo-pedido-cliente": {
+            customers: {
+              "123": {
+                lastInvoicedPurchaseAt: "2026-08-01",
+                lastLostOrderAt: "2026-08-05",
+                lastCommercialMovementAt: "2026-08-05",
+                invoicedCountLast12Months: 3,
+                lostCountLast12Months: 1,
+                recentInvoicedOrders: [
+                  {
+                    orderNumber: 1001,
+                    occurredAt: "2026-08-01",
+                    codRep: 10,
+                    branchCode: 1,
+                  },
+                ],
+                recentLostOrders: [
+                  {
+                    orderNumber: 1002,
+                    occurredAt: "2026-08-05",
+                    codRep: 10,
+                    sitped: 5,
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      new Date("2026-01-10T00:00:00.000Z"),
+    );
+    const app = createApp(store);
+
+    const response = await request(app)
+      .get("/api/overview/customers/123")
+      .set("Authorization", `Bearer ${createToken("ADMIN")}`);
+
+    assert.strictEqual(response.status, 200);
+    assert.strictEqual(response.body.customer.lastInvoicedPurchaseAt, "2026-08-01");
+    assert.strictEqual(response.body.customer.lastLostOrderAt, "2026-08-05");
+    assert.strictEqual(response.body.customer.lastCommercialMovementAt, "2026-08-05");
+    assert.strictEqual(response.body.customer.invoicedCountLast12Months, 3);
+    assert.strictEqual(response.body.customer.lostCountLast12Months, 1);
+    assert.strictEqual("recentInvoicedOrders" in response.body, false);
+    assert.strictEqual("recentLostOrders" in response.body, false);
+  });
+
   it("returns recent commercial motion slices for authorized users", async () => {
     const store = new InMemoryOverviewCustomerSyncStore();
     store.seedSuccessfulSnapshot(
@@ -613,6 +712,8 @@ describe("Overview customer detail HTTP", () => {
                 lastInvoicedPurchaseAt: "2026-08-01",
                 lastLostOrderAt: "2026-08-05",
                 lastCommercialMovementAt: "2026-08-05",
+                invoicedCountLast12Months: 2,
+                lostCountLast12Months: 1,
                 recentInvoicedOrders: [
                   {
                     orderNumber: 1001,
@@ -639,7 +740,7 @@ describe("Overview customer detail HTTP", () => {
     const app = createApp(store);
 
     const response = await request(app)
-      .get("/api/overview/customers/123/recent-commercial-motion")
+      .get("/api/overview/customers/123/recent-orders")
       .set("Authorization", `Bearer ${createToken("ADMIN")}`);
 
     assert.strictEqual(response.status, 200);
@@ -648,6 +749,8 @@ describe("Overview customer detail HTTP", () => {
       lastInvoicedPurchaseAt: "2026-08-01",
       lastLostOrderAt: "2026-08-05",
       lastCommercialMovementAt: "2026-08-05",
+      invoicedCountLast12Months: 2,
+      lostCountLast12Months: 1,
       recentInvoicedOrders: [
         {
           orderNumber: 1001,
@@ -698,7 +801,7 @@ describe("Overview customer detail HTTP", () => {
     const app = createApp(store);
 
     const response = await request(app)
-      .get("/api/overview/customers/123/recent-commercial-motion")
+      .get("/api/overview/customers/123/recent-orders")
       .set("Authorization", `Bearer ${createToken("VENDAS", 20)}`);
 
     assert.strictEqual(response.status, 403);

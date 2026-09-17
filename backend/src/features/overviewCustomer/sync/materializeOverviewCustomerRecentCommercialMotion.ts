@@ -7,7 +7,6 @@ import type {
 
 const MAX_RECENT_ROWS = 5;
 const LOST_SITPED = 5;
-
 export type OverviewCustomerInvoicedOrderRow = {
   customerCode: number;
   orderNumber: number;
@@ -31,10 +30,12 @@ export type OverviewCustomerRecentCommercialMotionSeed = {
 
 export function materializeOverviewCustomerRecentCommercialMotion(
   seed: OverviewCustomerRecentCommercialMotionSeed,
+  now: Date = new Date(),
 ): OverviewCustomerRecentCommercialMotionSnapshot {
+  const last12Cutoff = formatUtcDate(shiftMonths(now, -12));
   const customers = new Map<number, OverviewCustomerRecentCommercialMotion>();
 
-  for (const row of seed.invoicedOrders) {
+  for (const row of dedupeInvoicedRows(seed.invoicedOrders)) {
     const customer = getOrCreateCustomer(customers, row.customerCode);
     customer.recentInvoicedOrders.push({
       orderNumber: row.orderNumber,
@@ -42,9 +43,12 @@ export function materializeOverviewCustomerRecentCommercialMotion(
       codRep: row.codRep ?? null,
       branchCode: row.branchCode ?? null,
     });
+    if (row.invoiceDate >= last12Cutoff) {
+      customer.invoicedCountLast12Months += 1;
+    }
   }
 
-  for (const row of seed.lostOrders) {
+  for (const row of dedupeLostRows(seed.lostOrders)) {
     if (row.sitped !== LOST_SITPED) {
       continue;
     }
@@ -55,6 +59,9 @@ export function materializeOverviewCustomerRecentCommercialMotion(
       codRep: row.codRep ?? null,
       sitped: row.sitped,
     });
+    if (row.issueDate >= last12Cutoff) {
+      customer.lostCountLast12Months += 1;
+    }
   }
 
   const snapshotCustomers: OverviewCustomerRecentCommercialMotionSnapshot["customers"] = {};
@@ -76,6 +83,32 @@ export function materializeOverviewCustomerRecentCommercialMotion(
   };
 }
 
+function dedupeInvoicedRows(
+  rows: OverviewCustomerInvoicedOrderRow[],
+): OverviewCustomerInvoicedOrderRow[] {
+  const byKey = new Map<string, OverviewCustomerInvoicedOrderRow>();
+  for (const row of rows) {
+    const key = `${row.customerCode}:${row.orderNumber}`;
+    const existing = byKey.get(key);
+    if (!existing || row.invoiceDate > existing.invoiceDate) {
+      byKey.set(key, row);
+    }
+  }
+  return Array.from(byKey.values());
+}
+
+function dedupeLostRows(rows: OverviewCustomerLostOrderRow[]): OverviewCustomerLostOrderRow[] {
+  const byKey = new Map<string, OverviewCustomerLostOrderRow>();
+  for (const row of rows) {
+    const key = `${row.customerCode}:${row.orderNumber}`;
+    const existing = byKey.get(key);
+    if (!existing || row.issueDate > existing.issueDate) {
+      byKey.set(key, row);
+    }
+  }
+  return Array.from(byKey.values());
+}
+
 function getOrCreateCustomer(
   customers: Map<number, OverviewCustomerRecentCommercialMotion>,
   customerCode: number,
@@ -89,6 +122,8 @@ function getOrCreateCustomer(
     lastInvoicedPurchaseAt: null,
     lastLostOrderAt: null,
     lastCommercialMovementAt: null,
+    invoicedCountLast12Months: 0,
+    lostCountLast12Months: 0,
     recentInvoicedOrders: [],
     recentLostOrders: [],
   };
@@ -131,4 +166,14 @@ function maxDate(first: string | null, second: string | null): string | null {
     return first;
   }
   return first >= second ? first : second;
+}
+
+function shiftMonths(date: Date, delta: number): Date {
+  const shifted = new Date(date.getTime());
+  shifted.setUTCMonth(shifted.getUTCMonth() + delta);
+  return shifted;
+}
+
+function formatUtcDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
 }

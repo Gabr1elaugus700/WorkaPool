@@ -3,20 +3,27 @@ import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { OverviewCustomerAccessDeniedState } from "../components/OverviewCustomerAccessDeniedState";
 import { OverviewCustomerDetailHero } from "../components/detail/OverviewCustomerDetailHero";
+import { OverviewCustomerDetailOverviewPanel } from "../components/detail/OverviewCustomerDetailOverviewPanel";
 import { OverviewCustomerDetailPageHeader } from "../components/detail/OverviewCustomerDetailPageHeader";
 import { OverviewCustomerDetailSyncFooter } from "../components/detail/OverviewCustomerDetailSyncFooter";
 import { OverviewCustomerDetailTabs } from "../components/detail/OverviewCustomerDetailTabs";
 import type { OverviewCustomerDetailTabId } from "../components/detail/overviewCustomerDetailTabs.constants";
-import { OverviewCustomerKpiGrid } from "../components/detail/OverviewCustomerKpiGrid";
+import { OVERVIEW_CUSTOMER_DETAIL_TABS } from "../components/detail/overviewCustomerDetailTabs.constants";
+import { OverviewCustomerMonthlyEvolutionChart } from "../components/detail/OverviewCustomerMonthlyEvolutionChart";
 import { OverviewCustomerMonthlyEvolutionSection } from "../components/OverviewCustomerMonthlyEvolutionSection";
-import { OverviewCustomerPurchasedProductsSection } from "../components/OverviewCustomerPurchasedProductsSection";
-import { OverviewCustomerRecentCommercialMotionSection } from "../components/OverviewCustomerRecentCommercialMotionSection";
+import { OverviewCustomerDetailMotionPanel } from "../components/detail/OverviewCustomerDetailMotionPanel";
+import { OverviewCustomerDetailProductsPanel } from "../components/detail/OverviewCustomerDetailProductsPanel";
 import { OverviewCustomerSectionCard } from "../components/OverviewCustomerSectionCard";
 import { OverviewCustomerStateMessage } from "../components/OverviewCustomerStateMessage";
 import { useOverviewCustomerDetail } from "../hooks/useOverviewCustomerDetail";
 import { useOverviewCustomerMonthlyEvolution } from "../hooks/useOverviewCustomerMonthlyEvolution";
 import { useOverviewCustomerPurchasedProducts } from "../hooks/useOverviewCustomerPurchasedProducts";
 import { useOverviewCustomerRecentCommercialMotion } from "../hooks/useOverviewCustomerRecentCommercialMotion";
+import {
+  shouldFetchMonthlyEvolution,
+  shouldFetchPurchasedProducts,
+  shouldFetchRecentCommercialMotion,
+} from "../utils/overviewCustomerDetailFetch.utils";
 
 function parseCustomerCode(raw: string | undefined): number | null {
   if (!raw) {
@@ -31,16 +38,26 @@ function parseCustomerCode(raw: string | undefined): number | null {
 
 export function OverviewCustomerDetailView() {
   const params = useParams<{ clienteId: string }>();
-  const [activeTab, setActiveTab] = useState<OverviewCustomerDetailTabId>("overview");
+  const [activeTab, setActiveTab] = useState<OverviewCustomerDetailTabId>(
+    OVERVIEW_CUSTOMER_DETAIL_TABS.overview.id,
+  );
   const customerCode = useMemo(
     () => parseCustomerCode(params.clienteId),
     [params.clienteId],
   );
   const detailQuery = useOverviewCustomerDetail(customerCode);
-  const isHistoryTabActive = activeTab === "history";
-  const monthlyQuery = useOverviewCustomerMonthlyEvolution(customerCode, isHistoryTabActive);
-  const purchasedProductsQuery = useOverviewCustomerPurchasedProducts(customerCode);
-  const recentCommercialMotionQuery = useOverviewCustomerRecentCommercialMotion(customerCode);
+  const monthlyQuery = useOverviewCustomerMonthlyEvolution(
+    customerCode,
+    shouldFetchMonthlyEvolution(activeTab),
+  );
+  const purchasedProductsQuery = useOverviewCustomerPurchasedProducts(
+    customerCode,
+    shouldFetchPurchasedProducts(activeTab),
+  );
+  const recentCommercialMotionQuery = useOverviewCustomerRecentCommercialMotion(
+    customerCode,
+    shouldFetchRecentCommercialMotion(activeTab),
+  );
 
   if (customerCode == null) {
     return (
@@ -119,7 +136,10 @@ export function OverviewCustomerDetailView() {
     );
   }
 
+  const monthlyRows = monthlyQuery.data?.monthly ?? [];
+  const products = purchasedProductsQuery.data?.products ?? [];
   const productCount = purchasedProductsQuery.data?.products.length ?? null;
+  const recentInvoicedOrders = recentCommercialMotionQuery.data?.recentInvoicedOrders ?? [];
 
   return (
     <DefaultLayout>
@@ -141,26 +161,50 @@ export function OverviewCustomerDetailView() {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           productCount={productCount}
-          overviewPanel={<OverviewCustomerKpiGrid summary={detail.commercialSummary} />}
-          historyPanel={
-            <OverviewCustomerMonthlyEvolutionSection
-              rows={monthlyQuery.data?.monthly ?? []}
-              isLoading={monthlyQuery.isLoading}
-              isError={monthlyQuery.isError}
-              isOpen
-              showToggle={false}
-              onToggle={() => undefined}
+          overviewPanel={
+            <OverviewCustomerDetailOverviewPanel
+              summary={detail.commercialSummary}
+              monthlyRows={monthlyRows}
+              isMonthlyLoading={monthlyQuery.isLoading}
+              isMonthlyError={monthlyQuery.isError}
+              products={products}
+              isProductsLoading={purchasedProductsQuery.isLoading}
+              isProductsError={purchasedProductsQuery.isError}
+              invoicedOrders={recentInvoicedOrders}
+              isMotionLoading={recentCommercialMotionQuery.isLoading}
+              isMotionError={recentCommercialMotionQuery.isError}
+              onViewAllMotion={() =>
+                setActiveTab(OVERVIEW_CUSTOMER_DETAIL_TABS.motion.id)
+              }
             />
           }
+          historyPanel={
+            <div className="space-y-4">
+              <OverviewCustomerMonthlyEvolutionChart
+                rows={monthlyRows}
+                isLoading={monthlyQuery.isLoading}
+                isError={monthlyQuery.isError}
+                variant="full"
+              />
+              <OverviewCustomerMonthlyEvolutionSection
+                rows={monthlyRows}
+                isLoading={monthlyQuery.isLoading}
+                isError={monthlyQuery.isError}
+                isOpen
+                showToggle={false}
+                onToggle={() => undefined}
+              />
+            </div>
+          }
           productsPanel={
-            <OverviewCustomerPurchasedProductsSection
-              rows={purchasedProductsQuery.data?.products ?? []}
+            <OverviewCustomerDetailProductsPanel
+              rows={products}
               isLoading={purchasedProductsQuery.isLoading}
               isError={purchasedProductsQuery.isError}
             />
           }
           motionPanel={
-            <OverviewCustomerRecentCommercialMotionSection
+            <OverviewCustomerDetailMotionPanel
               lastInvoicedPurchaseAt={
                 recentCommercialMotionQuery.data?.lastInvoicedPurchaseAt ??
                 detail.customer.lastInvoicedPurchaseAt
@@ -173,9 +217,17 @@ export function OverviewCustomerDetailView() {
                 recentCommercialMotionQuery.data?.lastCommercialMovementAt ??
                 detail.customer.lastCommercialMovementAt
               }
-              recentInvoicedOrders={
-                recentCommercialMotionQuery.data?.recentInvoicedOrders ?? []
+              invoicedCountLast12Months={
+                recentCommercialMotionQuery.data?.invoicedCountLast12Months ??
+                detail.customer.invoicedCountLast12Months ??
+                null
               }
+              lostCountLast12Months={
+                recentCommercialMotionQuery.data?.lostCountLast12Months ??
+                detail.customer.lostCountLast12Months ??
+                null
+              }
+              recentInvoicedOrders={recentInvoicedOrders}
               recentLostOrders={recentCommercialMotionQuery.data?.recentLostOrders ?? []}
               isLoadingInvoiced={recentCommercialMotionQuery.isLoading}
               isLoadingLost={recentCommercialMotionQuery.isLoading}

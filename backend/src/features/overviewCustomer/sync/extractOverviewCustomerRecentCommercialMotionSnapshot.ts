@@ -68,6 +68,8 @@ function parseCustomer(value: unknown): OverviewCustomerRecentCommercialMotion |
     !isNullableDateString(value.lastInvoicedPurchaseAt) ||
     !isNullableDateString(value.lastLostOrderAt) ||
     !isNullableDateString(value.lastCommercialMovementAt) ||
+    !isNonNegativeInteger(value.invoicedCountLast12Months) ||
+    !isNonNegativeInteger(value.lostCountLast12Months) ||
     !Array.isArray(value.recentInvoicedOrders) ||
     !Array.isArray(value.recentLostOrders)
   ) {
@@ -78,6 +80,8 @@ function parseCustomer(value: unknown): OverviewCustomerRecentCommercialMotion |
     lastInvoicedPurchaseAt: value.lastInvoicedPurchaseAt,
     lastLostOrderAt: value.lastLostOrderAt,
     lastCommercialMovementAt: value.lastCommercialMovementAt,
+    invoicedCountLast12Months: value.invoicedCountLast12Months,
+    lostCountLast12Months: value.lostCountLast12Months,
     recentInvoicedOrders: value.recentInvoicedOrders.filter(isRecentInvoicedOrder),
     recentLostOrders: value.recentLostOrders.filter(isRecentLostOrder),
   };
@@ -123,6 +127,10 @@ function isNullableNumber(value: unknown): value is number | null {
 
 function isPositiveInteger(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value > 0;
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
 }
 
 function isRecord(value: unknown): value is GenericRecord {

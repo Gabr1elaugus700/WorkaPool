@@ -1,7 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { OverviewCustomerService } from "../services/overviewCustomerService";
 
-export function useOverviewCustomerPurchasedProducts(customerCode: number | null) {
+export function useOverviewCustomerPurchasedProducts(
+  customerCode: number | null,
+  enabled = true,
+) {
   return useQuery({
     queryKey: ["overview-customer-purchased-products", customerCode],
     queryFn: async () => {
@@ -10,7 +13,7 @@ export function useOverviewCustomerPurchasedProducts(customerCode: number | null
       }
       return OverviewCustomerService.getPurchasedProducts(customerCode);
     },
-    enabled: customerCode != null,
+    enabled: customerCode != null && enabled,
     staleTime: 1000 * 30,
   });
 }
