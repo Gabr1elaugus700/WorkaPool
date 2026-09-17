@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router-dom";
 import { OverviewCustomerPortfolioList } from "./OverviewCustomerPortfolioList";
 import type { OverviewCustomerListRow } from "../types/overviewCustomerList.types";
 
@@ -33,14 +34,18 @@ describe("OverviewCustomerPortfolioList", () => {
 
   it("renders rows with navigation links to detail route", () => {
     const markup = renderToStaticMarkup(
-      React.createElement(OverviewCustomerPortfolioList, {
-        items: [createRow()],
-        isLoading: false,
-      }),
+      React.createElement(
+        MemoryRouter,
+        null,
+        React.createElement(OverviewCustomerPortfolioList, {
+          items: [createRow()],
+          isLoading: false,
+        }),
+      ),
     );
 
     assert.match(markup, /Cliente ACME/);
     assert.match(markup, /href="\/overview\/customers\/123"/);
-    assert.match(markup, />123<\/a>/);
+    assert.match(markup, /#123/);
   });
 });

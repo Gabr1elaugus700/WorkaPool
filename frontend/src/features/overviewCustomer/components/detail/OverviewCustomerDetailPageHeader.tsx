@@ -1,6 +1,12 @@
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import React from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileDown } from "lucide-react";
 import { Link } from "react-router-dom";
 
 type OverviewCustomerDetailPageHeaderProps = {
@@ -38,12 +44,27 @@ export function OverviewCustomerDetailPageHeader({
             Cliente #{customerCode} · {tradeName}
           </p>
         </div>
-        <Button type="button" variant="outline" className="gap-2" asChild>
-          <Link to="/overview/customers">
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Voltar para carteira
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex">
+                  <Button type="button" variant="outline" className="gap-2" disabled>
+                    <FileDown className="h-4 w-4" aria-hidden="true" />
+                    Exportar relatório
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Em breve</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <Button type="button" variant="outline" className="gap-2" asChild>
+            <Link to="/overview/customers">
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              Voltar para carteira
+            </Link>
+          </Button>
+        </div>
       </div>
     </header>
   );

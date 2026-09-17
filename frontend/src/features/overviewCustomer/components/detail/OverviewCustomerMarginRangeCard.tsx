@@ -4,6 +4,7 @@ import { formatOverviewPercent } from "../../utils/overviewCustomerFormatters";
 import { computeMarginRange } from "../../utils/overviewCustomerAnalytics.utils";
 import { OverviewCustomerSectionCard } from "../OverviewCustomerSectionCard";
 import { OverviewCustomerStateMessage } from "../OverviewCustomerStateMessage";
+import { OverviewCustomerSectionCardSkeleton } from "./OverviewCustomerSectionCardSkeleton";
 
 type OverviewCustomerMarginRangeCardProps = {
   margins: Array<number | null>;
@@ -27,9 +28,11 @@ export function OverviewCustomerMarginRangeCard({
 
   if (isLoading) {
     return (
-      <OverviewCustomerSectionCard title={title} className="border-muted" contentClassName="py-1">
-        <OverviewCustomerStateMessage message="Carregando faixa de margem deste cliente." />
-      </OverviewCustomerSectionCard>
+      <OverviewCustomerSectionCardSkeleton
+        title={title}
+        skeletonClassName="h-24"
+        loadingLabel="Carregando faixa de margem deste cliente."
+      />
     );
   }
 

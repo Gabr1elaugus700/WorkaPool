@@ -10,6 +10,7 @@ import {
 import React from "react";
 import type { OverviewCustomerRecentInvoicedOrder } from "../../types/overviewCustomerRecentCommercialMotion.types";
 import { OverviewCustomerStateMessage } from "../OverviewCustomerStateMessage";
+import { OverviewCustomerTableSkeleton } from "./OverviewCustomerTableSkeleton";
 
 type OverviewCustomerRecentInvoicedOrdersTableProps = {
   rows: OverviewCustomerRecentInvoicedOrder[];
@@ -24,7 +25,7 @@ export function OverviewCustomerRecentInvoicedOrdersTable({
 }: OverviewCustomerRecentInvoicedOrdersTableProps) {
   if (isLoading) {
     return (
-      <OverviewCustomerStateMessage message="Carregando pedidos faturados recentes deste cliente." />
+      <OverviewCustomerTableSkeleton loadingLabel="Carregando pedidos faturados recentes deste cliente." />
     );
   }
 

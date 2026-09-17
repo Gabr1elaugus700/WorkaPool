@@ -4,6 +4,7 @@ import { OverviewCustomerSectionCard } from "../OverviewCustomerSectionCard";
 import { OverviewCustomerStateMessage } from "../OverviewCustomerStateMessage";
 import { OverviewCustomerProductsToolbar } from "./OverviewCustomerProductsToolbar";
 import { OverviewCustomerPurchasedProductsTable } from "./OverviewCustomerPurchasedProductsTable";
+import { OverviewCustomerSectionCardSkeleton } from "./OverviewCustomerSectionCardSkeleton";
 
 type OverviewCustomerDetailProductsPanelProps = {
   rows: OverviewCustomerPurchasedProduct[];
@@ -23,9 +24,12 @@ export function OverviewCustomerDetailProductsPanel({
 
   if (isLoading) {
     return (
-      <OverviewCustomerSectionCard title={title} className="border-muted" contentClassName="py-1">
-        <OverviewCustomerStateMessage message="Carregando produtos comprados deste cliente." />
-      </OverviewCustomerSectionCard>
+      <OverviewCustomerSectionCardSkeleton
+        title={title}
+        description="Produtos com maior impacto no faturamento e na recorrência de compra."
+        skeletonClassName="h-48"
+        loadingLabel="Carregando produtos comprados deste cliente."
+      />
     );
   }
 

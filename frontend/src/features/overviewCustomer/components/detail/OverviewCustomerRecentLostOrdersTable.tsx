@@ -10,6 +10,7 @@ import {
 import React from "react";
 import type { OverviewCustomerRecentLostOrder } from "../../types/overviewCustomerRecentCommercialMotion.types";
 import { OverviewCustomerStateMessage } from "../OverviewCustomerStateMessage";
+import { OverviewCustomerTableSkeleton } from "./OverviewCustomerTableSkeleton";
 
 type OverviewCustomerRecentLostOrdersTableProps = {
   rows: OverviewCustomerRecentLostOrder[];
@@ -24,7 +25,7 @@ export function OverviewCustomerRecentLostOrdersTable({
 }: OverviewCustomerRecentLostOrdersTableProps) {
   if (isLoading) {
     return (
-      <OverviewCustomerStateMessage message="Carregando pedidos perdidos recentes deste cliente." />
+      <OverviewCustomerTableSkeleton loadingLabel="Carregando pedidos perdidos recentes deste cliente." />
     );
   }
 
