@@ -3,6 +3,7 @@ import type {
   OverviewCustomerIdentitySnapshot,
 } from "../models/OverviewCustomerIdentity";
 import { extractOverviewCustomerCommercialSummarySnapshot } from "./extractOverviewCustomerCommercialSummarySnapshot";
+import { extractOverviewCustomerRecentCommercialMotionSnapshot } from "./extractOverviewCustomerRecentCommercialMotionSnapshot";
 
 type GenericRecord = Record<string, unknown>;
 
@@ -42,8 +43,9 @@ function enrichWithCommercialSummary(
   identitySnapshot: OverviewCustomerIdentitySnapshot,
 ): OverviewCustomerIdentitySnapshot {
   const summarySnapshot = extractOverviewCustomerCommercialSummarySnapshot(payload);
+  const recentMotionSnapshot = extractOverviewCustomerRecentCommercialMotionSnapshot(payload);
   if (!summarySnapshot) {
-    return identitySnapshot;
+    return enrichWithRecentMotion(identitySnapshot, recentMotionSnapshot);
   }
 
   const enrichedCustomers: OverviewCustomerIdentitySnapshot["customers"] = {};
@@ -56,6 +58,39 @@ function enrichWithCommercialSummary(
       revenueLast12Months: summary?.revenueLast12Months ?? customer.revenueLast12Months,
       daysSinceLastPurchase:
         summary?.daysSinceLastPurchase ?? customer.daysSinceLastPurchase,
+      lastLostOrderAt: customer.lastLostOrderAt ?? null,
+      lastCommercialMovementAt:
+        customer.lastCommercialMovementAt ?? customer.lastInvoicedPurchaseAt ?? null,
+    };
+  }
+
+  return enrichWithRecentMotion({ customers: enrichedCustomers }, recentMotionSnapshot);
+}
+
+function enrichWithRecentMotion(
+  identitySnapshot: OverviewCustomerIdentitySnapshot,
+  recentMotionSnapshot:
+    | ReturnType<typeof extractOverviewCustomerRecentCommercialMotionSnapshot>
+    | null,
+): OverviewCustomerIdentitySnapshot {
+  if (!recentMotionSnapshot) {
+    return identitySnapshot;
+  }
+
+  const enrichedCustomers: OverviewCustomerIdentitySnapshot["customers"] = {};
+  for (const [customerCode, customer] of Object.entries(identitySnapshot.customers)) {
+    const motion = recentMotionSnapshot.customers[customerCode];
+    enrichedCustomers[customerCode] = {
+      ...customer,
+      lastInvoicedPurchaseAt:
+        motion?.lastInvoicedPurchaseAt ?? customer.lastInvoicedPurchaseAt ?? null,
+      lastLostOrderAt: motion?.lastLostOrderAt ?? customer.lastLostOrderAt ?? null,
+      lastCommercialMovementAt:
+        motion?.lastCommercialMovementAt ??
+        customer.lastCommercialMovementAt ??
+        motion?.lastInvoicedPurchaseAt ??
+        customer.lastInvoicedPurchaseAt ??
+        null,
     };
   }
 
@@ -94,6 +129,8 @@ function isOverviewCustomerIdentity(value: unknown): value is OverviewCustomerId
     isNullableNumber(value.primaryCodRep) &&
     isNullableString(value.firstInvoicedPurchaseAt) &&
     isNullableString(value.lastInvoicedPurchaseAt) &&
+    isOptionalNullableString(value.lastLostOrderAt) &&
+    isOptionalNullableString(value.lastCommercialMovementAt) &&
     isOptionalNumber(value.orderCountLast12Months) &&
     isOptionalNumber(value.revenueLast12Months) &&
     isOptionalNullableNumber(value.daysSinceLastPurchase) &&
@@ -117,6 +154,10 @@ function isOptionalNumber(value: unknown): value is number | undefined {
 
 function isOptionalNullableNumber(value: unknown): value is number | null | undefined {
   return value === undefined || value === null || typeof value === "number";
+}
+
+function isOptionalNullableString(value: unknown): value is string | null | undefined {
+  return value === undefined || value === null || typeof value === "string";
 }
 
 function isRecord(value: unknown): value is GenericRecord {

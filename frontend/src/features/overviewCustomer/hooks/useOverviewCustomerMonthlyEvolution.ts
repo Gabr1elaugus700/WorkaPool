@@ -1,7 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { OverviewCustomerService } from "../services/overviewCustomerService";
 
-export function useOverviewCustomerMonthlyEvolution(customerCode: number | null) {
+export function useOverviewCustomerMonthlyEvolution(
+  customerCode: number | null,
+  enabled = true,
+) {
   return useQuery({
     queryKey: ["overview-customer-monthly-evolution", customerCode],
     queryFn: async () => {
@@ -10,7 +13,7 @@ export function useOverviewCustomerMonthlyEvolution(customerCode: number | null)
       }
       return OverviewCustomerService.getMonthlyEvolution(customerCode);
     },
-    enabled: customerCode != null,
+    enabled: customerCode != null && enabled,
     staleTime: 1000 * 30,
   });
 }

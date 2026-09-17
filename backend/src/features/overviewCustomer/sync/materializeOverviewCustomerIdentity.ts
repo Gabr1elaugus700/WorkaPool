@@ -55,6 +55,8 @@ export function materializeOverviewCustomerIdentity(
       primaryCodRep: summary.primaryCodRep,
       firstInvoicedPurchaseAt: summary.firstPurchase,
       lastInvoicedPurchaseAt: summary.lastPurchase,
+      lastLostOrderAt: null,
+      lastCommercialMovementAt: summary.lastPurchase,
       branchIndicator: summary.branchIndicator,
     };
   }

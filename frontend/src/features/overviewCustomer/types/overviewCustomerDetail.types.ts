@@ -11,6 +11,8 @@ export type OverviewCustomerIdentity = {
   primaryCodRep: number | null;
   firstInvoicedPurchaseAt: string | null;
   lastInvoicedPurchaseAt: string | null;
+  lastLostOrderAt: string | null;
+  lastCommercialMovementAt: string | null;
   branchIndicator: BranchIndicator;
 };
 

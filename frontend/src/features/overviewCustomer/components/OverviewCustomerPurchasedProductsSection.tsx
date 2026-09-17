@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Table,
   TableBody,
@@ -32,7 +33,7 @@ export function OverviewCustomerPurchasedProductsSection({
   if (isLoading) {
     return (
       <OverviewCustomerSectionCard title={title} className="border-muted" contentClassName="py-1">
-        <OverviewCustomerStateMessage message="Carregando os produtos comprados deste cliente." />
+        <OverviewCustomerStateMessage message="Carregando produtos comprados deste cliente." />
       </OverviewCustomerSectionCard>
     );
   }
@@ -41,7 +42,7 @@ export function OverviewCustomerPurchasedProductsSection({
     return (
       <OverviewCustomerSectionCard title={title} className="border-muted" contentClassName="py-1">
         <OverviewCustomerStateMessage
-          message="Não foi possível carregar os produtos comprados deste cliente. Tente novamente."
+          message="Não foi possível carregar os produtos comprados deste cliente."
           tone="destructive"
         />
       </OverviewCustomerSectionCard>
@@ -51,7 +52,7 @@ export function OverviewCustomerPurchasedProductsSection({
   if (rows.length === 0) {
     return (
       <OverviewCustomerSectionCard title={title} className="border-muted" contentClassName="py-1">
-        <OverviewCustomerStateMessage message="Ainda não há produtos comprados para este cliente." />
+        <OverviewCustomerStateMessage message="Nenhum produto comprado disponível para este cliente." />
       </OverviewCustomerSectionCard>
     );
   }

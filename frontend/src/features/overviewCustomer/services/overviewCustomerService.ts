@@ -3,6 +3,7 @@ import type { OverviewCustomerDetailResponse } from "../types/overviewCustomerDe
 import type { OverviewCustomerListResponse } from "../types/overviewCustomerList.types";
 import type { OverviewCustomerMonthlyEvolutionResponse } from "../types/overviewCustomerMonthlyEvolution.types";
 import type { OverviewCustomerPurchasedProductsResponse } from "../types/overviewCustomerPurchasedProducts.types";
+import type { OverviewCustomerRecentCommercialMotionResponse } from "../types/overviewCustomerRecentCommercialMotion.types";
 
 export const OverviewCustomerService = {
   getDetail: async (
@@ -24,6 +25,13 @@ export const OverviewCustomerService = {
   ): Promise<OverviewCustomerPurchasedProductsResponse> => {
     return apiFetchJson<OverviewCustomerPurchasedProductsResponse>(
       `/api/overview/customers/${encodeURIComponent(String(customerCode))}/purchased-products`,
+    );
+  },
+  getRecentCommercialMotion: async (
+    customerCode: number,
+  ): Promise<OverviewCustomerRecentCommercialMotionResponse> => {
+    return apiFetchJson<OverviewCustomerRecentCommercialMotionResponse>(
+      `/api/overview/customers/${encodeURIComponent(String(customerCode))}/recent-commercial-motion`,
     );
   },
   list: async (params: { search?: string; page?: number }): Promise<OverviewCustomerListResponse> => {

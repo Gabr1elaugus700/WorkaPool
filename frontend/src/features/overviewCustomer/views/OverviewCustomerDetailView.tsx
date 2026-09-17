@@ -1,15 +1,17 @@
 import DefaultLayout from "@/layout/DefaultLayout";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { OverviewCustomerAccessDeniedState } from "../components/OverviewCustomerAccessDeniedState";
 import { OverviewCustomerCommercialSummaryCard } from "../components/OverviewCustomerCommercialSummaryCard";
 import { OverviewCustomerMonthlyEvolutionSection } from "../components/OverviewCustomerMonthlyEvolutionSection";
 import { OverviewCustomerPurchasedProductsSection } from "../components/OverviewCustomerPurchasedProductsSection";
+import { OverviewCustomerRecentCommercialMotionSection } from "../components/OverviewCustomerRecentCommercialMotionSection";
 import { OverviewCustomerSectionCard } from "../components/OverviewCustomerSectionCard";
 import { OverviewCustomerStateMessage } from "../components/OverviewCustomerStateMessage";
 import { useOverviewCustomerDetail } from "../hooks/useOverviewCustomerDetail";
 import { useOverviewCustomerMonthlyEvolution } from "../hooks/useOverviewCustomerMonthlyEvolution";
 import { useOverviewCustomerPurchasedProducts } from "../hooks/useOverviewCustomerPurchasedProducts";
+import { useOverviewCustomerRecentCommercialMotion } from "../hooks/useOverviewCustomerRecentCommercialMotion";
 
 function parseCustomerCode(raw: string | undefined): number | null {
   if (!raw) {
@@ -24,13 +26,19 @@ function parseCustomerCode(raw: string | undefined): number | null {
 
 export function OverviewCustomerDetailView() {
   const params = useParams<{ clienteId: string }>();
+  const [isMonthlyEvolutionOpen, setIsMonthlyEvolutionOpen] = useState(false);
   const customerCode = useMemo(
     () => parseCustomerCode(params.clienteId),
     [params.clienteId],
   );
   const detailQuery = useOverviewCustomerDetail(customerCode);
-  const monthlyQuery = useOverviewCustomerMonthlyEvolution(customerCode);
+  const monthlyQuery = useOverviewCustomerMonthlyEvolution(customerCode, isMonthlyEvolutionOpen);
   const purchasedProductsQuery = useOverviewCustomerPurchasedProducts(customerCode);
+  const recentCommercialMotionQuery = useOverviewCustomerRecentCommercialMotion(customerCode);
+
+  useEffect(() => {
+    setIsMonthlyEvolutionOpen(false);
+  }, [customerCode]);
 
   if (customerCode == null) {
     return (
@@ -150,11 +158,33 @@ export function OverviewCustomerDetailView() {
         </OverviewCustomerSectionCard>
 
         <OverviewCustomerCommercialSummaryCard summary={detail.commercialSummary} />
+        <OverviewCustomerRecentCommercialMotionSection
+          lastInvoicedPurchaseAt={
+            recentCommercialMotionQuery.data?.lastInvoicedPurchaseAt ??
+            detail.customer.lastInvoicedPurchaseAt
+          }
+          lastLostOrderAt={
+            recentCommercialMotionQuery.data?.lastLostOrderAt ??
+            detail.customer.lastLostOrderAt
+          }
+          lastCommercialMovementAt={
+            recentCommercialMotionQuery.data?.lastCommercialMovementAt ??
+            detail.customer.lastCommercialMovementAt
+          }
+          recentInvoicedOrders={recentCommercialMotionQuery.data?.recentInvoicedOrders ?? []}
+          recentLostOrders={recentCommercialMotionQuery.data?.recentLostOrders ?? []}
+          isLoadingInvoiced={recentCommercialMotionQuery.isLoading}
+          isLoadingLost={recentCommercialMotionQuery.isLoading}
+          isErrorInvoiced={recentCommercialMotionQuery.isError}
+          isErrorLost={recentCommercialMotionQuery.isError}
+        />
 
         <OverviewCustomerMonthlyEvolutionSection
           rows={monthlyQuery.data?.monthly ?? []}
           isLoading={monthlyQuery.isLoading}
           isError={monthlyQuery.isError}
+          isOpen={isMonthlyEvolutionOpen}
+          onToggle={() => setIsMonthlyEvolutionOpen((previous) => !previous)}
         />
         <OverviewCustomerPurchasedProductsSection
           rows={purchasedProductsQuery.data?.products ?? []}
