@@ -76,7 +76,12 @@ export class GetOverviewCustomerDetailUseCase {
     }
 
     return {
-      customer,
+      customer: {
+        ...customer,
+        lastLostOrderAt: customer.lastLostOrderAt ?? null,
+        lastCommercialMovementAt:
+          customer.lastCommercialMovementAt ?? customer.lastInvoicedPurchaseAt ?? null,
+      },
       commercialSummary,
       sync: {
         lastSuccessfulSyncAt: lastSuccessfulSyncAt

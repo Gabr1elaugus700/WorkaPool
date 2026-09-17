@@ -5,30 +5,48 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { OverviewCustomerMonthlyEvolutionSection } from "./OverviewCustomerMonthlyEvolutionSection";
 
 describe("OverviewCustomerMonthlyEvolutionSection", () => {
-  it("renders loading, empty, error and loaded states safely", () => {
+  it("renders closed, loading, empty, error and loaded states safely", () => {
+    const closed = renderToStaticMarkup(
+      React.createElement(OverviewCustomerMonthlyEvolutionSection, {
+        rows: [],
+        isLoading: false,
+        isError: false,
+        isOpen: false,
+        onToggle: () => undefined,
+      }),
+    );
+    assert.match(closed, /Carregar evolução mensal/i);
+    assert.match(closed, /Abra esta seção para carregar a evolução mensal/i);
+
     const loading = renderToStaticMarkup(
       React.createElement(OverviewCustomerMonthlyEvolutionSection, {
         rows: [],
         isLoading: true,
         isError: false,
+        isOpen: true,
+        onToggle: () => undefined,
       }),
     );
-    assert.match(loading, /Carregando evolução mensal/i);
+    assert.match(loading, /Carregando a evolução mensal deste cliente/i);
 
     const empty = renderToStaticMarkup(
       React.createElement(OverviewCustomerMonthlyEvolutionSection, {
         rows: [],
         isLoading: false,
         isError: false,
+        isOpen: true,
+        onToggle: () => undefined,
       }),
     );
-    assert.match(empty, /Sem evolução mensal disponível/i);
+    assert.match(empty, /Não há dados de evolução mensal para este cliente/i);
 
     const error = renderToStaticMarkup(
       React.createElement(OverviewCustomerMonthlyEvolutionSection, {
         rows: [],
         isLoading: false,
         isError: true,
+        isOpen: true,
+        onToggle: () => undefined,
       }),
     );
     assert.match(error, /Não foi possível carregar a evolução mensal/i);
@@ -46,6 +64,8 @@ describe("OverviewCustomerMonthlyEvolutionSection", () => {
         ],
         isLoading: false,
         isError: false,
+        isOpen: true,
+        onToggle: () => undefined,
       }),
     );
     assert.match(loaded, /Evolução mensal/);

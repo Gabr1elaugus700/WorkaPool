@@ -11,6 +11,8 @@ export type OverviewCustomerIdentity = {
   primaryCodRep: number | null;
   firstInvoicedPurchaseAt: string | null;
   lastInvoicedPurchaseAt: string | null;
+  lastLostOrderAt?: string | null;
+  lastCommercialMovementAt?: string | null;
   branchIndicator: BranchIndicator;
   orderCountLast12Months?: number;
   revenueLast12Months?: number;
@@ -67,4 +69,30 @@ export type OverviewCustomerPurchasedProduct = {
 
 export type OverviewCustomerPurchasedProductsSnapshot = {
   customers: Record<string, OverviewCustomerPurchasedProduct[]>;
+};
+
+export type OverviewCustomerRecentInvoicedOrder = {
+  orderNumber: number;
+  occurredAt: string;
+  codRep: number | null;
+  branchCode: number | null;
+};
+
+export type OverviewCustomerRecentLostOrder = {
+  orderNumber: number;
+  occurredAt: string;
+  codRep: number | null;
+  sitped: number;
+};
+
+export type OverviewCustomerRecentCommercialMotion = {
+  lastInvoicedPurchaseAt: string | null;
+  lastLostOrderAt: string | null;
+  lastCommercialMovementAt: string | null;
+  recentInvoicedOrders: OverviewCustomerRecentInvoicedOrder[];
+  recentLostOrders: OverviewCustomerRecentLostOrder[];
+};
+
+export type OverviewCustomerRecentCommercialMotionSnapshot = {
+  customers: Record<string, OverviewCustomerRecentCommercialMotion>;
 };

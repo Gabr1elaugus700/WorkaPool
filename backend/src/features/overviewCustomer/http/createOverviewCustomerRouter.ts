@@ -4,6 +4,7 @@ import { createOverviewCustomerDetailRoutes } from "./routes/overviewCustomerDet
 import { GetOverviewCustomerDetailUseCase } from "../useCases/GetOverviewCustomerDetailUseCase";
 import { ListOverviewCustomersUseCase } from "../useCases/ListOverviewCustomersUseCase";
 import { GetOverviewCustomerMonthlyEvolutionUseCase } from "../useCases/GetOverviewCustomerMonthlyEvolutionUseCase";
+import { GetOverviewCustomerRecentCommercialMotionUseCase } from "../useCases/GetOverviewCustomerRecentCommercialMotionUseCase";
 import { GetOverviewCustomerPurchasedProductsUseCase } from "../useCases/GetOverviewCustomerPurchasedProductsUseCase";
 
 export function createOverviewCustomerRouter(
@@ -14,6 +15,9 @@ export function createOverviewCustomerRouter(
     getDetail: new GetOverviewCustomerDetailUseCase(store),
     listCustomers: new ListOverviewCustomersUseCase(store),
     getMonthlyEvolution: new GetOverviewCustomerMonthlyEvolutionUseCase(store),
+    getRecentCommercialMotion: new GetOverviewCustomerRecentCommercialMotionUseCase(
+      store,
+    ),
     getPurchasedProducts: new GetOverviewCustomerPurchasedProductsUseCase(store),
   });
 }

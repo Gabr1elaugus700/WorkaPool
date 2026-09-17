@@ -7,6 +7,8 @@ import { materializeOverviewCustomerMonthlyEvolution } from "./materializeOvervi
 import { OverviewCustomerMonthlyEvolutionSeniorQuery } from "./OverviewCustomerMonthlyEvolutionSeniorQuery";
 import { materializeOverviewCustomerPurchasedProducts } from "./materializeOverviewCustomerPurchasedProducts";
 import { OverviewCustomerPurchasedProductsSeniorQuery } from "./OverviewCustomerPurchasedProductsSeniorQuery";
+import { materializeOverviewCustomerRecentCommercialMotion } from "./materializeOverviewCustomerRecentCommercialMotion";
+import { OverviewCustomerRecentCommercialMotionSeniorQuery } from "./OverviewCustomerRecentCommercialMotionSeniorQuery";
 
 const STEP_NAMES = [
   "dados-gerais-cliente",
@@ -15,16 +17,6 @@ const STEP_NAMES = [
   "produtos-comprados",
   "ultimo-pedido-cliente",
 ] as const;
-
-function createPendingWiringStep(name: string): SeniorStepExecutor {
-  return {
-    name,
-    execute: async () => ({
-      status: "PENDING_WIRING",
-      message: `Step ${name} ainda depende de integração final com query Senior dedicada.`,
-    }),
-  };
-}
 
 export function createOverviewCustomerSyncSteps(
   identityQuery: Pick<OverviewCustomerIdentitySeniorQuery, "fetchSeed"> =
@@ -37,6 +29,10 @@ export function createOverviewCustomerSyncSteps(
     new OverviewCustomerMonthlyEvolutionSeniorQuery(),
   purchasedProductsQuery: Pick<OverviewCustomerPurchasedProductsSeniorQuery, "fetchSeed"> =
     new OverviewCustomerPurchasedProductsSeniorQuery(),
+  recentCommercialMotionQuery: Pick<
+    OverviewCustomerRecentCommercialMotionSeniorQuery,
+    "fetchSeed"
+  > = new OverviewCustomerRecentCommercialMotionSeniorQuery(),
 ): SeniorStepExecutor[] {
   const identityStep: SeniorStepExecutor = {
     name: STEP_NAMES[0],
@@ -102,11 +98,27 @@ export function createOverviewCustomerSyncSteps(
     },
   };
 
+  const recentCommercialMotionStep: SeniorStepExecutor = {
+    name: STEP_NAMES[4],
+    execute: async () => {
+      const seed = await recentCommercialMotionQuery.fetchSeed();
+      const snapshot = materializeOverviewCustomerRecentCommercialMotion(seed);
+
+      return {
+        customers: snapshot.customers,
+        metadata: {
+          customerCount: Object.keys(snapshot.customers).length,
+          generatedAt: new Date().toISOString(),
+        },
+      };
+    },
+  };
+
   return [
     identityStep,
     summaryStep,
     monthlyEvolutionStep,
     purchasedProductsStep,
-    createPendingWiringStep(STEP_NAMES[4]),
+    recentCommercialMotionStep,
   ];
 }

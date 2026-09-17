@@ -5,9 +5,10 @@ import type { OverviewCustomerIdentitySeed } from "../../../../../src/features/o
 import type { OverviewCustomerCommercialSummarySeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerCommercialSummary";
 import type { OverviewCustomerMonthlyEvolutionSeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerMonthlyEvolution";
 import type { OverviewCustomerPurchasedProductsSeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerPurchasedProducts";
+import type { OverviewCustomerRecentCommercialMotionSeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerRecentCommercialMotion";
 
 describe("createOverviewCustomerSyncSteps", () => {
-  it("builds identity and commercial-summary snapshots before pending steps", async () => {
+  it("builds identity, summary and recent motion snapshots", async () => {
     const seed: OverviewCustomerIdentitySeed = {
       customers: [
         {
@@ -59,16 +60,44 @@ describe("createOverviewCustomerSyncSteps", () => {
         },
       ],
     };
+    const recentMotionSeed: OverviewCustomerRecentCommercialMotionSeed = {
+      invoicedOrders: [
+        {
+          customerCode: 123,
+          orderNumber: 9001,
+          invoiceDate: "2026-08-01",
+          codRep: 10,
+          branchCode: 1,
+        },
+      ],
+      lostOrders: [
+        {
+          customerCode: 123,
+          orderNumber: 9002,
+          issueDate: "2026-08-03",
+          sitped: 5,
+          codRep: 10,
+        },
+      ],
+    };
 
-    const steps = createOverviewCustomerSyncSteps({
-      fetchSeed: async () => seed,
-    }, {
-      fetchSeed: async () => summarySeed,
-    }, {
-      fetchSeed: async () => ({ rows: [] }),
-    }, {
-      fetchSeed: async () => purchasedSeed,
-    });
+    const steps = createOverviewCustomerSyncSteps(
+      {
+        fetchSeed: async () => seed,
+      },
+      {
+        fetchSeed: async () => summarySeed,
+      },
+      {
+        fetchSeed: async () => ({ rows: [] }),
+      },
+      {
+        fetchSeed: async () => purchasedSeed,
+      },
+      {
+        fetchSeed: async () => recentMotionSeed,
+      },
+    );
 
     assert.strictEqual(steps.length, 5);
     assert.strictEqual(steps[0].name, "dados-gerais-cliente");
@@ -109,6 +138,28 @@ describe("createOverviewCustomerSyncSteps", () => {
       purchasedProductsRecord.customers["123"][0].productCode,
       "101072",
     );
+
+    const recentMotionResult = await steps[4].execute();
+    assert.ok(typeof recentMotionResult === "object" && recentMotionResult !== null);
+    const recentMotionRecord = recentMotionResult as {
+      customers: Record<
+        string,
+        {
+          lastCommercialMovementAt: string | null;
+          recentLostOrders: Array<{ orderNumber: number }>;
+        }
+      >;
+      metadata: { customerCount: number };
+    };
+    assert.strictEqual(recentMotionRecord.metadata.customerCount, 1);
+    assert.strictEqual(
+      recentMotionRecord.customers["123"].lastCommercialMovementAt,
+      "2026-08-03",
+    );
+    assert.deepStrictEqual(
+      recentMotionRecord.customers["123"].recentLostOrders.map((row) => row.orderNumber),
+      [9002],
+    );
   });
 
   it("wires monthly evolution sync step with customer snapshot output", async () => {
@@ -135,6 +186,7 @@ describe("createOverviewCustomerSyncSteps", () => {
       { fetchSeed: async () => summarySeed },
       { fetchSeed: async () => monthlySeed },
       { fetchSeed: async () => ({ lines: [] }) },
+      { fetchSeed: async () => ({ invoicedOrders: [], lostOrders: [] }) },
     );
 
     const monthlyResult = await steps[2].execute();

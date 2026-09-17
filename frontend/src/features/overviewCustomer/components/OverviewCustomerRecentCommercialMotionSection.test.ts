@@ -1,0 +1,88 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { OverviewCustomerRecentCommercialMotionSection } from "./OverviewCustomerRecentCommercialMotionSection";
+
+describe("OverviewCustomerRecentCommercialMotionSection", () => {
+  it("renders separated movement dates and both recent sections", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(OverviewCustomerRecentCommercialMotionSection, {
+        lastInvoicedPurchaseAt: "2026-08-01",
+        lastLostOrderAt: "2026-08-05",
+        lastCommercialMovementAt: "2026-08-05",
+        recentInvoicedOrders: [
+          {
+            orderNumber: 1001,
+            occurredAt: "2026-08-01",
+            codRep: 10,
+            branchCode: 1,
+          },
+        ],
+        recentLostOrders: [
+          {
+            orderNumber: 1002,
+            occurredAt: "2026-08-05",
+            codRep: 10,
+            sitped: 5,
+          },
+        ],
+        isLoadingInvoiced: false,
+        isLoadingLost: false,
+        isErrorInvoiced: false,
+        isErrorLost: false,
+      }),
+    );
+
+    assert.match(html, /Última compra \(NF faturada\)/i);
+    assert.match(html, /Último pedido perdido/i);
+    assert.match(html, /Última movimentação comercial/i);
+    assert.match(html, /Pedidos faturados recentes/i);
+    assert.match(html, /Pedidos perdidos recentes/i);
+    assert.match(html, /1001/);
+    assert.match(html, /1002/);
+  });
+
+  it("renders non-blocking loading, empty and error states per slice", () => {
+    const loadingAndEmpty = renderToStaticMarkup(
+      React.createElement(OverviewCustomerRecentCommercialMotionSection, {
+        lastInvoicedPurchaseAt: "2026-08-01",
+        lastLostOrderAt: null,
+        lastCommercialMovementAt: "2026-08-01",
+        recentInvoicedOrders: [],
+        recentLostOrders: [],
+        isLoadingInvoiced: true,
+        isLoadingLost: false,
+        isErrorInvoiced: false,
+        isErrorLost: false,
+      }),
+    );
+
+    assert.match(loadingAndEmpty, /Carregando pedidos faturados recentes/i);
+    assert.match(loadingAndEmpty, /Nenhum pedido perdido recente para este cliente/i);
+
+    const errorAndLoaded = renderToStaticMarkup(
+      React.createElement(OverviewCustomerRecentCommercialMotionSection, {
+        lastInvoicedPurchaseAt: "2026-08-01",
+        lastLostOrderAt: "2026-08-05",
+        lastCommercialMovementAt: "2026-08-05",
+        recentInvoicedOrders: [
+          {
+            orderNumber: 1001,
+            occurredAt: "2026-08-01",
+            codRep: 10,
+            branchCode: 1,
+          },
+        ],
+        recentLostOrders: [],
+        isLoadingInvoiced: false,
+        isLoadingLost: false,
+        isErrorInvoiced: false,
+        isErrorLost: true,
+      }),
+    );
+
+    assert.match(errorAndLoaded, /1001/);
+    assert.match(errorAndLoaded, /Não foi possível carregar pedidos perdidos recentes/i);
+  });
+});
