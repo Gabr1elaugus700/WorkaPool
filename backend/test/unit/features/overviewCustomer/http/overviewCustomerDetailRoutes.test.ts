@@ -477,6 +477,45 @@ describe("Overview customer detail HTTP", () => {
     });
   });
 
+  it("returns 404 on purchased-products when customer has no synced products slice", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    store.seedSuccessfulSnapshot(
+      {
+        id: "snap-products-404",
+        publishedAt: new Date("2026-01-10T00:00:00.000Z"),
+        payload: {
+          customers: {
+            "123": {
+              customerCode: 123,
+              tradeName: "Cliente A",
+              document: "00.000.000/0001-00",
+              city: "Maringa",
+              state: "PR",
+              segment: "Construcao",
+              registrationDate: "2024-01-15",
+              primaryCodRep: 10,
+              firstInvoicedPurchaseAt: "2024-02-01",
+              lastInvoicedPurchaseAt: "2026-08-01",
+              branchIndicator: "MGA",
+            },
+          },
+          "produtos-comprados": {
+            customers: {},
+          },
+        },
+      },
+      new Date("2026-01-10T00:00:00.000Z"),
+    );
+    const app = createApp(store);
+
+    const response = await request(app)
+      .get("/api/overview/customers/123/purchased-products")
+      .set("Authorization", `Bearer ${createToken("ADMIN")}`);
+
+    assert.strictEqual(response.status, 404);
+    assert.strictEqual(response.body.code, "OVERVIEW_CUSTOMER_NOT_FOUND");
+  });
+
   it("rejects unauthenticated purchased-products access with 401", async () => {
     const store = new InMemoryOverviewCustomerSyncStore();
     const app = createApp(store);
