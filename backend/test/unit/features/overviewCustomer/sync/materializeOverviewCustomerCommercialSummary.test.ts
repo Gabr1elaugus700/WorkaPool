@@ -6,6 +6,52 @@ import {
 } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerCommercialSummary";
 
 describe("materializeOverviewCustomerCommercialSummary", () => {
+  it("ignores orders before Jan/2024 for since-Jan metrics", () => {
+    const seed: OverviewCustomerCommercialSummarySeed = {
+      lines: [
+        {
+          customerCode: 321,
+          orderId: 9001,
+          issuedAt: "2023-12-15",
+          productCode: "999999",
+          quantityInvoiced: 2,
+          quantityReturned: 0,
+          unitPrice: 100,
+          lineMarginPercent: 10,
+        },
+        {
+          customerCode: 321,
+          orderId: 9002,
+          issuedAt: "2024-01-10",
+          productCode: "999999",
+          quantityInvoiced: 1,
+          quantityReturned: 0,
+          unitPrice: 300,
+          lineMarginPercent: 20,
+        },
+      ],
+    };
+
+    const snapshot = materializeOverviewCustomerCommercialSummary(
+      seed,
+      new Date("2026-10-01T00:00:00.000Z"),
+    );
+
+    assert.deepStrictEqual(snapshot.customers["321"], {
+      revenueSinceJan2024: 300,
+      revenueLast12Months: 0,
+      orderCountSinceJan2024: 1,
+      orderCountLast12Months: 0,
+      averageTicketSinceJan2024: 300,
+      averageTicketLast12Months: 0,
+      volumeSinceJan2024: 1,
+      volumeLast12Months: 0,
+      marginPercentWeightedByRevenue: 16,
+      purchaseFrequencyDays: 26,
+      daysSinceLastPurchase: 995,
+    });
+  });
+
   it("matches trusted numeric fixture including 101072 half-volume and weighted margin", () => {
     const seed: OverviewCustomerCommercialSummarySeed = {
       lines: [
@@ -96,5 +142,51 @@ describe("materializeOverviewCustomerCommercialSummary", () => {
     assert.strictEqual(snapshot.customers["10"].purchaseFrequencyDays, null);
     assert.strictEqual(snapshot.customers["10"].marginPercentWeightedByRevenue, null);
     assert.strictEqual(snapshot.customers["10"].daysSinceLastPurchase, 11);
+  });
+
+  it("ignores returned-only lines and keeps aggregates coherent", () => {
+    const seed: OverviewCustomerCommercialSummarySeed = {
+      lines: [
+        {
+          customerCode: 77,
+          orderId: 3001,
+          issuedAt: "2026-02-10",
+          productCode: "999999",
+          quantityInvoiced: 5,
+          quantityReturned: 5,
+          unitPrice: 40,
+          lineMarginPercent: 25,
+        },
+        {
+          customerCode: 77,
+          orderId: 3002,
+          issuedAt: "2026-02-20",
+          productCode: "999999",
+          quantityInvoiced: 2,
+          quantityReturned: 0,
+          unitPrice: 50,
+          lineMarginPercent: 20,
+        },
+      ],
+    };
+
+    const snapshot = materializeOverviewCustomerCommercialSummary(
+      seed,
+      new Date("2026-10-01T00:00:00.000Z"),
+    );
+
+    assert.deepStrictEqual(snapshot.customers["77"], {
+      revenueSinceJan2024: 100,
+      revenueLast12Months: 100,
+      orderCountSinceJan2024: 1,
+      orderCountLast12Months: 1,
+      averageTicketSinceJan2024: 100,
+      averageTicketLast12Months: 100,
+      volumeSinceJan2024: 2,
+      volumeLast12Months: 2,
+      marginPercentWeightedByRevenue: 20,
+      purchaseFrequencyDays: null,
+      daysSinceLastPurchase: 223,
+    });
   });
 });

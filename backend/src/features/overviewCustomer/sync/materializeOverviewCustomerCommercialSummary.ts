@@ -2,6 +2,7 @@ import type { OverviewCustomerCommercialSummarySnapshot } from "../models/Overvi
 
 const HALF_VOLUME_PRODUCT_CODE = "101072";
 const DAY_MS = 24 * 60 * 60 * 1000;
+const JAN_2024_CUTOFF = new Date("2024-01-01T00:00:00.000Z");
 
 export type OverviewCustomerCommercialLine = {
   customerCode: number;
@@ -83,8 +84,11 @@ export function materializeOverviewCustomerCommercialSummary(
       continue;
     }
 
-    const totalRevenue = sumBy(orders, (order) => order.revenue);
-    const totalVolume = sumBy(orders, (order) => order.volume);
+    const sinceJan2024Orders = orders.filter(
+      (order) => toUtcDate(order.issuedAt) >= JAN_2024_CUTOFF,
+    );
+    const totalRevenue = sumBy(sinceJan2024Orders, (order) => order.revenue);
+    const totalVolume = sumBy(sinceJan2024Orders, (order) => order.volume);
     const last12Orders = orders.filter((order) => toUtcDate(order.issuedAt) >= last12Cutoff);
     const last12Revenue = sumBy(last12Orders, (order) => order.revenue);
     const last12Volume = sumBy(last12Orders, (order) => order.volume);
@@ -101,9 +105,10 @@ export function materializeOverviewCustomerCommercialSummary(
     customers[String(customerCode)] = {
       revenueSinceJan2024: round2(totalRevenue),
       revenueLast12Months: round2(last12Revenue),
-      orderCountSinceJan2024: orders.length,
+      orderCountSinceJan2024: sinceJan2024Orders.length,
       orderCountLast12Months: last12Orders.length,
-      averageTicketSinceJan2024: round2(totalRevenue / orders.length),
+      averageTicketSinceJan2024:
+        sinceJan2024Orders.length > 0 ? round2(totalRevenue / sinceJan2024Orders.length) : 0,
       averageTicketLast12Months:
         last12Orders.length > 0 ? round2(last12Revenue / last12Orders.length) : 0,
       volumeSinceJan2024: round2(totalVolume),
