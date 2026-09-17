@@ -41,5 +41,6 @@ describe("OverviewCustomerPortfolioList", () => {
 
     assert.match(markup, /Cliente ACME/);
     assert.match(markup, /href="\/overview\/customers\/123"/);
+    assert.match(markup, />123<\/a>/);
   });
 });

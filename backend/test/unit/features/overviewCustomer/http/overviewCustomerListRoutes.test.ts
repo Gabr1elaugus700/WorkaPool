@@ -111,6 +111,36 @@ describe("Overview customer list HTTP", () => {
     assert.strictEqual(searchResponse.body.items.length, 0);
   });
 
+  it("rejects VENDAS list request without codRep claim", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    store.seedSuccessfulSnapshot(
+      {
+        id: "snap-list-vendas-no-codrep",
+        publishedAt: new Date("2026-01-10T00:00:00.000Z"),
+        payload: {
+          customers: {
+            "100": createSeedCustomer({
+              customerCode: 100,
+              tradeName: "Cliente Rep 10",
+              document: "11111111000111",
+              primaryCodRep: 10,
+            }),
+          },
+        },
+      },
+      new Date("2026-01-10T00:00:00.000Z"),
+    );
+    const app = createApp(store);
+    const token = createToken("VENDAS");
+
+    const response = await request(app)
+      .get("/api/overview/customers")
+      .set("Authorization", `Bearer ${token}`);
+
+    assert.strictEqual(response.status, 403);
+    assert.strictEqual(response.body.code, "OVERVIEW_CUSTOMER_FORBIDDEN");
+  });
+
   it("allows ADMIN and GERENTE_DPTO to see all customers", async () => {
     const store = new InMemoryOverviewCustomerSyncStore();
     store.seedSuccessfulSnapshot(
@@ -204,6 +234,46 @@ describe("Overview customer list HTTP", () => {
     assert.strictEqual(byDocument.body.items[0].customerCode, 123);
   });
 
+  it("returns only the exact code match when numeric search matches both code and document", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    store.seedSuccessfulSnapshot(
+      {
+        id: "snap-list-3b",
+        publishedAt: new Date("2026-01-10T00:00:00.000Z"),
+        payload: {
+          customers: {
+            "123": createSeedCustomer({
+              customerCode: 123,
+              tradeName: "Cliente Codigo 123",
+              document: "11.111.111/0001-11",
+              primaryCodRep: 10,
+            }),
+            "999": createSeedCustomer({
+              customerCode: 999,
+              tradeName: "Cliente Documento 123",
+              document: "00.000.123/0001-99",
+              primaryCodRep: 10,
+            }),
+          },
+        },
+      },
+      new Date("2026-01-10T00:00:00.000Z"),
+    );
+    const app = createApp(store);
+    const token = createToken("ADMIN");
+
+    const response = await request(app)
+      .get("/api/overview/customers")
+      .query({ search: "123" })
+      .set("Authorization", `Bearer ${token}`);
+
+    assert.strictEqual(response.status, 200);
+    assert.deepStrictEqual(
+      response.body.items.map((item: { customerCode: number }) => item.customerCode),
+      [123],
+    );
+  });
+
   it("applies page size 20 and returns page 2", async () => {
     const store = new InMemoryOverviewCustomerSyncStore();
     const customers: Record<string, unknown> = {};
@@ -249,6 +319,22 @@ describe("Overview customer list HTTP", () => {
     assert.strictEqual(page2.body.items.length, 5);
     assert.strictEqual(page2.body.pagination.page, 2);
     assert.notDeepStrictEqual(page1.body.items, page2.body.items);
+  });
+
+  it("clamps requested page to 1 when there is no served snapshot", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    const app = createApp(store);
+    const token = createToken("ADMIN");
+
+    const response = await request(app)
+      .get("/api/overview/customers")
+      .query({ page: "3" })
+      .set("Authorization", `Bearer ${token}`);
+
+    assert.strictEqual(response.status, 200);
+    assert.strictEqual(response.body.items.length, 0);
+    assert.strictEqual(response.body.pagination.totalPages, 1);
+    assert.strictEqual(response.body.pagination.page, 1);
   });
 
   it("uses order-count sort by default and falls back to last purchase when missing", async () => {

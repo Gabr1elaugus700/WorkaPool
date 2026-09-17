@@ -40,7 +40,14 @@ export function OverviewCustomerPortfolioList({
         <tbody>
           {items.map((item) => (
             <tr key={item.customerCode} className="border-t">
-              <td className="px-3 py-2">{item.customerCode}</td>
+              <td className="px-3 py-2">
+                <a
+                  href={`/overview/customers/${item.customerCode}`}
+                  className="text-primary underline"
+                >
+                  {item.customerCode}
+                </a>
+              </td>
               <td className="px-3 py-2">
                 <a
                   href={`/overview/customers/${item.customerCode}`}
