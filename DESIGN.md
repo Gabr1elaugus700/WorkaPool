@@ -1,213 +1,271 @@
 ---
 name: WorkaPool
-description: Internal operations and commercial workspace with high-signal green accents.
+description: Internal operations console for Pool Técnica — practical, scanable, green-accented task UI.
 colors:
-  primary: "hsl(var(--primary))"
-  primary-foreground: "hsl(var(--primary-foreground))"
-  background: "hsl(var(--background))"
-  foreground: "hsl(var(--foreground))"
-  card: "hsl(var(--card))"
-  card-foreground: "hsl(var(--card-foreground))"
-  muted: "hsl(var(--muted))"
-  muted-foreground: "hsl(var(--muted-foreground))"
-  border: "hsl(var(--border))"
-  ring: "hsl(var(--ring))"
-  destructive: "hsl(var(--destructive))"
-  destructive-foreground: "hsl(var(--destructive-foreground))"
-  order-mine: "hsl(var(--order-mine))"
-  order-other: "hsl(var(--order-other))"
-  order-blocked: "hsl(var(--order-blocked))"
-  order-nostock: "hsl(var(--order-nostock))"
+  primary: "hsl(143.3 80.6% 45.1%)"
+  primary-foreground: "hsl(355.7 100% 97.3%)"
+  background: "hsl(0 0% 97%)"
+  foreground: "hsl(220 20% 10%)"
+  card: "hsl(0 0% 100%)"
+  card-foreground: "hsl(220 20% 10%)"
+  muted: "hsl(240 4.8% 95.9%)"
+  muted-foreground: "hsl(240 3.8% 46.1%)"
+  border: "hsl(240 5.9% 90%)"
+  input: "hsl(240 5.9% 90%)"
+  ring: "hsl(142.1 76.2% 36.3%)"
+  destructive: "hsl(0 84.2% 60.2%)"
+  destructive-foreground: "hsl(0 0% 98%)"
+  carga-aberta: "#A7F3D0"
+  carga-solicitada: "#FDE047"
+  carga-fechada: "#16A34A"
+  carga-cancelada: "#DC2626"
+  order-mine: "hsl(160 55% 35%)"
+  order-mine-bg: "hsl(160 55% 92%)"
+  order-blocked: "hsl(0 72% 51%)"
+  order-blocked-bg: "hsl(0 72% 95%)"
+  order-nostock: "hsl(30 90% 50%)"
+  order-nostock-bg: "hsl(30 90% 94%)"
 typography:
   display:
     fontFamily: "Inter, sans-serif"
-    fontSize: "2rem"
+    fontSize: "1.5rem"
     fontWeight: 700
     lineHeight: 1.2
-  headline:
-    fontFamily: "Inter, sans-serif"
-    fontSize: "1.25rem"
-    fontWeight: 700
-    lineHeight: 1.25
+    letterSpacing: "normal"
   title:
     fontFamily: "Inter, sans-serif"
-    fontSize: "1.125rem"
+    fontSize: "1.5rem"
     fontWeight: 600
-    lineHeight: 1.35
+    lineHeight: 1
+    letterSpacing: "-0.025em"
   body:
     fontFamily: "Inter, sans-serif"
     fontSize: "0.875rem"
     fontWeight: 400
     lineHeight: 1.5
+    letterSpacing: "normal"
   label:
     fontFamily: "Inter, sans-serif"
     fontSize: "0.75rem"
     fontWeight: 500
-    lineHeight: 1.35
-    letterSpacing: "0.01em"
+    lineHeight: 1.4
+    letterSpacing: "normal"
 rounded:
-  sm: "calc(var(--radius) - 4px)"
-  md: "calc(var(--radius) - 2px)"
-  lg: "var(--radius)"
+  base: "0.65rem"
+  md: "calc(0.65rem - 2px)"
+  sm: "calc(0.65rem - 4px)"
   full: "9999px"
 spacing:
-  xs: "0.5rem"
-  sm: "0.75rem"
-  md: "1rem"
-  lg: "1.5rem"
-  xl: "2rem"
+  xs: "4px"
+  sm: "8px"
+  md: "16px"
+  lg: "24px"
+  xl: "32px"
 components:
   button-primary:
     backgroundColor: "{colors.primary}"
-    textColor: "{colors.primary-foreground}"
-    typography: "{typography.body}"
+    textColor: "#000000"
     rounded: "{rounded.md}"
-    padding: "0.5rem 1rem"
-    height: "2.5rem"
+    padding: "8px 16px"
+    height: "40px"
   button-primary-hover:
-    backgroundColor: "hsl(var(--primary) / 0.9)"
-    textColor: "{colors.primary-foreground}"
+    backgroundColor: "{colors.primary}"
+    textColor: "#000000"
     rounded: "{rounded.md}"
+    padding: "8px 16px"
+    height: "40px"
   button-outline:
     backgroundColor: "{colors.background}"
     textColor: "{colors.foreground}"
     rounded: "{rounded.md}"
-    padding: "0.5rem 1rem"
-    height: "2.5rem"
+    padding: "8px 16px"
+    height: "40px"
+  button-ghost:
+    backgroundColor: "transparent"
+    textColor: "{colors.primary-foreground}"
+    rounded: "{rounded.md}"
+    padding: "8px 16px"
+    height: "40px"
   input-default:
     backgroundColor: "{colors.background}"
     textColor: "{colors.foreground}"
     rounded: "{rounded.md}"
-    padding: "0.5rem 0.75rem"
-    height: "2.5rem"
+    padding: "8px 12px"
+    height: "40px"
   card-default:
     backgroundColor: "{colors.card}"
     textColor: "{colors.card-foreground}"
-    rounded: "{rounded.lg}"
-    padding: "1.5rem"
+    rounded: "{rounded.base}"
+    padding: "24px"
+  badge-default:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.primary-foreground}"
+    rounded: "{rounded.full}"
+    padding: "2px 10px"
 ---
 
 # Design System: WorkaPool
 
 ## Overview
 
-**Creative North Star: "The Operations Greenroom"**
+**Creative North Star: "The Operations Console"**
 
-The system is built for operational throughput and commercial analysis, so visual language prioritizes legibility, predictable interactions, and fast scanability over ornamental expression. Neutral canvases hold most of the interface while a single green family marks action, progress, and ownership.
+WorkaPool looks and behaves like a control room for daily operations—not a marketing site. Surfaces are light, information-dense, and organized around recurring jobs (cargas, pedidos, OS, metas). A confident **Pool Green** (`hsl(143.3 80.6% 45.1%)`) signals brand and primary action, while page bodies stay neutral so tables, cards, and status chips carry most of the visual signal.
 
-Interaction hierarchy is explicit: surfaces stay quiet at rest, then state changes surface intent through focused rings, hover contrast shifts, and selective elevation. Component behavior is confident and pragmatic, with concise geometry and restrained transitions that make workflows feel dependable under sustained daily use.
-
-Only one anti-reference is explicit: avoid gamified visuals with excessive saturation, decorative badges, or attention-seeking ornament that competes with task-critical information.
+The stack is **shadcn/ui + Radix** on Tailwind CSS variables (`frontend/src/styles/tailwind.css`, `frontend/tailwind.config.js`). Inter is the sole type family. Layout follows a desktop top bar + mobile bottom tab pattern (`DefaultLayout`). Polish is functional: borders, `shadow-sm`, and ring focus states—not decorative motion or hero imagery.
 
 **Key Characteristics:**
-- Neutral-first interface with controlled green signal accents.
-- Flat-by-default surfaces with state-driven depth.
-- Medium corner system and compact spacing rhythm.
-- Utility-first component vocabulary with consistent field and card anatomy.
+
+- Operate-mode density: tables, forms, and cards over empty marketing space
+- Green structural chrome (navbar) on neutral work surfaces
+- Semantic domain colors for **Carga** lifecycle and **order** negotiation states
+- shadcn component variants as the default extension point—not one-off inline styling
+- Portuguese (BR) labels with domain-precise terminology
 
 ## Colors
 
-The palette is role-driven: one accent family for action and status, anchored by muted neutrals for reading-heavy screens.
+A practical green-accent palette on cool neutrals, with reserved semantic hues for logistics and commercial status.
 
 ### Primary
-- **Signal Green** (`hsl(var(--primary))`): primary CTA surfaces, active emphasis, focus-ring family, and chart accents where positive action or progress must stand out.
 
-### Secondary
-- **Soft Support Gray** (`hsl(var(--secondary))`): secondary fills and low-emphasis surfaces that separate structure without stealing attention.
-
-### Tertiary
-- **Subtle Accent Mist** (`hsl(var(--accent))`): hover and lightweight contextual highlights used to acknowledge interaction.
+- **Pool Green** (`hsl(143.3 80.6% 45.1%)`): Brand bar, primary buttons, active wayfinding accents, chart emphasis. The app's signature hue.
+- **On Primary** (`hsl(355.7 100% 97.3%)`): Text and links on the green navbar; ghost nav actions.
 
 ### Neutral
-- **Mist White** (`hsl(var(--background))`): default application canvas and broad background fields.
-- **Pure Card White** (`hsl(var(--card))`): card and popover containers for content segmentation.
-- **Graphite Slate** (`hsl(var(--foreground))`): primary text and icon foreground for high readability.
-- **Fog Gray** (`hsl(var(--muted-foreground))`): secondary labels, helper copy, and table meta information.
-- **Quiet Divider** (`hsl(var(--border))`): border strokes for controls, cards, and structured data regions.
 
-### Named Rules (optional, powerful)
-**The Single Accent Channel Rule.** Green carries action authority; additional vivid accents are reserved for semantic states, never for decorative novelty.
+- **Console Canvas** (`hsl(0 0% 97%)`): Page background (`bg-background`).
+- **Ink** (`hsl(220 20% 10%)`): Primary body text (`text-foreground`).
+- **Surface** (`hsl(0 0% 100%)`): Cards, inputs, mobile bottom nav.
+- **Muted Field** (`hsl(240 4.8% 95.9%)`): Login backdrop, secondary fills.
+- **Muted Label** (`hsl(240 3.8% 46.1%)`): Placeholders, descriptions, footer text.
+- **Hairline** (`hsl(240 5.9% 90%)`): Borders and input strokes.
+
+### Tertiary (domain semantics)
+
+- **Carga Aberta** (`#A7F3D0`): Open load — early lifecycle.
+- **Carga Solicitada** (`#FDE047`): Requested load — in progress.
+- **Carga Fechada** (`#16A34A`): Closed load — complete.
+- **Carga Cancelada** (`#DC2626`): Cancelled load — terminal error.
+- **Order Mine** (`hsl(160 55% 35%)` / bg `hsl(160 55% 92%)`): User-owned negotiation cards.
+- **Order Blocked** (`hsl(0 72% 51%)` / bg `hsl(0 72% 95%)`): Blocked or lost-with-urgency states.
+- **Order No Stock** (`hsl(30 90% 50%)` / bg `hsl(30 90% 94%)`): Stock-related warnings.
+
+### Named Rules
+
+**The Green Bar Rule.** The full-width primary navbar is the only large-field green surface. Page content stays neutral; green appears in buttons, badges, and status chips—not full-bleed section backgrounds.
+
+**The Status Color Rule.** Carga and order states use their dedicated tokens (`carga-*`, `order-*`). Do not improvise new hues for ABERTA, FECHADA, perdido, or bloqueado.
 
 ## Typography
 
-**Display Font:** Inter (with `sans-serif` fallback)  
-**Body Font:** Inter (with `sans-serif` fallback)  
-**Label/Mono Font:** Inter for labels; no dedicated mono track is defined in the incumbent system.
+**Display Font:** Inter (with `sans-serif` fallback)
+**Body Font:** Inter (with `sans-serif` fallback)
+**Label Font:** Inter (same family; weight/size differentiate roles)
 
-**Character:** Geometric-humanist sans typography tuned for operational readability, with medium-to-strong weight contrasts and conservative tracking.
+**Character:** Neutral, legible, and slightly compact—optimized for scanning tables and form labels in Portuguese. No display serif or expressive pairing.
 
 ### Hierarchy
-- **Display** (700, `2rem`, 1.2): large entry headings such as auth and key section intros.
-- **Headline** (700, `1.25rem`, 1.25): navigation brand mark and high-priority heading rows.
-- **Title** (600, `1.125rem`, 1.35): card section titles and block-level emphasis.
-- **Body** (400, `0.875rem`, 1.5): primary reading text, table cells, and standard UI copy.
-- **Label** (500, `0.75rem`, 1.35, `0.01em` letter spacing): compact metadata and control labels.
 
-### Named Rules (optional)
-**The Workhorse Type Rule.** Keep the interface in one family and drive hierarchy by size, weight, and spacing rather than switching faces.
+- **Display** (700, 1.5rem / 24px, line-height 1.2): Navbar wordmark "WorkaPool", rare page titles.
+- **Title** (600, 1.5rem / 24px, line-height 1, tracking-tight): Card titles (`CardTitle`), login heading.
+- **Body** (400, 0.875rem / 14px on md+, 1rem / 16px on mobile inputs, line-height 1.5): Default UI copy, table cells, form text. Prefer 65–75ch for long prose blocks when they appear.
+- **Label** (500, 0.75rem / 12px): Mobile tab labels, badge text, compact metadata.
+
+### Named Rules
+
+**The One Family Rule.** Inter carries every role. Do not introduce a second typeface without explicit brand approval.
 
 ## Layout
 
-Layout follows a container-centered web app pattern (`container mx-auto`) with flexible vertical composition (`flex`, `grid`) and dense but readable spacing steps (`0.5rem`, `0.75rem`, `1rem`, `1.5rem`, `2rem`). Data-heavy sections favor single-column on small screens and pivot to two-column or tabular structures from medium breakpoints (`md`) upward. Mobile navigation is bottom-docked for direct thumb access, while desktop uses a persistent top navigation strip.
+- **Shell:** `min-h-screen flex flex-col` with `container mx-auto` content (`max-width` follows Tailwind `container` defaults).
+- **Desktop (md+):** Top primary navbar (`hidden md:block`), main padding `p-4`, footer with version line.
+- **Mobile (<md):** Fixed bottom tab bar (`pb-24` on main to clear it); three primary destinations (Home, Vistorias, Ordens).
+- **Spacing rhythm:** 4px base grid via Tailwind—`gap-4` / `p-4` (16px) for page sections; `p-6` (24px) inside cards.
+- **Density:** Operate-first; prefer stacked sections and scrollable tables over sparse hero layouts.
 
 ## Elevation & Depth
 
-Depth is mostly stateful. Default surfaces are visually flat and rely on borders and tonal separation; shadows appear as light structural hints on cards and stronger overlays for dialogs/toasts. This keeps baseline noise low while still giving users immediate feedback during interaction and focus shifts.
+Mostly **flat with light lift**. Depth is conveyed through white cards on a gray canvas, 1px borders, and occasional `shadow-sm`—not layered floating panels.
 
-### Shadow Vocabulary (if applicable)
-- **Surface Hint** (`shadow-sm`): lightweight separation for cards and grouped content regions.
-- **Overlay Lift** (`shadow-lg`): modal dialogs and toast notifications where foreground priority must be explicit.
+### Shadow Vocabulary
 
-### Named Rules (optional)
-**The Flat-by-Default Rule.** Surfaces remain flat at rest; elevation is introduced only when state or layering demands it.
+- **Card rest** (`box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05)`): Default cards (`shadow-sm`).
+- **Navbar** (`box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1)`): Structural separation under the green bar.
+- **Dialog** (`box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1)`): Modal content (`shadow-lg`); overlay `bg-black/80`.
+
+### Named Rules
+
+**The Flat-By-Default Rule.** Surfaces are flat at rest. Shadows appear on cards, modals, and the navbar—not on every list row or table cell.
 
 ## Shapes
 
-The form language uses a medium radius core anchored on `--radius` (`0.65rem`) and derived steps for control density: small (`calc(var(--radius) - 4px)`), medium (`calc(var(--radius) - 2px)`), and large (`var(--radius)`). Pills are reserved for badges/tags (`rounded-full`). Borders are thin and neutral; clipping and geometric novelty are intentionally absent to keep operational clarity first.
+- **Base radius** (`0.65rem` / ~10px): CSS variable `--radius`; drives `rounded-lg` on cards and `rounded-md` on inputs/buttons via Tailwind calc offsets.
+- **Pills:** Badges use `rounded-full`.
+- **Borders:** 1px `border` / `border-input` on inputs, cards, and tables; no heavy outlines.
+- **Dialogs:** `sm:rounded-lg` on modal content; square on very small viewports.
 
 ## Components
 
-Components read as confident and pragmatic: clear boundaries, stable hit targets, and predictable interaction states.
-
 ### Buttons
-- **Shape:** medium rounded controls (`calc(var(--radius) - 2px)`), icon buttons in square frames.
-- **Primary:** green fill with contrasting foreground (`hsl(var(--primary))` + `hsl(var(--primary-foreground))`) and compact horizontal padding (`1rem`).
-- **Hover / Focus:** hover uses controlled alpha shift; focus uses a visible ring (`hsl(var(--ring))`) plus offset for keyboard readability.
-- **Secondary / Ghost / Link:** secondary and ghost remain neutral; link style is text-first for nav contexts.
 
-### Chips (if used)
-- **Style:** rounded-pill (`9999px`) with semantic fills (primary, secondary, destructive) and compact label typography.
-- **State:** hover reduces opacity/saturation subtly; no animated flourish.
+- **Character:** Confident and utilitarian—filled green for primary actions, outline/ghost for secondary and nav.
+- **Shape:** `rounded-md` (~8px), height 40px default (`h-10`), 36px small (`h-9`), 44px large (`h-11`).
+- **Primary:** `bg-primary` with `hover:bg-primary/90`; note incumbent override `text-black` on default variant.
+- **Outline:** `border border-input bg-background`, hover `bg-accent`.
+- **Ghost:** Used in navbar for "Sair"; `text-primary-foreground` on green bar.
+- **Link:** `text-primary underline-offset-4` for inline text actions.
+- **Focus:** `ring-2 ring-ring ring-offset-2`.
+
+### Chips / Badges
+
+- **Style:** `rounded-full`, `text-xs font-semibold`, `px-2.5 py-0.5`.
+- **Default:** Primary fill; secondary/destructive/outline variants match shadcn patterns.
+- **Domain:** Prefer semantic `carga-*` / `order-*` backgrounds for status—not generic gray.
 
 ### Cards / Containers
-- **Corner Style:** large rounded container (`var(--radius)`).
-- **Background:** card-white surface on mist-white page canvas.
-- **Shadow Strategy:** flat by default with `shadow-sm` as separation hint.
-- **Border:** neutral single-line stroke for structure.
-- **Internal Padding:** usually `1.5rem`, with section-specific reductions for dense data blocks.
+
+- **Corner Style:** `rounded-lg` (0.65rem).
+- **Background:** `bg-card` on `bg-background` pages.
+- **Shadow:** `shadow-sm` at rest.
+- **Border:** `border` hairline optional; login card uses border implicitly via card styles.
+- **Internal Padding:** `p-6` header/content standard.
 
 ### Inputs / Fields
-- **Style:** neutral background with border stroke, medium radius, and fixed `2.5rem` control height.
-- **Focus:** ring + offset treatment mirrors button focus behavior for consistency.
-- **Error / Disabled:** destructive text for errors and opacity/pointer constraints for disabled state.
+
+- **Style:** `h-10`, `rounded-md`, `border-input`, `bg-background`, `px-3 py-2`.
+- **Placeholder:** `text-muted-foreground`.
+- **Focus:** `ring-2 ring-ring ring-offset-2`, no glow.
+- **Error:** `text-destructive` message below field (login pattern).
 
 ### Navigation
-- **Style:** desktop top bar in primary green with foreground links; mobile bottom nav in white with active-green icon/text states and neutral inactive states.
 
-### Overview Section Card
-Reusable analytics section wrapper with card shell, compact heading stack, optional supporting description, and content-first interior region for KPI grids/charts/tables.
+- **Desktop:** Full-width `bg-primary text-primary-foreground shadow` bar; `ButtonLink` renders `variant="link"` items in white; role-gated visibility.
+- **Mobile:** Fixed bottom white bar, `border-t border-primary/20`; active tab `text-green-600`, inactive `text-slate-500`; Lucide icons 24px with `text-xs` labels.
+- **Typography:** Navbar wordmark `text-xl font-bold text-white`.
+
+### Tables
+
+- **Style:** `text-sm`, full-width with horizontal scroll wrapper; header row `border-b`; zebra not used—rely on row borders.
+
+### Dialogs
+
+- **Overlay:** `bg-black/80` fade animation.
+- **Content:** Centered, `max-w-lg`, `p-6`, `shadow-lg`, zoom/slide entrance via `tailwindcss-animate`.
 
 ## Do's and Don'ts
 
-Concrete guardrails derived from the incumbent implementation:
-
 ### Do:
-- **Do** keep green as the singular high-signal action channel and rely on neutrals for base surfaces.
-- **Do** use visible focus rings with offset on interactive controls to preserve keyboard traceability.
-- **Do** keep table and KPI typography compact (`text-sm` and below) with clear muted-vs-primary contrast.
-- **Do** preserve medium-radius geometry and avoid mixing many corner systems on the same screen.
+
+- **Do** use semantic tokens (`primary`, `muted`, `destructive`, `carga-*`, `order-*`) via Tailwind classes or `hsl(var(--token))`.
+- **Do** keep labels and headings in Portuguese with domain terms from `CONTEXT.md` files.
+- **Do** extend shadcn variants (`Button`, `Badge`, `Card`) before creating bespoke styled divs.
+- **Do** preserve the green navbar + neutral body pattern on new authenticated screens.
+- **Do** use `container mx-auto p-4` and bottom padding on mobile when adding fixed footers.
 
 ### Don't:
-- **Don't** introduce gamified visual noise (over-saturated badges, excessive celebration colors, or decorative motion) in operational screens.
-- **Don't** stack deep shadows on resting surfaces; reserve strong elevation for overlays and transient feedback.
-- **Don't** use low-contrast gray-on-gray text for KPI labels and metadata.
+
+- **Don't** introduce marketing-style hero sections, gradients, or decorative illustration in operational views.
+- **Don't** assign new arbitrary colors to Carga or order states—use the established semantic palette.
+- **Don't** add a second global stylesheet with competing `:root` tokens (`globals.css` vs `tailwind.css`—`main.tsx` loads `tailwind.css` as authority).
+- **Don't** hide critical actions behind icon-only buttons without tooltips or labels.
+- **Don't** use English UI copy on staff-facing surfaces unless mirroring an established ERP field name.
