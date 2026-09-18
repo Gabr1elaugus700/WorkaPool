@@ -2,7 +2,9 @@
 import { app } from "./app";
 import "./config/env";
 import { createOverviewCustomerSyncRuntime } from "./features/overviewCustomer/sync/createOverviewCustomerSyncRuntime";
+import { createGrpproSyncRuntime } from "./features/grppro/sync/createGrpproSyncRuntime";
 import { OverviewCustomerSyncScheduler } from "./schedulers/overviewCustomerSync/OverviewCustomerSyncScheduler";
+import { GrpproSyncScheduler } from "./schedulers/grpproSync/GrpproSyncScheduler";
 
 console.log("🧪 DATABASE_URL carregado:", process.env.DATABASE_URL);
 
@@ -11,6 +13,12 @@ const overviewSyncScheduler = new OverviewCustomerSyncScheduler({
   pipeline: overviewSyncRuntime.pipeline,
 });
 overviewSyncScheduler.start();
+
+const grpproSyncRuntime = createGrpproSyncRuntime();
+const grpproSyncScheduler = new GrpproSyncScheduler({
+  pipeline: grpproSyncRuntime.pipeline,
+});
+grpproSyncScheduler.start();
 
 // Iniciar servidor
 const PORT = Number(process.env.PORT) || 3005; 
