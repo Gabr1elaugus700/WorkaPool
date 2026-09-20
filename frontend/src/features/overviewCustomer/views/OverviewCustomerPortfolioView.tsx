@@ -71,20 +71,6 @@ export function OverviewCustomerPortfolioView() {
   }, [branchFilter, cityFilter, items, quickFilter]);
 
   const metrics = useMemo(() => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    const purchasesThisMonth = items.filter((item) => {
-      if (!item.lastPurchaseAt) {
-        return false;
-      }
-
-      const [yearRaw, monthRaw] = item.lastPurchaseAt.split("-");
-      const year = Number(yearRaw);
-      const month = Number(monthRaw) - 1;
-      return year === currentYear && month === currentMonth;
-    }).length;
-
     const branchCount = items.reduce(
       (accumulator, item) => {
         accumulator[item.branchIndicator] += 1;
@@ -95,10 +81,10 @@ export function OverviewCustomerPortfolioView() {
 
     return {
       totalCustomers: pagination?.totalItems ?? items.length,
-      purchasesThisMonth,
+      purchasesThisMonth: listQuery.data?.summary?.purchasesThisMonth ?? 0,
       branchCount,
     };
-  }, [items, pagination?.totalItems]);
+  }, [items, listQuery.data?.summary?.purchasesThisMonth, pagination?.totalItems]);
 
   return (
     <DefaultLayout>
