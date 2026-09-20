@@ -22,24 +22,32 @@ const customerFixture: OverviewCustomerIdentity = {
 };
 
 describe("OverviewCustomerDetailHero", () => {
-  it("renders identity, branch badge and commercial signals", () => {
+  it("renders identity, health score mock and commercial signals", () => {
     const markup = renderToStaticMarkup(
       React.createElement(OverviewCustomerDetailHero, {
         customer: customerFixture,
         commercialSignals: {
-          marginPercentWeightedByRevenue: 24.8,
           purchaseFrequencyDays: 16,
           daysSinceLastPurchase: 9,
+          maxInvoicedOrderMarginPercent: 40,
+          minInvoicedOrderMarginPercent: 20,
         },
       }),
     );
 
     assert.match(markup, /QUIBRAS QUIMICA BRASILEIRA/);
-    assert.match(markup, /#4821/);
+    assert.match(markup, /Cód: #4821/);
     assert.match(markup, /Curitiba\/PR/);
     assert.match(markup, /CTB/);
     assert.match(markup, /12\.345\.678\/0001-90/);
-    assert.match(markup, /24,80%/);
+    assert.match(markup, /Score de Saúde 360°/);
+    assert.match(markup, /Dias desde última compra/);
+    assert.match(markup, /Maior margem \(pedido ganho\)/);
+    assert.match(markup, /Menor margem vendida/);
+    assert.match(markup, /40,00%/);
+    assert.match(markup, /20,00%/);
     assert.match(markup, /QQ/);
+    assert.doesNotMatch(markup, /Recência/);
+    assert.doesNotMatch(markup, /Documento:/);
   });
 });

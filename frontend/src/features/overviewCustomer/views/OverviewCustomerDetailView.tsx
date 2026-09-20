@@ -150,10 +150,12 @@ export function OverviewCustomerDetailView() {
         <OverviewCustomerDetailHero
           customer={detail.customer}
           commercialSignals={{
-            marginPercentWeightedByRevenue:
-              detail.commercialSummary.marginPercentWeightedByRevenue,
             purchaseFrequencyDays: detail.commercialSummary.purchaseFrequencyDays,
             daysSinceLastPurchase: detail.commercialSummary.daysSinceLastPurchase,
+            maxInvoicedOrderMarginPercent:
+              detail.commercialSummary.maxInvoicedOrderMarginPercent ?? null,
+            minInvoicedOrderMarginPercent:
+              detail.commercialSummary.minInvoicedOrderMarginPercent ?? null,
           }}
         />
         <OverviewCustomerDetailTabs
