@@ -9,7 +9,7 @@ Uma execução do pipeline overnight (ou disparada por admin). Tem steps nomeado
 _Avoid_: job genérico, cron tick sem registro
 
 **Sync step**:
-Unidade nomeada do pipeline (ex.: dados-gerais-cliente, resumo-comercial). Retry budget: até 3 attempts.
+Unidade nomeada do pipeline (ex.: dados-gerais-cliente, resumo-comercial, ganhos-por-grupo). Retry budget: até 3 attempts.
 _Avoid_: retry do pipeline inteiro neste slice
 
 **Served snapshot**:

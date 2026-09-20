@@ -6,6 +6,7 @@ import type { OverviewCustomerCommercialSummarySeed } from "../../../../../src/f
 import type { OverviewCustomerMonthlyEvolutionSeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerMonthlyEvolution";
 import type { OverviewCustomerPurchasedProductsSeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerPurchasedProducts";
 import type { OverviewCustomerRecentCommercialMotionSeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerRecentCommercialMotion";
+import type { OverviewCustomerWinsByGroupSeed } from "../../../../../src/features/overviewCustomer/sync/materializeOverviewCustomerWinsByGroup";
 
 describe("createOverviewCustomerSyncSteps", () => {
   it("builds identity, summary and recent motion snapshots", async () => {
@@ -60,6 +61,21 @@ describe("createOverviewCustomerSyncSteps", () => {
         },
       ],
     };
+    const winsSeed: Pick<OverviewCustomerWinsByGroupSeed, "lines"> = {
+      lines: [
+        {
+          customerCode: 123,
+          orderId: 9001,
+          invoiceNumber: 555,
+          issuedAt: "2026-08-01",
+          productCode: "101072",
+          quantityInvoiced: 4,
+          quantityReturned: 0,
+          unitPrice: 20,
+          lineMarginPercent: 30,
+        },
+      ],
+    };
     const recentMotionSeed: OverviewCustomerRecentCommercialMotionSeed = {
       invoicedOrders: [
         {
@@ -97,11 +113,25 @@ describe("createOverviewCustomerSyncSteps", () => {
       {
         fetchSeed: async () => recentMotionSeed,
       },
+      {
+        fetchSeed: async () => winsSeed,
+      },
+      {
+        fetchAll: async () => [
+          {
+            produtoCodigo: "101072",
+            grupoCodigo: "G01",
+            grupoDescricao: "TUBOS",
+          },
+        ],
+      },
     );
 
-    assert.strictEqual(steps.length, 5);
+    assert.strictEqual(steps.length, 6);
     assert.strictEqual(steps[0].name, "dados-gerais-cliente");
     assert.strictEqual(steps[1].name, "resumo-comercial");
+    assert.strictEqual(steps[4].name, "ganhos-por-grupo");
+    assert.strictEqual(steps[5].name, "ultimo-pedido-cliente");
 
     const firstResult = await steps[0].execute();
     assert.ok(typeof firstResult === "object" && firstResult !== null);
@@ -139,7 +169,18 @@ describe("createOverviewCustomerSyncSteps", () => {
       "101072",
     );
 
-    const recentMotionResult = await steps[4].execute();
+    const winsByGroupResult = await steps[4].execute();
+    assert.ok(typeof winsByGroupResult === "object" && winsByGroupResult !== null);
+    const winsByGroupRecord = winsByGroupResult as {
+      customers: Record<string, Array<{ numped: number; numnfv: number; grupoCodigo: string }>>;
+      metadata: { customerCount: number };
+    };
+    assert.strictEqual(winsByGroupRecord.metadata.customerCount, 1);
+    assert.strictEqual(winsByGroupRecord.customers["123"][0].numped, 9001);
+    assert.strictEqual(winsByGroupRecord.customers["123"][0].numnfv, 555);
+    assert.strictEqual(winsByGroupRecord.customers["123"][0].grupoCodigo, "G01");
+
+    const recentMotionResult = await steps[5].execute();
     assert.ok(typeof recentMotionResult === "object" && recentMotionResult !== null);
     const recentMotionRecord = recentMotionResult as {
       customers: Record<
@@ -187,6 +228,8 @@ describe("createOverviewCustomerSyncSteps", () => {
       { fetchSeed: async () => monthlySeed },
       { fetchSeed: async () => ({ lines: [] }) },
       { fetchSeed: async () => ({ invoicedOrders: [], lostOrders: [] }) },
+      { fetchSeed: async () => ({ lines: [] }) },
+      { fetchAll: async () => [] },
     );
 
     const monthlyResult = await steps[2].execute();
