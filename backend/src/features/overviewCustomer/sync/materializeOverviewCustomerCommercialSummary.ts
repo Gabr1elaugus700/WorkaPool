@@ -23,6 +23,8 @@ type OrderAccumulator = {
   issuedAt: string;
   revenue: number;
   volume: number;
+  weightedMarginNumerator: number;
+  weightedMarginDenominator: number;
 };
 
 type CustomerAccumulator = {
@@ -69,6 +71,8 @@ export function materializeOverviewCustomerCommercialSummary(
     if (line.lineMarginPercent !== null && Number.isFinite(line.lineMarginPercent)) {
       customer.weightedMarginNumerator += revenue * line.lineMarginPercent;
       customer.weightedMarginDenominator += revenue;
+      order.weightedMarginNumerator += revenue * line.lineMarginPercent;
+      order.weightedMarginDenominator += revenue;
     }
   }
 
@@ -102,6 +106,14 @@ export function materializeOverviewCustomerCommercialSummary(
         ? customer.weightedMarginNumerator / customer.weightedMarginDenominator
         : null;
 
+    const orderMargins = sinceJan2024Orders
+      .map((order) =>
+        order.weightedMarginDenominator > 0
+          ? order.weightedMarginNumerator / order.weightedMarginDenominator
+          : null,
+      )
+      .filter((margin): margin is number => margin !== null);
+
     customers[String(customerCode)] = {
       revenueSinceJan2024: round2(totalRevenue),
       revenueLast12Months: round2(last12Revenue),
@@ -118,6 +130,10 @@ export function materializeOverviewCustomerCommercialSummary(
       purchaseFrequencyDays:
         purchaseFrequencyDays === null ? null : round2(purchaseFrequencyDays),
       daysSinceLastPurchase,
+      maxInvoicedOrderMarginPercent:
+        orderMargins.length > 0 ? round2(Math.max(...orderMargins)) : null,
+      minInvoicedOrderMarginPercent:
+        orderMargins.length > 0 ? round2(Math.min(...orderMargins)) : null,
     };
   }
 
@@ -157,6 +173,8 @@ function getOrCreateOrder(
     issuedAt,
     revenue: 0,
     volume: 0,
+    weightedMarginNumerator: 0,
+    weightedMarginDenominator: 0,
   };
   orders.set(orderId, created);
   return created;

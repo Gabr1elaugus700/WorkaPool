@@ -108,5 +108,7 @@ function emptyCommercialSummary(): OverviewCustomerCommercialSummary {
     marginPercentWeightedByRevenue: null,
     purchaseFrequencyDays: null,
     daysSinceLastPurchase: null,
+    maxInvoicedOrderMarginPercent: null,
+    minInvoicedOrderMarginPercent: null,
   };
 }

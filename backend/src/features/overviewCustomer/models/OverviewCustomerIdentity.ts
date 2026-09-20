@@ -33,6 +33,8 @@ export type OverviewCustomerCommercialSummary = {
   marginPercentWeightedByRevenue: number | null;
   purchaseFrequencyDays: number | null;
   daysSinceLastPurchase: number | null;
+  maxInvoicedOrderMarginPercent: number | null;
+  minInvoicedOrderMarginPercent: number | null;
 };
 
 export type OverviewCustomerIdentitySnapshot = {

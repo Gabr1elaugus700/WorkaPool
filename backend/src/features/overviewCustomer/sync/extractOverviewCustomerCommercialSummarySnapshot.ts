@@ -44,15 +44,13 @@ function parseSnapshot(source: GenericRecord): OverviewCustomerCommercialSummary
     if (!isOverviewCustomerCommercialSummary(value)) {
       continue;
     }
-    parsed[key] = value;
+    parsed[key] = normalizeCommercialSummary(value);
   }
 
   return { customers: parsed };
 }
 
-function isOverviewCustomerCommercialSummary(
-  value: unknown,
-): value is OverviewCustomerCommercialSummary {
+function isOverviewCustomerCommercialSummary(value: unknown): value is GenericRecord {
   if (!isRecord(value)) {
     return false;
   }
@@ -68,8 +66,38 @@ function isOverviewCustomerCommercialSummary(
     isNumber(value.volumeLast12Months) &&
     isNullableNumber(value.marginPercentWeightedByRevenue) &&
     isNullableNumber(value.purchaseFrequencyDays) &&
-    isNullableNumber(value.daysSinceLastPurchase)
+    isNullableNumber(value.daysSinceLastPurchase) &&
+    isOptionalNullableNumber(value.maxInvoicedOrderMarginPercent) &&
+    isOptionalNullableNumber(value.minInvoicedOrderMarginPercent)
   );
+}
+
+function normalizeCommercialSummary(value: GenericRecord): OverviewCustomerCommercialSummary {
+  return {
+    revenueSinceJan2024: value.revenueSinceJan2024 as number,
+    revenueLast12Months: value.revenueLast12Months as number,
+    orderCountSinceJan2024: value.orderCountSinceJan2024 as number,
+    orderCountLast12Months: value.orderCountLast12Months as number,
+    averageTicketSinceJan2024: value.averageTicketSinceJan2024 as number,
+    averageTicketLast12Months: value.averageTicketLast12Months as number,
+    volumeSinceJan2024: value.volumeSinceJan2024 as number,
+    volumeLast12Months: value.volumeLast12Months as number,
+    marginPercentWeightedByRevenue: value.marginPercentWeightedByRevenue as number | null,
+    purchaseFrequencyDays: value.purchaseFrequencyDays as number | null,
+    daysSinceLastPurchase: value.daysSinceLastPurchase as number | null,
+    maxInvoicedOrderMarginPercent:
+      value.maxInvoicedOrderMarginPercent === undefined
+        ? null
+        : (value.maxInvoicedOrderMarginPercent as number | null),
+    minInvoicedOrderMarginPercent:
+      value.minInvoicedOrderMarginPercent === undefined
+        ? null
+        : (value.minInvoicedOrderMarginPercent as number | null),
+  };
+}
+
+function isOptionalNullableNumber(value: unknown): boolean {
+  return value === undefined || isNullableNumber(value);
 }
 
 function isRecord(value: unknown): value is GenericRecord {

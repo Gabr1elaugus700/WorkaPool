@@ -32,6 +32,8 @@ export type OverviewCustomerDetailResponse = {
     marginPercentWeightedByRevenue: number | null;
     purchaseFrequencyDays: number | null;
     daysSinceLastPurchase: number | null;
+    maxInvoicedOrderMarginPercent: number | null;
+    minInvoicedOrderMarginPercent: number | null;
   };
   sync: {
     lastSuccessfulSyncAt: string | null;

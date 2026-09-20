@@ -49,6 +49,8 @@ describe("materializeOverviewCustomerCommercialSummary", () => {
       marginPercentWeightedByRevenue: 16,
       purchaseFrequencyDays: 26,
       daysSinceLastPurchase: 995,
+      maxInvoicedOrderMarginPercent: 20,
+      minInvoicedOrderMarginPercent: 20,
     });
   });
 
@@ -115,6 +117,8 @@ describe("materializeOverviewCustomerCommercialSummary", () => {
       marginPercentWeightedByRevenue: 24.33,
       purchaseFrequencyDays: 297,
       daysSinceLastPurchase: 30,
+      maxInvoicedOrderMarginPercent: 40,
+      minInvoicedOrderMarginPercent: 20,
     });
   });
 
@@ -142,6 +146,8 @@ describe("materializeOverviewCustomerCommercialSummary", () => {
     assert.strictEqual(snapshot.customers["10"].purchaseFrequencyDays, null);
     assert.strictEqual(snapshot.customers["10"].marginPercentWeightedByRevenue, null);
     assert.strictEqual(snapshot.customers["10"].daysSinceLastPurchase, 11);
+    assert.strictEqual(snapshot.customers["10"].maxInvoicedOrderMarginPercent, null);
+    assert.strictEqual(snapshot.customers["10"].minInvoicedOrderMarginPercent, null);
   });
 
   it("ignores returned-only lines and keeps aggregates coherent", () => {
@@ -187,6 +193,8 @@ describe("materializeOverviewCustomerCommercialSummary", () => {
       marginPercentWeightedByRevenue: 20,
       purchaseFrequencyDays: null,
       daysSinceLastPurchase: 223,
+      maxInvoicedOrderMarginPercent: 20,
+      minInvoicedOrderMarginPercent: 20,
     });
   });
 });

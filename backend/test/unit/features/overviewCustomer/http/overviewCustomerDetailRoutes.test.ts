@@ -215,6 +215,8 @@ describe("Overview customer detail HTTP", () => {
       marginPercentWeightedByRevenue: 22.5,
       purchaseFrequencyDays: 30,
       daysSinceLastPurchase: 12,
+      maxInvoicedOrderMarginPercent: null,
+      minInvoicedOrderMarginPercent: null,
     });
     assert.strictEqual("purchasedProducts" in response.body, false);
   });
@@ -266,6 +268,8 @@ describe("Overview customer detail HTTP", () => {
       marginPercentWeightedByRevenue: null,
       purchaseFrequencyDays: null,
       daysSinceLastPurchase: null,
+      maxInvoicedOrderMarginPercent: null,
+      minInvoicedOrderMarginPercent: null,
     });
   });
 
