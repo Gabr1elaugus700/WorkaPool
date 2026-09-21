@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Seller, LegacyOrder } from "../types/orderLoss.types";
 import {
   ChevronDown,
@@ -11,14 +11,20 @@ import { OrderLossCustomerLink } from "./OrderLossCustomerLink";
 
 interface SellersListProps {
   sellers: Seller[];
+  initialExpandedSellerId?: string | null;
 }
 
 type FilterType = "all" | "price" | "stock" | "competition";
 
-export const SellersList: React.FC<SellersListProps> = ({ sellers }) => {
+export const SellersList: React.FC<SellersListProps> = ({
+  sellers,
+  initialExpandedSellerId = null,
+}) => {
   const [selectedOrder, setSelectedOrder] = useState<LegacyOrder | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [expandedSellerId, setExpandedSellerId] = useState<string | null>(null);
+  const [expandedSellerId, setExpandedSellerId] = useState<string | null>(
+    initialExpandedSellerId,
+  );
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
   const handleOrderClick = (order: LegacyOrder) => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { LegacyOrder, LossReasonCode, lossReasonLabels } from "../types/orderLoss.types";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";

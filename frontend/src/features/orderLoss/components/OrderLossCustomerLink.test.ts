@@ -6,7 +6,7 @@ import { MemoryRouter } from "react-router-dom";
 import { OrderLossCustomerLink } from "./OrderLossCustomerLink";
 
 describe("OrderLossCustomerLink", () => {
-  it("renders a link to overview detail when customerCode is valid", () => {
+  it("renders a same-tab link to overview detail when customerCode is valid", () => {
     const markup = renderToStaticMarkup(
       React.createElement(
         MemoryRouter,
@@ -20,6 +20,7 @@ describe("OrderLossCustomerLink", () => {
 
     assert.match(markup, /Cliente ACME/);
     assert.match(markup, /href="\/overview\/customers\/4821"/);
+    assert.doesNotMatch(markup, /target=/);
   });
 
   it("renders plain text when customerCode is missing", () => {

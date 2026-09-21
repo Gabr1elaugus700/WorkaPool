@@ -6,7 +6,7 @@ import { SellersList } from "../components/SellersList";
 import FilterButtons from "../components/FilterButtons";
 import ExportButton from "../components/ExportButton";
 import { OrderLossAsyncLayout } from "../components/OrderLossAsyncLayout";
-import { OrderLossCustomerLink } from "../components/OrderLossCustomerLink";
+import { OrderLossCustomerFilterBanner } from "../components/OrderLossCustomerFilterBanner";
 import { useLostOrdersFromSapiens, useOrders } from "../hooks/useOrders";
 import {
   Seller,
@@ -313,15 +313,7 @@ export const OrderLossView = () => {
           </div>
 
           {customerCodeFilter != null ? (
-            <p className="mt-4 rounded-md border border-muted bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
-              Filtrando pedidos perdidos do cliente{" "}
-              <OrderLossCustomerLink
-                customerCode={customerCodeFilter}
-                name={`#${customerCodeFilter}`}
-                className="font-medium text-foreground"
-              />
-              .
-            </p>
+            <OrderLossCustomerFilterBanner customerCode={customerCodeFilter} />
           ) : null}
 
           <div className="mt-6">
