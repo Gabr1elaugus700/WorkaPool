@@ -86,7 +86,7 @@ Em Pedidos Perdidos (`OrderLossView`) e Meus Pedidos (`SellerOrdersView`) o clie
 | ORDOV-02 | P1: Link do cliente | Execute | Pending |
 | ORDOV-03 | P1: Link do cliente | Execute | Pending |
 | ORDOV-04 | P1: Link do cliente | Execute | Pending |
-| ORDOV-05 | P1: Link do cliente | Execute | Pending |
+| ORDOV-05 | P1: Link do cliente | Execute | Verified |
 
 **ID format:** `ORDOV-NN`
 

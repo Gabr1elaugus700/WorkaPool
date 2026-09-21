@@ -1,5 +1,9 @@
 const ORDER_LOSS_CUSTOMER_CODE_PARAM = "customerCode";
 
+export function buildOverviewCustomerDetailHref(customerCode: number): string {
+  return `/overview/customers/${customerCode}`;
+}
+
 export function buildOverviewCustomerOrderLossHref(customerCode: number): string {
   const params = new URLSearchParams();
   params.set(ORDER_LOSS_CUSTOMER_CODE_PARAM, String(customerCode));
