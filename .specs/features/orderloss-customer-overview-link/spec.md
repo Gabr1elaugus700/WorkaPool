@@ -98,7 +98,7 @@ Em Pedidos Perdidos (`OrderLossView`) e Meus Pedidos (`SellerOrdersView`) o clie
 
 ## Success Criteria
 
-- [ ] Nome do cliente com código válido linka para `/overview/customers/{code}` nas listas e no modal.
-- [ ] Banner de filtro linka `#code` para o mesmo destino.
-- [ ] Sem código → texto estático.
-- [ ] Helper `buildOverviewCustomerDetailHref` coberto por teste.
+- [x] Nome do cliente com código válido linka para `/overview/customers/{code}` nas listas e no modal.
+- [x] Banner de filtro linka `#code` para o mesmo destino.
+- [x] Sem código → texto estático.
+- [x] Helper `buildOverviewCustomerDetailHref` coberto por teste.
