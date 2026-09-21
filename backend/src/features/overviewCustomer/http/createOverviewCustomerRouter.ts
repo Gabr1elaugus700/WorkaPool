@@ -6,6 +6,11 @@ import { ListOverviewCustomersUseCase } from "../useCases/ListOverviewCustomersU
 import { GetOverviewCustomerMonthlyEvolutionUseCase } from "../useCases/GetOverviewCustomerMonthlyEvolutionUseCase";
 import { GetOverviewCustomerRecentCommercialMotionUseCase } from "../useCases/GetOverviewCustomerRecentCommercialMotionUseCase";
 import { GetOverviewCustomerPurchasedProductsUseCase } from "../useCases/GetOverviewCustomerPurchasedProductsUseCase";
+import { GetOverviewCustomerAbcGroupsUseCase } from "../useCases/GetOverviewCustomerAbcGroupsUseCase";
+import { GetOverviewCustomerGroupAnaliseUseCase } from "../useCases/GetOverviewCustomerGroupAnaliseUseCase";
+import { GetOverviewCustomerGroupGanhosUseCase } from "../useCases/GetOverviewCustomerGroupGanhosUseCase";
+import { OverviewCustomerOrderLossRepository } from "../repositories/OverviewCustomerOrderLossRepository";
+import { OverviewCustomerGroupPerdidosSeniorQuery } from "../sync/OverviewCustomerGroupPerdidosSeniorQuery";
 
 export function createOverviewCustomerRouter(
   prisma = getPrismaClient(),
@@ -19,5 +24,12 @@ export function createOverviewCustomerRouter(
       store,
     ),
     getPurchasedProducts: new GetOverviewCustomerPurchasedProductsUseCase(store),
+    getAbcGroups: new GetOverviewCustomerAbcGroupsUseCase(store),
+    getGroupGanhos: new GetOverviewCustomerGroupGanhosUseCase(store),
+    getGroupAnalise: new GetOverviewCustomerGroupAnaliseUseCase(
+      store,
+      new OverviewCustomerGroupPerdidosSeniorQuery(),
+      new OverviewCustomerOrderLossRepository(prisma),
+    ),
   });
 }

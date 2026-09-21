@@ -4,6 +4,9 @@ import type { GetOverviewCustomerDetailUseCase } from "../../useCases/GetOvervie
 import type { GetOverviewCustomerMonthlyEvolutionUseCase } from "../../useCases/GetOverviewCustomerMonthlyEvolutionUseCase";
 import type { GetOverviewCustomerRecentCommercialMotionUseCase } from "../../useCases/GetOverviewCustomerRecentCommercialMotionUseCase";
 import type { GetOverviewCustomerPurchasedProductsUseCase } from "../../useCases/GetOverviewCustomerPurchasedProductsUseCase";
+import type { GetOverviewCustomerAbcGroupsUseCase } from "../../useCases/GetOverviewCustomerAbcGroupsUseCase";
+import type { GetOverviewCustomerGroupAnaliseUseCase } from "../../useCases/GetOverviewCustomerGroupAnaliseUseCase";
+import type { GetOverviewCustomerGroupGanhosUseCase } from "../../useCases/GetOverviewCustomerGroupGanhosUseCase";
 import type { ListOverviewCustomersUseCase } from "../../useCases/ListOverviewCustomersUseCase";
 
 export type OverviewCustomerDetailControllerDeps = {
@@ -12,6 +15,9 @@ export type OverviewCustomerDetailControllerDeps = {
   getMonthlyEvolution: GetOverviewCustomerMonthlyEvolutionUseCase;
   getRecentCommercialMotion: GetOverviewCustomerRecentCommercialMotionUseCase;
   getPurchasedProducts: GetOverviewCustomerPurchasedProductsUseCase;
+  getAbcGroups: GetOverviewCustomerAbcGroupsUseCase;
+  getGroupGanhos: GetOverviewCustomerGroupGanhosUseCase;
+  getGroupAnalise: GetOverviewCustomerGroupAnaliseUseCase;
 };
 
 export class OverviewCustomerDetailController {
@@ -99,6 +105,114 @@ export class OverviewCustomerDetailController {
     }
   };
 
+  getAbcGroupsByCustomerCode = async (
+    req: Request,
+    res: Response,
+  ): Promise<Response> => {
+    try {
+      const rawCustomerCode = Number(req.params.clienteId);
+      if (!Number.isInteger(rawCustomerCode) || rawCustomerCode <= 0) {
+        return res.status(400).json({
+          error: "clienteId inválido",
+          code: "OVERVIEW_CUSTOMER_INVALID_ID",
+        });
+      }
+
+      const role = req.user?.role;
+      if (!role) {
+        return res.status(401).json({ error: "Usuário não autenticado" });
+      }
+
+      const result = await this.deps.getAbcGroups.execute({
+        customerCode: rawCustomerCode,
+        role,
+        codRep: req.user?.codRep,
+      });
+
+      return res.status(200).json(result);
+    } catch (error: unknown) {
+      return this.mapError(res, error);
+    }
+  };
+
+  getGroupGanhosByCustomerCode = async (
+    req: Request,
+    res: Response,
+  ): Promise<Response> => {
+    try {
+      const rawCustomerCode = Number(req.params.clienteId);
+      if (!Number.isInteger(rawCustomerCode) || rawCustomerCode <= 0) {
+        return res.status(400).json({
+          error: "clienteId inválido",
+          code: "OVERVIEW_CUSTOMER_INVALID_ID",
+        });
+      }
+
+      const grupoCodigo = parseGrupoCodigo(req.params.grupoCodigo);
+      if (!grupoCodigo) {
+        return res.status(400).json({
+          error: "grupoCodigo inválido",
+          code: "OVERVIEW_CUSTOMER_INVALID_GROUP",
+        });
+      }
+
+      const role = req.user?.role;
+      if (!role) {
+        return res.status(401).json({ error: "Usuário não autenticado" });
+      }
+
+      const result = await this.deps.getGroupGanhos.execute({
+        customerCode: rawCustomerCode,
+        grupoCodigo,
+        role,
+        codRep: req.user?.codRep,
+      });
+
+      return res.status(200).json(result);
+    } catch (error: unknown) {
+      return this.mapError(res, error);
+    }
+  };
+
+  getGroupAnaliseByCustomerCode = async (
+    req: Request,
+    res: Response,
+  ): Promise<Response> => {
+    try {
+      const rawCustomerCode = Number(req.params.clienteId);
+      if (!Number.isInteger(rawCustomerCode) || rawCustomerCode <= 0) {
+        return res.status(400).json({
+          error: "clienteId inválido",
+          code: "OVERVIEW_CUSTOMER_INVALID_ID",
+        });
+      }
+
+      const grupoCodigo = parseGrupoCodigo(req.params.grupoCodigo);
+      if (!grupoCodigo) {
+        return res.status(400).json({
+          error: "grupoCodigo inválido",
+          code: "OVERVIEW_CUSTOMER_INVALID_GROUP",
+        });
+      }
+
+      const role = req.user?.role;
+      if (!role) {
+        return res.status(401).json({ error: "Usuário não autenticado" });
+      }
+
+      const result = await this.deps.getGroupAnalise.execute({
+        customerCode: rawCustomerCode,
+        grupoCodigo,
+        role,
+        codRep: req.user?.codRep,
+      });
+
+      return res.status(200).json(result);
+    } catch (error: unknown) {
+      return this.mapError(res, error);
+    }
+  };
+
   getPurchasedProductsByCustomerCode = async (
     req: Request,
     res: Response,
@@ -173,6 +287,14 @@ export class OverviewCustomerDetailController {
       code: "INTERNAL_ERROR",
     });
   }
+}
+
+function parseGrupoCodigo(rawGrupoCodigo: string | undefined): string | null {
+  if (typeof rawGrupoCodigo !== "string") {
+    return null;
+  }
+  const trimmed = rawGrupoCodigo.trim();
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 function parsePage(rawPage: Request["query"]["page"]): number {

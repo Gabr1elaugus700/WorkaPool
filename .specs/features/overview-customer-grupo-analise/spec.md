@@ -242,10 +242,10 @@ After this result set: aggregate by `NUMPED`, then keep 5. Join `orderLoss` on `
 | OCA-02 | P1: Chips ABC por grupo | Design | Pending |
 | OCA-03 | P1: TOP 5 ganhos | Design | Pending |
 | OCA-04 | P1: TOP 5 ganhos | Design | Pending |
-| OCA-05 | P1: TOP 5 perdidos | Design | Pending |
-| OCA-06 | P1: TOP 5 perdidos | Design | Pending |
+| OCA-05 | P1: TOP 5 perdidos | Execute | Verified |
+| OCA-06 | P1: TOP 5 perdidos | Execute | Verified |
 | OCA-07 | P1: Permissão da análise (API) | Design | Pending |
-| OCA-08 | P2: Falha parcial Sapiens | Design | Pending |
+| OCA-08 | P2: Falha parcial Sapiens | Execute | Verified |
 
 **ID format:** `OCA-NN` (Overview Customer Análise)
 

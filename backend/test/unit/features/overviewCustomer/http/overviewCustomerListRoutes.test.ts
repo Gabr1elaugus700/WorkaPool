@@ -6,6 +6,11 @@ import request from "supertest";
 import { createOverviewCustomerDetailRoutes } from "../../../../../src/features/overviewCustomer/http/routes/overviewCustomerDetailRoutes";
 import { GetOverviewCustomerDetailUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerDetailUseCase";
 import { GetOverviewCustomerMonthlyEvolutionUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerMonthlyEvolutionUseCase";
+import { GetOverviewCustomerRecentCommercialMotionUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerRecentCommercialMotionUseCase";
+import { GetOverviewCustomerPurchasedProductsUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerPurchasedProductsUseCase";
+import { GetOverviewCustomerAbcGroupsUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerAbcGroupsUseCase";
+import { GetOverviewCustomerGroupAnaliseUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerGroupAnaliseUseCase";
+import { GetOverviewCustomerGroupGanhosUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerGroupGanhosUseCase";
 import { ListOverviewCustomersUseCase } from "../../../../../src/features/overviewCustomer/useCases/ListOverviewCustomersUseCase";
 import { InMemoryOverviewCustomerSyncStore } from "../../../../helpers/InMemoryOverviewCustomerSyncStore";
 
@@ -40,6 +45,17 @@ function createApp(store: InMemoryOverviewCustomerSyncStore): Express {
       getDetail: new GetOverviewCustomerDetailUseCase(store),
       listCustomers: new ListOverviewCustomersUseCase(store),
       getMonthlyEvolution: new GetOverviewCustomerMonthlyEvolutionUseCase(store),
+      getRecentCommercialMotion: new GetOverviewCustomerRecentCommercialMotionUseCase(
+        store,
+      ),
+      getPurchasedProducts: new GetOverviewCustomerPurchasedProductsUseCase(store),
+      getAbcGroups: new GetOverviewCustomerAbcGroupsUseCase(store),
+      getGroupGanhos: new GetOverviewCustomerGroupGanhosUseCase(store),
+      getGroupAnalise: new GetOverviewCustomerGroupAnaliseUseCase(
+        store,
+        { fetchLines: async () => [] },
+        { findLossReasonsByOrderNumbers: async () => [] },
+      ),
     }),
   );
   return app;

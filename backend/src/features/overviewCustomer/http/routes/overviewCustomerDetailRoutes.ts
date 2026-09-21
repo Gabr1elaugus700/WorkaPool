@@ -18,6 +18,21 @@ export function createOverviewCustomerDetailRoutes(
     controller.getMonthlyEvolutionByCustomerCode,
   );
   router.get(
+    "/:clienteId/grupos/:grupoCodigo/ganhos",
+    authMiddleware,
+    controller.getGroupGanhosByCustomerCode,
+  );
+  router.get(
+    "/:clienteId/grupos/:grupoCodigo/analise",
+    authMiddleware,
+    controller.getGroupAnaliseByCustomerCode,
+  );
+  router.get(
+    "/:clienteId/grupos",
+    authMiddleware,
+    controller.getAbcGroupsByCustomerCode,
+  );
+  router.get(
     "/:clienteId/purchased-products",
     authMiddleware,
     controller.getPurchasedProductsByCustomerCode,
