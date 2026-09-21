@@ -173,12 +173,12 @@ T6 → T7
 
 **Done when**:
 
-- [ ] Mapper returns six non-negative ints; totals = invoiced + lost per window
-- [ ] Missing bases → `0`
-- [ ] Detail result includes `orderCounts`; `commercialSummary.orderCountSinceJan2024` and 12m fields unchanged
-- [ ] Unit tests for mapper cover totals and zero-defaults
-- [ ] Gate check passes: mapper unit test command
-- [ ] Test count: mapper suite green (no silent deletions)
+- [x] Mapper returns six non-negative ints; totals = invoiced + lost per window
+- [x] Missing bases → `0`
+- [x] Detail result includes `orderCounts`; `commercialSummary.orderCountSinceJan2024` and 12m fields unchanged
+- [x] Unit tests for mapper cover totals and zero-defaults
+- [x] Gate check passes: mapper unit test command
+- [x] Test count: mapper suite green (no silent deletions)
 
 **Tests**: unit
 **Gate**: full
