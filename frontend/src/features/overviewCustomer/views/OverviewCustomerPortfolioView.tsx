@@ -71,20 +71,17 @@ export function OverviewCustomerPortfolioView() {
   }, [branchFilter, cityFilter, items, quickFilter]);
 
   const metrics = useMemo(() => {
-    const branchCount = items.reduce(
-      (accumulator, item) => {
-        accumulator[item.branchIndicator] += 1;
-        return accumulator;
-      },
-      { BOTH: 0, MGA: 0, CTB: 0 },
-    );
-
     return {
       totalCustomers: pagination?.totalItems ?? items.length,
       purchasesThisMonth: listQuery.data?.summary?.purchasesThisMonth ?? 0,
-      branchCount,
+      branchCount: listQuery.data?.summary?.branchCount ?? { BOTH: 0, MGA: 0, CTB: 0 },
     };
-  }, [items, listQuery.data?.summary?.purchasesThisMonth, pagination?.totalItems]);
+  }, [
+    items.length,
+    listQuery.data?.summary?.branchCount,
+    listQuery.data?.summary?.purchasesThisMonth,
+    pagination?.totalItems,
+  ]);
 
   return (
     <DefaultLayout>
@@ -121,7 +118,7 @@ export function OverviewCustomerPortfolioView() {
             <CardContent className="space-y-1 p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Total na carteira</p>
               <p className="text-3xl font-semibold tracking-tight">{metrics.totalCustomers}</p>
-              <p className="text-xs text-muted-foreground">Maringa, Curitiba e Mandaguari</p>
+              <p className="text-xs text-muted-foreground">Maringa e Curitiba</p>
             </CardContent>
           </Card>
           <Card className="border-border/80">
@@ -139,7 +136,7 @@ export function OverviewCustomerPortfolioView() {
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Filiais operantes</p>
               <div className="flex flex-wrap gap-1.5">
                 <Badge variant="outline" className="border-cyan-200 bg-cyan-50 text-cyan-700">
-                  BOTH: {metrics.branchCount.BOTH}
+                  Ambas: {metrics.branchCount.BOTH}
                 </Badge>
                 <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
                   MGA: {metrics.branchCount.MGA}
@@ -184,7 +181,7 @@ export function OverviewCustomerPortfolioView() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas as filiais</SelectItem>
-                  <SelectItem value="BOTH">BOTH</SelectItem>
+                  <SelectItem value="BOTH">Ambas</SelectItem>
                   <SelectItem value="MGA">MGA</SelectItem>
                   <SelectItem value="CTB">CTB</SelectItem>
                 </SelectContent>

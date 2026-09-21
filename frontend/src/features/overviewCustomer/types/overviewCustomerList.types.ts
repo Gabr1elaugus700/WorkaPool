@@ -28,5 +28,10 @@ export type OverviewCustomerListResponse = {
   };
   summary: {
     purchasesThisMonth: number;
+    branchCount: {
+      BOTH: number;
+      MGA: number;
+      CTB: number;
+    };
   };
 };

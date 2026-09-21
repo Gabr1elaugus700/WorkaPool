@@ -53,6 +53,7 @@ type SeedCustomerParams = {
   lastInvoicedPurchaseAt?: string | null;
   orderCountLast12Months?: number;
   revenueLast12Months?: number;
+  branchIndicator?: "BOTH" | "MGA" | "CTB";
 };
 
 function createSeedCustomer(params: SeedCustomerParams): Record<string, unknown> {
@@ -67,7 +68,7 @@ function createSeedCustomer(params: SeedCustomerParams): Record<string, unknown>
     primaryCodRep: params.primaryCodRep,
     firstInvoicedPurchaseAt: "2024-02-01",
     lastInvoicedPurchaseAt: params.lastInvoicedPurchaseAt ?? "2026-01-01",
-    branchIndicator: "MGA",
+    branchIndicator: params.branchIndicator ?? "MGA",
     orderCountLast12Months: params.orderCountLast12Months,
     revenueLast12Months: params.revenueLast12Months,
   };
@@ -354,6 +355,11 @@ describe("Overview customer list HTTP", () => {
     assert.strictEqual(response.body.pagination.totalPages, 1);
     assert.strictEqual(response.body.pagination.page, 1);
     assert.strictEqual(response.body.summary.purchasesThisMonth, 0);
+    assert.deepStrictEqual(response.body.summary.branchCount, {
+      BOTH: 0,
+      MGA: 0,
+      CTB: 0,
+    });
   });
 
   it("counts purchases this month across the full list, not only the current page", async () => {
@@ -410,6 +416,77 @@ describe("Overview customer list HTTP", () => {
     assert.strictEqual(page2.status, 200);
     assert.strictEqual(page2.body.items.length, 10);
     assert.strictEqual(page2.body.summary.purchasesThisMonth, 25);
+  });
+
+  it("counts branch coverage across the full list, not only the current page", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    const customers: Record<string, unknown> = {};
+    for (let customerCode = 1; customerCode <= 12; customerCode += 1) {
+      customers[String(customerCode)] = createSeedCustomer({
+        customerCode,
+        tradeName: `Cliente ${customerCode}`,
+        document: `${customerCode}`.padStart(14, "0"),
+        primaryCodRep: 10,
+        branchIndicator: "BOTH",
+        orderCountLast12Months: customerCode,
+      });
+    }
+    for (let customerCode = 13; customerCode <= 22; customerCode += 1) {
+      customers[String(customerCode)] = createSeedCustomer({
+        customerCode,
+        tradeName: `Cliente ${customerCode}`,
+        document: `${customerCode}`.padStart(14, "0"),
+        primaryCodRep: 10,
+        branchIndicator: "MGA",
+        orderCountLast12Months: customerCode,
+      });
+    }
+    for (let customerCode = 23; customerCode <= 30; customerCode += 1) {
+      customers[String(customerCode)] = createSeedCustomer({
+        customerCode,
+        tradeName: `Cliente ${customerCode}`,
+        document: `${customerCode}`.padStart(14, "0"),
+        primaryCodRep: 10,
+        branchIndicator: "CTB",
+        orderCountLast12Months: customerCode,
+      });
+    }
+    store.seedSuccessfulSnapshot(
+      {
+        id: "snap-list-branch-count",
+        publishedAt: new Date("2026-01-10T00:00:00.000Z"),
+        payload: { customers },
+      },
+      new Date("2026-01-10T00:00:00.000Z"),
+    );
+    const app = createApp(store);
+    const token = createToken("ADMIN");
+
+    const page1 = await request(app)
+      .get("/api/overview/customers")
+      .query({ page: "1" })
+      .set("Authorization", `Bearer ${token}`);
+
+    assert.strictEqual(page1.status, 200);
+    assert.strictEqual(page1.body.items.length, 20);
+    assert.deepStrictEqual(page1.body.summary.branchCount, {
+      BOTH: 12,
+      MGA: 10,
+      CTB: 8,
+    });
+
+    const page2 = await request(app)
+      .get("/api/overview/customers")
+      .query({ page: "2" })
+      .set("Authorization", `Bearer ${token}`);
+
+    assert.strictEqual(page2.status, 200);
+    assert.strictEqual(page2.body.items.length, 10);
+    assert.deepStrictEqual(page2.body.summary.branchCount, {
+      BOTH: 12,
+      MGA: 10,
+      CTB: 8,
+    });
   });
 
   it("uses order-count sort by default and falls back to last purchase when missing", async () => {

@@ -53,7 +53,18 @@ export type ListOverviewCustomersResult = {
   };
   summary: {
     purchasesThisMonth: number;
+    branchCount: {
+      BOTH: number;
+      MGA: number;
+      CTB: number;
+    };
   };
+};
+
+const EMPTY_BRANCH_COUNT: { BOTH: number; MGA: number; CTB: number } = {
+  BOTH: 0,
+  MGA: 0,
+  CTB: 0,
 };
 
 export class ListOverviewCustomersUseCase {
@@ -109,6 +120,13 @@ export class ListOverviewCustomersUseCase {
     const purchasesThisMonth = rows.filter((row) =>
       row.lastPurchaseAt?.startsWith(yearMonth),
     ).length;
+    const branchCount = rows.reduce(
+      (accumulator, row) => {
+        accumulator[row.branchIndicator] += 1;
+        return accumulator;
+      },
+      { ...EMPTY_BRANCH_COUNT },
+    );
 
     return {
       items,
@@ -125,6 +143,7 @@ export class ListOverviewCustomersUseCase {
       },
       summary: {
         purchasesThisMonth,
+        branchCount,
       },
     };
   }
@@ -237,6 +256,7 @@ export class ListOverviewCustomersUseCase {
       },
       summary: {
         purchasesThisMonth: 0,
+        branchCount: { ...EMPTY_BRANCH_COUNT },
       },
     };
   }
