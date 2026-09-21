@@ -82,10 +82,10 @@ Em Pedidos Perdidos (`OrderLossView`) e Meus Pedidos (`SellerOrdersView`) o clie
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| ORDOV-01 | P1: Link do cliente | Execute | Pending |
-| ORDOV-02 | P1: Link do cliente | Execute | Pending |
-| ORDOV-03 | P1: Link do cliente | Execute | Pending |
-| ORDOV-04 | P1: Link do cliente | Execute | Pending |
+| ORDOV-01 | P1: Link do cliente | Execute | Verified |
+| ORDOV-02 | P1: Link do cliente | Execute | Verified |
+| ORDOV-03 | P1: Link do cliente | Execute | Verified |
+| ORDOV-04 | P1: Link do cliente | Execute | Verified |
 | ORDOV-05 | P1: Link do cliente | Execute | Verified |
 
 **ID format:** `ORDOV-NN`

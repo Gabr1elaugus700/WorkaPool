@@ -7,6 +7,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { OrderDetailsModal } from "./OrderDetailsModal";
+import { OrderLossCustomerLink } from "./OrderLossCustomerLink";
 
 interface SellersListProps {
   sellers: Seller[];
@@ -349,7 +350,10 @@ export const SellersList: React.FC<SellersListProps> = ({ sellers }) => {
                               {getClientInitials(order.clientName)}
                             </div>
                             <span className="text-gray-900 font-medium">
-                              {order.clientName}
+                              <OrderLossCustomerLink
+                                customerCode={order.customerCode}
+                                name={order.clientName}
+                              />
                             </span>
                           </div>
 
