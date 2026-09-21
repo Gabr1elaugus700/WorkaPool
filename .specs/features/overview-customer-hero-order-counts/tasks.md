@@ -227,12 +227,12 @@ T6 → T7
 
 **Done when**:
 
-- [ ] `OverviewCustomerDetailView` passes `detail.orderCounts` into the hero
-- [ ] KPI grid no longer renders “Pedidos (desde Jan/2024)”
-- [ ] Movimentação 12m counts unchanged
-- [ ] KPI grid unit test updated (assert tile absent)
-- [ ] Gate check passes: frontend KPI + hero tests; `cd frontend && npm run lint`
-- [ ] Test count: affected frontend suites green (no silent deletions)
+- [x] `OverviewCustomerDetailView` passes `detail.orderCounts` into the hero
+- [x] KPI grid no longer renders “Pedidos (desde Jan/2024)”
+- [x] Movimentação 12m counts unchanged
+- [x] KPI grid unit test updated (assert tile absent)
+- [x] Gate check passes: frontend KPI + hero tests; `cd frontend && npm run lint`
+- [x] Test count: affected frontend suites green (no silent deletions)
 
 **Tests**: unit
 **Gate**: build

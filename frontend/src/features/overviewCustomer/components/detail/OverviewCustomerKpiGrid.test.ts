@@ -28,7 +28,7 @@ describe("OverviewCustomerKpiGrid", () => {
 
     assert.match(markup, /Faturamento \(desde Jan\/2024\)/);
     assert.match(markup, /Volume \(desde Jan\/2024\)/);
-    assert.match(markup, /Pedidos \(desde Jan\/2024\)/);
+    assert.doesNotMatch(markup, /Pedidos \(desde Jan\/2024\)/);
     assert.match(markup, /Margem ponderada/);
     assert.match(markup, /Frequência média \(dias\)/);
     assert.match(markup, /Dias desde última compra/);

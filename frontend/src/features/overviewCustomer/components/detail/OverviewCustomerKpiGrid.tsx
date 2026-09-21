@@ -32,11 +32,6 @@ export function OverviewCustomerKpiGrid({ summary }: OverviewCustomerKpiGridProp
         subLabel={`Últimos 12m: ${formatOverviewNumber(summary.volumeLast12Months)}`}
       />
       <OverviewCustomerKpiTile
-        label="Pedidos (desde Jan/2024)"
-        value={formatOverviewNumber(summary.orderCountSinceJan2024)}
-        subLabel={`Ticket médio: ${formatOverviewCurrency(summary.averageTicketSinceJan2024)}`}
-      />
-      <OverviewCustomerKpiTile
         label="Margem ponderada"
         value={formatOverviewPercent(summary.marginPercentWeightedByRevenue)}
       />
