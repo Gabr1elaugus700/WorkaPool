@@ -98,12 +98,12 @@ No detalhe do cliente, o vendedor vê faturamento/volume e um único tile de “
 | HEROOC-04 | P1: Contagens no contrato | Execute | Verified |
 | HEROOC-05 | P1: Contagens no contrato | Execute | Verified |
 | HEROOC-06 | P1: Contagens no contrato | Execute | Verified |
-| HEROOC-07 | P1: Bloco no hero | Execute | Pending |
-| HEROOC-08 | P1: Bloco no hero | Execute | Pending |
-| HEROOC-09 | P1: Bloco no hero | Execute | Pending |
-| HEROOC-10 | P1: Bloco no hero | Execute | Pending |
-| HEROOC-11 | P1: Bloco no hero | Execute | Pending |
-| HEROOC-12 | P1: Bloco no hero | Execute | Pending |
+| HEROOC-07 | P1: Bloco no hero | Execute | Verified |
+| HEROOC-08 | P1: Bloco no hero | Execute | Verified |
+| HEROOC-09 | P1: Bloco no hero | Execute | Verified |
+| HEROOC-10 | P1: Bloco no hero | Execute | Verified |
+| HEROOC-11 | P1: Bloco no hero | Execute | Verified |
+| HEROOC-12 | P1: Bloco no hero | Execute | Verified |
 
 **Coverage:** 12 total, 12 mapped to tasks, 0 unmapped
 

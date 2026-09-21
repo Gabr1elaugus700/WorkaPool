@@ -18,6 +18,15 @@ export type OverviewCustomerIdentity = {
   branchIndicator: BranchIndicator;
 };
 
+export type OverviewCustomerOrderCounts = {
+  invoicedSinceJan2024: number;
+  lostSinceJan2024: number;
+  totalSinceJan2024: number;
+  invoicedLast60Days: number;
+  lostLast60Days: number;
+  totalLast60Days: number;
+};
+
 export type OverviewCustomerDetailResponse = {
   customer: OverviewCustomerIdentity;
   commercialSummary: {
@@ -35,6 +44,7 @@ export type OverviewCustomerDetailResponse = {
     maxInvoicedOrderMarginPercent: number | null;
     minInvoicedOrderMarginPercent: number | null;
   };
+  orderCounts?: OverviewCustomerOrderCounts;
   sync: {
     lastSuccessfulSyncAt: string | null;
     servedSnapshotId: string;

@@ -149,6 +149,7 @@ export function OverviewCustomerDetailView() {
         />
         <OverviewCustomerDetailHero
           customer={detail.customer}
+          orderCounts={detail.orderCounts}
           commercialSignals={{
             purchaseFrequencyDays: detail.commercialSummary.purchaseFrequencyDays,
             daysSinceLastPurchase: detail.commercialSummary.daysSinceLastPurchase,

@@ -2,7 +2,10 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin } from "lucide-react";
 import React from "react";
 import { cn } from "@/lib/utils";
-import type { OverviewCustomerIdentity } from "../../types/overviewCustomerDetail.types";
+import type {
+  OverviewCustomerIdentity,
+  OverviewCustomerOrderCounts,
+} from "../../types/overviewCustomerDetail.types";
 import {
   deriveOverviewCustomerInitials,
   formatOverviewBranchIndicator,
@@ -13,6 +16,7 @@ import {
   formatIsoDateLabel,
 } from "@/utils/formatDate";
 import { OverviewCustomerHealthScoreMock } from "./OverviewCustomerHealthScoreMock";
+import { OverviewCustomerHeroOrderCounts } from "./OverviewCustomerHeroOrderCounts";
 
 export type OverviewCustomerDetailHeroCommercialSignals = {
   purchaseFrequencyDays: number | null;
@@ -24,6 +28,7 @@ export type OverviewCustomerDetailHeroCommercialSignals = {
 type OverviewCustomerDetailHeroProps = {
   customer: OverviewCustomerIdentity;
   commercialSignals: OverviewCustomerDetailHeroCommercialSignals;
+  orderCounts?: OverviewCustomerOrderCounts | null;
 };
 
 type FooterItemProps = {
@@ -44,6 +49,7 @@ function FooterItem({ label, value, valueClassName }: FooterItemProps) {
 export function OverviewCustomerDetailHero({
   customer,
   commercialSignals,
+  orderCounts,
 }: OverviewCustomerDetailHeroProps) {
   const initials = deriveOverviewCustomerInitials(customer.tradeName);
   const estimatedNextPurchase = estimateNextPurchaseDate(
@@ -63,8 +69,8 @@ export function OverviewCustomerDetailHero({
 
   return (
     <section className="overflow-hidden rounded-lg border border-border/80 bg-foreground text-background shadow-sm">
-      <div className="flex flex-col gap-5 p-5 md:flex-row md:items-start md:justify-between md:p-6">
-        <div className="flex min-w-0 items-start gap-4">
+      <div className="flex flex-col gap-5 p-5 md:flex-row md:items-start md:justify-between md:gap-6 md:p-6">
+        <div className="flex min-w-0 flex-1 items-start gap-4">
           <div
             className={cn(
               "flex h-14 w-14 shrink-0 items-center justify-center rounded-lg",
@@ -117,6 +123,7 @@ export function OverviewCustomerDetailHero({
             </div>
           </div>
         </div>
+        <OverviewCustomerHeroOrderCounts orderCounts={orderCounts} />
         <OverviewCustomerHealthScoreMock
           daysSinceLastPurchase={commercialSignals.daysSinceLastPurchase}
           purchaseFrequencyDays={commercialSignals.purchaseFrequencyDays}

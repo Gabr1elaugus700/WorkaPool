@@ -100,9 +100,9 @@ T1 → T2 → T3 → T4 → T5 → T6
 
 **Done when**:
 
-- [ ] Component renders Totais/Faturados/Perdidos × Jan/2024 + 60d
-- [ ] Absent counts render as 0
-- [ ] Hero places block between identity and health score
+- [x] Component renders Totais/Faturados/Perdidos × Jan/2024 + 60d
+- [x] Absent counts render as 0
+- [x] Hero places block between identity and health score
 
 **Tests**: unit
 **Gate**: full
@@ -119,8 +119,8 @@ T1 → T2 → T3 → T4 → T5 → T6
 
 **Done when**:
 
-- [ ] Hero receives `orderCounts` from detail payload
-- [ ] KPI grid and motion summary props unchanged
+- [x] Hero receives `orderCounts` from detail payload
+- [x] KPI grid and motion summary props unchanged
 
 **Tests**: unit / regression
 **Gate**: build
