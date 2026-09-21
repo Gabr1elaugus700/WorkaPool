@@ -69,8 +69,12 @@ function renderSection(
       React.createElement(OverviewCustomerGroupAnalysisSection, {
         customerCode: CUSTOMER_CODE,
         activeTab,
-        children: ({ grupoCodigo }) =>
-          React.createElement("p", null, `${childMarker}:${grupoCodigo}`),
+        children: ({ grupoCodigo, grupoDescricao, revenueShare }) =>
+          React.createElement(
+            "p",
+            null,
+            `${childMarker}:${grupoCodigo}:${grupoDescricao}:${revenueShare ?? "null"}`,
+          ),
       }),
     ),
   );
@@ -106,7 +110,7 @@ describe("OverviewCustomerGroupAnalysisSection", () => {
     assert.doesNotMatch(markup, /analysis-ready/);
   });
 
-  it("selects the first chip and passes grupoCodigo to children", () => {
+  it("selects the first chip and passes grupo context to children", () => {
     const client = createQueryClient();
     seedSuccessQuery(client, SAMPLE_RESPONSE);
 
@@ -114,6 +118,6 @@ describe("OverviewCustomerGroupAnalysisSection", () => {
 
     assert.match(markup, /Grupo A/);
     assert.match(markup, /OUTROS PRODUTOS/);
-    assert.match(markup, /analysis-ready:G01/);
+    assert.match(markup, /analysis-ready:G01:Grupo A:42/);
   });
 });

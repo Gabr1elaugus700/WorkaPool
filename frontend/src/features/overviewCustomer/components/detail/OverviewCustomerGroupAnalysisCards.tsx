@@ -1,3 +1,4 @@
+import React from "react";
 import type { OverviewCustomerGroupAnaliseResponse } from "../../types/overviewCustomerGroupAnalise.types";
 import { useOverviewCustomerGroupAnalise } from "../../hooks/useOverviewCustomerGroupAnalise";
 import {
@@ -21,6 +22,8 @@ export type OverviewCustomerGroupAnalysisCardsQuery = {
 export type OverviewCustomerGroupAnalysisCardsProps = {
   customerCode: number;
   grupoCodigo: string | null;
+  grupoDescricao: string;
+  revenueShare: number | null;
   enabled?: boolean;
   query?: OverviewCustomerGroupAnalysisCardsQuery;
 };
@@ -28,6 +31,8 @@ export type OverviewCustomerGroupAnalysisCardsProps = {
 export function OverviewCustomerGroupAnalysisCards({
   customerCode,
   grupoCodigo,
+  grupoDescricao,
+  revenueShare,
   enabled = true,
   query,
 }: OverviewCustomerGroupAnalysisCardsProps) {
@@ -76,9 +81,15 @@ export function OverviewCustomerGroupAnalysisCards({
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <OverviewCustomerGroupGanhosCard viewState={ganhosViewState} />
+      <OverviewCustomerGroupGanhosCard
+        viewState={ganhosViewState}
+        grupoDescricao={grupoDescricao}
+        revenueShare={revenueShare}
+      />
       <OverviewCustomerGroupPerdidosCard
         viewState={perdidosViewState}
+        grupoDescricao={grupoDescricao}
+        revenueShare={revenueShare}
         onRetry={showPerdidosRetry ? refetch : undefined}
         isRetrying={isFetching}
       />

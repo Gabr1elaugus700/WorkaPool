@@ -19,6 +19,11 @@ const ganho = {
   margem: 10,
 };
 
+const GROUP_PROPS = {
+  grupoDescricao: "Grupo A",
+  revenueShare: 42,
+} as const;
+
 describe("OverviewCustomerGroupAnalysisCards layout", () => {
   it("stacks ganhos above perdidos and keeps ganhos when perdidos fail", () => {
     const analise = {
@@ -39,6 +44,7 @@ describe("OverviewCustomerGroupAnalysisCards layout", () => {
             isError: false,
             ganhos: analise.ganhos,
           }),
+          ...GROUP_PROPS,
         }),
         React.createElement(OverviewCustomerGroupPerdidosCard, {
           viewState: resolvePerdidosCardViewState({
@@ -48,13 +54,14 @@ describe("OverviewCustomerGroupAnalysisCards layout", () => {
             perdidos: analise.perdidos,
             hasLoadedAnalise: true,
           }),
+          ...GROUP_PROPS,
           onRetry: () => undefined,
         }),
       ),
     );
 
-    const ganhosIndex = markup.indexOf("Ganhos");
-    const perdidosIndex = markup.indexOf("Perdidos");
+    const ganhosIndex = markup.indexOf("Ganhos: Notas Faturadas");
+    const perdidosIndex = markup.indexOf("Perdidos: Cotações Sem Fechamento");
     assert.ok(ganhosIndex >= 0);
     assert.ok(perdidosIndex > ganhosIndex);
     assert.match(markup, /grid-cols-1/);

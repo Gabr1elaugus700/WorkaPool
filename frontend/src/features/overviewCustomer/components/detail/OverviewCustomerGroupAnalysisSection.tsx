@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import React, { useEffect, useState, type ReactNode } from "react";
 import { OverviewCustomerAccessDeniedState } from "../OverviewCustomerAccessDeniedState";
 import { OverviewCustomerSectionCard } from "../OverviewCustomerSectionCard";
 import { OverviewCustomerStateMessage } from "../OverviewCustomerStateMessage";
@@ -16,7 +16,11 @@ import { useOverviewCustomerAbcGroups } from "../../hooks/useOverviewCustomerAbc
 type OverviewCustomerGroupAnalysisSectionProps = {
   customerCode: number;
   activeTab: OverviewCustomerDetailTabId;
-  children: (ctx: { grupoCodigo: string }) => ReactNode;
+  children: (ctx: {
+    grupoCodigo: string;
+    grupoDescricao: string;
+    revenueShare: number | null;
+  }) => ReactNode;
 };
 
 const SECTION_TITLE = "Análise comercial por grupo";
@@ -83,6 +87,8 @@ export function OverviewCustomerGroupAnalysisSection({
 
   const resolvedGrupoCodigo =
     selectedGrupoCodigo ?? selectDefaultGrupoCodigo(grupos);
+  const selectedGrupo =
+    grupos.find((grupo) => grupo.grupoCodigo === resolvedGrupoCodigo) ?? grupos[0];
 
   return (
     <OverviewCustomerSectionCard
@@ -96,7 +102,11 @@ export function OverviewCustomerGroupAnalysisSection({
         selectedGrupoCodigo={resolvedGrupoCodigo}
         onSelect={setSelectedGrupoCodigo}
       />
-      {children({ grupoCodigo: resolvedGrupoCodigo })}
+      {children({
+        grupoCodigo: resolvedGrupoCodigo,
+        grupoDescricao: selectedGrupo?.grupoDescricao ?? resolvedGrupoCodigo,
+        revenueShare: selectedGrupo?.revenueShare ?? null,
+      })}
     </OverviewCustomerSectionCard>
   );
 }

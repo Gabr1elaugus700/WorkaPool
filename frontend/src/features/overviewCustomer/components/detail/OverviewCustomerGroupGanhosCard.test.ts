@@ -4,48 +4,64 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { OverviewCustomerGroupGanhosCard } from "./OverviewCustomerGroupGanhosCard";
 
-describe("OverviewCustomerGroupGanhosCard", () => {
-  it("renders loading, empty, error and ganho rows with numnfv", () => {
-    const loading = renderToStaticMarkup(
-      React.createElement(OverviewCustomerGroupGanhosCard, {
-        viewState: { kind: "loading" },
-      }),
-    );
-    assert.match(loading, /Carregando pedidos ganhos/i);
+const GROUP_PROPS = {
+  grupoDescricao: "Lauril",
+  revenueShare: 27,
+} as const;
 
+describe("OverviewCustomerGroupGanhosCard", () => {
+  it("renders empty and error messages without inventing rows", () => {
     const empty = renderToStaticMarkup(
       React.createElement(OverviewCustomerGroupGanhosCard, {
         viewState: { kind: "empty" },
+        ...GROUP_PROPS,
       }),
     );
     assert.match(empty, /Nenhum pedido encontrado\./);
+    assert.match(empty, /Ganhos: Notas Faturadas/);
+    assert.match(empty, /Lauril 27%/);
 
     const error = renderToStaticMarkup(
       React.createElement(OverviewCustomerGroupGanhosCard, {
         viewState: { kind: "error" },
+        ...GROUP_PROPS,
       }),
     );
-    assert.match(error, /Não foi possível carregar pedidos ganhos/i);
+    assert.match(error, /Não foi possível carregar pedidos ganhos/);
 
+    const loading = renderToStaticMarkup(
+      React.createElement(OverviewCustomerGroupGanhosCard, {
+        viewState: { kind: "loading" },
+        ...GROUP_PROPS,
+      }),
+    );
+    assert.match(loading, /Carregando notas faturadas do grupo selecionado/);
+  });
+
+  it("renders ganho rows with NF identity, metrics and volume pill", () => {
     const loaded = renderToStaticMarkup(
       React.createElement(OverviewCustomerGroupGanhosCard, {
         viewState: {
           kind: "rows",
           rows: [
             {
-              numnfv: 42,
-              numped: 99,
-              datemi: "2024-09-01",
-              vlrfinal: 90,
-              qtdped: 1,
-              preuni: 90,
-              margem: 10,
+              numnfv: 235638,
+              numped: 1,
+              datemi: "2026-09-01",
+              vlrfinal: 7030,
+              qtdped: 1000,
+              preuni: 7.03,
+              margem: 13.99,
             },
           ],
         },
+        ...GROUP_PROPS,
       }),
     );
-    assert.match(loaded, /NF 42/);
-    assert.doesNotMatch(loaded, /Pedido 99/);
+    assert.match(loaded, /NF 235638/);
+    assert.match(loaded, /Valor Total/);
+    assert.match(loaded, /Preço unit\./);
+    assert.match(loaded, /Volume:/);
+    assert.match(loaded, /1\.000,00 kg/);
   });
 });

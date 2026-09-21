@@ -77,10 +77,12 @@ export function OverviewCustomerDetailOverviewPanel({
         onViewAll={onViewAllMotion}
       />
       <OverviewCustomerGroupAnalysisSection customerCode={customerCode} activeTab={activeTab}>
-        {({ grupoCodigo }) => (
+        {({ grupoCodigo, grupoDescricao, revenueShare }) => (
           <OverviewCustomerGroupAnalysisCards
             customerCode={customerCode}
             grupoCodigo={grupoCodigo}
+            grupoDescricao={grupoDescricao}
+            revenueShare={revenueShare}
           />
         )}
       </OverviewCustomerGroupAnalysisSection>
