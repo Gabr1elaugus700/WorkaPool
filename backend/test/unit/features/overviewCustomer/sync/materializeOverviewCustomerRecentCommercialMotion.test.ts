@@ -195,6 +195,7 @@ describe("materializeOverviewCustomerRecentCommercialMotion", () => {
         invoicedLine({ customerCode: 123, orderNumber: 3, invoiceDate: "2026-07-24" }),
         invoicedLine({ customerCode: 123, orderNumber: 4, invoiceDate: "2026-07-22" }),
         invoicedLine({ customerCode: 123, orderNumber: 3, invoiceDate: "2026-07-24", productCode: "P2" }),
+        invoicedLine({ customerCode: 123, orderNumber: 5, invoiceDate: "2023-12-31" }),
       ],
       lostOrders: [
         { customerCode: 123, orderNumber: 10, issueDate: "2024-06-01", sitped: 5 },
@@ -202,6 +203,7 @@ describe("materializeOverviewCustomerRecentCommercialMotion", () => {
         { customerCode: 123, orderNumber: 12, issueDate: "2026-07-24", sitped: 5 },
         { customerCode: 123, orderNumber: 13, issueDate: "2026-07-22", sitped: 5 },
         { customerCode: 123, orderNumber: 14, issueDate: "2026-08-01", sitped: 1 },
+        { customerCode: 123, orderNumber: 15, issueDate: "2023-11-01", sitped: 5 },
       ],
     };
 
@@ -246,11 +248,19 @@ describe("materializeOverviewCustomerRecentCommercialMotion", () => {
     assert.strictEqual(invoicedOnly.lastCommercialMovementAt, "2026-04-01");
     assert.strictEqual(invoicedOnly.recentLostOrders.length, 0);
     assert.strictEqual(invoicedOnly.recentInvoicedOrders[0]?.items.length, 1);
+    assert.strictEqual(invoicedOnly.invoicedCountSinceJan2024, 1);
+    assert.strictEqual(invoicedOnly.lostCountSinceJan2024, 0);
+    assert.strictEqual(invoicedOnly.invoicedCountLast60Days, 0);
+    assert.strictEqual(invoicedOnly.lostCountLast60Days, 0);
 
     assert.ok(lostOnly);
     assert.strictEqual(lostOnly.lastInvoicedPurchaseAt, null);
     assert.strictEqual(lostOnly.lastLostOrderAt, "2026-04-10");
     assert.strictEqual(lostOnly.lastCommercialMovementAt, "2026-04-10");
     assert.strictEqual(lostOnly.recentInvoicedOrders.length, 0);
+    assert.strictEqual(lostOnly.invoicedCountSinceJan2024, 0);
+    assert.strictEqual(lostOnly.lostCountSinceJan2024, 1);
+    assert.strictEqual(lostOnly.invoicedCountLast60Days, 0);
+    assert.strictEqual(lostOnly.lostCountLast60Days, 0);
   });
 });

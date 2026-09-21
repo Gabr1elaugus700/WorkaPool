@@ -51,6 +51,13 @@ describe("OverviewCustomerDetailHero", () => {
     assert.match(markup, /Totais/);
     assert.match(markup, /Faturados/);
     assert.match(markup, /Perdidos/);
+    assert.match(markup, /flex flex-col gap-5/);
+    assert.match(markup, /md:flex-row/);
+    const countsAside = markup.match(
+      /<aside[^>]*aria-label="Quantidade de pedidos"[^>]*>/,
+    );
+    assert.ok(countsAside);
+    assert.doesNotMatch(countsAside[0], /\bhidden\b/);
     assert.doesNotMatch(markup, /Recência/);
     assert.doesNotMatch(markup, /Documento:/);
   });
