@@ -96,13 +96,13 @@ function enrichWithRecentMotion(
       lostCountLast12Months:
         motion?.lostCountLast12Months ?? customer.lostCountLast12Months,
       invoicedCountSinceJan2024:
-        motion?.invoicedCountSinceJan2024 ?? customer.invoicedCountSinceJan2024 ?? 0,
+        motion?.invoicedCountSinceJan2024 ?? customer.invoicedCountSinceJan2024,
       lostCountSinceJan2024:
-        motion?.lostCountSinceJan2024 ?? customer.lostCountSinceJan2024 ?? 0,
+        motion?.lostCountSinceJan2024 ?? customer.lostCountSinceJan2024,
       invoicedCountLast60Days:
-        motion?.invoicedCountLast60Days ?? customer.invoicedCountLast60Days ?? 0,
+        motion?.invoicedCountLast60Days ?? customer.invoicedCountLast60Days,
       lostCountLast60Days:
-        motion?.lostCountLast60Days ?? customer.lostCountLast60Days ?? 0,
+        motion?.lostCountLast60Days ?? customer.lostCountLast60Days,
     };
   }
 
