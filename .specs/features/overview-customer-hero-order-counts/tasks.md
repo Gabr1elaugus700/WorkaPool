@@ -100,11 +100,11 @@ T6 → T7
 
 **Done when**:
 
-- [ ] Four base counts materialized per customer
-- [ ] 12m counts unchanged
-- [ ] Unit tests cover since-Jan, day-60 inclusive, day-61 exclusive, pre-2024 exclusion, invoiced-only and lost-only
-- [ ] Gate check passes: quick materializer command
-- [ ] Test count: existing materializer tests remain; new assertions added (no silent deletions)
+- [x] Four base counts materialized per customer
+- [x] 12m counts unchanged
+- [x] Unit tests cover since-Jan, day-60 inclusive, day-61 exclusive, pre-2024 exclusion, invoiced-only and lost-only
+- [x] Gate check passes: quick materializer command
+- [x] Test count: existing materializer tests remain; new assertions added (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
