@@ -7,20 +7,17 @@ import type {
   OverviewCustomerIdentity,
 } from "../models/OverviewCustomerIdentity";
 import { extractOverviewCustomerCommercialSummarySnapshot } from "../sync/extractOverviewCustomerCommercialSummarySnapshot";
+import {
+  buildOverviewCustomerOrderCounts,
+  type OverviewCustomerOrderCounts,
+} from "../utils/buildOverviewCustomerOrderCounts";
+
+export type { OverviewCustomerOrderCounts };
 
 export type GetOverviewCustomerDetailInput = {
   customerCode: number;
   role: Role;
   codRep?: number;
-};
-
-export type OverviewCustomerOrderCounts = {
-  invoicedSinceJan2024: number;
-  lostSinceJan2024: number;
-  totalSinceJan2024: number;
-  invoicedLast60Days: number;
-  lostLast60Days: number;
-  totalLast60Days: number;
 };
 
 export type OverviewCustomerDetailResult = {
@@ -95,7 +92,7 @@ export class GetOverviewCustomerDetailUseCase {
         lostCountLast12Months: customer.lostCountLast12Months,
       },
       commercialSummary,
-      orderCounts: buildOrderCounts(customer),
+      orderCounts: buildOverviewCustomerOrderCounts(customer),
       sync: {
         lastSuccessfulSyncAt: lastSuccessfulSyncAt
           ? lastSuccessfulSyncAt.toISOString()
@@ -104,22 +101,6 @@ export class GetOverviewCustomerDetailUseCase {
       },
     };
   }
-}
-
-function buildOrderCounts(customer: OverviewCustomerIdentity): OverviewCustomerOrderCounts {
-  const invoicedSinceJan2024 = customer.invoicedCountSinceJan2024 ?? 0;
-  const lostSinceJan2024 = customer.lostCountSinceJan2024 ?? 0;
-  const invoicedLast60Days = customer.invoicedCountLast60Days ?? 0;
-  const lostLast60Days = customer.lostCountLast60Days ?? 0;
-
-  return {
-    invoicedSinceJan2024,
-    lostSinceJan2024,
-    totalSinceJan2024: invoicedSinceJan2024 + lostSinceJan2024,
-    invoicedLast60Days,
-    lostLast60Days,
-    totalLast60Days: invoicedLast60Days + lostLast60Days,
-  };
 }
 
 function emptyCommercialSummary(): OverviewCustomerCommercialSummary {
