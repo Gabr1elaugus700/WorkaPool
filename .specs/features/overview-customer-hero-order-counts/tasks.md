@@ -126,9 +126,9 @@ T6 → T7
 
 **Done when**:
 
-- [ ] Extract accepts and returns the four base fields
-- [ ] Missing fields default to `0` (compatible with old snapshots)
-- [ ] 12m extract behavior unchanged
+- [x] Extract accepts and returns the four base fields
+- [x] Missing fields default to `0` (compatible with old snapshots)
+- [x] 12m extract behavior unchanged
 
 **Tests**: none
 **Gate**: quick
