@@ -200,12 +200,12 @@ T6 → T7
 
 **Done when**:
 
-- [ ] Component shows Totais / Faturados / Perdidos × Desde Jan/2024 / Últimos 60 dias
-- [ ] Zeros render as `0`; absent payload resolves to zeros via util
-- [ ] Hero places counts between identity and health score on md+ and stacked below md
-- [ ] Unit tests for component + hero layout order pass
-- [ ] Gate check passes: frontend hero/utils tests
-- [ ] Test count: new hero tests green (no silent deletions)
+- [x] Component shows Totais / Faturados / Perdidos × Desde Jan/2024 / Últimos 60 dias
+- [x] Zeros render as `0`; absent payload resolves to zeros via util
+- [x] Hero places counts between identity and health score on md+ and stacked below md
+- [x] Unit tests for component + hero layout order pass
+- [x] Gate check passes: frontend hero/utils tests
+- [x] Test count: new hero tests green (no silent deletions)
 
 **Tests**: unit
 **Gate**: full
