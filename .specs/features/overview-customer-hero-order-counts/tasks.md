@@ -62,9 +62,9 @@ T1 → T2 → T3 → T4 → T5 → T6
 
 **Done when**:
 
-- [ ] Four base count fields materialized
-- [ ] 12m counts unchanged
-- [ ] Unit tests cover 59/60/61 days and since-Jan windows
+- [x] Four base count fields materialized
+- [x] 12m counts unchanged
+- [x] Unit tests cover 59/60/61 days and since-Jan windows
 
 **Tests**: unit
 **Gate**: quick
@@ -81,9 +81,9 @@ T1 → T2 → T3 → T4 → T5 → T6
 
 **Done when**:
 
-- [ ] Detail response includes `orderCounts` with six non-negative ints and correct totals
-- [ ] Missing snapshot fields → 0
-- [ ] commercialSummary / 12m fields unchanged
+- [x] Detail response includes `orderCounts` with six non-negative ints and correct totals
+- [x] Missing snapshot fields → 0
+- [x] commercialSummary / 12m fields unchanged
 
 **Tests**: unit
 **Gate**: full

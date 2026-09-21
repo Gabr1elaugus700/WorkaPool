@@ -92,12 +92,12 @@ No detalhe do cliente, o vendedor vê faturamento/volume e um único tile de “
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| HEROOC-01 | P1: Contagens no contrato | Execute | Pending |
-| HEROOC-02 | P1: Contagens no contrato | Execute | Pending |
-| HEROOC-03 | P1: Contagens no contrato | Execute | Pending |
-| HEROOC-04 | P1: Contagens no contrato | Execute | Pending |
-| HEROOC-05 | P1: Contagens no contrato | Execute | Pending |
-| HEROOC-06 | P1: Contagens no contrato | Execute | Pending |
+| HEROOC-01 | P1: Contagens no contrato | Execute | Verified |
+| HEROOC-02 | P1: Contagens no contrato | Execute | Verified |
+| HEROOC-03 | P1: Contagens no contrato | Execute | Verified |
+| HEROOC-04 | P1: Contagens no contrato | Execute | Verified |
+| HEROOC-05 | P1: Contagens no contrato | Execute | Verified |
+| HEROOC-06 | P1: Contagens no contrato | Execute | Verified |
 | HEROOC-07 | P1: Bloco no hero | Execute | Pending |
 | HEROOC-08 | P1: Bloco no hero | Execute | Pending |
 | HEROOC-09 | P1: Bloco no hero | Execute | Pending |

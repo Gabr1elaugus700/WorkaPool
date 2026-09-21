@@ -15,6 +15,10 @@ export type OverviewCustomerIdentity = {
   lastCommercialMovementAt?: string | null;
   invoicedCountLast12Months?: number;
   lostCountLast12Months?: number;
+  invoicedCountSinceJan2024?: number;
+  lostCountSinceJan2024?: number;
+  invoicedCountLast60Days?: number;
+  lostCountLast60Days?: number;
   branchIndicator: BranchIndicator;
   orderCountLast12Months?: number;
   revenueLast12Months?: number;
@@ -75,11 +79,25 @@ export type OverviewCustomerPurchasedProductsSnapshot = {
   customers: Record<string, OverviewCustomerPurchasedProduct[]>;
 };
 
+export type OverviewCustomerRecentInvoicedOrderItem = {
+  productCode: string;
+  productName: string;
+  quantity: number;
+  volume: number;
+  revenue: number;
+  unitPrice: number;
+  marginPercent: number | null;
+};
+
 export type OverviewCustomerRecentInvoicedOrder = {
   orderNumber: number;
   occurredAt: string;
   codRep: number | null;
   branchCode: number | null;
+  revenue: number;
+  volume: number;
+  marginPercent: number | null;
+  items: OverviewCustomerRecentInvoicedOrderItem[];
 };
 
 export type OverviewCustomerRecentLostOrder = {
@@ -93,6 +111,10 @@ export type OverviewCustomerRecentCommercialMotion = {
   lastInvoicedPurchaseAt: string | null;
   lastLostOrderAt: string | null;
   lastCommercialMovementAt: string | null;
+  invoicedCountSinceJan2024: number;
+  lostCountSinceJan2024: number;
+  invoicedCountLast60Days: number;
+  lostCountLast60Days: number;
   invoicedCountLast12Months: number;
   lostCountLast12Months: number;
   recentInvoicedOrders: OverviewCustomerRecentInvoicedOrder[];

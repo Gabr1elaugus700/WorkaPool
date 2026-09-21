@@ -14,9 +14,19 @@ export type GetOverviewCustomerDetailInput = {
   codRep?: number;
 };
 
+export type OverviewCustomerOrderCounts = {
+  invoicedSinceJan2024: number;
+  lostSinceJan2024: number;
+  totalSinceJan2024: number;
+  invoicedLast60Days: number;
+  lostLast60Days: number;
+  totalLast60Days: number;
+};
+
 export type OverviewCustomerDetailResult = {
   customer: OverviewCustomerIdentity;
   commercialSummary: OverviewCustomerCommercialSummary;
+  orderCounts: OverviewCustomerOrderCounts;
   sync: {
     lastSuccessfulSyncAt: string | null;
     servedSnapshotId: string;
@@ -85,6 +95,7 @@ export class GetOverviewCustomerDetailUseCase {
         lostCountLast12Months: customer.lostCountLast12Months,
       },
       commercialSummary,
+      orderCounts: buildOrderCounts(customer),
       sync: {
         lastSuccessfulSyncAt: lastSuccessfulSyncAt
           ? lastSuccessfulSyncAt.toISOString()
@@ -93,6 +104,22 @@ export class GetOverviewCustomerDetailUseCase {
       },
     };
   }
+}
+
+function buildOrderCounts(customer: OverviewCustomerIdentity): OverviewCustomerOrderCounts {
+  const invoicedSinceJan2024 = customer.invoicedCountSinceJan2024 ?? 0;
+  const lostSinceJan2024 = customer.lostCountSinceJan2024 ?? 0;
+  const invoicedLast60Days = customer.invoicedCountLast60Days ?? 0;
+  const lostLast60Days = customer.lostCountLast60Days ?? 0;
+
+  return {
+    invoicedSinceJan2024,
+    lostSinceJan2024,
+    totalSinceJan2024: invoicedSinceJan2024 + lostSinceJan2024,
+    invoicedLast60Days,
+    lostLast60Days,
+    totalLast60Days: invoicedLast60Days + lostLast60Days,
+  };
 }
 
 function emptyCommercialSummary(): OverviewCustomerCommercialSummary {
