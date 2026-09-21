@@ -150,8 +150,8 @@ T6 → T7
 
 **Done when**:
 
-- [ ] Identity customer carries the four base counts when motion provides them
-- [ ] Optional/missing motion counts remain safe (no throw)
+- [x] Identity customer carries the four base counts when motion provides them
+- [x] Optional/missing motion counts remain safe (no throw)
 
 **Tests**: none
 **Gate**: quick
