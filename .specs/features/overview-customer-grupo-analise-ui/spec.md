@@ -145,16 +145,16 @@ A API da análise 5×5 por grupo (spec irmã) não chega ao vendedor se a UI do 
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| OCAUI-01 | P1: Seção no Overview com chips | Design | Pending |
-| OCAUI-02 | P1: Cards ganhos e perdidos | Design | Pending |
-| OCAUI-03 | P1: Acesso negado | Design | Pending |
-| OCAUI-04 | P2: Loading e falha independente | Design | Pending |
+| OCAUI-01 | P1: Seção no Overview com chips | Execute | Verified |
+| OCAUI-02 | P1: Cards ganhos e perdidos | Execute | Verified |
+| OCAUI-03 | P1: Acesso negado | Execute | Verified |
+| OCAUI-04 | P2: Loading e falha independente | Execute | Verified |
 
 **ID format:** `OCAUI-NN`
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 4 total, 0 mapped to tasks, 4 unmapped
+**Coverage:** 4 total, 4 mapped to tasks, 0 unmapped
 
 ---
 

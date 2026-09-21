@@ -164,6 +164,8 @@ export function OverviewCustomerDetailView() {
           productCount={productCount}
           overviewPanel={
             <OverviewCustomerDetailOverviewPanel
+              customerCode={customerCode}
+              activeTab={activeTab}
               summary={detail.commercialSummary}
               monthlyRows={monthlyRows}
               isMonthlyLoading={monthlyQuery.isLoading}

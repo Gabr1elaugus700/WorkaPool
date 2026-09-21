@@ -8,8 +8,13 @@ import { OverviewCustomerKpiGrid } from "./OverviewCustomerKpiGrid";
 import { OverviewCustomerMarginRangeCard } from "./OverviewCustomerMarginRangeCard";
 import { OverviewCustomerMonthlyEvolutionChart } from "./OverviewCustomerMonthlyEvolutionChart";
 import { OverviewCustomerRecentOrdersTeaser } from "./OverviewCustomerRecentOrdersTeaser";
+import type { OverviewCustomerDetailTabId } from "./overviewCustomerDetailTabs.constants";
+import { OverviewCustomerGroupAnalysisCards } from "./OverviewCustomerGroupAnalysisCards";
+import { OverviewCustomerGroupAnalysisSection } from "./OverviewCustomerGroupAnalysisSection";
 
 type OverviewCustomerDetailOverviewPanelProps = {
+  customerCode: number;
+  activeTab: OverviewCustomerDetailTabId;
   summary: OverviewCustomerDetailResponse["commercialSummary"];
   monthlyRows: OverviewCustomerMonthlyEvolutionRow[];
   isMonthlyLoading: boolean;
@@ -24,6 +29,8 @@ type OverviewCustomerDetailOverviewPanelProps = {
 };
 
 export function OverviewCustomerDetailOverviewPanel({
+  customerCode,
+  activeTab,
   summary,
   monthlyRows,
   isMonthlyLoading,
@@ -69,6 +76,14 @@ export function OverviewCustomerDetailOverviewPanel({
         isError={isMotionError}
         onViewAll={onViewAllMotion}
       />
+      <OverviewCustomerGroupAnalysisSection customerCode={customerCode} activeTab={activeTab}>
+        {({ grupoCodigo }) => (
+          <OverviewCustomerGroupAnalysisCards
+            customerCode={customerCode}
+            grupoCodigo={grupoCodigo}
+          />
+        )}
+      </OverviewCustomerGroupAnalysisSection>
     </div>
   );
 }
