@@ -6,6 +6,15 @@ import { extractOverviewCustomerIdentitySnapshot } from "../sync/extractOverview
 
 const OVERVIEW_ALLOWED_ROLES: Role[] = [Role.ADMIN, Role.GERENTE_DPTO, Role.VENDAS];
 const PAGE_SIZE = 20;
+const SAO_PAULO_TIME_ZONE = "America/Sao_Paulo";
+
+function currentSaoPauloYearMonth(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: SAO_PAULO_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+  }).format(now);
+}
 
 type SortField = "orderCountLast12Months" | "lastPurchase";
 
@@ -41,6 +50,9 @@ export type ListOverviewCustomersResult = {
   sort: {
     field: SortField;
     direction: "desc";
+  };
+  summary: {
+    purchasesThisMonth: number;
   };
 };
 
@@ -93,6 +105,10 @@ export class ListOverviewCustomersUseCase {
     const safePage = Math.min(Math.max(input.page, 1), totalPages);
     const start = (safePage - 1) * PAGE_SIZE;
     const items = rows.slice(start, start + PAGE_SIZE);
+    const yearMonth = currentSaoPauloYearMonth();
+    const purchasesThisMonth = rows.filter((row) =>
+      row.lastPurchaseAt?.startsWith(yearMonth),
+    ).length;
 
     return {
       items,
@@ -106,6 +122,9 @@ export class ListOverviewCustomersUseCase {
       sort: {
         field: defaultSortField,
         direction: "desc",
+      },
+      summary: {
+        purchasesThisMonth,
       },
     };
   }
@@ -215,6 +234,9 @@ export class ListOverviewCustomersUseCase {
       sort: {
         field: sortField,
         direction: "desc",
+      },
+      summary: {
+        purchasesThisMonth: 0,
       },
     };
   }

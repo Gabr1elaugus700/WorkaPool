@@ -26,4 +26,7 @@ export type OverviewCustomerListResponse = {
     field: "orderCountLast12Months" | "lastPurchase";
     direction: "desc";
   };
+  summary: {
+    purchasesThisMonth: number;
+  };
 };

@@ -13,6 +13,24 @@ function createToken(role: string, codRep?: number): string {
   return jwt.sign({ id: "user-test", role, codRep }, "dev_secret");
 }
 
+function saoPauloYearMonth(date: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+  }).format(date);
+}
+
+function previousSaoPauloYearMonth(date: Date): string {
+  const [yearRaw, monthRaw] = saoPauloYearMonth(date).split("-");
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  if (month === 1) {
+    return `${year - 1}-12`;
+  }
+  return `${year}-${String(month - 1).padStart(2, "0")}`;
+}
+
 function createApp(store: InMemoryOverviewCustomerSyncStore): Express {
   const app = express();
   app.use(express.json());
@@ -335,6 +353,63 @@ describe("Overview customer list HTTP", () => {
     assert.strictEqual(response.body.items.length, 0);
     assert.strictEqual(response.body.pagination.totalPages, 1);
     assert.strictEqual(response.body.pagination.page, 1);
+    assert.strictEqual(response.body.summary.purchasesThisMonth, 0);
+  });
+
+  it("counts purchases this month across the full list, not only the current page", async () => {
+    const now = new Date();
+    const thisMonth = saoPauloYearMonth(now);
+    const lastMonth = previousSaoPauloYearMonth(now);
+    const store = new InMemoryOverviewCustomerSyncStore();
+    const customers: Record<string, unknown> = {};
+    for (let customerCode = 1; customerCode <= 25; customerCode += 1) {
+      customers[String(customerCode)] = createSeedCustomer({
+        customerCode,
+        tradeName: `Cliente ${customerCode}`,
+        document: `${customerCode}`.padStart(14, "0"),
+        primaryCodRep: 10,
+        lastInvoicedPurchaseAt: `${thisMonth}-15`,
+        orderCountLast12Months: customerCode,
+      });
+    }
+    for (let customerCode = 26; customerCode <= 30; customerCode += 1) {
+      customers[String(customerCode)] = createSeedCustomer({
+        customerCode,
+        tradeName: `Cliente ${customerCode}`,
+        document: `${customerCode}`.padStart(14, "0"),
+        primaryCodRep: 10,
+        lastInvoicedPurchaseAt: `${lastMonth}-15`,
+        orderCountLast12Months: customerCode,
+      });
+    }
+    store.seedSuccessfulSnapshot(
+      {
+        id: "snap-list-purchases-month",
+        publishedAt: new Date("2026-01-10T00:00:00.000Z"),
+        payload: { customers },
+      },
+      new Date("2026-01-10T00:00:00.000Z"),
+    );
+    const app = createApp(store);
+    const token = createToken("ADMIN");
+
+    const page1 = await request(app)
+      .get("/api/overview/customers")
+      .query({ page: "1" })
+      .set("Authorization", `Bearer ${token}`);
+
+    assert.strictEqual(page1.status, 200);
+    assert.strictEqual(page1.body.items.length, 20);
+    assert.strictEqual(page1.body.summary.purchasesThisMonth, 25);
+
+    const page2 = await request(app)
+      .get("/api/overview/customers")
+      .query({ page: "2" })
+      .set("Authorization", `Bearer ${token}`);
+
+    assert.strictEqual(page2.status, 200);
+    assert.strictEqual(page2.body.items.length, 10);
+    assert.strictEqual(page2.body.summary.purchasesThisMonth, 25);
   });
 
   it("uses order-count sort by default and falls back to last purchase when missing", async () => {
