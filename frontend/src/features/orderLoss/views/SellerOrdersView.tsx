@@ -262,6 +262,7 @@ export const SellerOrdersView = () => {
               orderNumber: g.numped,
               status: 'lost',
               clientName: g.firstItem.FANTASIA,
+              customerCode: g.firstItem.CODCLI,
               city: `${g.firstItem.CIDADE}`,
               totalValue: g.totalValue,
               totalWeight: g.items.reduce((sum, item) => sum + (item.QTDPED * 1), 0),
