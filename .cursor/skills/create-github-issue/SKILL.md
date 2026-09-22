@@ -21,10 +21,21 @@ Use esta skill sempre que o usuario disser algo como:
 - NAO executar build
 - APENAS criar a issue
 - Quando faltar clareza sobre a issue, sempre questione o usuario
-- SEMPRE adicionar labels na issue
+- SEMPRE adicionar labels na issue: exatamente um `type:*` **e** ≥1 label de natureza
 
-## Labels para issue no GitHub
-Use as seguintes regras ao criar issues:
+## Labels — pipeline (obrigatório, exatamente um)
+
+| Label | Quando |
+| --- | --- |
+| `type:feature` | Feature, melhoria ou trabalho planejado — pipeline completo (PRD/grill-me quando aplicável) |
+| `type:hotfix` | Correção urgente/operacional — mesma CI, sem cerimonial de PRD |
+
+Heurística:
+- Bug operacional urgente / produção quebrada → `type:hotfix` + `bug`
+- Bug não urgente, melhoria, feature nova → `type:feature` + natureza adequada (`bug` ou `enhancement`)
+- Refactor, docs, testes, infra, AI → em geral `type:feature` + a natureza correspondente
+
+## Labels — natureza (obrigatório, ≥1)
 
 - bug → quando algo existente não funciona como esperado ou está causando um erro operacional
 - enhancement → quando for melhoria ou nova funcionalidade ou feature nova
@@ -36,6 +47,8 @@ Use as seguintes regras ao criar issues:
 - ai → quando envolver lógica de IA, prompts, agentes, automações com LLM ou comportamento inteligente
 
 Labels disponiveis no repositorio:
+- type:feature (Feature — full pipeline) - `#0E8A16`
+- type:hotfix (Hotfix — same CI, no PRD ceremony) - `#D93F0B`
 - bug (Something isn't working) - `#d73a4a`
 - documentation (Improvements or additions to documentation) - `#0075ca`
 - duplicate (This issue or pull request already exists) - `#cfd3d7`
@@ -51,9 +64,10 @@ Labels disponiveis no repositorio:
 - ai (AI-related logic or prompt changes) - `#c5def5`
 
 ### Regras para label
-- Sempre escolha pelo menos 1 label ao criar uma issue.
+- Sempre incluir **um** de: `type:feature` | `type:hotfix`.
+- Sempre incluir **pelo menos uma** label de natureza.
 - Priorize clareza e contexto técnico.
-- Se aplicável, use mais de um label.
+- Se aplicável, use mais de uma label de natureza.
 
 ## Estrutura da Issue
 
@@ -80,18 +94,19 @@ Detalhes técnicos claros do que deve ser alterado
 Opcional
 
 ## Labels
-Selecionar automaticamente os labels mais adequados ao contexto da issue.
+Selecionar automaticamente: um `type:*` + natureza(s) adequadas.
 
 ## Execução
 
-Gerar e executar o comando:
+Gerar e executar o comando (incluir `type:*` e natureza no `--label`):
 
 gh issue create \
   --title "<TITLE>" \
   --body "<BODY>" \
-  --label "<LABELS>"
+  --label "type:feature,enhancement"
 
 ## Importante
 - Escape corretamente aspas
 - Não quebrar o comando
 - Executar no terminal do projeto
+- Nunca criar issue sem `type:feature` ou `type:hotfix`
