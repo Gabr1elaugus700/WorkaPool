@@ -1,8 +1,12 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { resolve } from "node:path";
+import { extname, join, relative, resolve } from "node:path";
 
-const packages = ["backend", "frontend"];
+const packageDefinitions = [
+  { name: "backend", testDirectory: "test/unit" },
+  { name: "frontend", testDirectory: "src" },
+];
+const packages = packageDefinitions.map((definition) => definition.name);
 const coverageMetrics = ["lines", "statements", "functions", "branches"];
 
 function argumentValue(name) {
@@ -163,6 +167,66 @@ function parseTestCounts(output) {
   };
 }
 
+function collectTestFiles(directory) {
+  if (!existsSync(directory)) {
+    return [];
+  }
+
+  const files = [];
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const entryPath = join(directory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...collectTestFiles(entryPath));
+      continue;
+    }
+    if (
+      entry.isFile() &&
+      [".ts", ".tsx"].includes(extname(entry.name)) &&
+      entry.name.includes(".test.")
+    ) {
+      files.push(entryPath);
+    }
+  }
+  return files.sort();
+}
+
+function resolveTsx(packageDirectory) {
+  const suffix = process.platform === "win32" ? ".cmd" : "";
+  const localTsx = join(packageDirectory, "node_modules", ".bin", `tsx${suffix}`);
+  return existsSync(localTsx) ? localTsx : undefined;
+}
+
+function runPackageUnitTests(packageDefinition) {
+  const packageDirectory = resolve(packageDefinition.name);
+  const testFiles = collectTestFiles(join(packageDirectory, packageDefinition.testDirectory));
+  if (testFiles.length === 0) {
+    return {
+      status: 0,
+      output: `# tests 0\n# pass 0\n# fail 0\n# skipped 0\n`,
+      tests: { total: 0, passed: 0, failed: 0, skipped: 0 },
+    };
+  }
+
+  const relativeTestFiles = testFiles.map((file) => relative(packageDirectory, file));
+  const localTsx = resolveTsx(packageDirectory);
+  const command = localTsx ?? (process.platform === "win32" ? "npx.cmd" : "npx");
+  const args = localTsx
+    ? ["--test", ...relativeTestFiles]
+    : ["--yes", "tsx", "--test", ...relativeTestFiles];
+  const result = spawnSync(command, args, {
+    cwd: packageDirectory,
+    encoding: "utf8",
+    env: { ...process.env, NODE_ENV: "test" },
+    shell: false,
+  });
+  const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
+  return {
+    status: result.status ?? 1,
+    output,
+    tests: parseTestCounts(output),
+  };
+}
+
 function collectTestCounts() {
   const outputPath = argumentValue("--output");
   if (!outputPath) {
@@ -170,21 +234,16 @@ function collectTestCounts() {
   }
 
   const results = {};
-  for (const packageName of packages) {
-    const command = process.platform === "win32" ? "npm.cmd" : "npm";
-    const result = spawnSync(command, ["test"], {
-      cwd: resolve(packageName),
-      encoding: "utf8",
-      env: { ...process.env, NODE_ENV: "test" },
-      shell: false,
-    });
-    const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
-    results[packageName] = {
-      ...parseTestCounts(output),
-      status: result.status ?? 1,
+  for (const packageDefinition of packageDefinitions) {
+    const result = runPackageUnitTests(packageDefinition);
+    results[packageDefinition.name] = {
+      ...result.tests,
+      status: result.status,
     };
-    if ((result.status ?? 1) !== 0) {
-      process.stderr.write(`Testes falharam em ${packageName}:\n${output}\n`);
+    if (result.status !== 0) {
+      process.stderr.write(
+        `Testes falharam em ${packageDefinition.name}:\n${result.output}\n`,
+      );
       process.exitCode = 1;
     }
   }
