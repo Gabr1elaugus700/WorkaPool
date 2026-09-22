@@ -2,13 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches:
-      - main
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - ready_for_review
+    branches: [main]
 
 permissions:
   contents: read
@@ -18,22 +12,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  quality:
-    name: Quality checks
+  quality-gate:
+    name: quality-gate
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
-      - name: Checkout PR head
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
-      - name: Preserve CI gate script
-        run: cp .github/scripts/ci-gates.mjs "$RUNNER_TEMP/ci-gates.mjs"
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
@@ -41,105 +29,36 @@ jobs:
             frontend/package-lock.json
             backend/package-lock.json
 
-      - name: Enforce PR size (max 300 added lines, excluding tests)
-        run: >
-          node "$RUNNER_TEMP/ci-gates.mjs" pr-size
-          --max 300
-          --base ${{ github.event.pull_request.base.sha }}
-          --head ${{ github.event.pull_request.head.sha }}
-
-      - name: Checkout PR base for test baseline
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.base.sha }}
-          fetch-depth: 0
-          clean: true
-
-      - name: Install base dependencies
+      - name: Install dependencies
         run: |
           npm ci --prefix frontend --no-audit --fund=false
           npm ci --prefix backend --no-audit --fund=false
 
-      - name: Generate Prisma client (base)
+      - name: Generate Prisma client
         working-directory: backend
         run: npx prisma generate --schema=prisma/schema.prisma
 
-      - name: Collect base test counts
-        run: node "$RUNNER_TEMP/ci-gates.mjs" collect-tests --output "$RUNNER_TEMP/base-tests.json"
-
-      - name: Checkout PR head for checks
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
-          clean: true
-
-      - name: Install PR dependencies
-        run: |
-          npm ci --prefix frontend --no-audit --fund=false
-          npm ci --prefix backend --no-audit --fund=false
-
-      - name: Generate Prisma client (PR)
-        working-directory: backend
-        run: npx prisma generate --schema=prisma/schema.prisma
-
-      - name: Lint frontend
+      - name: Lint
         working-directory: frontend
         run: npm run lint
 
-      - name: Typecheck backend
-        working-directory: backend
-        run: npx tsc --noEmit --project tsconfig.json
-
-      - name: Typecheck frontend
-        working-directory: frontend
-        run: npx tsc --noEmit --project tsconfig.app.json
-
-      - name: Build backend
-        working-directory: backend
-        run: npm run build
-
-      - name: Build frontend
-        working-directory: frontend
-        run: npm run build
-
-      - name: Test backend with coverage
-        working-directory: backend
+      - name: Typecheck
         run: |
-          set -o pipefail
-          npm run test:coverage 2>&1 | tee "$RUNNER_TEMP/backend-tests.log"
+          npm exec --prefix backend -- tsc --noEmit --project tsconfig.json
+          npm exec --prefix frontend -- tsc --noEmit --project tsconfig.app.json
 
-      - name: Test frontend with coverage
-        working-directory: frontend
+      - name: Test with coverage
         run: |
-          set -o pipefail
-          npm run test:coverage 2>&1 | tee "$RUNNER_TEMP/frontend-tests.log"
+          npm run test:coverage --prefix backend
+          npm run test:coverage --prefix frontend
 
-      - name: Parse PR test counts
-        run: >
-          node "$RUNNER_TEMP/ci-gates.mjs" parse-tests
-          --output "$RUNNER_TEMP/head-tests.json"
-          --backend-log "$RUNNER_TEMP/backend-tests.log"
-          --frontend-log "$RUNNER_TEMP/frontend-tests.log"
+      - name: Build
+        run: |
+          npm run build --prefix backend
+          npm run build --prefix frontend
 
-      - name: Compare test counts vs base
-        run: >
-          node "$RUNNER_TEMP/ci-gates.mjs" compare-tests
-          --base-json "$RUNNER_TEMP/base-tests.json"
-          --head-json "$RUNNER_TEMP/head-tests.json"
-
-      - name: Publish coverage summary
-        if: always()
-        run: node "$RUNNER_TEMP/ci-gates.mjs" coverage-summary
-
-      - name: Upload coverage artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-and-test-counts
-          path: |
-            backend/coverage/coverage-summary.json
-            frontend/coverage/coverage-summary.json
-            ${{ runner.temp }}/base-tests.json
-            ${{ runner.temp }}/head-tests.json
-          if-no-files-found: warn
+      - name: PR size and test-count gates
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node .github/scripts/pr-quality-gate.mjs

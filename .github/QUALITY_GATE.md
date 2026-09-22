@@ -1,34 +1,26 @@
-# Quality Gate da Codebase
+# Quality Gate
 
-O workflow [`ci.yml`](./workflows/ci.yml) roda em cada PR direcionado à `main`.
+O workflow [`ci.yml`](./workflows/ci.yml) roda em cada PR para `main`, em **um único job**.
 
 ## O que o CI faz
 
-1. Conta linhas **adicionadas** no diff `base...head` (arquivos de teste excluídos) e falha se passar de **300**.
-2. Instala dependências de `frontend/` e `backend/` e roda `prisma generate` no backend (client necessário para testes/typecheck com `NODE_ENV=test`).
-3. Roda ESLint (frontend), TypeScript `--noEmit` e `npm run build` em ambos os pacotes (inclui `vite build` no frontend — smoke test no runner do GitHub, sem deploy).
-4. Roda testes unitários com cobertura (`test:coverage`) no PR.
-5. Compara a quantidade de testes unitários (`# tests` do runner) entre a base e o head; falha se algum pacote tiver menos testes que a base.
-6. Publica cobertura no Summary da execução.
+1. Instala `frontend/` e `backend/`, gera o Prisma client (necessário para typecheck/testes).
+2. `lint` (frontend), `typecheck`, `build` e `test:coverage` nos dois pacotes.
+3. Gates de PR ([`pr-quality-gate.mjs`](./scripts/pr-quality-gate.mjs)):
+   - **tamanho:** falha se o PR adiciona mais de **300 linhas** fora de arquivos de teste
+   - **testes:** falha se a quantidade de `test(` / `it(` no diff da base → head diminuiu
+4. Publica cobertura e o resultado dos gates no Summary.
 
-Arquivos ignorados no limite de tamanho: `*.test.ts(x)`, paths sob `test/` e `__tests__/`, e tudo sob `.github/` (harness/CI).
+Arquivos ignorados no limite de 300 linhas: `*.test.*`, `*.spec.*`, pastas `test` / `tests` / `__tests__`.
 
-## Política do gate
+## Política
 
-O PR falha quando:
+O PR falha quando lint, typecheck, build ou testes falham; quando há menos testes que a base; ou quando passa de 300 linhas adicionadas (sem testes).
 
-- ESLint reporta erro;
-- typecheck ou build falha;
-- algum teste unitário falha;
-- a quantidade de testes (backend ou frontend) é menor que na base do PR;
-- o PR adiciona mais de 300 linhas fora de arquivos de teste.
+Cobertura percentual é **reportada**, mas **não** barra queda de % nesta versão.
 
-Cobertura percentual é **reportada**, mas nesta versão **não** barra queda de %.
+Fora deste CI: Postgres / `test:integration`, CodeQL, npm audit, Issues automáticas.
 
-Fora deste CI: Prisma validate/migrate, Postgres/`test:integration`, CodeQL, npm audit, Issues automáticas.
+## Onde ver
 
-## Onde consultar
-
-Resultado no **Summary** da execução e no artifact `coverage-and-test-counts`. Reprocessar com **Re-run jobs**.
-
-O workflow não tem agendamento nem push comum: valida alterações antes do merge em `main`.
+Summary da execução no GitHub Actions.
