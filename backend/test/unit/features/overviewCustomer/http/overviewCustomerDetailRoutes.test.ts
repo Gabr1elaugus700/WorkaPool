@@ -294,12 +294,14 @@ describe("Overview customer detail HTTP", () => {
     });
     assert.deepStrictEqual(response.body.commercialSummary, {
       revenueSinceJan2024: 1000,
+      revenueLast30Days: 0,
       revenueLast12Months: 600,
       orderCountSinceJan2024: 10,
       orderCountLast12Months: 6,
       averageTicketSinceJan2024: 100,
       averageTicketLast12Months: 110,
       volumeSinceJan2024: 350,
+      volumeLast30Days: 0,
       volumeLast12Months: 140,
       marginPercentWeightedByRevenue: 22.5,
       purchaseFrequencyDays: 30,
@@ -347,12 +349,14 @@ describe("Overview customer detail HTTP", () => {
     assert.strictEqual(response.status, 200);
     assert.deepStrictEqual(response.body.commercialSummary, {
       revenueSinceJan2024: 0,
+      revenueLast30Days: 0,
       revenueLast12Months: 0,
       orderCountSinceJan2024: 0,
       orderCountLast12Months: 0,
       averageTicketSinceJan2024: 0,
       averageTicketLast12Months: 0,
       volumeSinceJan2024: 0,
+      volumeLast30Days: 0,
       volumeLast12Months: 0,
       marginPercentWeightedByRevenue: null,
       purchaseFrequencyDays: null,

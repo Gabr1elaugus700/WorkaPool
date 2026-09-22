@@ -1,7 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import React from "react";
 import { OverviewCustomerDetailHeroSkeleton } from "./OverviewCustomerDetailHeroSkeleton";
-import { OverviewCustomerKpiGridSkeleton } from "./OverviewCustomerKpiGridSkeleton";
 
 export function OverviewCustomerDetailFirstPaintSkeleton() {
   return (
@@ -25,7 +24,6 @@ export function OverviewCustomerDetailFirstPaintSkeleton() {
       </header>
       <OverviewCustomerDetailHeroSkeleton />
       <Skeleton className="h-10 w-full max-w-xl" />
-      <OverviewCustomerKpiGridSkeleton />
     </div>
   );
 }

@@ -76,7 +76,8 @@ export function materializeOverviewCustomerCommercialSummary(
     }
   }
 
-  const last12Cutoff = shiftMonths(now, -12);
+    const last30Cutoff = shiftDays(now, -30);
+    const last12Cutoff = shiftMonths(now, -12);
   const customers: OverviewCustomerCommercialSummarySnapshot["customers"] = {};
 
   for (const [customerCode, customer] of byCustomer.entries()) {
@@ -93,6 +94,9 @@ export function materializeOverviewCustomerCommercialSummary(
     );
     const totalRevenue = sumBy(sinceJan2024Orders, (order) => order.revenue);
     const totalVolume = sumBy(sinceJan2024Orders, (order) => order.volume);
+    const last30Orders = orders.filter((order) => toUtcDate(order.issuedAt) >= last30Cutoff);
+    const last30Revenue = sumBy(last30Orders, (order) => order.revenue);
+    const last30Volume = sumBy(last30Orders, (order) => order.volume);
     const last12Orders = orders.filter((order) => toUtcDate(order.issuedAt) >= last12Cutoff);
     const last12Revenue = sumBy(last12Orders, (order) => order.revenue);
     const last12Volume = sumBy(last12Orders, (order) => order.volume);
@@ -116,6 +120,7 @@ export function materializeOverviewCustomerCommercialSummary(
 
     customers[String(customerCode)] = {
       revenueSinceJan2024: round2(totalRevenue),
+      revenueLast30Days: round2(last30Revenue),
       revenueLast12Months: round2(last12Revenue),
       orderCountSinceJan2024: sinceJan2024Orders.length,
       orderCountLast12Months: last12Orders.length,
@@ -124,6 +129,7 @@ export function materializeOverviewCustomerCommercialSummary(
       averageTicketLast12Months:
         last12Orders.length > 0 ? round2(last12Revenue / last12Orders.length) : 0,
       volumeSinceJan2024: round2(totalVolume),
+      volumeLast30Days: round2(last30Volume),
       volumeLast12Months: round2(last12Volume),
       marginPercentWeightedByRevenue:
         weightedMargin === null ? null : round2(weightedMargin),
@@ -205,6 +211,10 @@ function sumBy<T>(items: T[], pick: (item: T) => number): number {
 
 function diffDays(from: Date, to: Date): number {
   return Math.floor((to.getTime() - from.getTime()) / DAY_MS);
+}
+
+function shiftDays(date: Date, delta: number): Date {
+  return new Date(date.getTime() + delta * DAY_MS);
 }
 
 function shiftMonths(date: Date, delta: number): Date {

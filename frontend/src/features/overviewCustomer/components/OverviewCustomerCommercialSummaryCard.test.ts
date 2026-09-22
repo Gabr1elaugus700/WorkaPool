@@ -10,12 +10,14 @@ describe("OverviewCustomerCommercialSummaryCard", () => {
       React.createElement(OverviewCustomerCommercialSummaryCard, {
         summary: {
           revenueSinceJan2024: 1000,
+          revenueLast30Days: 100,
           revenueLast12Months: 500,
           orderCountSinceJan2024: 12,
           orderCountLast12Months: 5,
           averageTicketSinceJan2024: 83.33,
           averageTicketLast12Months: 100,
           volumeSinceJan2024: 200,
+          volumeLast30Days: 20,
           volumeLast12Months: 80,
           marginPercentWeightedByRevenue: 21.5,
           purchaseFrequencyDays: 27.3,

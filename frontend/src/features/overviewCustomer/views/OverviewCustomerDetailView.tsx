@@ -153,10 +153,12 @@ export function OverviewCustomerDetailView() {
           commercialSignals={{
             purchaseFrequencyDays: detail.commercialSummary.purchaseFrequencyDays,
             daysSinceLastPurchase: detail.commercialSummary.daysSinceLastPurchase,
-            maxInvoicedOrderMarginPercent:
-              detail.commercialSummary.maxInvoicedOrderMarginPercent ?? null,
-            minInvoicedOrderMarginPercent:
-              detail.commercialSummary.minInvoicedOrderMarginPercent ?? null,
+          }}
+          billing={{
+            revenueLast30Days: detail.commercialSummary.revenueLast30Days,
+            volumeLast30Days: detail.commercialSummary.volumeLast30Days,
+            revenueLast12Months: detail.commercialSummary.revenueLast12Months,
+            volumeLast12Months: detail.commercialSummary.volumeLast12Months,
           }}
         />
         <OverviewCustomerDetailTabs
@@ -167,7 +169,6 @@ export function OverviewCustomerDetailView() {
             <OverviewCustomerDetailOverviewPanel
               customerCode={customerCode}
               activeTab={activeTab}
-              summary={detail.commercialSummary}
               monthlyRows={monthlyRows}
               isMonthlyLoading={monthlyQuery.isLoading}
               isMonthlyError={monthlyQuery.isError}

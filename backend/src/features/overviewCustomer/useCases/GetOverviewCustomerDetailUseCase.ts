@@ -106,12 +106,14 @@ export class GetOverviewCustomerDetailUseCase {
 function emptyCommercialSummary(): OverviewCustomerCommercialSummary {
   return {
     revenueSinceJan2024: 0,
+    revenueLast30Days: 0,
     revenueLast12Months: 0,
     orderCountSinceJan2024: 0,
     orderCountLast12Months: 0,
     averageTicketSinceJan2024: 0,
     averageTicketLast12Months: 0,
     volumeSinceJan2024: 0,
+    volumeLast30Days: 0,
     volumeLast12Months: 0,
     marginPercentWeightedByRevenue: null,
     purchaseFrequencyDays: null,

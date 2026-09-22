@@ -27,12 +27,14 @@ export type OverviewCustomerIdentity = {
 
 export type OverviewCustomerCommercialSummary = {
   revenueSinceJan2024: number;
+  revenueLast30Days: number;
   revenueLast12Months: number;
   orderCountSinceJan2024: number;
   orderCountLast12Months: number;
   averageTicketSinceJan2024: number;
   averageTicketLast12Months: number;
   volumeSinceJan2024: number;
+  volumeLast30Days: number;
   volumeLast12Months: number;
   marginPercentWeightedByRevenue: number | null;
   purchaseFrequencyDays: number | null;

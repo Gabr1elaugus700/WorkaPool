@@ -1,16 +1,17 @@
 import { Badge } from "@/components/ui/badge";
 import React from "react";
-import { formatOverviewPercent } from "../../utils/overviewCustomerFormatters";
 import {
   formatDaysSinceLastPurchase,
   formatPurchaseFrequencyDays,
 } from "@/utils/formatDate";
+import type { OverviewCustomerOrderCounts } from "../../types/overviewCustomerDetail.types";
+import { formatOverviewNumber } from "../../utils/overviewCustomerFormatters";
+import { resolveOverviewCustomerOrderCounts } from "../../utils/overviewCustomerOrderCounts.utils";
 
 export type OverviewCustomerHealthScoreMockProps = {
   daysSinceLastPurchase: number | null;
   purchaseFrequencyDays: number | null;
-  maxInvoicedOrderMarginPercent: number | null;
-  minInvoicedOrderMarginPercent: number | null;
+  orderCounts?: OverviewCustomerOrderCounts | null;
 };
 
 type SignalCellProps = {
@@ -18,11 +19,40 @@ type SignalCellProps = {
   value: string;
 };
 
+type CountPair = {
+  label: string;
+  value: number;
+};
+
 function SignalCell({ label, value }: SignalCellProps) {
   return (
-    <div className="space-y-0.5">
-      <p className="text-[0.65rem] uppercase tracking-wide text-background/60">{label}</p>
-      <p className="text-sm font-medium tabular-nums text-background">{value}</p>
+    <div className="space-y-1">
+      <p className="text-xs font-medium uppercase tracking-wide text-background/75">{label}</p>
+      <p className="text-lg font-semibold tabular-nums text-background">{value}</p>
+    </div>
+  );
+}
+
+function CountPairItem({ label, value }: CountPair) {
+  return (
+    <p className="flex items-baseline gap-2">
+      <span className="text-xs font-medium uppercase tracking-wide text-background/75">{label}</span>
+      <span className="text-lg font-semibold tabular-nums text-background">
+        {formatOverviewNumber(value)}
+      </span>
+    </p>
+  );
+}
+
+function PeriodGroup({ title, pairs }: { title: string; pairs: CountPair[] }) {
+  return (
+    <div className="space-y-1">
+      <p className="text-xs font-medium uppercase tracking-wide text-background/75">{title}</p>
+      <div className="flex flex-wrap gap-x-4 gap-y-1">
+        {pairs.map((pair) => (
+          <CountPairItem key={pair.label} label={pair.label} value={pair.value} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -30,22 +60,23 @@ function SignalCell({ label, value }: SignalCellProps) {
 export function OverviewCustomerHealthScoreMock({
   daysSinceLastPurchase,
   purchaseFrequencyDays,
-  maxInvoicedOrderMarginPercent,
-  minInvoicedOrderMarginPercent,
+  orderCounts,
 }: OverviewCustomerHealthScoreMockProps) {
+  const counts = resolveOverviewCustomerOrderCounts(orderCounts);
+
   return (
     <aside
-      className="w-full rounded-lg border border-background/15 bg-background/10 p-4 md:max-w-md"
+      className="border-t border-background/15 px-5 py-4 md:px-6"
       aria-label="Score de Saúde 360° (demonstração)"
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <div className="space-y-2 sm:min-w-[120px]">
-          <p className="text-[0.65rem] font-medium uppercase tracking-wide text-background/60">
+      <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
+        <div className="space-y-1">
+          <p className="text-xs font-medium uppercase tracking-wide text-background/75">
             Score de Saúde 360°
           </p>
-          <p className="text-3xl font-semibold tabular-nums tracking-tight text-background">
+          <p className="text-lg font-semibold tabular-nums text-background">
             92
-            <span className="text-base font-normal text-background/60"> / 100</span>
+            <span className="text-sm font-normal text-background/75"> / 100</span>
           </p>
           <Badge
             variant="outline"
@@ -53,26 +84,30 @@ export function OverviewCustomerHealthScoreMock({
           >
             Saudável
           </Badge>
-          <p className="text-[0.65rem] text-background/50">Indicador em desenvolvimento</p>
+          <p className="text-xs text-background/75">Indicador em desenvolvimento</p>
         </div>
-        <div className="grid flex-1 grid-cols-2 gap-3">
-          <SignalCell
-            label="Dias desde última compra"
-            value={formatDaysSinceLastPurchase(daysSinceLastPurchase)}
-          />
-          <SignalCell
-            label="Frequência média"
-            value={formatPurchaseFrequencyDays(purchaseFrequencyDays)}
-          />
-          <SignalCell
-            label="Maior margem (pedido ganho)"
-            value={formatOverviewPercent(maxInvoicedOrderMarginPercent)}
-          />
-          <SignalCell
-            label="Menor margem vendida"
-            value={formatOverviewPercent(minInvoicedOrderMarginPercent)}
-          />
-        </div>
+        <SignalCell
+          label="Dias desde última compra"
+          value={formatDaysSinceLastPurchase(daysSinceLastPurchase)}
+        />
+        <SignalCell
+          label="Frequência média"
+          value={formatPurchaseFrequencyDays(purchaseFrequencyDays)}
+        />
+        <PeriodGroup
+          title="Desde Jan/2024"
+          pairs={[
+            { label: "Faturados", value: counts.invoicedSinceJan2024 },
+            { label: "Perdidos", value: counts.lostSinceJan2024 },
+          ]}
+        />
+        <PeriodGroup
+          title="Últimos 60 dias"
+          pairs={[
+            { label: "Faturados", value: counts.invoicedLast60Days },
+            { label: "Perdidos", value: counts.lostLast60Days },
+          ]}
+        />
       </div>
     </aside>
   );
