@@ -1,0 +1,56 @@
+---
+description: Fluxo trunk-based — issue com labels type:* + natureza, branch curta por issue, PR que fecha a issue.
+alwaysApply: true
+---
+
+# GitHub: issue → branch → PR
+
+## Labels obrigatórias em toda issue
+
+Exatamente **um** pipeline + **≥1** natureza:
+
+| Pipeline (obrigatório) | Quando |
+| --- | --- |
+| `type:feature` | Feature/melhoria — pipeline completo (PRD/grill-me quando aplicável) |
+| `type:hotfix` | Correção urgente — mesma CI, sem cerimonial de PRD |
+
+Natureza (já no repo): `bug`, `enhancement`, `documentation`, `refactor`, `test`, `performance`, `infra`, `ai`.
+
+Exemplos: `type:feature` + `enhancement`; `type:hotfix` + `bug`.
+
+Se a issue estiver sem `type:*` ou sem natureza → completar labels **antes** de abrir branch ou PR.
+
+## Branch (uma issue = uma branch)
+
+Sempre da `main` atualizada. Nunca de outra feature em andamento. Vida curta: nasce, vira PR, morre.
+
+- `type:feature` → `feature/<n>-slug`
+- `type:hotfix` → `hotfix/<n>-slug`
+
+```bash
+git checkout main && git pull
+git checkout -b feature/123-slug   # ou hotfix/123-slug
+```
+
+## PR fecha a issue
+
+Assim que a issue estiver pronta (não espera a Epic inteira):
+
+```bash
+git push -u origin HEAD
+gh pr create --title "feat: X (closes #123)" --body "Resolve #123" --base main
+```
+
+Merge: squash + apagar branch; sync local; próxima issue:
+
+```bash
+gh pr merge --squash --delete-branch
+git checkout main && git pull
+```
+
+## Proibido
+
+- Trabalhar issue sem labels `type:*` + natureza
+- Branch sem número da issue, ou uma branch cobrindo várias issues
+- PR sem `closes #N` / `Resolve #N`
+- Push direto em `main` (fluxo é sempre via PR)
