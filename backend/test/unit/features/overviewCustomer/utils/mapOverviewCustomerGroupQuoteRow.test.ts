@@ -37,6 +37,7 @@ describe("mapOverviewCustomerGroupQuoteRow", () => {
     const row = mapOverviewCustomerGroupQuoteRow(line({ sitped: 9 }), {
       sellerName: "Ana",
       lossReason: null,
+      openCustomerCode: 200,
     });
 
     assert.deepStrictEqual(row, {
@@ -61,6 +62,8 @@ describe("mapOverviewCustomerGroupQuoteRow", () => {
       sellerName: "Ana",
       lossReason: null,
       otherCustomer: false,
+      customerTradeName: null,
+      repShortName: "Rep A",
     });
   });
 
@@ -68,6 +71,7 @@ describe("mapOverviewCustomerGroupQuoteRow", () => {
     const row = mapOverviewCustomerGroupQuoteRow(line({ sitped: 5 }), {
       sellerName: null,
       lossReason: "Preço",
+      openCustomerCode: 200,
     });
 
     assert.equal(row.outcome, "perdida");
@@ -75,5 +79,28 @@ describe("mapOverviewCustomerGroupQuoteRow", () => {
     assert.equal(row.lossReason, "Preço");
     assert.equal(row.sellerName, null);
     assert.equal(row.otherCustomer, false);
+    assert.equal(row.customerTradeName, null);
+  });
+
+  it("marks other-customer rows with trade name and otherCustomer true", () => {
+    const row = mapOverviewCustomerGroupQuoteRow(
+      line({
+        sitped: 9,
+        codcli: 999,
+        apecli: "Outro Cliente",
+        aperep: "Rep B",
+      }),
+      {
+        sellerName: "Bruno",
+        lossReason: null,
+        openCustomerCode: 200,
+      },
+    );
+
+    assert.equal(row.otherCustomer, true);
+    assert.equal(row.customerTradeName, "Outro Cliente");
+    assert.equal(row.repShortName, "Rep B");
+    assert.equal(row.codRep, 10);
+    assert.equal(row.sellerName, "Bruno");
   });
 });

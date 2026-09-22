@@ -25,7 +25,7 @@ type OverviewCustomerGroupAnalysisSectionProps = {
 
 const SECTION_TITLE = "Análise comercial por grupo";
 const SECTION_DESCRIPTION =
-  "Selecione um grupo ABC para ver ganhos e perdidos nos cards abaixo.";
+  "Selecione um grupo ABC e um produto para ver as cotações dos últimos 12 dias.";
 
 export function OverviewCustomerGroupAnalysisSection({
   customerCode,

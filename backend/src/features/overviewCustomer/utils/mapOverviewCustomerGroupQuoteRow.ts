@@ -23,18 +23,23 @@ export type OverviewCustomerGroupQuoteRow = {
   codRep: number;
   sellerName: string | null;
   lossReason: string | null;
-  otherCustomer: false;
+  otherCustomer: boolean;
+  customerTradeName: string | null;
+  repShortName: string | null;
 };
 
 export type MapOverviewCustomerGroupQuoteRowExtras = {
   sellerName: string | null;
   lossReason: string | null;
+  openCustomerCode: number;
 };
 
 export function mapOverviewCustomerGroupQuoteRow(
   line: OverviewCustomerGroupQuoteSeniorLine,
   extras: MapOverviewCustomerGroupQuoteRowExtras,
 ): OverviewCustomerGroupQuoteRow {
+  const otherCustomer = line.codcli !== extras.openCustomerCode;
+
   return {
     orderNumber: line.numped,
     issuedAt: line.datemi,
@@ -56,6 +61,8 @@ export function mapOverviewCustomerGroupQuoteRow(
     codRep: line.codRep,
     sellerName: extras.sellerName,
     lossReason: extras.lossReason,
-    otherCustomer: false,
+    otherCustomer,
+    customerTradeName: otherCustomer ? line.apecli : null,
+    repShortName: line.aperep,
   };
 }

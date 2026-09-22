@@ -242,11 +242,13 @@ export class OverviewCustomerDetailController {
       }
 
       const productCode = parseOptionalProductCode(req.query.codPro);
+      const reveal = parseOptionalReveal(req.query.reveal);
 
       const result = await this.deps.getGroupQuotes.execute({
         customerCode: rawCustomerCode,
         grupoCodigo,
         productCode,
+        reveal,
         role,
         codRep: req.user?.codRep,
       });
@@ -349,6 +351,16 @@ function parseOptionalProductCode(
   }
   const trimmed = rawProductCode.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function parseOptionalReveal(
+  rawReveal: Request["query"]["reveal"],
+): boolean {
+  if (typeof rawReveal !== "string") {
+    return false;
+  }
+  const normalized = rawReveal.trim().toLowerCase();
+  return normalized === "true" || normalized === "1";
 }
 
 function parsePage(rawPage: Request["query"]["page"]): number {

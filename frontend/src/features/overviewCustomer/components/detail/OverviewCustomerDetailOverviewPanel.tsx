@@ -7,8 +7,8 @@ import { OverviewCustomerMarginRangeCard } from "./OverviewCustomerMarginRangeCa
 import { OverviewCustomerMonthlyEvolutionChart } from "./OverviewCustomerMonthlyEvolutionChart";
 import { OverviewCustomerRecentOrdersTeaser } from "./OverviewCustomerRecentOrdersTeaser";
 import type { OverviewCustomerDetailTabId } from "./overviewCustomerDetailTabs.constants";
-import { OverviewCustomerGroupAnalysisCards } from "./OverviewCustomerGroupAnalysisCards";
 import { OverviewCustomerGroupAnalysisSection } from "./OverviewCustomerGroupAnalysisSection";
+import { OverviewCustomerGroupQuotesPanel } from "./OverviewCustomerGroupQuotesPanel";
 
 type OverviewCustomerDetailOverviewPanelProps = {
   customerCode: number;
@@ -20,6 +20,7 @@ type OverviewCustomerDetailOverviewPanelProps = {
   isProductsLoading: boolean;
   isProductsError: boolean;
   invoicedOrders: OverviewCustomerRecentInvoicedOrder[];
+  invoicedCountLast12Months: number | null;
   isMotionLoading: boolean;
   isMotionError: boolean;
   onViewAllMotion: () => void;
@@ -35,6 +36,7 @@ export function OverviewCustomerDetailOverviewPanel({
   isProductsLoading,
   isProductsError,
   invoicedOrders,
+  invoicedCountLast12Months,
   isMotionLoading,
   isMotionError,
   onViewAllMotion,
@@ -67,17 +69,16 @@ export function OverviewCustomerDetailOverviewPanel({
       </div>
       <OverviewCustomerRecentOrdersTeaser
         invoicedOrders={invoicedOrders}
+        invoicedCountLast12Months={invoicedCountLast12Months}
         isLoading={isMotionLoading}
         isError={isMotionError}
         onViewAll={onViewAllMotion}
       />
       <OverviewCustomerGroupAnalysisSection customerCode={customerCode} activeTab={activeTab}>
-        {({ grupoCodigo, grupoDescricao, revenueShare }) => (
-          <OverviewCustomerGroupAnalysisCards
+        {({ grupoCodigo }) => (
+          <OverviewCustomerGroupQuotesPanel
             customerCode={customerCode}
             grupoCodigo={grupoCodigo}
-            grupoDescricao={grupoDescricao}
-            revenueShare={revenueShare}
           />
         )}
       </OverviewCustomerGroupAnalysisSection>

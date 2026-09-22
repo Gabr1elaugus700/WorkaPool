@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { Role } from "@prisma/client";
 import { AppError } from "../../../../../src/utils/AppError";
+import { CachedOverviewCustomerGroupQuotesReader } from "../../../../../src/features/overviewCustomer/sync/CachedOverviewCustomerGroupQuotesReader";
 import type { OverviewCustomerGroupQuoteSeniorLine } from "../../../../../src/features/overviewCustomer/sync/OverviewCustomerGroupQuotesSeniorQuery";
 import { GetOverviewCustomerGroupQuotesUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerGroupQuotesUseCase";
 import { InMemoryOverviewCustomerSyncStore } from "../../../../helpers/InMemoryOverviewCustomerSyncStore";
@@ -325,5 +326,115 @@ describe("GetOverviewCustomerGroupQuotesUseCase", () => {
         return true;
       },
     );
+  });
+
+  it("reveals other customers for ADMIN without an extra Sapiens call", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    seedStore(store);
+    const inner = new FakeQuotesReader([
+      line({ numped: 10, codcli: 123, codpro: "P001", apecli: "Cliente A" }),
+      line({
+        numped: 20,
+        codcli: 999,
+        codpro: "P001",
+        apecli: "Cliente B",
+        codRep: 20,
+        aperep: "Rep B",
+      }),
+    ]);
+    const reader = new CachedOverviewCustomerGroupQuotesReader(inner);
+    const useCase = new GetOverviewCustomerGroupQuotesUseCase(
+      store,
+      reader,
+      new FakeOrderLoss(),
+      new FakeSellers({ 10: "Ana", 20: "Bruno" }),
+    );
+
+    const withoutReveal = await useCase.execute({
+      customerCode: 123,
+      grupoCodigo: "G030",
+      productCode: "P001",
+      role: Role.ADMIN,
+      reveal: false,
+    });
+    const withReveal = await useCase.execute({
+      customerCode: 123,
+      grupoCodigo: "G030",
+      productCode: "P001",
+      role: Role.ADMIN,
+      reveal: true,
+    });
+
+    assert.equal(withoutReveal.rows.length, 1);
+    assert.equal(withoutReveal.rows[0]?.otherCustomer, false);
+    assert.equal(withReveal.rows.length, 2);
+    assert.equal(inner.callCount, 1);
+    const other = withReveal.rows.find((row) => row.otherCustomer);
+    assert.ok(other);
+    assert.equal(other.customerTradeName, "Cliente B");
+    assert.equal(other.sellerName, "Bruno");
+    assert.equal(other.repShortName, "Rep B");
+  });
+
+  it("reveals other customers for GERENTE_DPTO from the same cache", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    seedStore(store);
+    const inner = new FakeQuotesReader([
+      line({ numped: 10, codcli: 123, codpro: "P001" }),
+      line({ numped: 20, codcli: 999, codpro: "P001", apecli: "Outro" }),
+    ]);
+    const reader = new CachedOverviewCustomerGroupQuotesReader(inner);
+    const useCase = new GetOverviewCustomerGroupQuotesUseCase(
+      store,
+      reader,
+      new FakeOrderLoss(),
+      new FakeSellers(),
+    );
+
+    const first = await useCase.execute({
+      customerCode: 123,
+      grupoCodigo: "G030",
+      productCode: "P001",
+      role: Role.GERENTE_DPTO,
+    });
+    const revealed = await useCase.execute({
+      customerCode: 123,
+      grupoCodigo: "G030",
+      productCode: "P001",
+      role: Role.GERENTE_DPTO,
+      reveal: true,
+    });
+
+    assert.equal(first.rows.length, 1);
+    assert.equal(revealed.rows.length, 2);
+    assert.equal(inner.callCount, 1);
+  });
+
+  it("ignores reveal for VENDAS and returns only the open customer", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    seedStore(store);
+    const reader = new FakeQuotesReader([
+      line({ numped: 10, codcli: 123, codpro: "P001" }),
+      line({ numped: 20, codcli: 999, codpro: "P001", apecli: "Outro" }),
+    ]);
+    const useCase = new GetOverviewCustomerGroupQuotesUseCase(
+      store,
+      reader,
+      new FakeOrderLoss(),
+      new FakeSellers(),
+    );
+
+    const result = await useCase.execute({
+      customerCode: 123,
+      grupoCodigo: "G030",
+      productCode: "P001",
+      role: Role.VENDAS,
+      codRep: 10,
+      reveal: true,
+    });
+
+    assert.equal(result.rows.length, 1);
+    assert.equal(result.rows[0]?.otherCustomer, false);
+    assert.equal(reader.callCount, 1);
   });
 });
