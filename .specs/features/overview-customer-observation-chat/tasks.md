@@ -109,11 +109,11 @@ T16 → T17
 
 **Done when**:
 
-- [ ] `findRecentPage(customerCode, limit=50, before?)` returns newest page ascending
-- [ ] `create(...)` persists observation with `editedAt: null`
-- [ ] `updateByAuthor(...)` updates body and sets `editedAt`
-- [ ] Unit tests: 0 msgs, 51 msgs (only 50), cursor `before`, tie-break by `id`
-- [ ] Gate passes: quick backend observation tests
+- [x] `findRecentPage(customerCode, limit=50, before?)` returns newest page ascending
+- [x] `create(...)` persists observation with `editedAt: null`
+- [x] `updateByAuthor(...)` updates body and sets `editedAt`
+- [x] Unit tests: 0 msgs, 51 msgs (only 50), cursor `before`, tie-break by `id`
+- [x] Gate passes: quick backend observation tests
 
 **Tests**: unit
 **Gate**: quick
