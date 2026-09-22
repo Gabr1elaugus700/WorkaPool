@@ -28,6 +28,11 @@ export function createOverviewCustomerDetailRoutes(
     controller.getGroupAnaliseByCustomerCode,
   );
   router.get(
+    "/:clienteId/grupos/:grupoCodigo/cotacoes",
+    authMiddleware,
+    controller.getGroupQuotesByCustomerCode,
+  );
+  router.get(
     "/:clienteId/grupos",
     authMiddleware,
     controller.getAbcGroupsByCustomerCode,
