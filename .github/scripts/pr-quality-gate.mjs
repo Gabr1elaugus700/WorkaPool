@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Gates simples para PRs:
- * - barra se o PR adiciona mais de MAX_ADDED_LINES linhas (arquivos de teste excluídos)
+ * - barra se o PR adiciona mais de MAX_ADDED_LINES linhas (testes e .md excluídos)
  * - barra se a quantidade de testes (chamadas test/it) diminuiu vs a base
  * - reporta cobertura se coverage-summary.json existir
  */
@@ -39,9 +39,13 @@ function isTestPath(filePath) {
   return /\.(test|spec)\.[cm]?[jt]sx?$/i.test(normalized);
 }
 
+function isMarkdownPath(filePath) {
+  return /\.md$/i.test(filePath.replaceAll("\\", "/"));
+}
+
 function isExcludedFromSizeGate(filePath) {
-  // Só arquivos de teste ficam de fora do limite de 300 linhas.
-  return isTestPath(filePath);
+  // Testes e Markdown ficam de fora do limite de 300 linhas.
+  return isTestPath(filePath) || isMarkdownPath(filePath);
 }
 
 function countAddedNonTestLines() {
