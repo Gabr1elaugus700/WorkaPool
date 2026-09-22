@@ -176,6 +176,11 @@ export function OverviewCustomerDetailView() {
               isProductsLoading={purchasedProductsQuery.isLoading}
               isProductsError={purchasedProductsQuery.isError}
               invoicedOrders={recentInvoicedOrders}
+              invoicedCountLast12Months={
+                recentCommercialMotionQuery.data?.invoicedCountLast12Months ??
+                detail.customer.invoicedCountLast12Months ??
+                null
+              }
               isMotionLoading={recentCommercialMotionQuery.isLoading}
               isMotionError={recentCommercialMotionQuery.isError}
               onViewAllMotion={() =>

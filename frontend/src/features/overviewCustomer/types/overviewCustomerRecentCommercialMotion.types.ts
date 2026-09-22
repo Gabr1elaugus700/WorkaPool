@@ -1,8 +1,22 @@
+export type OverviewCustomerRecentInvoicedOrderItem = {
+  productCode: string;
+  productName: string;
+  quantity: number;
+  volume: number;
+  revenue: number;
+  unitPrice: number;
+  marginPercent: number | null;
+};
+
 export type OverviewCustomerRecentInvoicedOrder = {
   orderNumber: number;
   occurredAt: string;
   codRep: number | null;
   branchCode: number | null;
+  revenue: number;
+  volume: number;
+  marginPercent: number | null;
+  items: OverviewCustomerRecentInvoicedOrderItem[];
 };
 
 export type OverviewCustomerRecentLostOrder = {

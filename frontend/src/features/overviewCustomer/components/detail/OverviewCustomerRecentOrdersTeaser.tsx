@@ -1,33 +1,44 @@
 import { Button } from "@/components/ui/button";
+import { CircleCheck } from "lucide-react";
 import React from "react";
 import type { OverviewCustomerRecentInvoicedOrder } from "../../types/overviewCustomerRecentCommercialMotion.types";
+import { formatOverviewNumber } from "../../utils/overviewCustomerFormatters";
 import { OverviewCustomerSectionCard } from "../OverviewCustomerSectionCard";
 import { OverviewCustomerStateMessage } from "../OverviewCustomerStateMessage";
+import { OverviewCustomerRecentInvoicedOrdersList } from "./OverviewCustomerRecentInvoicedOrdersList";
 import { OverviewCustomerSectionCardSkeleton } from "./OverviewCustomerSectionCardSkeleton";
 
 type OverviewCustomerRecentOrdersTeaserProps = {
   invoicedOrders: OverviewCustomerRecentInvoicedOrder[];
+  invoicedCountLast12Months: number | null;
   isLoading: boolean;
   isError: boolean;
   onViewAll: () => void;
 };
 
-const TEASER_LIMIT = 3;
+const TEASER_LIMIT = 5;
 
 export function OverviewCustomerRecentOrdersTeaser({
   invoicedOrders,
+  invoicedCountLast12Months,
   isLoading,
   isError,
   onViewAll,
 }: OverviewCustomerRecentOrdersTeaserProps) {
   const title = "Pedidos faturados recentes";
+  const description = "Últimas vitórias comerciais com valor, volume, margem e itens.";
+  const leading = (
+    <span className="flex size-8 items-center justify-center rounded-full bg-primary/15 text-primary">
+      <CircleCheck aria-hidden="true" className="size-4" />
+    </span>
+  );
 
   if (isLoading) {
     return (
       <OverviewCustomerSectionCardSkeleton
         title={title}
-        description="Últimas vitórias comerciais antes de abrir a movimentação completa."
-        skeletonClassName="h-20"
+        description={description}
+        skeletonClassName="h-28"
         loadingLabel="Carregando pedidos faturados recentes deste cliente."
       />
     );
@@ -35,7 +46,13 @@ export function OverviewCustomerRecentOrdersTeaser({
 
   if (isError) {
     return (
-      <OverviewCustomerSectionCard title={title} className="border-muted" contentClassName="py-1">
+      <OverviewCustomerSectionCard
+        title={title}
+        description={description}
+        leading={leading}
+        className="border-muted"
+        contentClassName="py-1"
+      >
         <OverviewCustomerStateMessage
           message="Não foi possível carregar pedidos faturados recentes. Tente novamente."
           tone="destructive"
@@ -44,29 +61,52 @@ export function OverviewCustomerRecentOrdersTeaser({
     );
   }
 
-  const previewOrders = invoicedOrders.slice(0, TEASER_LIMIT);
+  const visibleCount = Math.min(invoicedOrders.length, TEASER_LIMIT);
+  const countLabel =
+    invoicedCountLast12Months != null
+      ? `Total (12 meses): ${formatOverviewNumber(invoicedCountLast12Months)} faturas`
+      : null;
+  const shownLabel =
+    visibleCount === 1 ? "Exibindo 1 fatura recente" : `Exibindo ${visibleCount} faturas recentes`;
+  const ofTotalLabel =
+    invoicedCountLast12Months != null
+      ? ` de ${formatOverviewNumber(invoicedCountLast12Months)} nos últimos 12 meses.`
+      : ".";
 
   return (
     <OverviewCustomerSectionCard
       title={title}
-      description="Últimas vitórias comerciais antes de abrir a movimentação completa."
-      className="border-muted"
+      description={description}
+      leading={leading}
+      trailing={
+        countLabel ? (
+          <p className="text-xs font-medium tabular-nums text-muted-foreground">{countLabel}</p>
+        ) : null
+      }
+      className="border-primary/20"
       contentClassName="space-y-3"
     >
-      {previewOrders.length === 0 ? (
-        <OverviewCustomerStateMessage message="Nenhum pedido faturado recente para este cliente." />
+      <OverviewCustomerRecentInvoicedOrdersList
+        rows={invoicedOrders}
+        isLoading={false}
+        isError={false}
+        limit={TEASER_LIMIT}
+      />
+      {visibleCount > 0 ? (
+        <div className="flex flex-col gap-2 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-muted-foreground">
+            {shownLabel}
+            {ofTotalLabel}
+          </p>
+          <Button type="button" variant="link" size="sm" className="h-auto px-0" onClick={onViewAll}>
+            Ver movimentação completa
+          </Button>
+        </div>
       ) : (
-        <ul className="space-y-1 text-sm">
-          {previewOrders.map((order) => (
-            <li key={`teaser-invoiced-${order.orderNumber}-${order.occurredAt}`} className="font-medium">
-              #{order.orderNumber} · {order.occurredAt}
-            </li>
-          ))}
-        </ul>
+        <Button type="button" variant="link" size="sm" className="h-auto px-0" onClick={onViewAll}>
+          Ver movimentação completa
+        </Button>
       )}
-      <Button type="button" variant="outline" size="sm" onClick={onViewAll}>
-        Ver movimentação completa
-      </Button>
     </OverviewCustomerSectionCard>
   );
 }
