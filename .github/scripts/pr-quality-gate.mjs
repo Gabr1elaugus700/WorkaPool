@@ -138,7 +138,7 @@ const lines = [
   `| Métrica | Base | PR |`,
   `| --- | ---: | ---: |`,
   `| Testes (test/it) | ${baseTests} | ${headTests} |`,
-  `| Linhas adicionadas (sem testes) | — | ${size.added} / ${MAX_ADDED_LINES} |`,
+  `| Linhas adicionadas (sem testes/md) | — | ${size.added} / ${MAX_ADDED_LINES} |`,
 ];
 
 if (backendCoverage) {
@@ -166,7 +166,7 @@ const findings = [];
 
 if (size.added > MAX_ADDED_LINES) {
   findings.push(
-    `PR com ${size.added} linhas adicionadas fora de testes (limite ${MAX_ADDED_LINES}).`,
+    `PR com ${size.added} linhas adicionadas fora de testes/Markdown (limite ${MAX_ADDED_LINES}).`,
   );
 }
 
