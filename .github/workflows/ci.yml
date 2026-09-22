@@ -42,10 +42,13 @@ jobs:
         working-directory: frontend
         run: npm run lint
 
-      - name: Typecheck
-        run: |
-          npm exec --prefix backend -- tsc --noEmit --project tsconfig.json
-          npm exec --prefix frontend -- tsc --noEmit --project tsconfig.app.json
+      - name: Typecheck backend
+        working-directory: backend
+        run: npx tsc --noEmit --project tsconfig.json
+
+      - name: Typecheck frontend
+        working-directory: frontend
+        run: npx tsc --noEmit --project tsconfig.app.json
 
       - name: Test with coverage
         run: |
