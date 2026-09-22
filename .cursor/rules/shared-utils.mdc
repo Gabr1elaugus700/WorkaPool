@@ -1,0 +1,32 @@
+---
+description: Reutilizar helpers existentes e colocar formatações/utils compartilháveis em utils
+alwaysApply: true
+---
+
+# Utils compartilhados
+
+Antes de criar formatação, helper de data/número, ou função pura de apresentação:
+
+1. **Procure o existente.** Busque em `frontend/src/utils/`, `backend/src/utils/` e na pasta `utils/` da feature. Reutilize o que já cobre o caso.
+2. **Decida o destino pela reutilização.** Se outro componente, feature ou view puder usar no futuro (datas, percentuais, dias relativos, moeda, iniciais, peso), coloque em:
+   - Frontend: [`frontend/src/utils/`](frontend/src/utils/)
+   - Backend: [`backend/src/utils/`](backend/src/utils/)
+3. **Só deixe na feature** (`features/<domínio>/utils/`) quando a função depender de tipo, regra ou vocabulário exclusivo daquele domínio.
+
+```typescript
+// ❌ BAD — formatador genérico preso na feature
+// frontend/src/features/overviewCustomer/utils/overviewCustomerHero.utils.ts
+export function formatIsoDateLabel(value: string | null): string { ... }
+
+// ✅ GOOD — reutilizável por qualquer view
+// frontend/src/utils/formatDate.ts
+export function formatIsoDateLabel(value: string | null): string { ... }
+```
+
+```typescript
+// ✅ OK na feature — só faz sentido no domínio
+// frontend/src/features/overviewCustomer/utils/overviewCustomerIdentity.utils.ts
+export function formatOverviewBranchIndicator(branch: BranchIndicator): string { ... }
+```
+
+Não duplique `Intl.NumberFormat` / `DateTimeFormat` pt-BR em cada feature. Importe de `utils` compartilhado ou extraia para lá no primeiro segundo uso.

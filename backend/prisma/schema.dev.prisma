@@ -552,3 +552,105 @@ model LossReason {
   @@index([code])
   @@map("loss_reasons")
 }
+
+enum OverviewSyncRunStatus {
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+enum OverviewSyncStepStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+model OverviewCustomerSyncRun {
+  id           String                 @id @default(uuid())
+  status       OverviewSyncRunStatus
+  startedAt    DateTime
+  finishedAt   DateTime?
+  errorSummary String?                @db.Text
+  steps        OverviewCustomerSyncStep[]
+
+  @@index([status])
+  @@map("overview_customer_sync_run")
+}
+
+model OverviewCustomerSyncStep {
+  id           String                  @id @default(uuid())
+  runId        String
+  run          OverviewCustomerSyncRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  name         String
+  status       OverviewSyncStepStatus
+  attemptCount Int                     @default(0)
+  lastError    String?                 @db.Text
+  startedAt    DateTime?
+  finishedAt   DateTime?
+
+  @@unique([runId, name])
+  @@index([runId])
+  @@map("overview_customer_sync_step")
+}
+
+model OverviewCustomerSnapshot {
+  id          String   @id @default(uuid())
+  publishedAt DateTime
+  payload     Json
+
+  @@map("overview_customer_snapshot")
+}
+
+model OverviewCustomerSyncMeta {
+  id                   Int       @id @default(1)
+  lastSuccessfulSyncAt DateTime?
+  servedSnapshotId     String?
+
+  @@map("overview_customer_sync_meta")
+}
+
+enum GrpproSyncRunStatus {
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+model ProdutoGrupoMap {
+  grupoCodigo    String   @map("grupo_codigo") @db.VarChar(10)
+  grupoDescricao String   @map("grupo_descricao") @db.VarChar(100)
+  produtoCodigo  String   @id @map("produto_codigo") @db.VarChar(10)
+  syncedAt       DateTime @map("synced_at")
+
+  @@index([grupoCodigo])
+  @@map("produto_grupo_map")
+}
+
+model ProdutoGrupoMapStaging {
+  grupoCodigo    String   @map("grupo_codigo") @db.VarChar(10)
+  grupoDescricao String   @map("grupo_descricao") @db.VarChar(100)
+  produtoCodigo  String   @id @map("produto_codigo") @db.VarChar(10)
+  syncedAt       DateTime @map("synced_at")
+
+  @@map("produto_grupo_map_staging")
+}
+
+model GrpproSyncRun {
+  id         String              @id @default(uuid())
+  status     GrpproSyncRunStatus
+  startedAt  DateTime
+  finishedAt DateTime?
+  rowCount   Int?
+  error      String?             @db.Text
+
+  @@index([status])
+  @@map("grppro_sync_run")
+}
+
+model GrpproSyncMeta {
+  id                   Int       @id @default(1)
+  lastSuccessfulSyncAt DateTime?
+  lastRowCount         Int?
+
+  @@map("grppro_sync_meta")
+}
