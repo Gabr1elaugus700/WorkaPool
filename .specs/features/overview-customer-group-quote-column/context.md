@@ -1,4 +1,4 @@
-# Coluna de cotações por grupo — Context
+# Coluna de cotações por produto — Context
 
 **Gathered:** 2026-09-21
 **Spec:** `.specs/features/overview-customer-group-quote-column/spec.md`
@@ -8,54 +8,52 @@
 
 ## Feature Boundary
 
-Na ficha do cliente, a seção “Análise comercial por grupo” continua com os chips de grupo ABC. No lugar dos dois cards, uma coluna lista cada item daquele grupo nas últimas 14 dias, de todos os clientes, ordenada pela data de emissão. Verde é nota faturada; vermelho é cotação sem fechamento. Vendedor vê só os próprios pedidos. Gestor e admin veem também os outros, em tom apagado, com badge de resultado e badge azul do vendedor. A página futura de análise de produto fica de fora; o componente da coluna não depende da ficha.
+Na ficha, os chips de grupo continuam. A leitura no Sapiens é uma vez por grupo, na janela de 12 dias, `sitped` 9 e 5, item a item. O backend calcula as datas, guarda o resultado e filtra o cliente aberto e o `codPro`. A coluna mostra carregamento nessa primeira busca. Vendedor não revela outros clientes. Admin e gestor revelam outros clientes do mesmo produto a partir do cache, em tom apagado, com fantasia e badges.
 
 ---
 
 ## Implementation Decisions
 
-### Entrada
+### Consulta
 
-- O filtro visual é o chip de grupo de produto que já existe.
-- Não há busca por código de produto nesta seção.
-- A lista não é filtrada pelo cliente aberto. O cliente só autoriza a ficha e define quais grupos aparecem nos chips.
+- Origem: `e120ped` + `e120ipd` + representante + cliente + `poolbi.dbo.grppro`.
+- População: `ped.sitped IN (9, 5)` e `grp.codgrp = @grpPro`.
+- `sitped = 9` é ganha; `sitped = 5` é perdida. A data das duas é `ped.datemi`.
+- Janela não usa `GETDATE` nem `DATEADD`. O backend manda `@dataInicio` (hoje menos 12 dias) e `@dataFimExclusiva` (amanhã), em `America/Sao_Paulo`.
+- Cliente e `codPro` não entram no SQL.
 
-### Grão da linha
+### Cache e tela
 
-- Uma linha é um item do grupo dentro de um pedido.
-- Itens do mesmo pedido não são somados. O mesmo número de pedido pode aparecer mais de uma vez.
-- O título da linha é só o número do pedido.
-- Valor, quantidade, preço unitário e margem são os daquele item.
-- Nota fiscal, código do produto e nome do cliente não aparecem na linha.
+- Cache no backend, chave grupo + início da janela, até mudar o dia em São Paulo.
+- Trocar produto, voltar num produto do cliente ou revelar não consulta o Sapiens de novo.
+- Falha do Sapiens não é gravada no cache.
+- A primeira leitura mostra carregamento, não a mensagem de lista vazia.
 
-### Verde, vermelho e outros vendedores
+### Recorte que a pessoa vê
 
-- Verde: nota faturada. Vermelho: `sitped = 5`.
-- Os dois resultados entram na mesma coluna, ordenados pela data de emissão.
-- Pedido do próprio vendedor: cor cheia, sem badges.
-- Pedido de outro vendedor: linha apagada; badge verde `Ganha` ou vermelho `Perdida`; badge azul com `codRep` vindo do SQL e nome vindo de `User.name` no WorkaPool.
-- Sem nome de usuário, o badge azul mostra só o `codRep`.
+- Padrão: cliente aberto + produto selecionado, cor cheia, sem badges.
+- Revelar: acrescenta outros clientes do mesmo `codPro`, linha apagada, fantasia, badge `Ganha` ou `Perdida`, badge azul `codRep` + nome do usuário (ou `aperep` se não houver usuário).
+- O seletor de produto lista só os `codPro` desse cliente dentro da leitura do grupo. O menor código começa selecionado.
+- Cada linha mostra os números do item que o SQL traz: quantidade, preço, valor, margem, IPI, ICMS, custo, frete, transportadora e frete incluso.
 
 ### Agent's Discretion
 
-- Tratamento visual exato de “apagado” (borda, fundo, texto), desde que a linha própria continue verde ou vermelha saturada e os badges do outro vendedor continuem verde, vermelho e azul saturados.
-- Se a leitura de usuários falhar, a lista de cotações segue e o badge azul fica só com o `codRep`.
-- Empate de vários usuários no mesmo `codRep`: nome não vazio em ordem alfabética, depois menor id.
-- `ownedByViewer` falso quando o usuário logado tem `codRep` 0.
-- Falha do Sapiens derruba a coluna inteira, com retry, sem lista parcial e sem voltar ao recorte salvo.
+- Onde o cache mora no processo, desde que a chave e a validade sejam as da spec.
+- Tratamento visual de “apagado”, com badges saturados.
+- Layout dos campos extras na linha, sem omitir nenhum deles.
 
 ### Declined / Undiscussed Gray Areas → Assumptions
 
-- Janela, universo da empresa, corte de papel no servidor, motivo da perda e números do item estão na tabela de assumptions da spec.
-- Participação de receita do grupo não entra na coluna.
+- Motivo da perda continua vindo do order loss no WorkaPool, sem segunda ida ao Sapiens.
+- Segundo clique no revelar só oculta o filtro.
 
 ---
 
 ## Specific References
 
-- Cards atuais: “Ganhos: Notas Faturadas” e “Perdidos: Cotações Sem Fechamento”, em `OverviewCustomerGroupAnalysisCards`.
-- Verde e vermelho saturados seguem o padrão desses cards para o pedido próprio.
-- Badge azul é específico de pedido de outro vendedor, ao lado do badge de resultado.
+- SQL alvo do usuário, com a janela trocada por parâmetros.
+- Botão: `Revelar cotações de outros vendedores` / `Ocultar cotações de outros vendedores`.
+- Cards a tirar do grid: “Ganhos: Notas Faturadas” e “Perdidos: Cotações Sem Fechamento”.
 
 ---
 
