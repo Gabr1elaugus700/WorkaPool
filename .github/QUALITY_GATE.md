@@ -5,7 +5,7 @@ O workflow [`ci.yml`](./workflows/ci.yml) roda em cada PR direcionado à `main`.
 ## O que o CI faz
 
 1. Conta linhas **adicionadas** no diff `base...head` (arquivos de teste excluídos) e falha se passar de **300**.
-2. Instala dependências de `frontend/` e `backend/`.
+2. Instala dependências de `frontend/` e `backend/` e roda `prisma generate` no backend (client necessário para testes/typecheck com `NODE_ENV=test`).
 3. Roda ESLint (frontend), TypeScript `--noEmit` e `npm run build` em ambos os pacotes (inclui `vite build` no frontend — smoke test no runner do GitHub, sem deploy).
 4. Roda testes unitários com cobertura (`test:coverage`) no PR.
 5. Compara a quantidade de testes unitários (`# tests` do runner) entre a base e o head; falha se algum pacote tiver menos testes que a base.
@@ -25,7 +25,7 @@ O PR falha quando:
 
 Cobertura percentual é **reportada**, mas nesta versão **não** barra queda de %.
 
-Fora deste CI: Prisma validate/generate/migrate, Postgres/`test:integration`, CodeQL, npm audit, Issues automáticas.
+Fora deste CI: Prisma validate/migrate, Postgres/`test:integration`, CodeQL, npm audit, Issues automáticas.
 
 ## Onde consultar
 

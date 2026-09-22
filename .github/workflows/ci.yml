@@ -60,6 +60,10 @@ jobs:
           npm ci --prefix frontend --no-audit --fund=false
           npm ci --prefix backend --no-audit --fund=false
 
+      - name: Generate Prisma client (base)
+        working-directory: backend
+        run: npx prisma generate --schema=prisma/schema.prisma
+
       - name: Collect base test counts
         run: node "$RUNNER_TEMP/ci-gates.mjs" collect-tests --output "$RUNNER_TEMP/base-tests.json"
 
@@ -74,6 +78,10 @@ jobs:
         run: |
           npm ci --prefix frontend --no-audit --fund=false
           npm ci --prefix backend --no-audit --fund=false
+
+      - name: Generate Prisma client (PR)
+        working-directory: backend
+        run: npx prisma generate --schema=prisma/schema.prisma
 
       - name: Lint frontend
         working-directory: frontend
