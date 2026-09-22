@@ -1,6 +1,6 @@
+import React from "react";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { OverviewCustomerKpiGrid } from "./OverviewCustomerKpiGrid";
 
@@ -16,6 +16,8 @@ const summaryFixture = {
   marginPercentWeightedByRevenue: 21.5,
   purchaseFrequencyDays: 27.3,
   daysSinceLastPurchase: 9,
+  maxInvoicedOrderMarginPercent: 35.2,
+  minInvoicedOrderMarginPercent: 8.1,
 };
 
 describe("OverviewCustomerKpiGrid", () => {

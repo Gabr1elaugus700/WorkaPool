@@ -1,5 +1,4 @@
 import { Progress } from "@/components/ui/progress";
-import React from "react";
 import { formatOverviewPercent } from "../../utils/overviewCustomerFormatters";
 import { computeMarginRange } from "../../utils/overviewCustomerAnalytics.utils";
 import { OverviewCustomerSectionCard } from "../OverviewCustomerSectionCard";

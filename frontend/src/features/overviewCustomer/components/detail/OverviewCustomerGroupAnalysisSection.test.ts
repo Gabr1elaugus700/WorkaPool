@@ -1,7 +1,7 @@
+import React from "react";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { OverviewCustomerAbcGroupsResponse } from "../../types/overviewCustomerAbcGroups.types";
 import { OverviewCustomerGroupAnalysisSection } from "./OverviewCustomerGroupAnalysisSection";
@@ -24,7 +24,7 @@ function createQueryClient(): QueryClient {
         retry: false,
         staleTime: Infinity,
         gcTime: Infinity,
-        networkMode: "offline",
+        networkMode: "always",
         refetchOnMount: false,
         refetchOnReconnect: false,
         refetchOnWindowFocus: false,

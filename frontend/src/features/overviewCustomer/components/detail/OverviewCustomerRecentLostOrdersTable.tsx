@@ -7,7 +7,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import React from "react";
 import type { OverviewCustomerRecentLostOrder } from "../../types/overviewCustomerRecentCommercialMotion.types";
 import { OverviewCustomerStateMessage } from "../OverviewCustomerStateMessage";
 import { OverviewCustomerTableSkeleton } from "./OverviewCustomerTableSkeleton";

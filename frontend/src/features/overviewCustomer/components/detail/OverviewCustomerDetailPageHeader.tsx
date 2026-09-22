@@ -5,7 +5,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import React from "react";
 import { ArrowLeft, FileDown } from "lucide-react";
 import { Link } from "react-router-dom";
 

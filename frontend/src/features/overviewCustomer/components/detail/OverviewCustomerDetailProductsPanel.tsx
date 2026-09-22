@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import type { OverviewCustomerPurchasedProduct } from "../../types/overviewCustomerPurchasedProducts.types";
 import { OverviewCustomerSectionCard } from "../OverviewCustomerSectionCard";
 import { OverviewCustomerStateMessage } from "../OverviewCustomerStateMessage";

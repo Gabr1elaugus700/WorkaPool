@@ -1,5 +1,4 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import React from "react";
 
 type OverviewCustomerTableSkeletonProps = {
   rowCount?: number;

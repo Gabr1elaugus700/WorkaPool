@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import React from "react";
 import type { OverviewCustomerAbcGroup } from "../../types/overviewCustomerAbcGroups.types";
 
 type OverviewCustomerGroupAnalysisChipsProps = {

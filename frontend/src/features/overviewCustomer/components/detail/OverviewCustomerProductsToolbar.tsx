@@ -1,5 +1,4 @@
 import { Input } from "@/components/ui/input";
-import React from "react";
 import { formatOverviewNumber } from "../../utils/overviewCustomerFormatters";
 
 type OverviewCustomerProductsToolbarProps = {

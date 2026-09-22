@@ -1,5 +1,4 @@
 import { Progress } from "@/components/ui/progress";
-import React from "react";
 import type { OverviewCustomerPurchasedProduct } from "../../types/overviewCustomerPurchasedProducts.types";
 import { formatOverviewNumber } from "../../utils/overviewCustomerFormatters";
 import { buildAbcConcentrationRows } from "../../utils/overviewCustomerAnalytics.utils";

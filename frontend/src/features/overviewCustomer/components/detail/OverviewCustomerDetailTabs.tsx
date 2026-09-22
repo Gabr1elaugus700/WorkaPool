@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import React, { type ReactNode } from "react";
+import { type ReactNode } from "react";
 import {
   OVERVIEW_CUSTOMER_DETAIL_TABS,
   type OverviewCustomerDetailTabId,

@@ -1,6 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import React from "react";
 import { OverviewCustomerSectionCard } from "../OverviewCustomerSectionCard";
 
 type OverviewCustomerSectionCardSkeletonProps = {

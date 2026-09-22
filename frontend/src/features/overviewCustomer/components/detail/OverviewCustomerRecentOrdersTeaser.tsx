@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import React from "react";
 import type { OverviewCustomerRecentInvoicedOrder } from "../../types/overviewCustomerRecentCommercialMotion.types";
 import { OverviewCustomerSectionCard } from "../OverviewCustomerSectionCard";
 import { OverviewCustomerStateMessage } from "../OverviewCustomerStateMessage";

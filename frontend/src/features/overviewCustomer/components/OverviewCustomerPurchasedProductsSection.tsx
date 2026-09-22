@@ -1,4 +1,3 @@
-import React from "react";
 import type { OverviewCustomerPurchasedProduct } from "../types/overviewCustomerPurchasedProducts.types";
 import { OverviewCustomerDetailProductsPanel } from "./detail/OverviewCustomerDetailProductsPanel";
 

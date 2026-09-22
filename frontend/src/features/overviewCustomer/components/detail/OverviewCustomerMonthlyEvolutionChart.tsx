@@ -5,7 +5,6 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
-import React from "react";
 import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
 import type { OverviewCustomerMonthlyEvolutionRow } from "../../types/overviewCustomerMonthlyEvolution.types";
 import { OverviewCustomerSectionCard } from "../OverviewCustomerSectionCard";

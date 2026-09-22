@@ -1,4 +1,3 @@
-import React from "react";
 import { formatOverviewNumber } from "../../utils/overviewCustomerFormatters";
 
 type OverviewCustomerCommercialMotionSummaryProps = {
