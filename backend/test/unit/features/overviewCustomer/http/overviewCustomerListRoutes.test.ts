@@ -11,6 +11,7 @@ import { GetOverviewCustomerPurchasedProductsUseCase } from "../../../../../src/
 import { GetOverviewCustomerAbcGroupsUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerAbcGroupsUseCase";
 import { GetOverviewCustomerGroupAnaliseUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerGroupAnaliseUseCase";
 import { GetOverviewCustomerGroupGanhosUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerGroupGanhosUseCase";
+import { GetOverviewCustomerGroupQuotesUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerGroupQuotesUseCase";
 import { ListOverviewCustomersUseCase } from "../../../../../src/features/overviewCustomer/useCases/ListOverviewCustomersUseCase";
 import { InMemoryOverviewCustomerSyncStore } from "../../../../helpers/InMemoryOverviewCustomerSyncStore";
 
@@ -55,6 +56,12 @@ function createApp(store: InMemoryOverviewCustomerSyncStore): Express {
         store,
         { fetchLines: async () => [] },
         { findLossReasonsByOrderNumbers: async () => [] },
+      ),
+      getGroupQuotes: new GetOverviewCustomerGroupQuotesUseCase(
+        store,
+        { fetchLines: async () => [] },
+        { findLossReasonsByOrderNumbers: async () => [] },
+        { findNamesByCodReps: async () => [] },
       ),
     }),
   );

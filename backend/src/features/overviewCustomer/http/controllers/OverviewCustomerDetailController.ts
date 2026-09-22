@@ -7,6 +7,7 @@ import type { GetOverviewCustomerPurchasedProductsUseCase } from "../../useCases
 import type { GetOverviewCustomerAbcGroupsUseCase } from "../../useCases/GetOverviewCustomerAbcGroupsUseCase";
 import type { GetOverviewCustomerGroupAnaliseUseCase } from "../../useCases/GetOverviewCustomerGroupAnaliseUseCase";
 import type { GetOverviewCustomerGroupGanhosUseCase } from "../../useCases/GetOverviewCustomerGroupGanhosUseCase";
+import type { GetOverviewCustomerGroupQuotesUseCase } from "../../useCases/GetOverviewCustomerGroupQuotesUseCase";
 import type { ListOverviewCustomersUseCase } from "../../useCases/ListOverviewCustomersUseCase";
 
 export type OverviewCustomerDetailControllerDeps = {
@@ -18,6 +19,7 @@ export type OverviewCustomerDetailControllerDeps = {
   getAbcGroups: GetOverviewCustomerAbcGroupsUseCase;
   getGroupGanhos: GetOverviewCustomerGroupGanhosUseCase;
   getGroupAnalise: GetOverviewCustomerGroupAnaliseUseCase;
+  getGroupQuotes: GetOverviewCustomerGroupQuotesUseCase;
 };
 
 export class OverviewCustomerDetailController {
@@ -213,6 +215,48 @@ export class OverviewCustomerDetailController {
     }
   };
 
+  getGroupQuotesByCustomerCode = async (
+    req: Request,
+    res: Response,
+  ): Promise<Response> => {
+    try {
+      const rawCustomerCode = Number(req.params.clienteId);
+      if (!Number.isInteger(rawCustomerCode) || rawCustomerCode <= 0) {
+        return res.status(400).json({
+          error: "clienteId inválido",
+          code: "OVERVIEW_CUSTOMER_INVALID_ID",
+        });
+      }
+
+      const grupoCodigo = parseGrupoCodigo(req.params.grupoCodigo);
+      if (!grupoCodigo) {
+        return res.status(400).json({
+          error: "grupoCodigo inválido",
+          code: "OVERVIEW_CUSTOMER_INVALID_GROUP",
+        });
+      }
+
+      const role = req.user?.role;
+      if (!role) {
+        return res.status(401).json({ error: "Usuário não autenticado" });
+      }
+
+      const productCode = parseOptionalProductCode(req.query.codPro);
+
+      const result = await this.deps.getGroupQuotes.execute({
+        customerCode: rawCustomerCode,
+        grupoCodigo,
+        productCode,
+        role,
+        codRep: req.user?.codRep,
+      });
+
+      return res.status(200).json(result);
+    } catch (error: unknown) {
+      return this.mapError(res, error);
+    }
+  };
+
   getPurchasedProductsByCustomerCode = async (
     req: Request,
     res: Response,
@@ -295,6 +339,16 @@ function parseGrupoCodigo(rawGrupoCodigo: string | undefined): string | null {
   }
   const trimmed = rawGrupoCodigo.trim();
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function parseOptionalProductCode(
+  rawProductCode: Request["query"]["codPro"],
+): string | undefined {
+  if (typeof rawProductCode !== "string") {
+    return undefined;
+  }
+  const trimmed = rawProductCode.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
 }
 
 function parsePage(rawPage: Request["query"]["page"]): number {

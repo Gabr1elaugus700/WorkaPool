@@ -11,9 +11,12 @@ import { GetOverviewCustomerPurchasedProductsUseCase } from "../../../../../src/
 import { GetOverviewCustomerAbcGroupsUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerAbcGroupsUseCase";
 import { GetOverviewCustomerGroupAnaliseUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerGroupAnaliseUseCase";
 import { GetOverviewCustomerGroupGanhosUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerGroupGanhosUseCase";
+import { GetOverviewCustomerGroupQuotesUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerGroupQuotesUseCase";
 import { ListOverviewCustomersUseCase } from "../../../../../src/features/overviewCustomer/useCases/ListOverviewCustomersUseCase";
 import type { OverviewCustomerGroupPerdidoLine } from "../../../../../src/features/overviewCustomer/utils/aggregateOverviewCustomerGroupPerdidos";
+import type { OverviewCustomerGroupQuoteSeniorLine } from "../../../../../src/features/overviewCustomer/sync/OverviewCustomerGroupQuotesSeniorQuery";
 import { InMemoryOverviewCustomerSyncStore } from "../../../../helpers/InMemoryOverviewCustomerSyncStore";
+import { AppError } from "../../../../../src/utils/AppError";
 
 function createToken(role: string, codRep?: number): string {
   return jwt.sign({ id: "user-test", role, codRep }, "dev_secret");
@@ -52,11 +55,47 @@ class FakeOverviewCustomerOrderLossLookup {
   }
 }
 
+class FakeOverviewCustomerGroupQuotesSenior {
+  callCount = 0;
+
+  constructor(
+    private readonly lines: OverviewCustomerGroupQuoteSeniorLine[] = [],
+    private readonly fail = false,
+  ) {}
+
+  async fetchLines(): Promise<OverviewCustomerGroupQuoteSeniorLine[]> {
+    this.callCount += 1;
+    if (this.fail) {
+      throw new AppError({
+        message: "Leitura de cotações do grupo indisponível",
+        statusCode: 503,
+        code: "OVERVIEW_CUSTOMER_GROUP_QUOTES_UNAVAILABLE",
+      });
+    }
+    return this.lines;
+  }
+}
+
+class FakeOverviewCustomerSellerNameLookup {
+  constructor(private readonly names: Record<number, string> = {}) {}
+
+  async findNamesByCodReps(
+    codReps: number[],
+  ): Promise<Array<{ codRep: number; name: string }>> {
+    return codReps.flatMap((codRep) => {
+      const name = this.names[codRep];
+      return name ? [{ codRep, name }] : [];
+    });
+  }
+}
+
 function createApp(
   store: InMemoryOverviewCustomerSyncStore,
   options?: {
     senior?: FakeOverviewCustomerGroupPerdidosSenior;
     orderLoss?: FakeOverviewCustomerOrderLossLookup;
+    quotes?: FakeOverviewCustomerGroupQuotesSenior;
+    sellers?: FakeOverviewCustomerSellerNameLookup;
   },
 ): Express {
   const app = express();
@@ -77,6 +116,12 @@ function createApp(
         store,
         options?.senior ?? new FakeOverviewCustomerGroupPerdidosSenior(),
         options?.orderLoss ?? new FakeOverviewCustomerOrderLossLookup(),
+      ),
+      getGroupQuotes: new GetOverviewCustomerGroupQuotesUseCase(
+        store,
+        options?.quotes ?? new FakeOverviewCustomerGroupQuotesSenior(),
+        options?.orderLoss ?? new FakeOverviewCustomerOrderLossLookup(),
+        options?.sellers ?? new FakeOverviewCustomerSellerNameLookup(),
       ),
     }),
   );
@@ -1654,6 +1699,128 @@ describe("Overview customer detail HTTP", () => {
     assert.strictEqual(response.status, 400);
     assert.strictEqual(response.body.code, "OVERVIEW_CUSTOMER_INVALID_GROUP");
   });
+
+  it("returns filtered group quotes for the open customer and product", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    seedAnaliseSnapshot(store, "G030");
+    const quotes = new FakeOverviewCustomerGroupQuotesSenior([
+      quoteLine({
+        numped: 10,
+        codcli: 123,
+        codpro: "P001",
+        qtdped: 1,
+        vlrfinal: 10,
+      }),
+      quoteLine({
+        numped: 10,
+        codcli: 123,
+        codpro: "P001",
+        qtdped: 2,
+        vlrfinal: 20,
+      }),
+      quoteLine({
+        numped: 20,
+        codcli: 999,
+        codpro: "P001",
+        qtdped: 9,
+        vlrfinal: 90,
+      }),
+      quoteLine({
+        numped: 30,
+        codcli: 123,
+        codpro: "P020",
+        productName: "Outro",
+      }),
+    ]);
+    const app = createApp(store, {
+      quotes,
+      sellers: new FakeOverviewCustomerSellerNameLookup({ 10: "Ana" }),
+    });
+
+    const response = await request(app)
+      .get("/api/overview/customers/123/grupos/G030/cotacoes?codPro=P001")
+      .set("Authorization", `Bearer ${createToken("ADMIN")}`);
+
+    assert.strictEqual(response.status, 200);
+    assert.strictEqual(response.body.selectedProductCode, "P001");
+    assert.strictEqual(response.body.rows.length, 2);
+    assert.strictEqual(response.body.rows[0].quantity, 1);
+    assert.strictEqual(response.body.rows[1].quantity, 2);
+    assert.strictEqual(response.body.rows[0].otherCustomer, false);
+    assert.strictEqual(response.body.rows[0].sellerName, "Ana");
+    assert.equal(quotes.callCount, 1);
+  });
+
+  it("defaults to the lowest product code when codPro is omitted", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    seedAnaliseSnapshot(store, "G030");
+    const app = createApp(store, {
+      quotes: new FakeOverviewCustomerGroupQuotesSenior([
+        quoteLine({ codpro: "P020", productName: "Beta" }),
+        quoteLine({ codpro: "P010", productName: "Alpha" }),
+      ]),
+    });
+
+    const response = await request(app)
+      .get("/api/overview/customers/123/grupos/G030/cotacoes")
+      .set("Authorization", `Bearer ${createToken("ADMIN")}`);
+
+    assert.strictEqual(response.status, 200);
+    assert.strictEqual(response.body.selectedProductCode, "P010");
+    assert.strictEqual(response.body.rows.length, 1);
+  });
+
+  it("returns 200 with empty rows when the customer has no products in the group", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    seedAnaliseSnapshot(store, "G030");
+    const app = createApp(store, {
+      quotes: new FakeOverviewCustomerGroupQuotesSenior([
+        quoteLine({ codcli: 999 }),
+      ]),
+    });
+
+    const response = await request(app)
+      .get("/api/overview/customers/123/grupos/G030/cotacoes")
+      .set("Authorization", `Bearer ${createToken("ADMIN")}`);
+
+    assert.strictEqual(response.status, 200);
+    assert.deepStrictEqual(response.body.products, []);
+    assert.strictEqual(response.body.selectedProductCode, null);
+    assert.deepStrictEqual(response.body.rows, []);
+  });
+
+  it("returns 403 when VENDAS is not the customer's primary representative for quotes", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    seedAnaliseSnapshot(store, "G030");
+    const app = createApp(store, {
+      quotes: new FakeOverviewCustomerGroupQuotesSenior([quoteLine()]),
+    });
+
+    const response = await request(app)
+      .get("/api/overview/customers/123/grupos/G030/cotacoes")
+      .set("Authorization", `Bearer ${createToken("VENDAS", 99)}`);
+
+    assert.strictEqual(response.status, 403);
+    assert.strictEqual(response.body.code, "OVERVIEW_CUSTOMER_FORBIDDEN");
+  });
+
+  it("returns 503 when group quotes Sapiens read fails", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    seedAnaliseSnapshot(store, "G030");
+    const app = createApp(store, {
+      quotes: new FakeOverviewCustomerGroupQuotesSenior([], true),
+    });
+
+    const response = await request(app)
+      .get("/api/overview/customers/123/grupos/G030/cotacoes")
+      .set("Authorization", `Bearer ${createToken("ADMIN")}`);
+
+    assert.strictEqual(response.status, 503);
+    assert.strictEqual(
+      response.body.code,
+      "OVERVIEW_CUSTOMER_GROUP_QUOTES_UNAVAILABLE",
+    );
+  });
 });
 
 function seedAnaliseSnapshot(
@@ -1688,5 +1855,34 @@ function perdidoLine(
     preuni: 1,
     vlrfinal: 1,
     margem: 1,
+  };
+}
+
+function quoteLine(
+  overrides: Partial<OverviewCustomerGroupQuoteSeniorLine> = {},
+): OverviewCustomerGroupQuoteSeniorLine {
+  return {
+    datemi: "2026-09-15",
+    numped: 100,
+    sitped: 9,
+    codRep: 10,
+    aperep: "Rep A",
+    codcli: 123,
+    apecli: "Cliente A",
+    productName: "Produto 1",
+    codpro: "P001",
+    codgrp: "G030",
+    ipi: 1,
+    icm: 2,
+    icmsPercent: 12,
+    qtdped: 2,
+    preuni: 10,
+    vlrfinal: 20,
+    margem: 5,
+    preCusto: 8,
+    frete: 1.5,
+    transportadora: 99,
+    freteIncluso: true,
+    ...overrides,
   };
 }

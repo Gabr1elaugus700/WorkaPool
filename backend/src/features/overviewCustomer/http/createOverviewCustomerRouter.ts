@@ -9,13 +9,21 @@ import { GetOverviewCustomerPurchasedProductsUseCase } from "../useCases/GetOver
 import { GetOverviewCustomerAbcGroupsUseCase } from "../useCases/GetOverviewCustomerAbcGroupsUseCase";
 import { GetOverviewCustomerGroupAnaliseUseCase } from "../useCases/GetOverviewCustomerGroupAnaliseUseCase";
 import { GetOverviewCustomerGroupGanhosUseCase } from "../useCases/GetOverviewCustomerGroupGanhosUseCase";
+import { GetOverviewCustomerGroupQuotesUseCase } from "../useCases/GetOverviewCustomerGroupQuotesUseCase";
 import { OverviewCustomerOrderLossRepository } from "../repositories/OverviewCustomerOrderLossRepository";
+import { OverviewCustomerSellerNameRepository } from "../repositories/OverviewCustomerSellerNameRepository";
+import { CachedOverviewCustomerGroupQuotesReader } from "../sync/CachedOverviewCustomerGroupQuotesReader";
 import { OverviewCustomerGroupPerdidosSeniorQuery } from "../sync/OverviewCustomerGroupPerdidosSeniorQuery";
+import { OverviewCustomerGroupQuotesSeniorQuery } from "../sync/OverviewCustomerGroupQuotesSeniorQuery";
 
 export function createOverviewCustomerRouter(
   prisma = getPrismaClient(),
 ) {
   const store = new OverviewCustomerSyncRepository(prisma);
+  const orderLoss = new OverviewCustomerOrderLossRepository(prisma);
+  const groupQuotesReader = new CachedOverviewCustomerGroupQuotesReader(
+    new OverviewCustomerGroupQuotesSeniorQuery(),
+  );
   return createOverviewCustomerDetailRoutes({
     getDetail: new GetOverviewCustomerDetailUseCase(store),
     listCustomers: new ListOverviewCustomersUseCase(store),
@@ -29,7 +37,13 @@ export function createOverviewCustomerRouter(
     getGroupAnalise: new GetOverviewCustomerGroupAnaliseUseCase(
       store,
       new OverviewCustomerGroupPerdidosSeniorQuery(),
-      new OverviewCustomerOrderLossRepository(prisma),
+      orderLoss,
+    ),
+    getGroupQuotes: new GetOverviewCustomerGroupQuotesUseCase(
+      store,
+      groupQuotesReader,
+      orderLoss,
+      new OverviewCustomerSellerNameRepository(prisma),
     ),
   });
 }
