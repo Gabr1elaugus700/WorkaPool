@@ -1,4 +1,5 @@
 import { getBaseUrl } from "@/lib/apiBase";
+import { fallbackApiErrorMessage, parseApiErrorBody } from "@/lib/apiFetchErrorMessage";
 import { getAuthHeaders } from "@/lib/authHeaders";
 
 export type ApiFetchOptions = RequestInit & {
@@ -25,11 +26,13 @@ async function readErrorMessage(res: Response): Promise<string> {
   }
   try {
     const text = await res.text();
-    if (text) return text;
+    if (text) {
+      return parseApiErrorBody(text, res.status);
+    }
   } catch {
     /* ignore */
   }
-  return res.statusText || `HTTP ${res.status}`;
+  return fallbackApiErrorMessage(res.status);
 }
 
 /**

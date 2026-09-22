@@ -152,7 +152,10 @@ export function buildOpenApiDocument(contracts: RouteContract[]) {
     servers: [
       { url: process.env.API_SERVER_URL + ":" + process.env.PORT }
     ],
-    tags: [{ name: "Users", description: "Operações de usuários" }],
+    tags: [
+      { name: "Users", description: "Operações de usuários" },
+      { name: "OverviewCustomer", description: "Overview de clientes (read model)" },
+    ],
     components,
     paths,
   };

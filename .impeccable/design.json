@@ -1,149 +1,136 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-01T18:45:00.000Z",
+  "generatedAt": "2026-09-17T11:45:04.5101287-03:00",
   "title": "Design System: WorkaPool",
   "extensions": {
     "colorMeta": {
       "primary": {
         "role": "primary",
-        "displayName": "Pool Green",
-        "canonical": "hsl(143.3 80.6% 45.1%)",
+        "displayName": "Signal Green",
+        "canonical": "hsl(var(--primary))",
         "tonalRamp": [
-          "hsl(143 80% 18%)",
-          "hsl(143 80% 26%)",
-          "hsl(143 80% 34%)",
-          "hsl(143 80% 42%)",
-          "hsl(143.3 80.6% 45.1%)",
-          "hsl(143 75% 55%)",
-          "hsl(143 65% 68%)",
-          "hsl(143 50% 88%)"
+          "oklch(22% 0.04 150)",
+          "oklch(30% 0.06 150)",
+          "oklch(40% 0.09 150)",
+          "oklch(50% 0.12 150)",
+          "oklch(60% 0.14 150)",
+          "oklch(72% 0.12 150)",
+          "oklch(84% 0.08 150)",
+          "oklch(95% 0.03 150)"
         ]
       },
       "background": {
         "role": "neutral",
-        "displayName": "Console Canvas",
-        "canonical": "hsl(0 0% 97%)",
+        "displayName": "Mist White",
+        "canonical": "hsl(var(--background))",
         "tonalRamp": [
-          "hsl(0 0% 12%)",
-          "hsl(0 0% 22%)",
-          "hsl(0 0% 35%)",
-          "hsl(0 0% 50%)",
-          "hsl(0 0% 70%)",
-          "hsl(0 0% 85%)",
-          "hsl(0 0% 93%)",
-          "hsl(0 0% 97%)"
+          "oklch(20% 0.004 255)",
+          "oklch(30% 0.004 255)",
+          "oklch(40% 0.004 255)",
+          "oklch(52% 0.004 255)",
+          "oklch(64% 0.004 255)",
+          "oklch(77% 0.004 255)",
+          "oklch(88% 0.004 255)",
+          "oklch(97% 0.004 255)"
         ]
       },
       "foreground": {
         "role": "neutral",
-        "displayName": "Ink",
-        "canonical": "hsl(220 20% 10%)",
+        "displayName": "Graphite Slate",
+        "canonical": "hsl(var(--foreground))",
         "tonalRamp": [
-          "hsl(220 20% 8%)",
-          "hsl(220 20% 12%)",
-          "hsl(220 18% 18%)",
-          "hsl(220 15% 28%)",
-          "hsl(220 12% 40%)",
-          "hsl(220 10% 55%)",
-          "hsl(220 8% 72%)",
-          "hsl(220 5% 90%)"
+          "oklch(15% 0.01 250)",
+          "oklch(25% 0.01 250)",
+          "oklch(35% 0.01 250)",
+          "oklch(45% 0.01 250)",
+          "oklch(57% 0.01 250)",
+          "oklch(70% 0.01 250)",
+          "oklch(83% 0.01 250)",
+          "oklch(94% 0.01 250)"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Fog Gray",
+        "canonical": "hsl(var(--muted-foreground))",
+        "tonalRamp": [
+          "oklch(20% 0.005 250)",
+          "oklch(30% 0.005 250)",
+          "oklch(40% 0.005 250)",
+          "oklch(50% 0.005 250)",
+          "oklch(60% 0.005 250)",
+          "oklch(72% 0.005 250)",
+          "oklch(84% 0.005 250)",
+          "oklch(95% 0.005 250)"
         ]
       },
       "destructive": {
         "role": "semantic",
-        "displayName": "Alert Red",
-        "canonical": "hsl(0 84.2% 60.2%)",
+        "displayName": "Alert Coral",
+        "canonical": "hsl(var(--destructive))",
         "tonalRamp": [
-          "hsl(0 84% 22%)",
-          "hsl(0 84% 32%)",
-          "hsl(0 84% 42%)",
-          "hsl(0 84% 50%)",
-          "hsl(0 84.2% 60.2%)",
-          "hsl(0 80% 70%)",
-          "hsl(0 75% 82%)",
-          "hsl(0 70% 94%)"
-        ]
-      },
-      "carga-aberta": {
-        "role": "semantic",
-        "displayName": "Carga Aberta",
-        "canonical": "#A7F3D0",
-        "tonalRamp": ["#064E3B", "#047857", "#059669", "#10B981", "#34D399", "#6EE7B7", "#A7F3D0", "#D1FAE5"]
-      },
-      "carga-fechada": {
-        "role": "semantic",
-        "displayName": "Carga Fechada",
-        "canonical": "#16A34A",
-        "tonalRamp": ["#14532D", "#166534", "#15803D", "#16A34A", "#22C55E", "#4ADE80", "#86EFAC", "#DCFCE7"]
-      },
-      "order-blocked": {
-        "role": "semantic",
-        "displayName": "Order Blocked",
-        "canonical": "hsl(0 72% 51%)",
-        "tonalRamp": [
-          "hsl(0 72% 20%)",
-          "hsl(0 72% 30%)",
-          "hsl(0 72% 40%)",
-          "hsl(0 72% 48%)",
-          "hsl(0 72% 51%)",
-          "hsl(0 70% 62%)",
-          "hsl(0 65% 78%)",
-          "hsl(0 60% 93%)"
+          "oklch(25% 0.05 25)",
+          "oklch(33% 0.09 25)",
+          "oklch(41% 0.13 25)",
+          "oklch(50% 0.16 25)",
+          "oklch(60% 0.16 25)",
+          "oklch(72% 0.13 25)",
+          "oklch(84% 0.09 25)",
+          "oklch(95% 0.04 25)"
         ]
       }
     },
     "typographyMeta": {
       "display": {
         "displayName": "Display",
-        "purpose": "Navbar wordmark and rare page titles."
+        "purpose": "Large entry headings such as auth and key section intros."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Navigation brand mark and high-priority heading rows."
       },
       "title": {
         "displayName": "Title",
-        "purpose": "Card headers and form section headings."
+        "purpose": "Card section titles and block-level emphasis."
       },
       "body": {
         "displayName": "Body",
-        "purpose": "Default UI copy, tables, and form values."
+        "purpose": "Primary reading text, table cells, and standard UI copy."
       },
       "label": {
         "displayName": "Label",
-        "purpose": "Badges, mobile tab labels, compact metadata."
+        "purpose": "Compact metadata and control labels."
       }
     },
     "shadows": [
       {
-        "name": "card-sm",
-        "value": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-        "purpose": "Default card elevation at rest."
+        "name": "surface-hint",
+        "value": "0 1px 2px rgba(15, 23, 42, 0.08)",
+        "purpose": "Lightweight separation for cards and grouped content regions."
       },
       {
-        "name": "navbar",
-        "value": "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
-        "purpose": "Separation under the green top navigation bar."
-      },
-      {
-        "name": "dialog-lg",
-        "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-        "purpose": "Modal dialog content above overlay."
+        "name": "overlay-lift",
+        "value": "0 10px 35px rgba(2, 6, 23, 0.24)",
+        "purpose": "Modal dialogs and toast notifications where foreground priority must be explicit."
       }
     ],
     "motion": [
       {
-        "name": "ease-colors",
-        "value": "color 150ms cubic-bezier(0.4, 0, 0.2, 1), background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), border-color 150ms cubic-bezier(0.4, 0, 0.2, 1)",
-        "purpose": "Default button and interactive surface transitions."
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default easing for state transitions."
       },
       {
-        "name": "dialog-in",
-        "value": "fade-in 200ms, zoom-in-95 200ms",
-        "purpose": "Dialog open via tailwindcss-animate."
+        "name": "duration-fast",
+        "value": "160ms",
+        "purpose": "Quick hover and focus feedback."
       }
     ],
     "breakpoints": [
-      { "name": "sm", "value": "640px" },
-      { "name": "md", "value": "768px" },
-      { "name": "lg", "value": "1024px" },
-      { "name": "xl", "value": "1280px" }
+      {
+        "name": "md",
+        "value": "768px"
+      }
     ]
   },
   "components": [
@@ -151,112 +138,87 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Main call-to-action on forms and confirmations.",
-      "html": "<button class=\"ds-btn-primary\" type=\"button\">Salvar</button>",
-      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 8px 16px; border: none; border-radius: calc(0.65rem - 2px); background: hsl(143.3 80.6% 45.1%); color: #000000; font-family: Inter, sans-serif; font-size: 0.875rem; font-weight: 500; line-height: 1; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary:hover { background: hsl(143.3 80.6% 40%); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(0 0% 97%), 0 0 0 4px hsl(142.1 76.2% 36.3%); } .ds-btn-primary:disabled { opacity: 0.5; pointer-events: none; }"
+      "description": "Primary call to action for form submit and high-priority actions.",
+      "html": "<button class=\"ds-btn-primary\">Entrar</button>",
+      "css": ".ds-btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border: 1px solid transparent; border-radius: calc(var(--radius) - 2px); min-height: 2.5rem; padding: 0.5rem 1rem; font-family: Inter, sans-serif; font-size: 0.875rem; font-weight: 500; line-height: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; transition: background-color 160ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 160ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary:hover { background: hsl(var(--primary) / 0.9); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(var(--ring)), 0 0 0 4px hsl(var(--background)); }"
     },
     {
       "name": "Outline Button",
       "kind": "button",
       "refersTo": "button-outline",
-      "description": "Secondary actions that should not compete with primary green.",
-      "html": "<button class=\"ds-btn-outline\" type=\"button\">Cancelar</button>",
-      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 8px 16px; border: 1px solid hsl(240 5.9% 90%); border-radius: calc(0.65rem - 2px); background: hsl(0 0% 97%); color: hsl(220 20% 10%); font-family: Inter, sans-serif; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-outline:hover { background: hsl(240 4.8% 95.9%); } .ds-btn-outline:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(0 0% 97%), 0 0 0 4px hsl(142.1 76.2% 36.3%); }"
+      "description": "Secondary action for low-emphasis contextual operations.",
+      "html": "<button class=\"ds-btn-outline\">Filtrar</button>",
+      "css": ".ds-btn-outline { background: hsl(var(--background)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--input)); border-radius: calc(var(--radius) - 2px); min-height: 2.5rem; padding: 0.5rem 1rem; font-family: Inter, sans-serif; font-size: 0.875rem; font-weight: 500; line-height: 1; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: background-color 160ms cubic-bezier(0.4, 0, 0.2, 1), color 160ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-outline:hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); } .ds-btn-outline:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(var(--ring)), 0 0 0 4px hsl(var(--background)); }"
     },
     {
       "name": "Text Input",
       "kind": "input",
       "refersTo": "input-default",
-      "description": "Standard single-line field for login and forms.",
-      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Usuário\" />",
-      "css": ".ds-input { display: flex; width: 100%; height: 40px; padding: 8px 12px; border: 1px solid hsl(240 5.9% 90%); border-radius: calc(0.65rem - 2px); background: hsl(0 0% 97%); color: hsl(220 20% 10%); font-family: Inter, sans-serif; font-size: 0.875rem; line-height: 1.5; box-sizing: border-box; } .ds-input::placeholder { color: hsl(240 3.8% 46.1%); } .ds-input:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(0 0% 97%), 0 0 0 4px hsl(142.1 76.2% 36.3%); } .ds-input:disabled { opacity: 0.5; cursor: not-allowed; }"
+      "description": "Standard text field used across filters, forms, and search boxes.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Usuario</span><input class=\"ds-input\" type=\"text\" placeholder=\"Digite o usuario\" /></label>",
+      "css": ".ds-field { display: grid; gap: 0.5rem; font-family: Inter, sans-serif; } .ds-field-label { color: hsl(var(--muted-foreground)); font-size: 0.75rem; font-weight: 500; line-height: 1.35; } .ds-input { width: 100%; min-height: 2.5rem; border-radius: calc(var(--radius) - 2px); border: 1px solid hsl(var(--input)); background: hsl(var(--background)); color: hsl(var(--foreground)); padding: 0.5rem 0.75rem; font-size: 0.875rem; line-height: 1.5; transition: border-color 160ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 160ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-input::placeholder { color: hsl(var(--muted-foreground)); } .ds-input:hover { border-color: hsl(var(--border)); } .ds-input:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(var(--ring)), 0 0 0 4px hsl(var(--background)); }"
     },
     {
-      "name": "Card",
+      "name": "Card Container",
       "kind": "card",
       "refersTo": "card-default",
-      "description": "Grouped content container for forms, lists, and summaries.",
-      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\"><div class=\"ds-card-title\">Login</div></div><div class=\"ds-card-content\"><p class=\"ds-card-body\">Conteúdo do card.</p></div></div>",
-      "css": ".ds-card { border-radius: 0.65rem; border: 1px solid hsl(240 5.9% 90%); background: hsl(0 0% 100%); color: hsl(220 20% 10%); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); overflow: hidden; font-family: Inter, sans-serif; } .ds-card-header { padding: 24px 24px 0; text-align: center; } .ds-card-title { font-size: 1.5rem; font-weight: 600; line-height: 1; letter-spacing: -0.025em; } .ds-card-content { padding: 24px; } .ds-card-body { margin: 0; font-size: 0.875rem; line-height: 1.5; color: hsl(240 3.8% 46.1%); }"
+      "description": "Base analytic container for grouped KPIs, lists, and contextual explanations.",
+      "html": "<article class=\"ds-card\"><h3 class=\"ds-card-title\">Resumo comercial</h3><p class=\"ds-card-copy\">Indicadores consolidados de faturamento, pedidos, ticket e frequencia.</p></article>",
+      "css": ".ds-card { background: hsl(var(--card)); color: hsl(var(--card-foreground)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 1.5rem; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08); display: grid; gap: 0.5rem; font-family: Inter, sans-serif; } .ds-card-title { margin: 0; font-size: 1.125rem; line-height: 1.35; font-weight: 600; color: hsl(var(--foreground)); } .ds-card-copy { margin: 0; font-size: 0.875rem; line-height: 1.5; color: hsl(var(--muted-foreground)); } .ds-card:hover { border-color: hsl(var(--ring) / 0.35); } .ds-card:focus-within { box-shadow: 0 0 0 2px hsl(var(--ring) / 0.4); }"
     },
     {
-      "name": "Badge",
-      "kind": "chip",
-      "refersTo": "badge-default",
-      "description": "Compact status or count label.",
-      "html": "<span class=\"ds-badge\">Aberta</span>",
-      "css": ".ds-badge { display: inline-flex; align-items: center; border-radius: 9999px; border: 1px solid transparent; padding: 2px 10px; font-family: Inter, sans-serif; font-size: 0.75rem; font-weight: 600; line-height: 1.4; background: hsl(143.3 80.6% 45.1%); color: hsl(355.7 100% 97.3%); }"
-    },
-    {
-      "name": "Carga Status Chip",
-      "kind": "chip",
-      "refersTo": "badge-default",
-      "description": "Domain-specific status for carga lifecycle states.",
-      "html": "<span class=\"ds-chip-carga-fechada\">Fechada</span>",
-      "css": ".ds-chip-carga-fechada { display: inline-flex; align-items: center; border-radius: 9999px; padding: 2px 10px; font-family: Inter, sans-serif; font-size: 0.75rem; font-weight: 600; background: #16A34A; color: #ffffff; } .ds-chip-carga-aberta { display: inline-flex; align-items: center; border-radius: 9999px; padding: 2px 10px; font-family: Inter, sans-serif; font-size: 0.75rem; font-weight: 600; background: #A7F3D0; color: #064E3B; }"
-    },
-    {
-      "name": "Nav Link",
+      "name": "Navigation Link",
       "kind": "nav",
-      "refersTo": "button-ghost",
-      "description": "Text link inside the green desktop navbar.",
-      "html": "<a class=\"ds-nav-link\" href=\"#\">Cargas</a>",
-      "css": ".ds-nav-link { display: inline-flex; align-items: center; padding: 8px 12px; font-family: Inter, sans-serif; font-size: 0.875rem; font-weight: 500; color: hsl(355.7 100% 97.3%); text-decoration: none; border-radius: calc(0.65rem - 2px); transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1), background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-nav-link:hover { color: hsl(0 0% 97%); background: hsl(143.3 80.6% 40%); } .ds-nav-link:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(0 0% 97%), 0 0 0 4px hsl(142.1 76.2% 36.3%); }"
+      "refersTo": "button-primary",
+      "description": "Top navigation action link rendered over the green app header.",
+      "html": "<a class=\"ds-nav-link\" href=\"#\">Pedidos Perdidos</a>",
+      "css": ".ds-nav-link { display: inline-flex; align-items: center; justify-content: center; min-height: 2.5rem; padding: 0.5rem 1rem; border-radius: calc(var(--radius) - 2px); font-family: Inter, sans-serif; font-size: 0.875rem; font-weight: 500; color: hsl(var(--primary-foreground)); text-decoration: none; transition: background-color 160ms cubic-bezier(0.4, 0, 0.2, 1), color 160ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-nav-link:hover { background: hsl(var(--primary-foreground) / 0.12); color: hsl(var(--primary-foreground)); } .ds-nav-link:focus-visible { outline: none; box-shadow: inset 0 0 0 2px hsl(var(--primary-foreground) / 0.7); }"
     },
     {
-      "name": "Top Navbar",
-      "kind": "nav",
-      "refersTo": "button-ghost",
-      "description": "Desktop structural chrome with brand and module links.",
-      "html": "<nav class=\"ds-navbar\"><span class=\"ds-navbar-brand\">WorkaPool</span><div class=\"ds-navbar-links\"><a class=\"ds-nav-link\" href=\"#\">Cargas</a></div></nav>",
-      "css": ".ds-navbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: hsl(143.3 80.6% 45.1%); color: hsl(355.7 100% 97.3%); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1); font-family: Inter, sans-serif; } .ds-navbar-brand { font-size: 1.25rem; font-weight: 700; color: #ffffff; } .ds-navbar-links { display: flex; gap: 8px; align-items: center; }"
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "button-primary",
+      "description": "Compact status indicator for filters and list metadata.",
+      "html": "<span class=\"ds-badge\">Ativo</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; justify-content: center; border-radius: 9999px; border: 1px solid transparent; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); padding: 0.125rem 0.625rem; font-family: Inter, sans-serif; font-size: 0.75rem; font-weight: 600; line-height: 1.2; transition: opacity 160ms cubic-bezier(0.4, 0, 0.2, 1), transform 160ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-badge:hover { opacity: 0.9; } .ds-badge:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(var(--ring)), 0 0 0 4px hsl(var(--background)); }"
     }
   ],
   "narrative": {
-    "northStar": "The Operations Console",
-    "overview": "WorkaPool looks and behaves like a control room for daily operations—not a marketing site. Surfaces are light, information-dense, and organized around recurring jobs (cargas, pedidos, OS, metas). A confident Pool Green signals brand and primary action, while page bodies stay neutral so tables, cards, and status chips carry most of the visual signal.\n\nThe stack is shadcn/ui + Radix on Tailwind CSS variables. Inter is the sole type family. Layout follows a desktop top bar + mobile bottom tab pattern. Polish is functional: borders, shadow-sm, and ring focus states—not decorative motion or hero imagery.",
+    "northStar": "The Operations Greenroom",
+    "overview": "The system is built for operational throughput and commercial analysis, so visual language prioritizes legibility, predictable interactions, and fast scanability over ornamental expression. Neutral canvases hold most of the interface while a single green family marks action, progress, and ownership.\n\nInteraction hierarchy is explicit: surfaces stay quiet at rest, then state changes surface intent through focused rings, hover contrast shifts, and selective elevation. Component behavior is confident and pragmatic, with concise geometry and restrained transitions that make workflows feel dependable under sustained daily use.\n\nOnly one anti-reference is explicit: avoid gamified visuals with excessive saturation, decorative badges, or attention-seeking ornament that competes with task-critical information.",
     "keyCharacteristics": [
-      "Operate-mode density: tables, forms, and cards over empty marketing space",
-      "Green structural chrome (navbar) on neutral work surfaces",
-      "Semantic domain colors for Carga lifecycle and order negotiation states",
-      "shadcn component variants as the default extension point—not one-off inline styling",
-      "Portuguese (BR) labels with domain-precise terminology"
+      "Neutral-first interface with controlled green signal accents.",
+      "Flat-by-default surfaces with state-driven depth.",
+      "Medium corner system and compact spacing rhythm.",
+      "Utility-first component vocabulary with consistent field and card anatomy."
     ],
     "rules": [
       {
-        "name": "The Green Bar Rule",
-        "body": "The full-width primary navbar is the only large-field green surface. Page content stays neutral; green appears in buttons, badges, and status chips—not full-bleed section backgrounds.",
+        "name": "The Single Accent Channel Rule",
+        "body": "Green carries action authority; additional vivid accents are reserved for semantic states, never for decorative novelty.",
         "section": "colors"
       },
       {
-        "name": "The Status Color Rule",
-        "body": "Carga and order states use their dedicated tokens (carga-*, order-*). Do not improvise new hues for ABERTA, FECHADA, perdido, or bloqueado.",
-        "section": "colors"
-      },
-      {
-        "name": "The One Family Rule",
-        "body": "Inter carries every role. Do not introduce a second typeface without explicit brand approval.",
+        "name": "The Workhorse Type Rule",
+        "body": "Keep the interface in one family and drive hierarchy by size, weight, and spacing rather than switching faces.",
         "section": "typography"
       },
       {
-        "name": "The Flat-By-Default Rule",
-        "body": "Surfaces are flat at rest. Shadows appear on cards, modals, and the navbar—not on every list row or table cell.",
+        "name": "The Flat-by-Default Rule",
+        "body": "Surfaces remain flat at rest; elevation is introduced only when state or layering demands it.",
         "section": "elevation"
       }
     ],
     "dos": [
-      "Do use semantic tokens (primary, muted, destructive, carga-*, order-*) via Tailwind classes or hsl(var(--token)).",
-      "Do keep labels and headings in Portuguese with domain terms from CONTEXT.md files.",
-      "Do extend shadcn variants (Button, Badge, Card) before creating bespoke styled divs.",
-      "Do preserve the green navbar + neutral body pattern on new authenticated screens.",
-      "Do use container mx-auto p-4 and bottom padding on mobile when adding fixed footers."
+      "Do keep green as the singular high-signal action channel and rely on neutrals for base surfaces.",
+      "Do use visible focus rings with offset on interactive controls to preserve keyboard traceability.",
+      "Do keep table and KPI typography compact (text-sm and below) with clear muted-vs-primary contrast.",
+      "Do preserve medium-radius geometry and avoid mixing many corner systems on the same screen."
     ],
     "donts": [
-      "Don't introduce marketing-style hero sections, gradients, or decorative illustration in operational views.",
-      "Don't assign new arbitrary colors to Carga or order states—use the established semantic palette.",
-      "Don't add a second global stylesheet with competing :root tokens (globals.css vs tailwind.css—main.tsx loads tailwind.css as authority).",
-      "Don't hide critical actions behind icon-only buttons without tooltips or labels.",
-      "Don't use English UI copy on staff-facing surfaces unless mirroring an established ERP field name."
+      "Don't introduce gamified visual noise (over-saturated badges, excessive celebration colors, or decorative motion) in operational screens.",
+      "Don't stack deep shadows on resting surfaces; reserve strong elevation for overlays and transient feedback.",
+      "Don't use low-contrast gray-on-gray text for KPI labels and metadata."
     ]
   }
 }

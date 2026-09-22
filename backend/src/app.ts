@@ -32,6 +32,9 @@ import cargoRoutes from "./features/cargo/http/routes/CargoRoute";
 // New Routes After Refactor
 import goals from "./features/goals/http/routes/goalsRoutes";
 import ordersRoutes from "./features/orderLoss/http/routes/ordersRoutes";
+import { createOverviewCustomerRouter } from "./features/overviewCustomer/http/createOverviewCustomerRouter";
+import { createGrpproSyncAdminRouter } from "./features/grppro/http/createGrpproSyncAdminRouter";
+import { createOverviewSyncAdminRouter } from "./features/overviewCustomer/http/createOverviewSyncAdminRouter";
 
 const app = express();
 
@@ -122,6 +125,13 @@ app.use("/api/goals", goals);
 
 // Order Loss - Pedidos Perdidos e em Negociação
 app.use("/api/orders", ordersRoutes);
+
+// Overview Customer - sync admin (ADMIN only)
+app.use("/api/overview/sync", createOverviewSyncAdminRouter());
+
+// GrpPro - sync admin (ADMIN only)
+app.use("/api/grppro/sync", createGrpproSyncAdminRouter());
+app.use("/api/overview/customers", createOverviewCustomerRouter());
 
 // Iniciar servidor
 app.use(

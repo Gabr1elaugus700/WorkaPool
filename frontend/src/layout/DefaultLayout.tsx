@@ -104,7 +104,12 @@ export default function DefaultLayout({ children }: Props) {
               Metas
             </ButtonLink>
 
-            
+            <ButtonLink
+              to="/overview/sync"
+              allowedRoles={["ADMIN"]}
+            >
+              Overview Sync
+            </ButtonLink>
 
             <ButtonLink
               to="/dashboard"
