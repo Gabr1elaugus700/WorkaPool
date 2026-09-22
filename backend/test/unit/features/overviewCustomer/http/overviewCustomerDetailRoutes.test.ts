@@ -14,6 +14,7 @@ import { GetOverviewCustomerGroupGanhosUseCase } from "../../../../../src/featur
 import { GetOverviewCustomerGroupQuotesUseCase } from "../../../../../src/features/overviewCustomer/useCases/GetOverviewCustomerGroupQuotesUseCase";
 import { ListOverviewCustomersUseCase } from "../../../../../src/features/overviewCustomer/useCases/ListOverviewCustomersUseCase";
 import type { OverviewCustomerGroupPerdidoLine } from "../../../../../src/features/overviewCustomer/utils/aggregateOverviewCustomerGroupPerdidos";
+import { CachedOverviewCustomerGroupQuotesReader } from "../../../../../src/features/overviewCustomer/sync/CachedOverviewCustomerGroupQuotesReader";
 import type { OverviewCustomerGroupQuoteSeniorLine } from "../../../../../src/features/overviewCustomer/sync/OverviewCustomerGroupQuotesSeniorQuery";
 import { InMemoryOverviewCustomerSyncStore } from "../../../../helpers/InMemoryOverviewCustomerSyncStore";
 import { AppError } from "../../../../../src/utils/AppError";
@@ -119,7 +120,9 @@ function createApp(
       ),
       getGroupQuotes: new GetOverviewCustomerGroupQuotesUseCase(
         store,
-        options?.quotes ?? new FakeOverviewCustomerGroupQuotesSenior(),
+        new CachedOverviewCustomerGroupQuotesReader(
+          options?.quotes ?? new FakeOverviewCustomerGroupQuotesSenior(),
+        ),
         options?.orderLoss ?? new FakeOverviewCustomerOrderLossLookup(),
         options?.sellers ?? new FakeOverviewCustomerSellerNameLookup(),
       ),
@@ -1631,6 +1634,81 @@ describe("Overview customer detail HTTP", () => {
     assert.strictEqual(response.body.rows[0].otherCustomer, false);
     assert.strictEqual(response.body.rows[0].sellerName, "Ana");
     assert.equal(quotes.callCount, 1);
+  });
+
+  it("reveals other customers for ADMIN when reveal=true without an extra Sapiens call", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    seedAnaliseSnapshot(store, "G030");
+    const quotes = new FakeOverviewCustomerGroupQuotesSenior([
+      quoteLine({
+        numped: 10,
+        codcli: 123,
+        codpro: "P001",
+        apecli: "Cliente A",
+      }),
+      quoteLine({
+        numped: 20,
+        codcli: 999,
+        codpro: "P001",
+        apecli: "Cliente B",
+        codRep: 20,
+        aperep: "Rep B",
+      }),
+    ]);
+    const app = createApp(store, {
+      quotes,
+      sellers: new FakeOverviewCustomerSellerNameLookup({
+        10: "Ana",
+        20: "Bruno",
+      }),
+    });
+
+    const hidden = await request(app)
+      .get("/api/overview/customers/123/grupos/G030/cotacoes?codPro=P001")
+      .set("Authorization", `Bearer ${createToken("ADMIN")}`);
+    const revealed = await request(app)
+      .get(
+        "/api/overview/customers/123/grupos/G030/cotacoes?codPro=P001&reveal=true",
+      )
+      .set("Authorization", `Bearer ${createToken("ADMIN")}`);
+
+    assert.strictEqual(hidden.status, 200);
+    assert.strictEqual(hidden.body.rows.length, 1);
+    assert.strictEqual(revealed.status, 200);
+    assert.strictEqual(revealed.body.rows.length, 2);
+    assert.equal(quotes.callCount, 1);
+    const other = revealed.body.rows.find(
+      (row: { otherCustomer: boolean }) => row.otherCustomer,
+    );
+    assert.ok(other);
+    assert.strictEqual(other.customerTradeName, "Cliente B");
+    assert.strictEqual(other.sellerName, "Bruno");
+    assert.strictEqual(other.repShortName, "Rep B");
+  });
+
+  it("ignores reveal for VENDAS and returns only the open customer", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    seedAnaliseSnapshot(store, "G030");
+    const quotes = new FakeOverviewCustomerGroupQuotesSenior([
+      quoteLine({ numped: 10, codcli: 123, codpro: "P001" }),
+      quoteLine({
+        numped: 20,
+        codcli: 999,
+        codpro: "P001",
+        apecli: "Outro",
+      }),
+    ]);
+    const app = createApp(store, { quotes });
+
+    const response = await request(app)
+      .get(
+        "/api/overview/customers/123/grupos/G030/cotacoes?codPro=P001&reveal=true",
+      )
+      .set("Authorization", `Bearer ${createToken("VENDAS", 10)}`);
+
+    assert.strictEqual(response.status, 200);
+    assert.strictEqual(response.body.rows.length, 1);
+    assert.strictEqual(response.body.rows[0].otherCustomer, false);
   });
 
   it("defaults to the lowest product code when codPro is omitted", async () => {

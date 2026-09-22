@@ -25,6 +25,7 @@ export type GetOverviewCustomerGroupQuotesInput = {
   customerCode: number;
   grupoCodigo: string;
   productCode?: string;
+  reveal?: boolean;
   role: Role;
   codRep?: number;
 };
@@ -95,11 +96,16 @@ export class GetOverviewCustomerGroupQuotesUseCase {
       };
     }
 
+    const revealOtherCustomers =
+      input.reveal === true &&
+      (input.role === Role.ADMIN || input.role === Role.GERENTE_DPTO);
+
     const filtered = sortOverviewCustomerGroupQuoteLines(
       filterOverviewCustomerGroupQuoteLines(
         lines,
         input.customerCode,
         selectedProductCode,
+        { revealOtherCustomers },
       ),
     );
 
@@ -119,6 +125,7 @@ export class GetOverviewCustomerGroupQuotesUseCase {
               ? (lossReasonByOrder.get(line.numped) ??
                 OVERVIEW_CUSTOMER_UNMATCHED_LOSS_MOTIVO)
               : null,
+          openCustomerCode: input.customerCode,
         }),
       ),
     };

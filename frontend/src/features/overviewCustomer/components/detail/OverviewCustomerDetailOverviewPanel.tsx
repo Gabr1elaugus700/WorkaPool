@@ -9,8 +9,8 @@ import { OverviewCustomerMarginRangeCard } from "./OverviewCustomerMarginRangeCa
 import { OverviewCustomerMonthlyEvolutionChart } from "./OverviewCustomerMonthlyEvolutionChart";
 import { OverviewCustomerRecentOrdersTeaser } from "./OverviewCustomerRecentOrdersTeaser";
 import type { OverviewCustomerDetailTabId } from "./overviewCustomerDetailTabs.constants";
-import { OverviewCustomerGroupAnalysisCards } from "./OverviewCustomerGroupAnalysisCards";
 import { OverviewCustomerGroupAnalysisSection } from "./OverviewCustomerGroupAnalysisSection";
+import { OverviewCustomerGroupQuotesPanel } from "./OverviewCustomerGroupQuotesPanel";
 
 type OverviewCustomerDetailOverviewPanelProps = {
   customerCode: number;
@@ -78,7 +78,7 @@ export function OverviewCustomerDetailOverviewPanel({
       />
       <OverviewCustomerGroupAnalysisSection customerCode={customerCode} activeTab={activeTab}>
         {({ grupoCodigo }) => (
-          <OverviewCustomerGroupAnalysisCards
+          <OverviewCustomerGroupQuotesPanel
             customerCode={customerCode}
             grupoCodigo={grupoCodigo}
           />

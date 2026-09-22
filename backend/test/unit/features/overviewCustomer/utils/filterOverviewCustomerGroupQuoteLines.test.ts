@@ -47,4 +47,19 @@ describe("filterOverviewCustomerGroupQuoteLines", () => {
 
     assert.deepStrictEqual(result, [keptA, keptB]);
   });
+
+  it("includes other customers for the same product when reveal is on", () => {
+    const openCustomer = line({ numped: 1, codcli: 200, codpro: "P001" });
+    const otherCustomer = line({ numped: 2, codcli: 999, codpro: "P001" });
+    const otherProduct = line({ numped: 3, codcli: 999, codpro: "P002" });
+
+    const result = filterOverviewCustomerGroupQuoteLines(
+      [openCustomer, otherCustomer, otherProduct],
+      200,
+      "P001",
+      { revealOtherCustomers: true },
+    );
+
+    assert.deepStrictEqual(result, [openCustomer, otherCustomer]);
+  });
 });
