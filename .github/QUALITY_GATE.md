@@ -1,35 +1,34 @@
 # Quality Gate da Codebase
 
-O workflow [`codebase-quality-gate.yml`](./workflows/codebase-quality-gate.yml) é executado em cada PR direcionado à `main`. Ele sobe um PostgreSQL descartável para permitir que os testes de integração existentes também façam parte da comparação.
+O workflow [`ci.yml`](./workflows/ci.yml) roda em cada PR direcionado à `main`.
 
-## O que é comparado
+## O que o CI faz
 
-O workflow executa a mesma coleta no commit-base e no commit do PR. O relatório compara:
+1. Conta linhas **adicionadas** no diff `base...head` (arquivos de teste excluídos) e falha se passar de **300**.
+2. Instala dependências de `frontend/` e `backend/`.
+3. Roda ESLint (frontend), TypeScript `--noEmit` e `npm run build` em ambos os pacotes (inclui `vite build` no frontend — smoke test no runner do GitHub, sem deploy).
+4. Roda testes unitários com cobertura (`test:coverage`) no PR.
+5. Compara a quantidade de testes unitários (`# tests` do runner) entre a base e o head; falha se algum pacote tiver menos testes que a base.
+6. Publica cobertura no Summary da execução.
 
-- cobertura V8 de `lines`, `statements`, `functions` e `branches`;
-- total de testes unitários e de integração, testes aprovados e falhas;
-- erros e avisos do ESLint;
-- resultado da verificação TypeScript;
-- vulnerabilidades `npm audit` altas e críticas;
-- alertas de segurança encontrados pelo CodeQL, com os novos alertas destacados pelo GitHub no PR.
-
-Cada cobertura é apresentada com valor anterior, valor do PR e variação em pontos percentuais. Testes, ESLint e npm audit também mostram a variação quantitativa. Exemplo: `42,1% → 45,8% (+3,7 pp)`. O CodeQL usa a comparação nativa do GitHub e aparece na aba **Security** e nas anotações do PR.
+Arquivos ignorados no limite de tamanho: `*.test.ts(x)`, paths sob `test/` e `__tests__/`, e tudo sob `.github/` (harness/CI).
 
 ## Política do gate
 
 O PR falha quando:
 
-- uma suíte de testes falha;
-- a verificação TypeScript falha;
-- qualquer índice de cobertura diminui;
-- aumentam erros ou avisos do ESLint;
-- aumentam vulnerabilidades altas ou críticas no `npm audit`;
-- a análise do CodeQL não consegue concluir.
+- ESLint reporta erro;
+- typecheck ou build falha;
+- algum teste unitário falha;
+- a quantidade de testes (backend ou frontend) é menor que na base do PR;
+- o PR adiciona mais de 300 linhas fora de arquivos de teste.
 
-O CodeQL publica os alertas na aba **Security** do repositório. Falhas determinísticas da comparação também podem gerar Issues automaticamente. Issues são deduplicadas por PR e categoria. Em PRs vindos de forks, o GitHub não concede permissão de escrita ao token; nesse caso, o relatório continua funcionando, mas a Issue precisa ser criada manualmente.
+Cobertura percentual é **reportada**, mas nesta versão **não** barra queda de %.
+
+Fora deste CI: Prisma validate/generate/migrate, Postgres/`test:integration`, CodeQL, npm audit, Issues automáticas.
 
 ## Onde consultar
 
-O resultado aparece no **Summary** da execução e no artifact `quality-gate-report`. A execução pode ser reprocessada pelo botão **Re-run jobs** do GitHub Actions.
+Resultado no **Summary** da execução e no artifact `coverage-and-test-counts`. Reprocessar com **Re-run jobs**.
 
-O workflow não possui agendamento nem é executado por push comum: sua finalidade é validar cada alteração antes do merge em `main`.
+O workflow não tem agendamento nem push comum: valida alterações antes do merge em `main`.

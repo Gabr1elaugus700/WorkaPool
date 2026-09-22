@@ -79,7 +79,7 @@ Backend ubiquitous language (read before naming):
 | [.agents/skills/](./.agents/skills/) | [writing-typescript](./.agents/skills/writing-typescript/SKILL.md), [tdd](./.agents/skills/tdd/SKILL.md), [code-review](./.agents/skills/code-review/SKILL.md), [diagnosing-bugs](./.agents/skills/diagnosing-bugs/SKILL.md) |
 | [.cursor/agents/](./.cursor/agents/) | [task-intake](./.cursor/agents/task-intake.md) — capture ideas/bugs; do not implement |
 | [.specs/](./.specs/) | Feature specs under `features/`; [OPENAPI_CONTRACT_FIRST.md](./.specs/codebase/OPENAPI_CONTRACT_FIRST.md) |
-| [.github/QUALITY_GATE.md](./.github/QUALITY_GATE.md) | PR quality gate (tests, coverage, ESLint, tsc, audit) |
+| [.github/QUALITY_GATE.md](./.github/QUALITY_GATE.md) | PR CI (lint, tsc, build, tests, coverage, size/test-count gates) |
 
 ## 8. Local verification
 
