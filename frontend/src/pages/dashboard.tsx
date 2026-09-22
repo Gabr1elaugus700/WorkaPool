@@ -21,7 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useAuth } from "../auth/AuthContext";
-import { PieFaturamento } from '../components/charts/PieFaturamento'
 
 const faturamentoDiario = [
   { dia: "01", valor: 1200 },
@@ -118,11 +117,6 @@ export default function Dashboard() {
             <Progress className="bg-slate-400 [&>div]:bg-emerald-500 mt-2" value={65} />
           </CardContent>
         </Card>
-        <Card className="col-span-2 xl:col-span-4">
-            <CardContent>
-              <PieFaturamento />
-            </CardContent>
-          </Card>
         <Card className="bg-slate-300 xl:col-span-2">
           <CardHeader>
 
