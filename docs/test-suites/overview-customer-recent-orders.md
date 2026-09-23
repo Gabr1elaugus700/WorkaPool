@@ -13,6 +13,7 @@
 ## Coverage Notes
 - Sibling slices already cover identity/auth (#94/#115), portfolio list (#95/#116), commercial summary (#96), monthly (#97), purchased products (#98).
 - Step `ultimo-pedido-cliente` is wired via `materializeOverviewCustomerRecentCommercialMotion`; lazy route is `GET /api/overview/customers/:clienteId/recent-orders` (alias `recent-commercial-motion`).
+- Invoiced rows now include order totals (`revenue`, `volume`, `marginPercent`) and nested `items[]` (product, qty, volume, revenue, margin). After deploying this schema change, **re-run sync step `ultimo-pedido-cliente`** so served snapshots carry the enriched shape; extract rejects legacy header-only rows.
 - Highest-risk gaps vs product intent: lost classification (`sitped = 5`), separation of the three date fields, top-5 lists without full history, and lazy UI that must not block first paint.
 
 ## Risk Rationale
@@ -21,7 +22,7 @@
 - **Top-5 without full history is a UX and cost contract:** materializing or fetching full order history breaks the Overview job-to-be-done.
 - **Auth consistency protects portfolio scope:** recent-orders must enforce the same VENDAS primary-`codRep` rules as other Overview endpoints.
 - **Lazy loading is a UX contract:** recent-orders request cannot block first paint of identity + commercial summary (+ first-paint dates).
-- **Optional Order Loss deep-link must not absorb Order Loss:** link only; never merge Kanban/motivos app-only into this slice.
+- **Lost list is API-only for summary metrics:** UI no longer renders recent lost orders; summary still shows last lost date and 12-month lost count.
 
 ## Execution Order
 1. Validate sync invariants (invoiced vs `sitped = 5` lost, top 5 ordering, 12-month counts, three distinct dates, null handling).
@@ -38,7 +39,7 @@ Feature: Overview customer recent invoiced and lost orders
   Scenario: Sync materializes recent invoiced and lost order rows
     Given Senior fixtures with multiple invoiced and lost orders for a customer since the product cutoff
     When the "ultimo-pedido-cliente" sync step is materialized
-    Then the snapshot includes typed recent invoiced rows and typed recent lost rows
+    Then the snapshot includes typed recent invoiced rows with totals and items and typed recent lost rows
     And lost rows only include ERP sitped = 5
     And each list is capped at the 5 most recent by issue date (tie-break order number)
 
@@ -98,7 +99,7 @@ Feature: Overview customer recent invoiced and lost orders
     And I am authenticated as ADMIN
     When I GET recent orders for that clienteId
     Then the response status is 200
-    And the response includes recentInvoiced and recentLost lists (and 12-month counts when present)
+    And the response includes recentInvoiced (with totals and items) and recentLost lists (and 12-month counts when present)
     And the customer identity first-paint payload is not required in this endpoint
 
   @integration @medium
@@ -116,10 +117,12 @@ Feature: Overview customer recent invoiced and lost orders
     Then identity, summary, and movement dates render before the recent-orders request resolves
 
   @unit @high
-  Scenario: Recent-orders section renders invoiced and lost lists for an authorized user
-    Given the recent-orders endpoint returns up to five invoiced and five lost orders
+  Scenario: Recent-orders section renders expandable invoiced orders for an authorized user
+    Given the recent-orders endpoint returns up to five invoiced orders with totals and items
     When the recent-orders request succeeds
-    Then the UI renders both lists without loading full order history
+    Then the UI renders expandable invoiced orders (valor, volume, margem, itens)
+    And the UI does not render the recent lost-orders list
+    And the summary still shows last lost date and 12-month lost count when present
 
   @unit @medium
   Scenario: Recent-orders section shows empty and error states safely
@@ -127,10 +130,3 @@ Feature: Overview customer recent invoiced and lost orders
     When the recent-orders section renders
     Then the UI shows an empty state for no data
     And shows a non-blocking error state when request fails
-
-  @unit @low
-  Scenario: Optional Order Loss deep-link does not absorb Order Loss
-    Given an authorized user viewing recent lost orders
-    When a cheap Order Loss deep-link is available
-    Then the UI may link out to Order Loss
-    And the Overview does not embed Order Loss Kanban or app-only loss motivos

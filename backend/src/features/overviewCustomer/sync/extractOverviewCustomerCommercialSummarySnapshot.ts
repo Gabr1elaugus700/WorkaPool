@@ -75,12 +75,14 @@ function isOverviewCustomerCommercialSummary(value: unknown): value is GenericRe
 function normalizeCommercialSummary(value: GenericRecord): OverviewCustomerCommercialSummary {
   return {
     revenueSinceJan2024: value.revenueSinceJan2024 as number,
+    revenueLast30Days: isNumber(value.revenueLast30Days) ? value.revenueLast30Days : 0,
     revenueLast12Months: value.revenueLast12Months as number,
     orderCountSinceJan2024: value.orderCountSinceJan2024 as number,
     orderCountLast12Months: value.orderCountLast12Months as number,
     averageTicketSinceJan2024: value.averageTicketSinceJan2024 as number,
     averageTicketLast12Months: value.averageTicketLast12Months as number,
     volumeSinceJan2024: value.volumeSinceJan2024 as number,
+    volumeLast30Days: isNumber(value.volumeLast30Days) ? value.volumeLast30Days : 0,
     volumeLast12Months: value.volumeLast12Months as number,
     marginPercentWeightedByRevenue: value.marginPercentWeightedByRevenue as number | null,
     purchaseFrequencyDays: value.purchaseFrequencyDays as number | null,

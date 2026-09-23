@@ -77,13 +77,19 @@ describe("createOverviewCustomerSyncSteps", () => {
       ],
     };
     const recentMotionSeed: OverviewCustomerRecentCommercialMotionSeed = {
-      invoicedOrders: [
+      invoicedLines: [
         {
           customerCode: 123,
           orderNumber: 9001,
           invoiceDate: "2026-08-01",
           codRep: 10,
           branchCode: 1,
+          productCode: "P1",
+          productName: "Produto 1",
+          quantityInvoiced: 2,
+          quantityReturned: 0,
+          unitPrice: 50,
+          lineMarginPercent: 15,
         },
       ],
       lostOrders: [
@@ -227,7 +233,7 @@ describe("createOverviewCustomerSyncSteps", () => {
       { fetchSeed: async () => summarySeed },
       { fetchSeed: async () => monthlySeed },
       { fetchSeed: async () => ({ lines: [] }) },
-      { fetchSeed: async () => ({ invoicedOrders: [], lostOrders: [] }) },
+      { fetchSeed: async () => ({ invoicedLines: [], lostOrders: [] }) },
       { fetchSeed: async () => ({ lines: [] }) },
       { fetchAll: async () => [] },
     );

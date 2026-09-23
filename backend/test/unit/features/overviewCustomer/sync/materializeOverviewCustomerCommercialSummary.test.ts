@@ -39,12 +39,14 @@ describe("materializeOverviewCustomerCommercialSummary", () => {
 
     assert.deepStrictEqual(snapshot.customers["321"], {
       revenueSinceJan2024: 300,
+      revenueLast30Days: 0,
       revenueLast12Months: 0,
       orderCountSinceJan2024: 1,
       orderCountLast12Months: 0,
       averageTicketSinceJan2024: 300,
       averageTicketLast12Months: 0,
       volumeSinceJan2024: 1,
+      volumeLast30Days: 0,
       volumeLast12Months: 0,
       marginPercentWeightedByRevenue: 16,
       purchaseFrequencyDays: 26,
@@ -107,12 +109,14 @@ describe("materializeOverviewCustomerCommercialSummary", () => {
 
     assert.deepStrictEqual(snapshot.customers["123"], {
       revenueSinceJan2024: 670,
+      revenueLast30Days: 120,
       revenueLast12Months: 320,
       orderCountSinceJan2024: 3,
       orderCountLast12Months: 2,
       averageTicketSinceJan2024: 223.33,
       averageTicketLast12Months: 160,
       volumeSinceJan2024: 12,
+      volumeLast30Days: 2,
       volumeLast12Months: 4,
       marginPercentWeightedByRevenue: 24.33,
       purchaseFrequencyDays: 297,
@@ -183,12 +187,14 @@ describe("materializeOverviewCustomerCommercialSummary", () => {
 
     assert.deepStrictEqual(snapshot.customers["77"], {
       revenueSinceJan2024: 100,
+      revenueLast30Days: 0,
       revenueLast12Months: 100,
       orderCountSinceJan2024: 1,
       orderCountLast12Months: 1,
       averageTicketSinceJan2024: 100,
       averageTicketLast12Months: 100,
       volumeSinceJan2024: 2,
+      volumeLast30Days: 0,
       volumeLast12Months: 2,
       marginPercentWeightedByRevenue: 20,
       purchaseFrequencyDays: null,

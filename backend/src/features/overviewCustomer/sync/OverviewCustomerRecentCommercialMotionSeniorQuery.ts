@@ -1,16 +1,22 @@
 import { sqlPool, sqlPoolConnect } from "../../../database/sqlServer";
 import type {
-  OverviewCustomerInvoicedOrderRow,
+  OverviewCustomerInvoicedOrderLine,
   OverviewCustomerLostOrderRow,
   OverviewCustomerRecentCommercialMotionSeed,
 } from "./materializeOverviewCustomerRecentCommercialMotion";
 
-type SeniorInvoicedRow = {
+type SeniorInvoicedLine = {
   customerCode: number;
   orderNumber: number;
   invoiceDate: string | null;
   codRep: number | null;
   branchCode: number | null;
+  productCode: string | number | null;
+  productName: string | null;
+  quantityInvoiced: number;
+  quantityReturned: number;
+  unitPrice: number;
+  lineMarginPercent: number | null;
 };
 
 type SeniorLostRow = {
@@ -29,13 +35,19 @@ export class OverviewCustomerRecentCommercialMotionSeniorQuery {
 
     const invoicedRequest = sqlPool.request();
     invoicedRequest.input("cutoffDate", DEFAULT_CUTOFF_DATE);
-    const invoicedResult = await invoicedRequest.query<SeniorInvoicedRow>(`
+    const invoicedResult = await invoicedRequest.query<SeniorInvoicedLine>(`
       SELECT
         nfv.codcli AS customerCode,
         ipd.numped AS orderNumber,
         CONVERT(VARCHAR(10), nfv.datemi, 23) AS invoiceDate,
         ped.codven AS codRep,
-        ipv.codfil AS branchCode
+        ipv.codfil AS branchCode,
+        CAST(ipv.codpro AS VARCHAR(32)) AS productCode,
+        COALESCE(NULLIF(ipv.cplipv, ''), CAST(ipv.codpro AS VARCHAR(32))) AS productName,
+        ipv.qtdfat AS quantityInvoiced,
+        ipv.qtddev AS quantityReturned,
+        ipv.preuni AS unitPrice,
+        ipd.usu_mgmluc AS lineMarginPercent
       FROM e140ipv ipv
       INNER JOIN e140nfv nfv
         ON nfv.numnfv = ipv.numnfv
@@ -80,12 +92,12 @@ export class OverviewCustomerRecentCommercialMotionSeniorQuery {
     `);
 
     return {
-      invoicedOrders: this.mapInvoicedOrders(invoicedResult.recordset),
+      invoicedLines: this.mapInvoicedLines(invoicedResult.recordset),
       lostOrders: this.mapLostOrders(lostResult.recordset),
     };
   }
 
-  private mapInvoicedOrders(records: SeniorInvoicedRow[]): OverviewCustomerInvoicedOrderRow[] {
+  private mapInvoicedLines(records: SeniorInvoicedLine[]): OverviewCustomerInvoicedOrderLine[] {
     return records
       .filter(
         (record) =>
@@ -94,15 +106,31 @@ export class OverviewCustomerRecentCommercialMotionSeniorQuery {
           Number.isInteger(record.orderNumber) &&
           record.orderNumber > 0 &&
           typeof record.invoiceDate === "string" &&
-          record.invoiceDate.length > 0,
+          record.invoiceDate.length > 0 &&
+          record.productCode != null &&
+          String(record.productCode).length > 0,
       )
-      .map((record) => ({
-        customerCode: record.customerCode,
-        orderNumber: record.orderNumber,
-        invoiceDate: record.invoiceDate as string,
-        codRep: record.codRep,
-        branchCode: record.branchCode,
-      }));
+      .map((record) => {
+        const productCode = String(record.productCode);
+        const productName =
+          typeof record.productName === "string" && record.productName.length > 0
+            ? record.productName
+            : productCode;
+        return {
+          customerCode: record.customerCode,
+          orderNumber: record.orderNumber,
+          invoiceDate: record.invoiceDate as string,
+          codRep: record.codRep,
+          branchCode: record.branchCode,
+          productCode,
+          productName,
+          quantityInvoiced: Number(record.quantityInvoiced),
+          quantityReturned: Number(record.quantityReturned),
+          unitPrice: Number(record.unitPrice),
+          lineMarginPercent:
+            record.lineMarginPercent === null ? null : Number(record.lineMarginPercent),
+        };
+      });
   }
 
   private mapLostOrders(records: SeniorLostRow[]): OverviewCustomerLostOrderRow[] {
