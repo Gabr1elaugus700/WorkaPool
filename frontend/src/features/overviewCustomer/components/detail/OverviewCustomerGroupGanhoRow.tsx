@@ -1,4 +1,5 @@
 import { formatIsoDateLabel } from "@/utils/formatDate";
+import React from "react";
 import type { OverviewCustomerGroupGanho } from "../../types/overviewCustomerGroupAnalise.types";
 import {
   formatOverviewCurrency,
@@ -12,30 +13,40 @@ type OverviewCustomerGroupGanhoRowProps = {
 
 export function OverviewCustomerGroupGanhoRow({ row }: OverviewCustomerGroupGanhoRowProps) {
   return (
-    <li className="rounded-md border border-primary/20 bg-primary/5 p-3">
-      <p className="text-sm font-medium tabular-nums text-primary">NF {row.numnfv}</p>
-      <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-sm sm:grid-cols-3">
+    <li className="rounded-lg border border-primary/25 bg-card p-3 shadow-sm">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <p className="text-sm font-semibold tabular-nums text-primary">NF {row.numnfv}</p>
+        <p className="text-xs text-muted-foreground tabular-nums">
+          Data: {formatIsoDateLabel(row.datemi)}
+        </p>
+      </div>
+
+      <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm sm:grid-cols-3">
         <div>
-          <dt className="text-muted-foreground">Data</dt>
-          <dd className="font-medium tabular-nums">{formatIsoDateLabel(row.datemi)}</dd>
+          <dt className="text-xs text-muted-foreground">Valor Total</dt>
+          <dd className="font-semibold tabular-nums text-foreground">
+            {formatOverviewCurrency(row.vlrfinal)}
+          </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Valor</dt>
-          <dd className="font-medium tabular-nums">{formatOverviewCurrency(row.vlrfinal)}</dd>
+          <dt className="text-xs text-muted-foreground">Quantidade</dt>
+          <dd className="font-semibold tabular-nums text-foreground">
+            {formatOverviewDecimal(row.qtdped)} kg
+          </dd>
         </div>
-        <div>
-          <dt className="text-muted-foreground">Quantidade</dt>
-          <dd className="font-medium tabular-nums">{formatOverviewDecimal(row.qtdped)}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Preço unit.</dt>
-          <dd className="font-medium tabular-nums">{formatOverviewCurrency(row.preuni)}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Margem</dt>
-          <dd className="font-medium tabular-nums">{formatOverviewPercent(row.margem)}</dd>
+        <div className="col-span-2 sm:col-span-1">
+          <dt className="text-xs text-muted-foreground">Margem</dt>
+          <dd className="font-semibold tabular-nums text-primary">
+            {formatOverviewPercent(row.margem)}
+          </dd>
         </div>
       </dl>
+
+      <div className="mt-3 border-t border-primary/15 pt-2">
+        <p className="text-sm font-medium tabular-nums text-foreground">
+          Preço unit.: {formatOverviewCurrency(row.preuni)} /kg
+        </p>
+      </div>
     </li>
   );
 }

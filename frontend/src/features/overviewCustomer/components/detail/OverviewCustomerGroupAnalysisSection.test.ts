@@ -1,7 +1,7 @@
-import React from "react";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { OverviewCustomerAbcGroupsResponse } from "../../types/overviewCustomerAbcGroups.types";
 import { OverviewCustomerGroupAnalysisSection } from "./OverviewCustomerGroupAnalysisSection";
@@ -24,7 +24,7 @@ function createQueryClient(): QueryClient {
         retry: false,
         staleTime: Infinity,
         gcTime: Infinity,
-        networkMode: "always",
+        networkMode: "offline",
         refetchOnMount: false,
         refetchOnReconnect: false,
         refetchOnWindowFocus: false,
@@ -69,8 +69,12 @@ function renderSection(
       React.createElement(OverviewCustomerGroupAnalysisSection, {
         customerCode: CUSTOMER_CODE,
         activeTab,
-        children: ({ grupoCodigo }) =>
-          React.createElement("p", null, `${childMarker}:${grupoCodigo}`),
+        children: ({ grupoCodigo, grupoDescricao, revenueShare }) =>
+          React.createElement(
+            "p",
+            null,
+            `${childMarker}:${grupoCodigo}:${grupoDescricao}:${revenueShare ?? "null"}`,
+          ),
       }),
     ),
   );
@@ -106,7 +110,7 @@ describe("OverviewCustomerGroupAnalysisSection", () => {
     assert.doesNotMatch(markup, /analysis-ready/);
   });
 
-  it("selects the first chip and passes grupoCodigo to children", () => {
+  it("selects the first chip and passes grupo context to children", () => {
     const client = createQueryClient();
     seedSuccessQuery(client, SAMPLE_RESPONSE);
 
@@ -114,6 +118,6 @@ describe("OverviewCustomerGroupAnalysisSection", () => {
 
     assert.match(markup, /Grupo A/);
     assert.match(markup, /OUTROS PRODUTOS/);
-    assert.match(markup, /analysis-ready:G01/);
+    assert.match(markup, /analysis-ready:G01:Grupo A:42/);
   });
 });
