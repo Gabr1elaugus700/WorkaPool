@@ -135,10 +135,10 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Helper throws `OVERVIEW_CUSTOMER_FORBIDDEN` / `OVERVIEW_CUSTOMER_NOT_FOUND` as spec
-- [ ] `GetOverviewCustomerDetailUseCase` refactored to use helper
-- [ ] Unit tests: ADMIN ok, GERENTE ok, VENDAS owner ok, VENDAS other 403, `primaryCodRep` null + VENDAS 403
-- [ ] Gate passes: quick backend tests
+- [x] Helper throws `OVERVIEW_CUSTOMER_FORBIDDEN` / `OVERVIEW_CUSTOMER_NOT_FOUND` as spec
+- [x] `GetOverviewCustomerDetailUseCase` refactored to use helper
+- [x] Unit tests: ADMIN ok, GERENTE ok, VENDAS owner ok, VENDAS other 403, `primaryCodRep` null + VENDAS 403
+- [x] Gate passes: quick backend tests
 
 **Tests**: unit
 **Gate**: quick
