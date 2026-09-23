@@ -342,12 +342,14 @@ describe("Overview customer detail HTTP", () => {
     });
     assert.deepStrictEqual(response.body.commercialSummary, {
       revenueSinceJan2024: 1000,
+      revenueLast30Days: 0,
       revenueLast12Months: 600,
       orderCountSinceJan2024: 10,
       orderCountLast12Months: 6,
       averageTicketSinceJan2024: 100,
       averageTicketLast12Months: 110,
       volumeSinceJan2024: 350,
+      volumeLast30Days: 0,
       volumeLast12Months: 140,
       marginPercentWeightedByRevenue: 22.5,
       purchaseFrequencyDays: 30,
@@ -395,12 +397,14 @@ describe("Overview customer detail HTTP", () => {
     assert.strictEqual(response.status, 200);
     assert.deepStrictEqual(response.body.commercialSummary, {
       revenueSinceJan2024: 0,
+      revenueLast30Days: 0,
       revenueLast12Months: 0,
       orderCountSinceJan2024: 0,
       orderCountLast12Months: 0,
       averageTicketSinceJan2024: 0,
       averageTicketLast12Months: 0,
       volumeSinceJan2024: 0,
+      volumeLast30Days: 0,
       volumeLast12Months: 0,
       marginPercentWeightedByRevenue: null,
       purchaseFrequencyDays: null,
@@ -790,6 +794,20 @@ describe("Overview customer detail HTTP", () => {
                     occurredAt: "2026-08-01",
                     codRep: 10,
                     branchCode: 1,
+                    revenue: 100,
+                    volume: 10,
+                    marginPercent: 20,
+                    items: [
+                      {
+                        productCode: "P1",
+                        productName: "Produto 1",
+                        quantity: 10,
+                        volume: 10,
+                        revenue: 100,
+                        unitPrice: 10,
+                        marginPercent: 20,
+                      },
+                    ],
                   },
                 ],
                 recentLostOrders: [
@@ -819,8 +837,80 @@ describe("Overview customer detail HTTP", () => {
     assert.strictEqual(response.body.customer.lastCommercialMovementAt, "2026-08-05");
     assert.strictEqual(response.body.customer.invoicedCountLast12Months, 3);
     assert.strictEqual(response.body.customer.lostCountLast12Months, 1);
+    assert.deepStrictEqual(response.body.orderCounts, {
+      invoicedSinceJan2024: 0,
+      lostSinceJan2024: 0,
+      totalSinceJan2024: 0,
+      invoicedLast60Days: 0,
+      lostLast60Days: 0,
+      totalLast60Days: 0,
+    });
     assert.strictEqual("recentInvoicedOrders" in response.body, false);
     assert.strictEqual("recentLostOrders" in response.body, false);
+  });
+
+  it("returns detail orderCounts from motion snapshot with derived totals", async () => {
+    const store = new InMemoryOverviewCustomerSyncStore();
+    store.seedSuccessfulSnapshot(
+      {
+        id: "snap-detail-order-counts",
+        publishedAt: new Date("2026-01-10T00:00:00.000Z"),
+        payload: {
+          "dados-gerais-cliente": {
+            customers: {
+              "123": {
+                customerCode: 123,
+                tradeName: "Cliente A",
+                document: "00.000.000/0001-00",
+                city: "Maringa",
+                state: "PR",
+                segment: "Construcao",
+                registrationDate: "2024-01-15",
+                primaryCodRep: 10,
+                firstInvoicedPurchaseAt: "2024-02-01",
+                lastInvoicedPurchaseAt: "2026-07-01",
+                branchIndicator: "MGA",
+              },
+            },
+          },
+          "ultimo-pedido-cliente": {
+            customers: {
+              "123": {
+                lastInvoicedPurchaseAt: "2026-08-01",
+                lastLostOrderAt: "2026-08-05",
+                lastCommercialMovementAt: "2026-08-05",
+                invoicedCountSinceJan2024: 10,
+                lostCountSinceJan2024: 4,
+                invoicedCountLast60Days: 2,
+                lostCountLast60Days: 1,
+                invoicedCountLast12Months: 3,
+                lostCountLast12Months: 1,
+                recentInvoicedOrders: [],
+                recentLostOrders: [],
+              },
+            },
+          },
+        },
+      },
+      new Date("2026-01-10T00:00:00.000Z"),
+    );
+    const app = createApp(store);
+
+    const response = await request(app)
+      .get("/api/overview/customers/123")
+      .set("Authorization", `Bearer ${createToken("ADMIN")}`);
+
+    assert.strictEqual(response.status, 200);
+    assert.deepStrictEqual(response.body.orderCounts, {
+      invoicedSinceJan2024: 10,
+      lostSinceJan2024: 4,
+      totalSinceJan2024: 14,
+      invoicedLast60Days: 2,
+      lostLast60Days: 1,
+      totalLast60Days: 3,
+    });
+    assert.strictEqual(response.body.customer.invoicedCountLast12Months, 3);
+    assert.strictEqual(response.body.customer.lostCountLast12Months, 1);
   });
 
   it("returns recent commercial motion slices for authorized users", async () => {
@@ -861,6 +951,20 @@ describe("Overview customer detail HTTP", () => {
                     occurredAt: "2026-08-01",
                     codRep: 10,
                     branchCode: 1,
+                    revenue: 100,
+                    volume: 10,
+                    marginPercent: 20,
+                    items: [
+                      {
+                        productCode: "P1",
+                        productName: "Produto 1",
+                        quantity: 10,
+                        volume: 10,
+                        revenue: 100,
+                        unitPrice: 10,
+                        marginPercent: 20,
+                      },
+                    ],
                   },
                 ],
                 recentLostOrders: [
@@ -898,6 +1002,20 @@ describe("Overview customer detail HTTP", () => {
           occurredAt: "2026-08-01",
           codRep: 10,
           branchCode: 1,
+          revenue: 100,
+          volume: 10,
+          marginPercent: 20,
+          items: [
+            {
+              productCode: "P1",
+              productName: "Produto 1",
+              quantity: 10,
+              volume: 10,
+              revenue: 100,
+              unitPrice: 10,
+              marginPercent: 20,
+            },
+          ],
         },
       ],
       recentLostOrders: [

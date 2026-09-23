@@ -80,6 +80,10 @@ function parseCustomer(value: unknown): OverviewCustomerRecentCommercialMotion |
     lastInvoicedPurchaseAt: value.lastInvoicedPurchaseAt,
     lastLostOrderAt: value.lastLostOrderAt,
     lastCommercialMovementAt: value.lastCommercialMovementAt,
+    invoicedCountSinceJan2024: readOptionalNonNegativeInteger(value.invoicedCountSinceJan2024),
+    lostCountSinceJan2024: readOptionalNonNegativeInteger(value.lostCountSinceJan2024),
+    invoicedCountLast60Days: readOptionalNonNegativeInteger(value.invoicedCountLast60Days),
+    lostCountLast60Days: readOptionalNonNegativeInteger(value.lostCountLast60Days),
     invoicedCountLast12Months: value.invoicedCountLast12Months,
     lostCountLast12Months: value.lostCountLast12Months,
     recentInvoicedOrders: value.recentInvoicedOrders.filter(isRecentInvoicedOrder),
@@ -92,12 +96,42 @@ function isRecentInvoicedOrder(value: unknown): value is OverviewCustomerRecentI
     return false;
   }
 
+  if (
+    !isPositiveInteger(value.orderNumber) ||
+    !isDateString(value.occurredAt) ||
+    !isNullableNumber(value.codRep) ||
+    !isNullableNumber(value.branchCode) ||
+    !isNumber(value.revenue) ||
+    !isNumber(value.volume) ||
+    !isNullableNumber(value.marginPercent) ||
+    !Array.isArray(value.items)
+  ) {
+    return false;
+  }
+
+  return value.items.every(isRecentInvoicedOrderItem);
+}
+
+function isRecentInvoicedOrderItem(value: unknown): boolean {
+  if (!isRecord(value)) {
+    return false;
+  }
+
   return (
-    isPositiveInteger(value.orderNumber) &&
-    isDateString(value.occurredAt) &&
-    isNullableNumber(value.codRep) &&
-    isNullableNumber(value.branchCode)
+    typeof value.productCode === "string" &&
+    value.productCode.length > 0 &&
+    typeof value.productName === "string" &&
+    value.productName.length > 0 &&
+    isNumber(value.quantity) &&
+    isNumber(value.volume) &&
+    isNumber(value.revenue) &&
+    isNumber(value.unitPrice) &&
+    isNullableNumber(value.marginPercent)
   );
+}
+
+function isNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
 }
 
 function isRecentLostOrder(value: unknown): value is OverviewCustomerRecentLostOrder {
@@ -131,6 +165,13 @@ function isPositiveInteger(value: unknown): value is number {
 
 function isNonNegativeInteger(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
+function readOptionalNonNegativeInteger(value: unknown): number {
+  if (isNonNegativeInteger(value)) {
+    return value;
+  }
+  return 0;
 }
 
 function isRecord(value: unknown): value is GenericRecord {

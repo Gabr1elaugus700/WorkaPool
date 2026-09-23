@@ -95,6 +95,14 @@ function enrichWithRecentMotion(
         motion?.invoicedCountLast12Months ?? customer.invoicedCountLast12Months,
       lostCountLast12Months:
         motion?.lostCountLast12Months ?? customer.lostCountLast12Months,
+      invoicedCountSinceJan2024:
+        motion?.invoicedCountSinceJan2024 ?? customer.invoicedCountSinceJan2024,
+      lostCountSinceJan2024:
+        motion?.lostCountSinceJan2024 ?? customer.lostCountSinceJan2024,
+      invoicedCountLast60Days:
+        motion?.invoicedCountLast60Days ?? customer.invoicedCountLast60Days,
+      lostCountLast60Days:
+        motion?.lostCountLast60Days ?? customer.lostCountLast60Days,
     };
   }
 
@@ -137,6 +145,10 @@ function isOverviewCustomerIdentity(value: unknown): value is OverviewCustomerId
     isOptionalNullableString(value.lastCommercialMovementAt) &&
     isOptionalNumber(value.invoicedCountLast12Months) &&
     isOptionalNumber(value.lostCountLast12Months) &&
+    isOptionalNumber(value.invoicedCountSinceJan2024) &&
+    isOptionalNumber(value.lostCountSinceJan2024) &&
+    isOptionalNumber(value.invoicedCountLast60Days) &&
+    isOptionalNumber(value.lostCountLast60Days) &&
     isOptionalNumber(value.orderCountLast12Months) &&
     isOptionalNumber(value.revenueLast12Months) &&
     isOptionalNullableNumber(value.daysSinceLastPurchase) &&
