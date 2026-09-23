@@ -162,6 +162,7 @@ export interface LegacyOrder {
   id: string;
   orderNumber: string;
   clientName: string;
+  customerCode?: number;
   status: 'negotiating' | 'lost';
   city: string;
   seller: string;
