@@ -48,6 +48,7 @@ model User {
   workOrders           WorkOrder[]  @relation("WOAssigned")
   workOrdersAssignedBy WorkOrder[]  @relation("WOAssignedBy")
   inspections          Inspection[]
+  overviewCustomerObservations OverviewCustomerObservation[]
 }
 
 // Caminhões Disponíveis
@@ -608,6 +609,21 @@ model OverviewCustomerSyncMeta {
   servedSnapshotId     String?
 
   @@map("overview_customer_sync_meta")
+}
+
+model OverviewCustomerObservation {
+  id           String   @id @default(uuid())
+  customerCode Int
+  authorUserId String
+  body         String   @db.VarChar(2000)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  editedAt     DateTime?
+
+  author User @relation(fields: [authorUserId], references: [id])
+
+  @@index([customerCode, createdAt, id])
+  @@map("overview_customer_observation")
 }
 
 enum GrpproSyncRunStatus {

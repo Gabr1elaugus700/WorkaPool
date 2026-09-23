@@ -11,6 +11,7 @@ import { Package, Truck, MessageSquareMore } from "lucide-react";
 import formatMargin from "@/utils/formatMargin";
 import formatWeight from "@/utils/formatWeight";
 import getInitials from "@/utils/getInitials";
+import { OrderLossCustomerLink } from "./OrderLossCustomerLink";
 
 interface OrderDetailsModalProps {
   order: LegacyOrder;
@@ -72,7 +73,10 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                   Cliente
                 </p>
                 <p className="font-semibold text-gray-900">
-                  {order.clientName}
+                  <OrderLossCustomerLink
+                    customerCode={order.customerCode}
+                    name={order.clientName}
+                  />
                 </p>
               </div>
               <div>

@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { CircleCheck } from "lucide-react";
-import React from "react";
 import type { OverviewCustomerRecentInvoicedOrder } from "../../types/overviewCustomerRecentCommercialMotion.types";
 import { formatOverviewNumber } from "../../utils/overviewCustomerFormatters";
 import { OverviewCustomerSectionCard } from "../OverviewCustomerSectionCard";
@@ -10,7 +9,7 @@ import { OverviewCustomerSectionCardSkeleton } from "./OverviewCustomerSectionCa
 
 type OverviewCustomerRecentOrdersTeaserProps = {
   invoicedOrders: OverviewCustomerRecentInvoicedOrder[];
-  invoicedCountLast12Months: number | null;
+  invoicedCountLast12Months?: number | null;
   isLoading: boolean;
   isError: boolean;
   onViewAll: () => void;
@@ -20,7 +19,7 @@ const TEASER_LIMIT = 5;
 
 export function OverviewCustomerRecentOrdersTeaser({
   invoicedOrders,
-  invoicedCountLast12Months,
+  invoicedCountLast12Months = null,
   isLoading,
   isError,
   onViewAll,

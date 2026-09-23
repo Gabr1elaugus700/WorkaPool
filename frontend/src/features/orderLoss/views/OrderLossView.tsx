@@ -6,6 +6,7 @@ import { SellersList } from "../components/SellersList";
 import FilterButtons from "../components/FilterButtons";
 import ExportButton from "../components/ExportButton";
 import { OrderLossAsyncLayout } from "../components/OrderLossAsyncLayout";
+import { OrderLossCustomerFilterBanner } from "../components/OrderLossCustomerFilterBanner";
 import { useLostOrdersFromSapiens, useOrders } from "../hooks/useOrders";
 import {
   Seller,
@@ -99,6 +100,7 @@ export const OrderLossView = () => {
         id: sapiensOrder.NUMPED,
         orderNumber: sapiensOrder.NUMPED,
         clientName: sapiensOrder.FANTASIA,
+        customerCode: sapiensOrder.CODCLI,
         status: "lost",
         city: sapiensOrder.CIDADE,
         seller: sapiensOrder.APEREP,
@@ -158,6 +160,7 @@ export const OrderLossView = () => {
         id: localOrder.order.id,
         orderNumber: String(localOrder.order.orderNumber),
         clientName: firstSapiensItem?.FANTASIA || "Cliente",
+        customerCode: firstSapiensItem?.CODCLI,
         city: firstSapiensItem?.CIDADE || "Cidade",
         status: "lost",
         seller: seller.name,
@@ -310,9 +313,7 @@ export const OrderLossView = () => {
           </div>
 
           {customerCodeFilter != null ? (
-            <p className="mt-4 rounded-md border border-muted bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
-              Filtrando pedidos perdidos do cliente #{customerCodeFilter}.
-            </p>
+            <OrderLossCustomerFilterBanner customerCode={customerCodeFilter} />
           ) : null}
 
           <div className="mt-6">

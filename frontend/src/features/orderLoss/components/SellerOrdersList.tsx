@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { LegacyOrder, LossReasonCode, lossReasonLabels } from "../types/orderLoss.types";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LossReasonForm } from "./LossReasonForm";
 import { OrderDetailsModal } from "./OrderDetailsModal";
+import { OrderLossCustomerLink } from "./OrderLossCustomerLink";
 import { 
   Calendar, 
   DollarSign, 
@@ -91,7 +92,10 @@ export const SellerOrdersList: React.FC<SellerOrdersListProps> = ({
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-semibold text-lg text-gray-900">
-                          {order.clientName}
+                          <OrderLossCustomerLink
+                            customerCode={order.customerCode}
+                            name={order.clientName}
+                          />
                         </h3>
                         <Badge
                           variant={isLost ? "destructive" : "default"}
