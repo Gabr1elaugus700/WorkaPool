@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gate:
+    name: quality-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            backend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci --prefix frontend --no-audit --fund=false
+          npm ci --prefix backend --no-audit --fund=false
+
+      - name: Generate Prisma client
+        working-directory: backend
+        run: npx prisma generate --schema=prisma/schema.prisma
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Typecheck backend
+        working-directory: backend
+        run: npx tsc --noEmit --project tsconfig.json
+
+      - name: Typecheck frontend
+        working-directory: frontend
+        run: npx tsc --noEmit --project tsconfig.app.json
+
+      - name: Test with coverage
+        run: |
+          npm run test:coverage --prefix backend
+          npm run test:coverage --prefix frontend
+
+      - name: Build
+        run: |
+          npm run build --prefix backend
+          npm run build --prefix frontend
+
+      - name: PR size and test-count gates
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node .github/scripts/pr-quality-gate.mjs

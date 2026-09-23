@@ -1,35 +1,26 @@
-# Quality Gate da Codebase
+# Quality Gate
 
-O workflow [`codebase-quality-gate.yml`](./workflows/codebase-quality-gate.yml) é executado em cada PR direcionado à `main`. Ele sobe um PostgreSQL descartável para permitir que os testes de integração existentes também façam parte da comparação.
+O workflow [`ci.yml`](./workflows/ci.yml) roda em cada PR para `main`, em **um único job**.
 
-## O que é comparado
+## O que o CI faz
 
-O workflow executa a mesma coleta no commit-base e no commit do PR. O relatório compara:
+1. Instala `frontend/` e `backend/`, gera o Prisma client (necessário para typecheck/testes).
+2. `lint` (frontend), `typecheck`, `build` e `test:coverage` nos dois pacotes.
+3. Gates de PR ([`pr-quality-gate.mjs`](./scripts/pr-quality-gate.mjs)):
+   - **tamanho:** falha se o PR adiciona mais de **300 linhas** fora de arquivos de teste e Markdown
+   - **testes:** falha se a quantidade de `test(` / `it(` no diff da base → head diminuiu
+4. Publica cobertura e o resultado dos gates no Summary.
 
-- cobertura V8 de `lines`, `statements`, `functions` e `branches`;
-- total de testes unitários e de integração, testes aprovados e falhas;
-- erros e avisos do ESLint;
-- resultado da verificação TypeScript;
-- vulnerabilidades `npm audit` altas e críticas;
-- alertas de segurança encontrados pelo CodeQL, com os novos alertas destacados pelo GitHub no PR.
+Arquivos ignorados no limite de 300 linhas: `*.test.*`, `*.spec.*`, pastas `test` / `tests` / `__tests__`, e `*.md`.
 
-Cada cobertura é apresentada com valor anterior, valor do PR e variação em pontos percentuais. Testes, ESLint e npm audit também mostram a variação quantitativa. Exemplo: `42,1% → 45,8% (+3,7 pp)`. O CodeQL usa a comparação nativa do GitHub e aparece na aba **Security** e nas anotações do PR.
+## Política
 
-## Política do gate
+O PR falha quando lint, typecheck, build ou testes falham; quando há menos testes que a base; ou quando passa de 300 linhas adicionadas (sem testes nem Markdown).
 
-O PR falha quando:
+Cobertura percentual é **reportada**, mas **não** barra queda de % nesta versão.
 
-- uma suíte de testes falha;
-- a verificação TypeScript falha;
-- qualquer índice de cobertura diminui;
-- aumentam erros ou avisos do ESLint;
-- aumentam vulnerabilidades altas ou críticas no `npm audit`;
-- a análise do CodeQL não consegue concluir.
+Fora deste CI: Postgres / `test:integration`, CodeQL, npm audit, Issues automáticas.
 
-O CodeQL publica os alertas na aba **Security** do repositório. Falhas determinísticas da comparação também podem gerar Issues automaticamente. Issues são deduplicadas por PR e categoria. Em PRs vindos de forks, o GitHub não concede permissão de escrita ao token; nesse caso, o relatório continua funcionando, mas a Issue precisa ser criada manualmente.
+## Onde ver
 
-## Onde consultar
-
-O resultado aparece no **Summary** da execução e no artifact `quality-gate-report`. A execução pode ser reprocessada pelo botão **Re-run jobs** do GitHub Actions.
-
-O workflow não possui agendamento nem é executado por push comum: sua finalidade é validar cada alteração antes do merge em `main`.
+Summary da execução no GitHub Actions.

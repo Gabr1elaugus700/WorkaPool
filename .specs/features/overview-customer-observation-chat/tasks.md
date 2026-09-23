@@ -1,4 +1,4 @@
-# Overview Customer — Histórico de observações — Tasks
+# Overview Customer ÔÇö Hist├│rico de observa├º├Áes ÔÇö Tasks
 
 ## Execution Protocol (MANDATORY -- do not skip)
 
@@ -20,11 +20,11 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | Code Layer | Required Test Type | Coverage Expectation | Location Pattern | Run Command |
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
 | Use cases (list/create/update + access) | unit | 1:1 com ACs OBSCHAT-02..05; edge cases do spec | `backend/test/unit/features/overviewCustomer/**/*.test.ts` | `cd backend && npm test` |
-| Repository | unit | queries de página, cursor, create, update-by-author | `backend/test/unit/features/overviewCustomer/repositories/*.test.ts` | `cd backend && npm test` |
+| Repository | unit | queries de p├ígina, cursor, create, update-by-author | `backend/test/unit/features/overviewCustomer/repositories/*.test.ts` | `cd backend && npm test` |
 | HTTP routes/controller | unit (supertest) | GET/POST/PATCH happy + 400/403/404 por AC | `backend/test/unit/features/overviewCustomer/http/*.test.ts` | `cd backend && npm test` |
-| Prisma schema/migration | none | build gate only | — | migration apply local |
+| Prisma schema/migration | none | build gate only | ÔÇö | migration apply local |
 | Frontend components/hook/service | unit (renderToStaticMarkup) | ACs OBSCHAT-01/04/05 UI; bolhas esquerda/direita | `frontend/src/features/overviewCustomer/**/*.test.ts` | `cd frontend && npm test` |
-| OpenAPI contracts | none | validação manual + route tests | `backend/src/features/overviewCustomer/http/overviewCustomer.contracts.ts` | lint/tsc gate |
+| OpenAPI contracts | none | valida├º├úo manual + route tests | `backend/src/features/overviewCustomer/http/overviewCustomer.contracts.ts` | lint/tsc gate |
 
 ## Gate Check Commands
 
@@ -32,8 +32,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 | Gate Level | When to Use | Command |
 | ---------- | ----------- | ------- |
-| Quick | Após task backend unit | `cd backend && npm test -- --test-name-pattern="Observation"` |
-| Quick | Após task frontend unit | `cd frontend && npm test -- OverviewCustomerObservation` |
+| Quick | Ap├│s task backend unit | `cd backend && npm test -- --test-name-pattern="Observation"` |
+| Quick | Ap├│s task frontend unit | `cd frontend && npm test -- OverviewCustomerObservation` |
 | Full | Fim de cada fase | `cd backend && npm test` + `cd frontend && npm test` + `cd frontend && npm run lint` |
 
 ---
@@ -45,25 +45,25 @@ Phases are ordered and run sequentially - each phase completes before the next b
 ### Phase 1: Backend foundation (MVP API)
 
 ```
-T1 → T2 → T3 → T4 → T5 → T6 → T7
+T1 ÔåÆ T2 ÔåÆ T3 ÔåÆ T4 ÔåÆ T5 ÔåÆ T6 ÔåÆ T7
 ```
 
 ### Phase 2: Frontend MVP (OBSCHAT-01..04)
 
 ```
-T7 → T8 → T9 → T10 → T11 → T12 → T13
+T7 ÔåÆ T8 ÔåÆ T9 ÔåÆ T10 ÔåÆ T11 ÔåÆ T12 ÔåÆ T13
 ```
 
 ### Phase 3: P2 (edit + pagination)
 
 ```
-T13 → T14 → T15 → T16
+T13 ÔåÆ T14 ÔåÆ T15 ÔåÆ T16
 ```
 
-### Phase 4: Verificação
+### Phase 4: Verifica├º├úo
 
 ```
-T16 → T17
+T16 ÔåÆ T17
 ```
 
 ---
@@ -172,7 +172,7 @@ T16 → T17
 
 ### T5: CreateOverviewCustomerObservationUseCase
 
-**What**: Create use case validating trimmed body 1–2000 chars.
+**What**: Create use case validating trimmed body 1ÔÇô2000 chars.
 **Where**: `backend/src/features/overviewCustomer/useCases/CreateOverviewCustomerObservationUseCase.ts`
 **Depends on**: T4
 **Reuses**: `assertOverviewCustomerAccess`, repository
@@ -334,7 +334,7 @@ T16 → T17
 
 **Done when**:
 
-- [ ] Empty state: `Nenhuma observação neste cliente` with composer visible
+- [ ] Empty state: `Nenhuma observa├º├úo neste cliente` with composer visible
 - [ ] Thread renders ascending list of bubbles
 - [ ] Enter submits; Shift+Enter inserts newline
 - [ ] Unit tests cover empty state and keyboard behavior markup
@@ -361,7 +361,7 @@ T16 → T17
 **Done when**:
 
 - [ ] Title = customer trade name
-- [ ] Error copy: `Não foi possível carregar o histórico`
+- [ ] Error copy: `N├úo foi poss├¡vel carregar o hist├│rico`
 - [ ] Closes on overlay, close control, Escape
 - [ ] Does not render fabricated messages on error
 - [ ] Unit tests cover open/close/error states
@@ -387,7 +387,7 @@ T16 → T17
 
 **Done when**:
 
-- [ ] Icon button with `aria-label="Histórico de observações"` beside `tradeName`
+- [ ] Icon button with `aria-label="Hist├│rico de observa├º├Áes"` beside `tradeName`
 - [ ] Click opens modal; detail view remains behind
 - [ ] Re-fetch on each modal open (no stale cache)
 - [ ] `OverviewCustomerDetailHero.test.ts` updated
@@ -527,22 +527,22 @@ T16 → T17
 | Task | Depends On (task body) | Diagram Shows | Status |
 | ---- | ---------------------- | ------------- | ------ |
 | T1 | None | (start) | Match |
-| T2 | T1 | T1 → T2 | Match |
-| T3 | T2 | T2 → T3 | Match |
-| T4 | T3 | T3 → T4 | Match |
-| T5 | T4 | T4 → T5 | Match |
-| T6 | T5 | T5 → T6 | Match |
-| T7 | T6 | T6 → T7 | Match |
-| T8 | T7 | T7 → T8 | Match |
-| T9 | T8 | T8 → T9 | Match |
-| T10 | T9 | T9 → T10 | Match |
-| T11 | T10 | T10 → T11 | Match |
-| T12 | T11 | T11 → T12 | Match |
-| T13 | T12 | T12 → T13 | Match |
-| T14 | T13 | T13 → T14 | Match |
-| T15 | T14 | T14 → T15 | Match |
-| T16 | T15 | T15 → T16 | Match |
-| T17 | T16 | T16 → T17 | Match |
+| T2 | T1 | T1 ÔåÆ T2 | Match |
+| T3 | T2 | T2 ÔåÆ T3 | Match |
+| T4 | T3 | T3 ÔåÆ T4 | Match |
+| T5 | T4 | T4 ÔåÆ T5 | Match |
+| T6 | T5 | T5 ÔåÆ T6 | Match |
+| T7 | T6 | T6 ÔåÆ T7 | Match |
+| T8 | T7 | T7 ÔåÆ T8 | Match |
+| T9 | T8 | T8 ÔåÆ T9 | Match |
+| T10 | T9 | T9 ÔåÆ T10 | Match |
+| T11 | T10 | T10 ÔåÆ T11 | Match |
+| T12 | T11 | T11 ÔåÆ T12 | Match |
+| T13 | T12 | T12 ÔåÆ T13 | Match |
+| T14 | T13 | T13 ÔåÆ T14 | Match |
+| T15 | T14 | T14 ÔåÆ T15 | Match |
+| T16 | T15 | T15 ÔåÆ T16 | Match |
+| T17 | T16 | T16 ÔåÆ T17 | Match |
 
 ---
 

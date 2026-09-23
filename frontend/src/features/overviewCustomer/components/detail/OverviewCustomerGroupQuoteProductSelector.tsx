@@ -1,4 +1,3 @@
-import React from "react";
 import type { OverviewCustomerGroupQuoteProductOption } from "../../types/overviewCustomerGroupQuotes.types";
 
 type OverviewCustomerGroupQuoteProductSelectorProps = {
