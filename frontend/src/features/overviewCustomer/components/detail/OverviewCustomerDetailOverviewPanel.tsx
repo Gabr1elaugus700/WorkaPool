@@ -1,9 +1,8 @@
-import type { OverviewCustomerDetailResponse } from "../../types/overviewCustomerDetail.types";
+import React from "react";
 import type { OverviewCustomerMonthlyEvolutionRow } from "../../types/overviewCustomerMonthlyEvolution.types";
 import type { OverviewCustomerPurchasedProduct } from "../../types/overviewCustomerPurchasedProducts.types";
 import type { OverviewCustomerRecentInvoicedOrder } from "../../types/overviewCustomerRecentCommercialMotion.types";
 import { OverviewCustomerAbcConcentrationCard } from "./OverviewCustomerAbcConcentrationCard";
-import { OverviewCustomerKpiGrid } from "./OverviewCustomerKpiGrid";
 import { OverviewCustomerMarginRangeCard } from "./OverviewCustomerMarginRangeCard";
 import { OverviewCustomerMonthlyEvolutionChart } from "./OverviewCustomerMonthlyEvolutionChart";
 import { OverviewCustomerRecentOrdersTeaser } from "./OverviewCustomerRecentOrdersTeaser";
@@ -14,7 +13,6 @@ import { OverviewCustomerGroupQuotesPanel } from "./OverviewCustomerGroupQuotesP
 type OverviewCustomerDetailOverviewPanelProps = {
   customerCode: number;
   activeTab: OverviewCustomerDetailTabId;
-  summary: OverviewCustomerDetailResponse["commercialSummary"];
   monthlyRows: OverviewCustomerMonthlyEvolutionRow[];
   isMonthlyLoading: boolean;
   isMonthlyError: boolean;
@@ -22,6 +20,7 @@ type OverviewCustomerDetailOverviewPanelProps = {
   isProductsLoading: boolean;
   isProductsError: boolean;
   invoicedOrders: OverviewCustomerRecentInvoicedOrder[];
+  invoicedCountLast12Months: number | null;
   isMotionLoading: boolean;
   isMotionError: boolean;
   onViewAllMotion: () => void;
@@ -30,7 +29,6 @@ type OverviewCustomerDetailOverviewPanelProps = {
 export function OverviewCustomerDetailOverviewPanel({
   customerCode,
   activeTab,
-  summary,
   monthlyRows,
   isMonthlyLoading,
   isMonthlyError,
@@ -38,6 +36,7 @@ export function OverviewCustomerDetailOverviewPanel({
   isProductsLoading,
   isProductsError,
   invoicedOrders,
+  invoicedCountLast12Months,
   isMotionLoading,
   isMotionError,
   onViewAllMotion,
@@ -46,7 +45,6 @@ export function OverviewCustomerDetailOverviewPanel({
 
   return (
     <div className="space-y-4">
-      <OverviewCustomerKpiGrid summary={summary} />
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <OverviewCustomerMonthlyEvolutionChart
@@ -71,6 +69,7 @@ export function OverviewCustomerDetailOverviewPanel({
       </div>
       <OverviewCustomerRecentOrdersTeaser
         invoicedOrders={invoicedOrders}
+        invoicedCountLast12Months={invoicedCountLast12Months}
         isLoading={isMotionLoading}
         isError={isMotionError}
         onViewAll={onViewAllMotion}

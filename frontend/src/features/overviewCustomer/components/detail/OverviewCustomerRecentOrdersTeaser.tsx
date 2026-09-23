@@ -6,6 +6,7 @@ import { OverviewCustomerSectionCardSkeleton } from "./OverviewCustomerSectionCa
 
 type OverviewCustomerRecentOrdersTeaserProps = {
   invoicedOrders: OverviewCustomerRecentInvoicedOrder[];
+  invoicedCountLast12Months?: number | null;
   isLoading: boolean;
   isError: boolean;
   onViewAll: () => void;
@@ -15,17 +16,22 @@ const TEASER_LIMIT = 3;
 
 export function OverviewCustomerRecentOrdersTeaser({
   invoicedOrders,
+  invoicedCountLast12Months = null,
   isLoading,
   isError,
   onViewAll,
 }: OverviewCustomerRecentOrdersTeaserProps) {
   const title = "Pedidos faturados recentes";
+  const description =
+    invoicedCountLast12Months != null
+      ? `Últimas vitórias comerciais · Total (12 meses): ${invoicedCountLast12Months} faturas.`
+      : "Últimas vitórias comerciais antes de abrir a movimentação completa.";
 
   if (isLoading) {
     return (
       <OverviewCustomerSectionCardSkeleton
         title={title}
-        description="Últimas vitórias comerciais antes de abrir a movimentação completa."
+        description={description}
         skeletonClassName="h-20"
         loadingLabel="Carregando pedidos faturados recentes deste cliente."
       />
@@ -48,7 +54,7 @@ export function OverviewCustomerRecentOrdersTeaser({
   return (
     <OverviewCustomerSectionCard
       title={title}
-      description="Últimas vitórias comerciais antes de abrir a movimentação completa."
+      description={description}
       className="border-muted"
       contentClassName="space-y-3"
     >
