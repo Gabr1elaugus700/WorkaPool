@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import React from "react";
 import type { OverviewCustomerGroupPerdidosCardViewState } from "../../utils/overviewCustomerGroupAnaliseDisplay.utils";
 import {
   OVERVIEW_CUSTOMER_GROUP_ANALISE_EMPTY_MESSAGE,

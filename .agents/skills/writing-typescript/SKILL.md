@@ -64,6 +64,7 @@ When creating or editing frontend React UI:
 4. **Colocate by feature.** Put extracted pieces in `features/<feature>/components/`, not back into a generic dump folder or unrelated `components/<area>/`.
 5. **Name by role.** Prefer `PedidoCard`, `CargaDropzone`, `OrderDetailsModal` over vague names like `Helper` or `Section2`.
 6. **Pass narrow props.** Children receive only what they render or invoke; keep fetch/side effects in the view/page or a dedicated hook.
+7. **No unused default `React` import.** Frontend uses `"jsx": "react-jsx"` + `noUnusedLocals`. Prefer `import { useState } from "react"`. Keep `import React` only when the file references `React` (e.g. `React.createElement` in unit tests). Blind `import React from "react"` in `.tsx` fails CI with TS6133.
 
 Reference patterns in-repo: `features/orderLoss/views/OrderLossView.tsx` + `features/orderLoss/components/*`; `features/cargo/pages/ControleDeCargas.tsx` + `features/cargo/components/*`.
 

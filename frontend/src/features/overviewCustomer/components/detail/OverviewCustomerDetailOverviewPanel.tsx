@@ -1,4 +1,3 @@
-import React from "react";
 import type { OverviewCustomerMonthlyEvolutionRow } from "../../types/overviewCustomerMonthlyEvolution.types";
 import type { OverviewCustomerPurchasedProduct } from "../../types/overviewCustomerPurchasedProducts.types";
 import type { OverviewCustomerRecentInvoicedOrder } from "../../types/overviewCustomerRecentCommercialMotion.types";

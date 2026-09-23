@@ -1,4 +1,3 @@
-import React from "react";
 import type { OverviewCustomerGroupAnaliseResponse } from "../../types/overviewCustomerGroupAnalise.types";
 import { useOverviewCustomerGroupAnalise } from "../../hooks/useOverviewCustomerGroupAnalise";
 import {

@@ -85,6 +85,7 @@ Backend ubiquitous language (read before naming):
 
 - Backend: `cd backend && npm test`. Integration: `npm run test:integration` when persistence or HTTP contracts changed.
 - Frontend: `cd frontend && npm run lint`. Also `npm test` when you added or changed tests.
+- Frontend typecheck (required before PR that touches `frontend/`): `cd frontend && npx tsc --noEmit --project tsconfig.app.json`. Catches unused `import React` (TS6133) under `jsx: react-jsx`.
 - **Do not** run `npm run build` or production Prisma scripts to “verify”.
 
 ## 9. Anti-patterns

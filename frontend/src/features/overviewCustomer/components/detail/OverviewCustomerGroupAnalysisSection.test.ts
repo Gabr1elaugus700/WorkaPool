@@ -24,7 +24,6 @@ function createQueryClient(): QueryClient {
         retry: false,
         staleTime: Infinity,
         gcTime: Infinity,
-        networkMode: "offline",
         refetchOnMount: false,
         refetchOnReconnect: false,
         refetchOnWindowFocus: false,

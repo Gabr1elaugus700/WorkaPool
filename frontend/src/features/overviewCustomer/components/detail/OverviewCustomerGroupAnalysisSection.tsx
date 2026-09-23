@@ -1,4 +1,4 @@
-import React, { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { OverviewCustomerAccessDeniedState } from "../OverviewCustomerAccessDeniedState";
 import { OverviewCustomerSectionCard } from "../OverviewCustomerSectionCard";
 import { OverviewCustomerStateMessage } from "../OverviewCustomerStateMessage";
