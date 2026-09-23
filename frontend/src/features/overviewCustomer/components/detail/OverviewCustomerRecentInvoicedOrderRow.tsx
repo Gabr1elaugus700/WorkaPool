@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { formatIsoDateLabel } from "@/utils/formatDate";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import type { OverviewCustomerRecentInvoicedOrder } from "../../types/overviewCustomerRecentCommercialMotion.types";
 import {
   formatOverviewCurrency,

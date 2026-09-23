@@ -1,5 +1,4 @@
 import { formatIsoDateLabel } from "@/utils/formatDate";
-import React from "react";
 import type { OverviewCustomerGroupPerdido } from "../../types/overviewCustomerGroupAnalise.types";
 import {
   formatOverviewCurrency,

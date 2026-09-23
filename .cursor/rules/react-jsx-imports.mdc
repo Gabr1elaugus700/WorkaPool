@@ -1,0 +1,29 @@
+---
+description: Não importar React default ocioso — jsx react-jsx + noUnusedLocals
+globs: frontend/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# React JSX — imports
+
+O frontend usa `"jsx": "react-jsx"` e `"noUnusedLocals": true` em [`frontend/tsconfig.app.json`](frontend/tsconfig.app.json).
+
+## Obrigatório
+
+- **Não** escreva `import React from "react"` só porque o arquivo é `.tsx`.
+- Importe **somente** o que o arquivo lê: `import { useState, useEffect } from "react"`.
+- Em testes com `React.createElement(...)`, o default `import React` **é** necessário — mantenha.
+- Em componentes, prefira JSX; não use `React.createElement` sem motivo.
+
+## Por que a CI quebra
+
+`tsc --noEmit` no quality-gate reporta `TS6133: 'React' is declared but its value is never read` quando o default import existe e ninguém referencia `React` no arquivo. Isso não é “falso positivo”: o valor realmente não é lido sob o automatic runtime.
+
+## Antes de abrir / atualizar PR que toca frontend
+
+```powershell
+cd frontend
+npx tsc --noEmit --project tsconfig.app.json
+```
+
+Não confie só em `npm run lint` — o gate de typecheck é o que pega TS6133.

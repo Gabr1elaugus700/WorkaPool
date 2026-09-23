@@ -1,5 +1,4 @@
 import { Check } from "lucide-react";
-import React from "react";
 import type { OverviewCustomerGroupGanhosCardViewState } from "../../utils/overviewCustomerGroupAnaliseDisplay.utils";
 import {
   OVERVIEW_CUSTOMER_GROUP_ANALISE_EMPTY_MESSAGE,

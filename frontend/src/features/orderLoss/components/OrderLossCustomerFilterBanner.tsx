@@ -1,4 +1,3 @@
-import React from "react";
 import { OrderLossCustomerLink } from "./OrderLossCustomerLink";
 
 type OrderLossCustomerFilterBannerProps = {

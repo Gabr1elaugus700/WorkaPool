@@ -1,4 +1,3 @@
-import React from "react";
 import type { OverviewCustomerRecentInvoicedOrderItem } from "../../types/overviewCustomerRecentCommercialMotion.types";
 import {
   formatOverviewCurrency,

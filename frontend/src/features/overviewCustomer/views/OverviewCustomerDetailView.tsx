@@ -215,7 +215,6 @@ export function OverviewCustomerDetailView() {
           }
           motionPanel={
             <OverviewCustomerDetailMotionPanel
-              customerCode={customerCode}
               lastInvoicedPurchaseAt={
                 recentCommercialMotionQuery.data?.lastInvoicedPurchaseAt ??
                 detail.customer.lastInvoicedPurchaseAt
@@ -239,11 +238,8 @@ export function OverviewCustomerDetailView() {
                 null
               }
               recentInvoicedOrders={recentInvoicedOrders}
-              recentLostOrders={recentCommercialMotionQuery.data?.recentLostOrders ?? []}
               isLoadingInvoiced={recentCommercialMotionQuery.isLoading}
-              isLoadingLost={recentCommercialMotionQuery.isLoading}
               isErrorInvoiced={recentCommercialMotionQuery.isError}
-              isErrorLost={recentCommercialMotionQuery.isError}
             />
           }
         />

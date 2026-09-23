@@ -1,5 +1,4 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import React from "react";
 import { OverviewCustomerDetailHeroSkeleton } from "./OverviewCustomerDetailHeroSkeleton";
 
 export function OverviewCustomerDetailFirstPaintSkeleton() {

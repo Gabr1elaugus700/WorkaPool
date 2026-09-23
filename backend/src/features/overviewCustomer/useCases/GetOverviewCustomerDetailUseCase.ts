@@ -1,24 +1,21 @@
-import { Role } from "@prisma/client";
-import { AppError } from "../../../utils/AppError";
 import type { OverviewCustomerSyncStore } from "../sync/ports";
-import { extractOverviewCustomerIdentitySnapshot } from "../sync/extractOverviewCustomerIdentitySnapshot";
+import { extractOverviewCustomerCommercialSummarySnapshot } from "../sync/extractOverviewCustomerCommercialSummarySnapshot";
 import type {
   OverviewCustomerCommercialSummary,
   OverviewCustomerIdentity,
 } from "../models/OverviewCustomerIdentity";
-import { extractOverviewCustomerCommercialSummarySnapshot } from "../sync/extractOverviewCustomerCommercialSummarySnapshot";
 import {
   buildOverviewCustomerOrderCounts,
   type OverviewCustomerOrderCounts,
 } from "../utils/buildOverviewCustomerOrderCounts";
+import {
+  assertOverviewCustomerAccess,
+  type AssertOverviewCustomerAccessInput,
+} from "../utils/assertOverviewCustomerAccess";
 
 export type { OverviewCustomerOrderCounts };
 
-export type GetOverviewCustomerDetailInput = {
-  customerCode: number;
-  role: Role;
-  codRep?: number;
-};
+export type GetOverviewCustomerDetailInput = AssertOverviewCustomerAccessInput;
 
 export type OverviewCustomerDetailResult = {
   customer: OverviewCustomerIdentity;
@@ -30,42 +27,16 @@ export type OverviewCustomerDetailResult = {
   };
 };
 
-const OVERVIEW_ALLOWED_ROLES: Role[] = [Role.ADMIN, Role.GERENTE_DPTO, Role.VENDAS];
-
 export class GetOverviewCustomerDetailUseCase {
   constructor(private readonly store: OverviewCustomerSyncStore) {}
 
   async execute(input: GetOverviewCustomerDetailInput): Promise<OverviewCustomerDetailResult> {
-    if (!OVERVIEW_ALLOWED_ROLES.includes(input.role)) {
-      throw new AppError({
-        message: "Acesso negado",
-        statusCode: 403,
-        code: "OVERVIEW_CUSTOMER_FORBIDDEN",
-      });
-    }
-
-    const [snapshot, lastSuccessfulSyncAt] = await Promise.all([
-      this.store.getServedSnapshot(),
+    const [access, lastSuccessfulSyncAt] = await Promise.all([
+      assertOverviewCustomerAccess(this.store, input),
       this.store.getLastSuccessfulSyncAt(),
     ]);
 
-    if (!snapshot) {
-      throw new AppError({
-        message: `Overview customer ${input.customerCode} not found`,
-        statusCode: 404,
-        code: "OVERVIEW_CUSTOMER_NOT_FOUND",
-      });
-    }
-
-    const parsed = extractOverviewCustomerIdentitySnapshot(snapshot.payload);
-    const customer = parsed?.customers[String(input.customerCode)] ?? null;
-    if (!customer) {
-      throw new AppError({
-        message: `Overview customer ${input.customerCode} not found`,
-        statusCode: 404,
-        code: "OVERVIEW_CUSTOMER_NOT_FOUND",
-      });
-    }
+    const { customer, snapshot } = access;
 
     const commercialSummarySnapshot = extractOverviewCustomerCommercialSummarySnapshot(
       snapshot.payload,
@@ -73,14 +44,6 @@ export class GetOverviewCustomerDetailUseCase {
     const commercialSummary =
       commercialSummarySnapshot?.customers[String(input.customerCode)] ??
       emptyCommercialSummary();
-
-    if (input.role === Role.VENDAS && customer.primaryCodRep !== input.codRep) {
-      throw new AppError({
-        message: "Acesso negado",
-        statusCode: 403,
-        code: "OVERVIEW_CUSTOMER_FORBIDDEN",
-      });
-    }
 
     return {
       customer: {

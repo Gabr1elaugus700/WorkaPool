@@ -1,4 +1,3 @@
-import React from "react";
 import type { OverviewCustomerRecentInvoicedOrder } from "../types/overviewCustomerRecentCommercialMotion.types";
 import { OverviewCustomerDetailMotionPanel } from "./detail/OverviewCustomerDetailMotionPanel";
 
