@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import React from "react";
 
 export function OverviewCustomerDetailHeroSkeleton() {
   return (

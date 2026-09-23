@@ -25,7 +25,11 @@ export function formatPurchaseFrequencyDays(value: number | null): string {
   if (value == null) {
     return "Não informado";
   }
-  return `${formatNumber(value)} dias`;
+  const days = Math.round(value);
+  if (days === 1) {
+    return "1 dia";
+  }
+  return `${formatNumber(days)} dias`;
 }
 
 export function estimateNextPurchaseDate(

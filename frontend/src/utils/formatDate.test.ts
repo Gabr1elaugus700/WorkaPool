@@ -5,6 +5,7 @@ import {
   formatDaysSinceLastPurchase,
   formatEstimatedDaysUntilNextPurchase,
   formatIsoDateLabel,
+  formatPurchaseFrequencyDays,
 } from "./formatDate";
 
 describe("formatDate", () => {
@@ -13,6 +14,13 @@ describe("formatDate", () => {
     assert.equal(formatDaysSinceLastPurchase(1), "1 dia");
     assert.equal(formatDaysSinceLastPurchase(9), "9 dias");
     assert.equal(formatDaysSinceLastPurchase(null), "Não informado");
+  });
+
+  it("formats purchase frequency as whole days", () => {
+    assert.equal(formatPurchaseFrequencyDays(1.29), "1 dia");
+    assert.equal(formatPurchaseFrequencyDays(1.5), "2 dias");
+    assert.equal(formatPurchaseFrequencyDays(null), "Não informado");
+    assert.equal(formatPurchaseFrequencyDays(-1.2), "-1 dias");
   });
 
   it("estimates next purchase date from last purchase and frequency", () => {

@@ -1,7 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { MapPin } from "lucide-react";
+import React from "react";
 import { cn } from "@/lib/utils";
-import type { OverviewCustomerIdentity } from "../../types/overviewCustomerDetail.types";
+import type {
+  OverviewCustomerIdentity,
+  OverviewCustomerOrderCounts,
+} from "../../types/overviewCustomerDetail.types";
 import {
   deriveOverviewCustomerInitials,
   formatOverviewBranchIndicator,
@@ -11,18 +15,29 @@ import {
   formatEstimatedDaysUntilNextPurchase,
   formatIsoDateLabel,
 } from "@/utils/formatDate";
+import {
+  formatOverviewCurrency,
+  formatOverviewNumber,
+} from "../../utils/overviewCustomerFormatters";
 import { OverviewCustomerHealthScoreMock } from "./OverviewCustomerHealthScoreMock";
 
 export type OverviewCustomerDetailHeroCommercialSignals = {
   purchaseFrequencyDays: number | null;
   daysSinceLastPurchase: number | null;
-  maxInvoicedOrderMarginPercent: number | null;
-  minInvoicedOrderMarginPercent: number | null;
+};
+
+export type OverviewCustomerDetailHeroBilling = {
+  revenueLast30Days: number;
+  volumeLast30Days: number;
+  revenueLast12Months: number;
+  volumeLast12Months: number;
 };
 
 type OverviewCustomerDetailHeroProps = {
   customer: OverviewCustomerIdentity;
   commercialSignals: OverviewCustomerDetailHeroCommercialSignals;
+  billing: OverviewCustomerDetailHeroBilling;
+  orderCounts?: OverviewCustomerOrderCounts | null;
 };
 
 type FooterItemProps = {
@@ -30,6 +45,41 @@ type FooterItemProps = {
   value: React.ReactNode;
   valueClassName?: string;
 };
+
+function BillingColumn({ billing }: { billing: OverviewCustomerDetailHeroBilling }) {
+  return (
+    <div className="shrink-0 space-y-3 md:text-right">
+      <div className="space-y-1">
+        <p className="text-xs font-medium uppercase tracking-wide text-background/75">
+          Faturamento · últimos 30 dias
+        </p>
+        <p className="text-3xl font-semibold tabular-nums tracking-tight text-background">
+          {formatOverviewCurrency(billing.revenueLast30Days)}
+        </p>
+        <p className="text-sm text-background/75">
+          Volume{" "}
+          <span className="font-semibold tabular-nums text-background">
+            {formatOverviewNumber(billing.volumeLast30Days)}
+          </span>
+        </p>
+      </div>
+      <div className="space-y-0.5">
+        <p className="text-xs font-medium uppercase tracking-wide text-background/75">
+          Últimos 12 meses
+        </p>
+        <p className="text-base font-semibold tabular-nums text-background">
+          {formatOverviewCurrency(billing.revenueLast12Months)}
+        </p>
+        <p className="text-sm text-background/75">
+          Volume{" "}
+          <span className="font-semibold tabular-nums text-background">
+            {formatOverviewNumber(billing.volumeLast12Months)}
+          </span>
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function FooterItem({ label, value, valueClassName }: FooterItemProps) {
   return (
@@ -43,6 +93,8 @@ function FooterItem({ label, value, valueClassName }: FooterItemProps) {
 export function OverviewCustomerDetailHero({
   customer,
   commercialSignals,
+  billing,
+  orderCounts,
 }: OverviewCustomerDetailHeroProps) {
   const initials = deriveOverviewCustomerInitials(customer.tradeName);
   const estimatedNextPurchase = estimateNextPurchaseDate(
@@ -62,8 +114,8 @@ export function OverviewCustomerDetailHero({
 
   return (
     <section className="overflow-hidden rounded-lg border border-border/80 bg-foreground text-background shadow-sm">
-      <div className="flex flex-col gap-5 p-5 md:flex-row md:items-start md:justify-between md:p-6">
-        <div className="flex min-w-0 items-start gap-4">
+      <div className="flex flex-col gap-5 p-5 md:flex-row md:items-start md:justify-between md:gap-8 md:p-6">
+        <div className="flex min-w-0 flex-1 items-start gap-4">
           <div
             className={cn(
               "flex h-14 w-14 shrink-0 items-center justify-center rounded-lg",
@@ -116,13 +168,13 @@ export function OverviewCustomerDetailHero({
             </div>
           </div>
         </div>
-        <OverviewCustomerHealthScoreMock
-          daysSinceLastPurchase={commercialSignals.daysSinceLastPurchase}
-          purchaseFrequencyDays={commercialSignals.purchaseFrequencyDays}
-          maxInvoicedOrderMarginPercent={commercialSignals.maxInvoicedOrderMarginPercent}
-          minInvoicedOrderMarginPercent={commercialSignals.minInvoicedOrderMarginPercent}
-        />
+        <BillingColumn billing={billing} />
       </div>
+      <OverviewCustomerHealthScoreMock
+        daysSinceLastPurchase={commercialSignals.daysSinceLastPurchase}
+        purchaseFrequencyDays={commercialSignals.purchaseFrequencyDays}
+        orderCounts={orderCounts}
+      />
       <div className="grid grid-cols-1 border-t border-border/80 bg-card text-card-foreground sm:grid-cols-2 lg:grid-cols-5">
         <FooterItem
           label="Vendedor responsável"
