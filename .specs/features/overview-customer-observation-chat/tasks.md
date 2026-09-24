@@ -160,10 +160,10 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Returns at most 50 items, ascending by `createdAt`, with `hasOlder` and `nextBefore`
-- [ ] Author display name = `User.name || User.user`
-- [ ] Unit tests cover ACs OBSCHAT-02 (1..6) and same-`createdAt` tie-break
-- [ ] Gate passes: quick backend observation tests
+- [x] Returns at most 50 items, ascending by `createdAt`, with `hasOlder` and `nextBefore`
+- [x] Author display name = `User.name || User.user`
+- [x] Unit tests cover ACs OBSCHAT-02 (1..6) and same-`createdAt` tie-break
+- [x] Gate passes: quick backend observation tests
 
 **Tests**: unit
 **Gate**: quick
@@ -185,11 +185,11 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Persists with `authorUserId`, `editedAt: null`
-- [ ] Returns 400 `OBSERVATION_INVALID_BODY` for empty or >2000 after trim
-- [ ] Returns 403 for VENDAS with wrong `codRep`
-- [ ] Unit tests cover ACs OBSCHAT-03 (1..6)
-- [ ] Gate passes: quick backend observation tests
+- [x] Persists with `authorUserId`, `editedAt: null`
+- [x] Returns 400 `OBSERVATION_INVALID_BODY` for empty or >2000 after trim
+- [x] Returns 403 for VENDAS with wrong `codRep`
+- [x] Unit tests cover ACs OBSCHAT-03 (1..6)
+- [x] Gate passes: quick backend observation tests
 
 **Tests**: unit
 **Gate**: quick
@@ -199,7 +199,7 @@ T16 ÔåÆ T17
 ### T6: HTTP layer GET + POST observations
 
 **What**: Wire GET and POST observation routes, controller, and route tests.
-**Where**: `backend/src/features/overviewCustomer/http/routes/overviewCustomerDetailRoutes.ts`
+**Where**: `backend/src/features/overviewCustomer/http/routes/overviewCustomerObservationRoutes.ts`, mounted in `http/createOverviewCustomerRouter.ts`
 **Depends on**: T5
 **Reuses**: `overviewCustomerDetailRoutes.test.ts` supertest pattern
 **Requirement**: OBSCHAT-02, OBSCHAT-03
@@ -211,10 +211,10 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] `GET /api/overview/customers/:clienteId/observations` works with optional `before`
-- [ ] `POST /api/overview/customers/:clienteId/observations` returns 201
-- [ ] Route tests cover happy path + 400/403/404 per spec
-- [ ] Gate passes: full backend test suite for observation routes
+- [x] `GET /api/overview/customers/:clienteId/observations` works with optional `beforeCreatedAt` + `beforeId`
+- [x] `POST /api/overview/customers/:clienteId/observations` returns 201
+- [x] Route tests cover happy path + 400/403/404 per spec
+- [x] Gate passes: full backend test suite for observation routes
 
 **Tests**: unit
 **Gate**: full

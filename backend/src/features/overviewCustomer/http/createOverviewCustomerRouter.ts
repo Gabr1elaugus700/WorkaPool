@@ -1,6 +1,8 @@
+import { Router } from "express";
 import { getPrismaClient } from "../../../config/prisma";
 import { OverviewCustomerSyncRepository } from "../repositories/OverviewCustomerSyncRepository";
 import { createOverviewCustomerDetailRoutes } from "./routes/overviewCustomerDetailRoutes";
+import { createOverviewCustomerObservationRoutes } from "./routes/overviewCustomerObservationRoutes";
 import { GetOverviewCustomerDetailUseCase } from "../useCases/GetOverviewCustomerDetailUseCase";
 import { ListOverviewCustomersUseCase } from "../useCases/ListOverviewCustomersUseCase";
 import { GetOverviewCustomerMonthlyEvolutionUseCase } from "../useCases/GetOverviewCustomerMonthlyEvolutionUseCase";
@@ -10,6 +12,10 @@ import { GetOverviewCustomerAbcGroupsUseCase } from "../useCases/GetOverviewCust
 import { GetOverviewCustomerGroupAnaliseUseCase } from "../useCases/GetOverviewCustomerGroupAnaliseUseCase";
 import { GetOverviewCustomerGroupGanhosUseCase } from "../useCases/GetOverviewCustomerGroupGanhosUseCase";
 import { GetOverviewCustomerGroupQuotesUseCase } from "../useCases/GetOverviewCustomerGroupQuotesUseCase";
+import { ListOverviewCustomerObservationsUseCase } from "../useCases/ListOverviewCustomerObservationsUseCase";
+import { CreateOverviewCustomerObservationUseCase } from "../useCases/CreateOverviewCustomerObservationUseCase";
+import { OverviewCustomerObservationRepository } from "../repositories/OverviewCustomerObservationRepository";
+import { OverviewCustomerObservationAuthorRepository } from "../repositories/OverviewCustomerObservationAuthorRepository";
 import { OverviewCustomerOrderLossRepository } from "../repositories/OverviewCustomerOrderLossRepository";
 import { OverviewCustomerSellerNameRepository } from "../repositories/OverviewCustomerSellerNameRepository";
 import { CachedOverviewCustomerGroupQuotesReader } from "../sync/CachedOverviewCustomerGroupQuotesReader";
@@ -24,26 +30,49 @@ export function createOverviewCustomerRouter(
   const groupQuotesReader = new CachedOverviewCustomerGroupQuotesReader(
     new OverviewCustomerGroupQuotesSeniorQuery(),
   );
-  return createOverviewCustomerDetailRoutes({
-    getDetail: new GetOverviewCustomerDetailUseCase(store),
-    listCustomers: new ListOverviewCustomersUseCase(store),
-    getMonthlyEvolution: new GetOverviewCustomerMonthlyEvolutionUseCase(store),
-    getRecentCommercialMotion: new GetOverviewCustomerRecentCommercialMotionUseCase(
-      store,
-    ),
-    getPurchasedProducts: new GetOverviewCustomerPurchasedProductsUseCase(store),
-    getAbcGroups: new GetOverviewCustomerAbcGroupsUseCase(store),
-    getGroupGanhos: new GetOverviewCustomerGroupGanhosUseCase(store),
-    getGroupAnalise: new GetOverviewCustomerGroupAnaliseUseCase(
-      store,
-      new OverviewCustomerGroupPerdidosSeniorQuery(),
-      orderLoss,
-    ),
-    getGroupQuotes: new GetOverviewCustomerGroupQuotesUseCase(
-      store,
-      groupQuotesReader,
-      orderLoss,
-      new OverviewCustomerSellerNameRepository(prisma),
-    ),
-  });
+  const observations = new OverviewCustomerObservationRepository(prisma);
+  const observationAuthors = new OverviewCustomerObservationAuthorRepository(prisma);
+
+  const router = Router();
+  router.use(
+    "/:clienteId/observations",
+    createOverviewCustomerObservationRoutes({
+      listObservations: new ListOverviewCustomerObservationsUseCase(
+        store,
+        observations,
+        observationAuthors,
+      ),
+      createObservation: new CreateOverviewCustomerObservationUseCase(
+        store,
+        observations,
+        observationAuthors,
+      ),
+    }),
+  );
+  router.use(
+    "/",
+    createOverviewCustomerDetailRoutes({
+      getDetail: new GetOverviewCustomerDetailUseCase(store),
+      listCustomers: new ListOverviewCustomersUseCase(store),
+      getMonthlyEvolution: new GetOverviewCustomerMonthlyEvolutionUseCase(store),
+      getRecentCommercialMotion: new GetOverviewCustomerRecentCommercialMotionUseCase(
+        store,
+      ),
+      getPurchasedProducts: new GetOverviewCustomerPurchasedProductsUseCase(store),
+      getAbcGroups: new GetOverviewCustomerAbcGroupsUseCase(store),
+      getGroupGanhos: new GetOverviewCustomerGroupGanhosUseCase(store),
+      getGroupAnalise: new GetOverviewCustomerGroupAnaliseUseCase(
+        store,
+        new OverviewCustomerGroupPerdidosSeniorQuery(),
+        orderLoss,
+      ),
+      getGroupQuotes: new GetOverviewCustomerGroupQuotesUseCase(
+        store,
+        groupQuotesReader,
+        orderLoss,
+        new OverviewCustomerSellerNameRepository(prisma),
+      ),
+    }),
+  );
+  return router;
 }

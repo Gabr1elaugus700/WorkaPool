@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { AppError } from "../../../../utils/AppError";
+import { sendOverviewCustomerError } from "../overviewCustomerHttpResponses";
 import type { GetOverviewCustomerDetailUseCase } from "../../useCases/GetOverviewCustomerDetailUseCase";
 import type { GetOverviewCustomerMonthlyEvolutionUseCase } from "../../useCases/GetOverviewCustomerMonthlyEvolutionUseCase";
 import type { GetOverviewCustomerRecentCommercialMotionUseCase } from "../../useCases/GetOverviewCustomerRecentCommercialMotionUseCase";
@@ -320,18 +320,11 @@ export class OverviewCustomerDetailController {
   };
 
   private mapError(res: Response, error: unknown): Response {
-    if (error instanceof AppError) {
-      return res.status(error.statusCode).json({
-        error: error.message,
-        code: error.code,
-        details: error.details,
-      });
-    }
-
-    return res.status(500).json({
-      error: "Erro ao buscar detalhes do cliente no Overview",
-      code: "INTERNAL_ERROR",
-    });
+    return sendOverviewCustomerError(
+      res,
+      error,
+      "Erro ao buscar detalhes do cliente no Overview",
+    );
   }
 }
 
