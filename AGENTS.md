@@ -74,7 +74,7 @@ Backend ubiquitous language (read before naming):
 
 | Path | What |
 | --- | --- |
-| [.cursor/rules/](./.cursor/rules/) | [backend-role.md](./.cursor/rules/backend-role.md), [local-dev-ports.mdc](./.cursor/rules/local-dev-ports.mdc), [task-intake.mdc](./.cursor/rules/task-intake.mdc) |
+| [.cursor/rules/](./.cursor/rules/) | [backend-role.md](./.cursor/rules/backend-role.md), [local-dev-ports.mdc](./.cursor/rules/local-dev-ports.mdc), [task-intake.mdc](./.cursor/rules/task-intake.mdc), [github-issue-branch-pr.mdc](./.cursor/rules/github-issue-branch-pr.mdc) (issue → branch → PR; modo epic + worktrees via `scripts/worktree.ps1`) |
 | [.cursor/skills/](./.cursor/skills/) | [tlc-spec-driven](./.cursor/skills/tlc-spec-driven/SKILL.md), [impeccable](./.cursor/skills/impeccable/SKILL.md), [create-github-issue](./.cursor/skills/create-github-issue/SKILL.md) |
 | [.agents/skills/](./.agents/skills/) | [writing-typescript](./.agents/skills/writing-typescript/SKILL.md), [tdd](./.agents/skills/tdd/SKILL.md), [code-review](./.agents/skills/code-review/SKILL.md), [diagnosing-bugs](./.agents/skills/diagnosing-bugs/SKILL.md) |
 | [.cursor/agents/](./.cursor/agents/) | [task-intake](./.cursor/agents/task-intake.md) — capture ideas/bugs; do not implement |

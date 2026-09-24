@@ -13,6 +13,9 @@ const MAX_ADDED_LINES = 300;
 const root = process.cwd();
 const baseSha = process.env.BASE_SHA;
 const headSha = process.env.HEAD_SHA ?? "HEAD";
+// PR epic/* → main agrega as filhas, que já passaram pelo limite de tamanho.
+const isEpicToMain =
+  process.env.BASE_REF === "main" && (process.env.HEAD_REF ?? "").startsWith("epic/");
 
 if (!baseSha) {
   console.error("BASE_SHA é obrigatório.");
@@ -138,7 +141,7 @@ const lines = [
   `| Métrica | Base | PR |`,
   `| --- | ---: | ---: |`,
   `| Testes (test/it) | ${baseTests} | ${headTests} |`,
-  `| Linhas adicionadas (sem testes/md) | — | ${size.added} / ${MAX_ADDED_LINES} |`,
+  `| Linhas adicionadas (sem testes/md) | — | ${size.added} / ${isEpicToMain ? "dispensado (epic → main)" : MAX_ADDED_LINES} |`,
 ];
 
 if (backendCoverage) {
@@ -164,7 +167,7 @@ if (size.files.length > 0) {
 
 const findings = [];
 
-if (size.added > MAX_ADDED_LINES) {
+if (!isEpicToMain && size.added > MAX_ADDED_LINES) {
   findings.push(
     `PR com ${size.added} linhas adicionadas fora de testes/Markdown (limite ${MAX_ADDED_LINES}).`,
   );
