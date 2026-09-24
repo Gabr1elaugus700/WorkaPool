@@ -122,11 +122,11 @@ model OverviewCustomerObservation {
 
 | Method | Path | Purpose |
 | ------ | ---- | ------- |
-| GET | `/api/overview/customers/:clienteId/observations?before=<cursor>` | Newest page (50), ascending payload |
+| GET | `/api/overview/customers/:clienteId/observations?beforeCreatedAt=<ISO>&beforeId=<id>` | Newest page (50), ascending payload |
 | POST | `/api/overview/customers/:clienteId/observations` | Create observation |
 | PATCH | `/api/overview/customers/:clienteId/observations/:observationId` | Author edit |
 
-Cursor `before`: composite `{ createdAt, id }` of oldest loaded item.
+Cursor: `beforeCreatedAt` + `beforeId` (sent together) = `nextBefore` `{ createdAt, id }` of oldest loaded item. Only one of them, or a non-ISO `beforeCreatedAt`, returns 400 `OBSERVATION_INVALID_CURSOR`.
 
 ### Error codes
 
@@ -135,6 +135,8 @@ Cursor `before`: composite `{ createdAt, id }` of oldest loaded item.
 | `OVERVIEW_CUSTOMER_FORBIDDEN` | 403 |
 | `OVERVIEW_CUSTOMER_NOT_FOUND` | 404 |
 | `OBSERVATION_INVALID_BODY` | 400 |
+| `OBSERVATION_INVALID_CURSOR` | 400 |
+| `OVERVIEW_CUSTOMER_INVALID_ID` | 400 |
 | `OBSERVATION_EDIT_FORBIDDEN` | 403 |
 | `OBSERVATION_NOT_FOUND` | 404 |
 
