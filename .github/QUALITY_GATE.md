@@ -1,6 +1,6 @@
 # Quality Gate
 
-O workflow [`ci.yml`](./workflows/ci.yml) roda em cada PR para `main`, em **um único job**.
+O workflow [`ci.yml`](./workflows/ci.yml) roda em cada PR para `main` e para `epic/**` (filhas de uma epic), em **um único job**. Fluxo de branches: [github-issue-branch-pr.mdc](../.cursor/rules/github-issue-branch-pr.mdc).
 
 ## O que o CI faz
 
@@ -12,6 +12,8 @@ O workflow [`ci.yml`](./workflows/ci.yml) roda em cada PR para `main`, em **um �
 4. Publica cobertura e o resultado dos gates no Summary.
 
 Arquivos ignorados no limite de 300 linhas: `*.test.*`, `*.spec.*`, pastas `test` / `tests` / `__tests__`, e `*.md`.
+
+**Exceção epic:** PR de `epic/*` para `main` dispensa só o limite de 300 linhas, porque agrega filhas que já passaram por ele no PR filha → epic. Lint, typecheck, build, testes e o gate de quantidade de testes continuam valendo.
 
 ## Política
 

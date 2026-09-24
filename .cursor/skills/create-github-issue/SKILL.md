@@ -46,7 +46,21 @@ Heurística:
 - infra → quando envolver infraestrutura, deploy, Docker, CI/CD, banco de dados ou ambiente
 - ai → quando envolver lógica de IA, prompts, agentes, automações com LLM ou comportamento inteligente
 
+## Epic (issue pai + filhas)
+
+Quando o trabalho for uma epic (varias issues entregues numa branch pai `epic/<n>-slug`):
+- **Issue pai:** `type:feature` + natureza + `epic`. No corpo, secao `## Filhas` com checklist `- [ ] #<m>` (atualizar a cada filha criada).
+- **Issue filha:** pergunte o numero da pai se nao estiver claro. Inclua `Parte de #<n>` no inicio do corpo e vincule como sub-issue:
+
+```bash
+child_id=$(gh api repos/{owner}/{repo}/issues/<m> --jq .id)
+gh api repos/{owner}/{repo}/issues/<n>/sub_issues -X POST -F sub_issue_id=$child_id
+```
+
+Se o vinculo de sub-issue falhar, mantenha so o `Parte de #<n>` + checklist na pai e avise o usuario. Fluxo de branch/PR da epic: [github-issue-branch-pr.mdc](../../rules/github-issue-branch-pr.mdc).
+
 Labels disponiveis no repositorio:
+- epic (Issue pai de uma epic) - `#3E4B9E`
 - type:feature (Feature — full pipeline) - `#0E8A16`
 - type:hotfix (Hotfix — same CI, no PRD ceremony) - `#D93F0B`
 - bug (Something isn't working) - `#d73a4a`
@@ -68,6 +82,7 @@ Labels disponiveis no repositorio:
 - Sempre incluir **pelo menos uma** label de natureza.
 - Priorize clareza e contexto técnico.
 - Se aplicável, use mais de uma label de natureza.
+- Issue pai de epic: adicionar também `epic`.
 
 ## Estrutura da Issue
 

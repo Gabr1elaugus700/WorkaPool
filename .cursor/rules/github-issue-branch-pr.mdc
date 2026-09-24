@@ -1,5 +1,5 @@
 ---
-description: Fluxo trunk-based — issue com labels type:* + natureza, branch curta por issue, PR que fecha a issue.
+description: Fluxo issue → branch → PR com worktrees — modo standalone (PR para main) e modo epic (filhas com PR para a branch pai epic/<n>-slug).
 alwaysApply: true
 ---
 
@@ -16,41 +16,93 @@ Exatamente **um** pipeline + **≥1** natureza:
 
 Natureza (já no repo): `bug`, `enhancement`, `documentation`, `refactor`, `test`, `performance`, `infra`, `ai`.
 
-Exemplos: `type:feature` + `enhancement`; `type:hotfix` + `bug`.
+Issue pai de epic: adicionar também a label `epic`.
+
+Exemplos: `type:feature` + `enhancement`; `type:hotfix` + `bug`; `type:feature` + `enhancement` + `epic`.
 
 Se a issue estiver sem `type:*` ou sem natureza → completar labels **antes** de abrir branch ou PR.
 
-## Branch (uma issue = uma branch)
+## Dois modos
 
-Sempre da `main` atualizada. Nunca de outra feature em andamento. Vida curta: nasce, vira PR, morre.
+| Modo | Quando | Branch | Base | PR para |
+| --- | --- | --- | --- | --- |
+| standalone | Issue sem pai | `feature/<n>-slug` / `hotfix/<n>-slug` | `origin/main` | `main` |
+| epic (pai) | Issue pai com label `epic` | `epic/<n>-slug` | `origin/main` | `main` (só no fim da epic) |
+| epic (filha) | Issue com `Parte de #<n>` | `feature/<m>-slug` / `hotfix/<m>-slug` | `origin/epic/<n>-slug` | `epic/<n>-slug` |
 
-- `type:feature` → `feature/<n>-slug`
-- `type:hotfix` → `hotfix/<n>-slug`
+Uma issue = uma branch = uma worktree. Filha nasce **sempre** do pai no remoto, nunca da `main` nem de outra filha.
 
-```bash
-git checkout main && git pull
-git checkout -b feature/123-slug   # ou hotfix/123-slug
+## Worktrees (nome determinístico)
+
+Todas as worktrees ficam na pasta irmã `../WorkaPool.worktrees/`. O nome da pasta é a branch com `/` trocado por `-`; filha leva o prefixo da epic:
+
+| Branch | Pasta |
+| --- | --- |
+| `epic/120-overview-customer` | `epic-120-overview-customer` |
+| `feature/123-observacoes` (filha da 120) | `epic-120--feature-123-observacoes` |
+| `hotfix/130-ajuste-x` (standalone) | `hotfix-130-ajuste-x` |
+
+Crie e remova **sempre** pelo script (roda do repo principal ou de qualquer worktree):
+
+```powershell
+./scripts/worktree.ps1 new-epic  -Issue 120 -Slug overview-customer              # epic/120-... de origin/main + push
+./scripts/worktree.ps1 new-child -Epic 120 -Issue 123 -Slug observacoes -Type feature   # de origin/epic/120-...
+./scripts/worktree.ps1 new       -Issue 130 -Slug ajuste-x -Type hotfix          # standalone, de origin/main
+./scripts/worktree.ps1 remove    -Issue 123                                       # pasta + branch local + prune
 ```
 
-## PR fecha a issue
+Slug: kebab-case, minúsculo, sem acento.
 
-Assim que a issue estiver pronta (não espera a Epic inteira):
+## PR — standalone
 
 ```bash
 git push -u origin HEAD
-gh pr create --title "feat: X (closes #123)" --body "Resolve #123" --base main
+gh pr create --base main --title "feat: X (closes #130)" --body "Resolve #130"
+gh pr merge --squash --delete-branch
+./scripts/worktree.ps1 remove -Issue 130
 ```
 
-Merge: squash + apagar branch; sync local; próxima issue:
+## PR — filha → epic
+
+`closes #N` **só fecha a issue automaticamente em merge na branch padrão (`main`)**. Em PR para `epic/*` a issue filha precisa ser fechada explicitamente.
 
 ```bash
-gh pr merge --squash --delete-branch
-git checkout main && git pull
+git push -u origin HEAD
+gh pr create --base epic/120-overview-customer --title "feat: X (#123)" --body "Resolve #123
+Parte de #120"
+gh pr merge <pr> --squash --delete-branch
+gh issue close 123 --comment "Entregue em #<pr> na epic/120-overview-customer"
+./scripts/worktree.ps1 remove -Issue 123
 ```
+
+Próxima filha: criar de novo com `new-child` (o script faz `fetch`, então já sai do pai atualizado).
+
+## Sincronizar a epic com a main
+
+Epic longa: na worktree do pai, `git fetch origin && git merge origin/main && git push`. Sem rebase — a branch é compartilhada pelas filhas.
+
+## PR — epic → main
+
+Só quando todas as filhas estiverem mergeadas e fechadas. Fecha a issue pai.
+
+```bash
+gh pr create --base main --label epic --title "feat: <épico> (closes #120)" --body "Closes #120
+
+Filhas: #123, #124"
+gh pr merge <pr> --merge --delete-branch     # merge commit: preserva um commit por filha
+./scripts/worktree.ps1 remove -Issue 120
+```
+
+No CI, PR `epic/*` → `main` dispensa só o limite de 300 linhas; o resto do quality gate vale (ver [.github/QUALITY_GATE.md](../../.github/QUALITY_GATE.md)).
 
 ## Proibido
 
 - Trabalhar issue sem labels `type:*` + natureza
 - Branch sem número da issue, ou uma branch cobrindo várias issues
+- Filha criada a partir de outra filha ou da `main`; PR de filha direto para a `main`
+- `closes #<pai>` em PR de filha
+- Deixar issue filha aberta depois do merge na epic
+- `git checkout main` dentro de worktree (use `origin/main` via script)
+- Worktree com nome fora do padrão, dentro do repo principal ou dentro de outra worktree (inclui as worktrees automáticas do Cursor com nome aleatório)
 - PR sem `closes #N` / `Resolve #N`
-- Push direto em `main` (fluxo é sempre via PR)
+- Push direto em `main` ou em `epic/*` (fluxo é sempre via PR; exceção: merge de sincronização `origin/main` na epic)
