@@ -27,9 +27,11 @@ param(
 $ErrorActionPreference = 'Stop'
 
 function Invoke-Git {
-  param([string[]]$GitArgs)
+  param([string[]]$GitArgs, [switch]$AllowFailure)
+  # git escreve progresso no stderr; com 'Stop' o PowerShell 5.1 trataria isso como erro fatal quando o stderr e redirecionado.
+  $ErrorActionPreference = 'Continue'
   $output = & git @GitArgs
-  if ($LASTEXITCODE -ne 0) {
+  if ($LASTEXITCODE -ne 0 -and -not $AllowFailure) {
     throw "git $($GitArgs -join ' ') falhou (exit $LASTEXITCODE)."
   }
   return $output
@@ -55,15 +57,15 @@ function Assert-Slug {
 
 function Assert-BranchFree {
   param([string]$Branch)
-  & git show-ref --verify --quiet "refs/heads/$Branch"
+  Invoke-Git @('show-ref', '--verify', '--quiet', "refs/heads/$Branch") -AllowFailure | Out-Null
   if ($LASTEXITCODE -eq 0) { throw "Branch local '$Branch' ja existe." }
-  $remote = & git ls-remote --heads origin $Branch
+  $remote = Invoke-Git @('ls-remote', '--heads', 'origin', $Branch)
   if ($remote) { throw "Branch remota '$Branch' ja existe." }
 }
 
 function Resolve-EpicBranch {
   param([int]$EpicIssue)
-  $refs = @(& git ls-remote --heads origin "epic/$EpicIssue-*" | Where-Object { $_ })
+  $refs = @(Invoke-Git @('ls-remote', '--heads', 'origin', "epic/$EpicIssue-*") | Where-Object { $_ })
   if ($refs.Count -ne 1) {
     throw "Esperava exatamente uma branch origin/epic/$EpicIssue-*, encontrei $($refs.Count)."
   }
@@ -104,7 +106,7 @@ function Remove-IssueWorktree {
   }
 
   Invoke-Git @('worktree', 'remove', $match.Path) | Out-Null
-  & git branch -D $match.Branch | Out-Null
+  Invoke-Git @('branch', '-D', $match.Branch) -AllowFailure | Out-Null
   Invoke-Git @('worktree', 'prune') | Out-Null
   Write-Host "Removida: $($match.Path) ($($match.Branch))"
 }
