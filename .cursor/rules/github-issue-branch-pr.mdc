@@ -42,6 +42,8 @@ Todas as worktrees ficam na pasta irmã `../WorkaPool.worktrees/`. O nome da pas
 | `feature/123-observacoes` (filha da 120) | `epic-120--feature-123-observacoes` |
 | `hotfix/130-ajuste-x` (standalone) | `hotfix-130-ajuste-x` |
 
+Atalho no chat: `/wt <issue>` ([skill wt](../skills/wt/SKILL.md)) coleta issue, epic e slug e roda o script.
+
 Crie e remova **sempre** pelo script (roda do repo principal ou de qualquer worktree):
 
 ```powershell
