@@ -12,6 +12,13 @@ import {
   overviewCustomerGroupGanhosResponseSchema,
 } from "../schemas/overviewCustomerGroupGanhos.schemas";
 import {
+  createOverviewCustomerObservationBodyContractSchema,
+  listOverviewCustomerObservationsQuerySchema,
+  overviewCustomerObservationListResponseSchema,
+  overviewCustomerObservationParamsSchema,
+  overviewCustomerObservationSchema,
+} from "../schemas/overviewCustomerObservation.schemas";
+import {
   appErrorSchema,
   internalServerErrorSchema,
   unauthorizedErrorSchema,
@@ -19,7 +26,7 @@ import {
 
 const overviewErrorResponses = {
   "400": {
-    description: "clienteId inválido",
+    description: "clienteId inválido (OVERVIEW_CUSTOMER_INVALID_ID)",
     schema: appErrorSchema,
     componentName: "OverviewCustomerInvalidIdError",
   },
@@ -29,17 +36,17 @@ const overviewErrorResponses = {
     componentName: "UnauthorizedError",
   },
   "403": {
-    description: "Acesso negado à carteira do Overview",
+    description: "Acesso negado à carteira do Overview (OVERVIEW_CUSTOMER_FORBIDDEN)",
     schema: appErrorSchema,
     componentName: "OverviewCustomerForbiddenError",
   },
   "404": {
-    description: "Cliente ausente do snapshot servido",
+    description: "Cliente ausente do snapshot servido (OVERVIEW_CUSTOMER_NOT_FOUND)",
     schema: appErrorSchema,
     componentName: "OverviewCustomerNotFoundError",
   },
   "500": {
-    description: "Erro interno do servidor",
+    description: "Erro interno do servidor (INTERNAL_ERROR)",
     schema: internalServerErrorSchema,
     componentName: "InternalServerError",
   },
@@ -111,6 +118,56 @@ export const overviewCustomerContracts: RouteContract[] = [
         description: "clienteId ou grupoCodigo inválido",
         schema: appErrorSchema,
         componentName: "OverviewCustomerInvalidIdError",
+      },
+    },
+  },
+  {
+    method: "get",
+    path: "/api/overview/customers/{clienteId}/observations",
+    summary: "Lista observações do cliente no Overview",
+    description:
+      "Página de até 50 observações em ordem cronológica ascendente (mais antiga primeiro). Para carregar mais antigas, enviar beforeCreatedAt e beforeId juntos a partir de nextBefore.",
+    tags: ["OverviewCustomer"],
+    request: {
+      params: overviewCustomerObservationParamsSchema,
+      query: listOverviewCustomerObservationsQuerySchema,
+    },
+    responses: {
+      "200": {
+        description: "Página de observações; hasOlder indica se há mais antigas",
+        schema: overviewCustomerObservationListResponseSchema,
+      },
+      ...overviewErrorResponses,
+      "400": {
+        description:
+          "clienteId inválido (OVERVIEW_CUSTOMER_INVALID_ID) ou cursor de paginação inválido (OBSERVATION_INVALID_CURSOR)",
+        schema: appErrorSchema,
+        componentName: "OverviewCustomerObservationListBadRequestError",
+      },
+    },
+  },
+  {
+    method: "post",
+    path: "/api/overview/customers/{clienteId}/observations",
+    summary: "Registra observação do cliente no Overview",
+    description:
+      "Autor vem do JWT. O body é aparado (trim) e precisa ter de 1 a 2000 caracteres. Acesso à carteira é verificado antes da validação do body.",
+    tags: ["OverviewCustomer"],
+    request: {
+      params: overviewCustomerObservationParamsSchema,
+      body: createOverviewCustomerObservationBodyContractSchema,
+    },
+    responses: {
+      "201": {
+        description: "Observação criada",
+        schema: overviewCustomerObservationSchema,
+      },
+      ...overviewErrorResponses,
+      "400": {
+        description:
+          "clienteId inválido (OVERVIEW_CUSTOMER_INVALID_ID) ou body vazio/acima de 2000 caracteres (OBSERVATION_INVALID_BODY)",
+        schema: appErrorSchema,
+        componentName: "OverviewCustomerObservationCreateBadRequestError",
       },
     },
   },
