@@ -70,7 +70,7 @@ No Sapiens calls. No WebSocket. GET on modal open; POST/PATCH success refreshes 
 | Create use case | `useCases/CreateOverviewCustomerObservationUseCase.ts` | Validate body, persist |
 | Update use case | `useCases/UpdateOverviewCustomerObservationUseCase.ts` | Author-only PATCH, set `editedAt` |
 | HTTP routes | `http/routes/overviewCustomerDetailRoutes.ts` | GET/POST/PATCH wiring |
-| OpenAPI | `http/overviewCustomer.contracts.ts` | Schemas and paths |
+| OpenAPI | `contracts/overviewCustomer.contracts.ts` | Schemas and paths |
 | FE types | `types/overviewCustomerObservation.types.ts` | DTOs |
 | Service | `services/overviewCustomerService.ts` | HTTP client methods |
 | Hook | `hooks/useOverviewCustomerObservations.ts` | Modal state, fetch, submit, pagination |

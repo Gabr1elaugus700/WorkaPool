@@ -1,14 +1,13 @@
 import { AppError } from "../../../utils/AppError";
 import type { OverviewCustomerObservationAuthorLookup } from "../repositories/OverviewCustomerObservationAuthorRepository";
 import type { OverviewCustomerObservationRepository } from "../repositories/OverviewCustomerObservationRepository";
+import { OVERVIEW_CUSTOMER_OBSERVATION_MAX_BODY_LENGTH } from "../schemas/overviewCustomerObservation.schemas";
 import type { OverviewCustomerSyncStore } from "../sync/ports";
 import {
   assertOverviewCustomerAccess,
   type AssertOverviewCustomerAccessInput,
 } from "../utils/assertOverviewCustomerAccess";
 import type { OverviewCustomerObservationListItem } from "./ListOverviewCustomerObservationsUseCase";
-
-const MAX_BODY_LENGTH = 2000;
 
 export type CreateOverviewCustomerObservationInput =
   AssertOverviewCustomerAccessInput & {
@@ -36,7 +35,7 @@ export class CreateOverviewCustomerObservationUseCase {
     });
 
     const trimmed = input.body.trim();
-    if (trimmed.length === 0 || trimmed.length > MAX_BODY_LENGTH) {
+    if (trimmed.length === 0 || trimmed.length > OVERVIEW_CUSTOMER_OBSERVATION_MAX_BODY_LENGTH) {
       throw new AppError({
         message: "Corpo da observação inválido",
         statusCode: 400,
