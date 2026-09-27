@@ -2,8 +2,15 @@ import { apiFetchJson } from "@/lib/apiFetch";
 import type { OverviewCustomerDetailResponse } from "../types/overviewCustomerDetail.types";
 import type { OverviewCustomerListResponse } from "../types/overviewCustomerList.types";
 import type { OverviewCustomerMonthlyEvolutionResponse } from "../types/overviewCustomerMonthlyEvolution.types";
+import type {
+  OverviewCustomerObservation,
+  OverviewCustomerObservationCreateInput,
+  OverviewCustomerObservationCursor,
+  OverviewCustomerObservationListResponse,
+} from "../types/overviewCustomerObservation.types";
 import type { OverviewCustomerPurchasedProductsResponse } from "../types/overviewCustomerPurchasedProducts.types";
 import type { OverviewCustomerRecentCommercialMotionResponse } from "../types/overviewCustomerRecentCommercialMotion.types";
+import { buildOverviewCustomerObservationsPath } from "../utils/overviewCustomerObservationsPath.utils";
 
 export const OverviewCustomerService = {
   getDetail: async (
@@ -32,6 +39,27 @@ export const OverviewCustomerService = {
   ): Promise<OverviewCustomerRecentCommercialMotionResponse> => {
     return apiFetchJson<OverviewCustomerRecentCommercialMotionResponse>(
       `/api/overview/customers/${encodeURIComponent(String(customerCode))}/recent-orders`,
+    );
+  },
+  getObservations: async (
+    customerCode: number,
+    before?: OverviewCustomerObservationCursor,
+  ): Promise<OverviewCustomerObservationListResponse> => {
+    return apiFetchJson<OverviewCustomerObservationListResponse>(
+      buildOverviewCustomerObservationsPath(customerCode, before),
+    );
+  },
+  createObservation: async (
+    customerCode: number,
+    body: string,
+  ): Promise<OverviewCustomerObservation> => {
+    const payload: OverviewCustomerObservationCreateInput = { body };
+    return apiFetchJson<OverviewCustomerObservation>(
+      buildOverviewCustomerObservationsPath(customerCode),
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
     );
   },
   list: async (params: { search?: string; page?: number }): Promise<OverviewCustomerListResponse> => {
