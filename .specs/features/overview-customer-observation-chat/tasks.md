@@ -56,14 +56,17 @@ T7 ÔåÆ T8 ÔåÆ T9 ÔåÆ T10 ÔåÆ T11 ÔåÆ T12 ÔåÆ T13
 
 ### Phase 3: P2 (edit + pagination)
 
+T14 is backend-only and can start in parallel with Phase 2. T16 needs only the thread (T11).
+
 ```
-T13 ÔåÆ T14 ÔåÆ T15 ÔåÆ T16
+T7  → T14 → T15
+T11 → T16
 ```
 
 ### Phase 4: Verifica├º├úo
 
 ```
-T16 ÔåÆ T17
+T13 + T15 + T16 → T17
 ```
 
 ---
@@ -402,7 +405,7 @@ T16 ÔåÆ T17
 
 **What**: Author-only PATCH use case and HTTP route.
 **Where**: `backend/src/features/overviewCustomer/useCases/UpdateOverviewCustomerObservationUseCase.ts`, observation routes
-**Depends on**: T13
+**Depends on**: T7
 **Reuses**: Repository `updateByAuthor`, access helper
 **Requirement**: OBSCHAT-05
 
@@ -453,7 +456,7 @@ T16 ÔåÆ T17
 
 **What**: Load-previous control prepends older page without scroll jump.
 **Where**: `frontend/src/features/overviewCustomer/components/detail/observations/OverviewCustomerObservationThread.tsx`, hook
-**Depends on**: T15
+**Depends on**: T11
 **Reuses**: `before` cursor from list API
 **Requirement**: OBSCHAT-06
 
@@ -478,7 +481,7 @@ T16 ÔåÆ T17
 
 **What**: Run spec-anchored outcome check, discrimination sensor, write validation report.
 **Where**: `.specs/features/overview-customer-observation-chat/validation.md`
-**Depends on**: T16
+**Depends on**: T13, T15, T16
 **Reuses**: tlc-spec-driven Verifier sub-agent flow
 **Requirement**: OBSCHAT-01..06
 
@@ -539,10 +542,10 @@ T16 ÔåÆ T17
 | T11 | T10 | T10 ÔåÆ T11 | Match |
 | T12 | T11 | T11 ÔåÆ T12 | Match |
 | T13 | T12 | T12 ÔåÆ T13 | Match |
-| T14 | T13 | T13 ÔåÆ T14 | Match |
-| T15 | T14 | T14 ÔåÆ T15 | Match |
-| T16 | T15 | T15 ÔåÆ T16 | Match |
-| T17 | T16 | T16 ÔåÆ T17 | Match |
+| T14 | T7 | T7 → T14 | Match |
+| T15 | T14 | T14 → T15 | Match |
+| T16 | T11 | T11 → T16 | Match |
+| T17 | T13, T15, T16 | T13 + T15 + T16 → T17 | Match |
 
 ---
 
