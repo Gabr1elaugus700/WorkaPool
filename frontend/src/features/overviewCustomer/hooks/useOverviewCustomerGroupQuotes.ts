@@ -1,25 +1,29 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { OverviewCustomerGroupQuotesService } from "../services/overviewCustomerGroupQuotesService";
+import { buildOverviewCustomerGroupQuotesQueryKey } from "../utils/overviewCustomerGroupQuotesQueryKey.utils";
 
 export function useOverviewCustomerGroupQuotes(
   customerCode: number,
   grupoCodigo: string | null,
   options: {
     productCode?: string | null;
-    reveal?: boolean;
+    includeOtherCustomers?: boolean;
     enabled?: boolean;
   } = {},
 ) {
-  const { productCode = null, reveal = false, enabled = true } = options;
+  const {
+    productCode = null,
+    includeOtherCustomers = false,
+    enabled = true,
+  } = options;
 
   return useQuery({
-    queryKey: [
-      "overview-customer-group-quotes",
+    queryKey: buildOverviewCustomerGroupQuotesQueryKey(
       customerCode,
       grupoCodigo,
       productCode,
-      reveal,
-    ],
+      includeOtherCustomers,
+    ),
     queryFn: async () => {
       if (grupoCodigo == null) {
         throw new Error("Código do grupo inválido para consultar cotações.");
@@ -29,7 +33,7 @@ export function useOverviewCustomerGroupQuotes(
         grupoCodigo,
         {
           productCode: productCode ?? undefined,
-          reveal,
+          reveal: includeOtherCustomers,
         },
       );
     },
