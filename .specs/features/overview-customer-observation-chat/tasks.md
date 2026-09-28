@@ -24,7 +24,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | HTTP routes/controller | unit (supertest) | GET/POST/PATCH happy + 400/403/404 por AC | `backend/test/unit/features/overviewCustomer/http/*.test.ts` | `cd backend && npm test` |
 | Prisma schema/migration | none | build gate only | ÔÇö | migration apply local |
 | Frontend components/hook/service | unit (renderToStaticMarkup) | ACs OBSCHAT-01/04/05 UI; bolhas esquerda/direita | `frontend/src/features/overviewCustomer/**/*.test.ts` | `cd frontend && npm test` |
-| OpenAPI contracts | none | valida├º├úo manual + route tests | `backend/src/features/overviewCustomer/http/overviewCustomer.contracts.ts` | lint/tsc gate |
+| OpenAPI contracts | none | valida├º├úo manual + route tests | `backend/src/features/overviewCustomer/contracts/overviewCustomer.contracts.ts` | lint/tsc gate |
 
 ## Gate Check Commands
 
@@ -224,7 +224,7 @@ T16 ÔåÆ T17
 ### T7: OpenAPI contracts for observations
 
 **What**: Document observation schemas and paths in OpenAPI contracts.
-**Where**: `backend/src/features/overviewCustomer/http/overviewCustomer.contracts.ts`
+**Where**: `backend/src/features/overviewCustomer/contracts/overviewCustomer.contracts.ts`
 **Depends on**: T6
 **Reuses**: Existing contract file structure
 **Requirement**: OBSCHAT-02, OBSCHAT-03
@@ -236,10 +236,10 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] GET/POST observation paths and DTOs documented
-- [ ] Error codes listed in contracts
+- [x] GET/POST observation paths and DTOs documented
+- [x] Error codes listed in contracts
 
-**Tests**: none
+**Tests**: unit (`backend/test/unit/features/overviewCustomer/contracts/overviewCustomerObservationContracts.test.ts`)
 **Gate**: build
 
 ---
@@ -259,9 +259,9 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Types match API DTO
-- [ ] Service methods call correct endpoints
-- [ ] Unit tests for URL/parsing if needed
+- [x] Types match API DTO
+- [x] Service methods call correct endpoints
+- [x] Unit tests for URL/parsing if needed
 
 **Tests**: unit
 **Gate**: quick
@@ -283,11 +283,11 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Fetches on open; POST success appends and clears composer
-- [ ] Keeps typed text on POST error
-- [ ] Disables submit while request in flight
-- [ ] Unit tests cover fetch, submit, error retention
-- [ ] Gate passes: quick frontend observation tests
+- [x] Fetches on open; POST success appends and clears composer
+- [x] Keeps typed text on POST error
+- [x] Disables submit while request in flight
+- [x] Unit tests cover fetch, submit, error retention
+- [x] Gate passes: quick frontend observation tests
 
 **Tests**: unit
 **Gate**: quick
