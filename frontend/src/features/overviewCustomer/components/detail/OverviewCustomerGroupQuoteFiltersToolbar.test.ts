@@ -9,18 +9,14 @@ import {
 } from "./OverviewCustomerGroupQuoteFiltersToolbar";
 
 const baseProps = {
-  search: "",
-  codRep: null,
-  status: "todas" as const,
+  filters: { search: "", codRep: null, status: "todas" as const },
   sellerOptions: [
     { codRep: 10, label: "Ana" },
     { codRep: 20, label: "Bruno" },
   ],
   counts: { todas: 24, ganhas: 12, perdidas: 7, outros: 5 },
   outrosEnabled: true,
-  onSearchChange: () => undefined,
-  onSellerChange: () => undefined,
-  onStatusChange: () => undefined,
+  onFiltersChange: () => undefined,
 };
 
 describe("OverviewCustomerGroupQuoteFiltersToolbar", () => {
@@ -42,9 +38,7 @@ describe("OverviewCustomerGroupQuoteFiltersToolbar", () => {
     const markup = renderToStaticMarkup(
       React.createElement(OverviewCustomerGroupQuoteFiltersToolbar, {
         ...baseProps,
-        search: "#123",
-        codRep: 20,
-        status: "perdidas" as const,
+        filters: { search: "#123", codRep: 20, status: "perdidas" as const },
       }),
     );
 

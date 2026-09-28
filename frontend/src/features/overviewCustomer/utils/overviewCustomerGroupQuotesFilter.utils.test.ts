@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { OverviewCustomerGroupQuoteRow } from "../types/overviewCustomerGroupQuotes.types";
 import {
+  applyOverviewCustomerGroupQuoteFilters,
   filterOverviewCustomerGroupQuoteRowsBySearchAndSeller,
   filterOverviewCustomerGroupQuoteRowsByStatus,
   listOverviewCustomerGroupQuoteSellerOptions,
@@ -150,6 +151,42 @@ describe("summarizeOverviewCustomerGroupQuoteStatusCounts", () => {
       perdidas: 0,
       outros: 0,
     });
+  });
+});
+
+describe("applyOverviewCustomerGroupQuoteFilters", () => {
+  it("counts after search and seller, then applies status last", () => {
+    const result = applyOverviewCustomerGroupQuoteFilters(
+      rows,
+      { search: "", codRep: 20, status: "perdidas" },
+      { outrosEnabled: true },
+    );
+
+    assert.deepEqual(result.counts, { todas: 2, ganhas: 0, perdidas: 1, outros: 1 });
+    assert.deepEqual(orderNumbers(result.rows), [55501]);
+    assert.equal(result.sellerOptions.length, 3);
+  });
+
+  it("falls back to todas when outros is selected but reveal is hidden", () => {
+    const result = applyOverviewCustomerGroupQuoteFilters(
+      rows,
+      { search: "", codRep: null, status: "outros" },
+      { outrosEnabled: false },
+    );
+
+    assert.equal(result.filters.status, "todas");
+    assert.equal(result.rows.length, rows.length);
+  });
+
+  it("drops a selected seller that is no longer among the visible rows", () => {
+    const result = applyOverviewCustomerGroupQuoteFilters(
+      rows,
+      { search: "", codRep: 999, status: "todas" },
+      { outrosEnabled: true },
+    );
+
+    assert.equal(result.filters.codRep, null);
+    assert.equal(result.rows.length, rows.length);
   });
 });
 

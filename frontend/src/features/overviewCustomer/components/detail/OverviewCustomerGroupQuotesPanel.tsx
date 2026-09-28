@@ -4,11 +4,8 @@ import { useOverviewCustomerGroupQuotes } from "../../hooks/useOverviewCustomerG
 import { isOverviewCustomerForbiddenMessage } from "../../utils/overviewCustomerForbidden.utils";
 import { isOverviewCustomerGroupQuotesRevealRole } from "../../utils/overviewCustomerGroupQuoteBadge.utils";
 import {
-  filterOverviewCustomerGroupQuoteRowsBySearchAndSeller,
-  filterOverviewCustomerGroupQuoteRowsByStatus,
-  listOverviewCustomerGroupQuoteSellerOptions,
-  summarizeOverviewCustomerGroupQuoteStatusCounts,
-  type OverviewCustomerGroupQuoteStatusFilter,
+  applyOverviewCustomerGroupQuoteFilters,
+  OVERVIEW_CUSTOMER_GROUP_QUOTE_DEFAULT_FILTERS,
 } from "../../utils/overviewCustomerGroupQuotesFilter.utils";
 import { selectVisibleOverviewCustomerGroupQuoteRows } from "../../utils/overviewCustomerGroupQuotesReveal.utils";
 import { OverviewCustomerAccessDeniedState } from "../OverviewCustomerAccessDeniedState";
@@ -32,17 +29,14 @@ export function OverviewCustomerGroupQuotesPanel({
     null,
   );
   const [revealVisible, setRevealVisible] = useState(false);
-  const [search, setSearch] = useState("");
-  const [codRep, setCodRep] = useState<number | null>(null);
-  const [status, setStatus] =
-    useState<OverviewCustomerGroupQuoteStatusFilter>("todas");
+  const [filters, setFilters] = useState(
+    OVERVIEW_CUSTOMER_GROUP_QUOTE_DEFAULT_FILTERS,
+  );
 
   useEffect(() => {
     setSelectedProductCode(null);
     setRevealVisible(false);
-    setSearch("");
-    setCodRep(null);
-    setStatus("todas");
+    setFilters(OVERVIEW_CUSTOMER_GROUP_QUOTE_DEFAULT_FILTERS);
   }, [customerCode, grupoCodigo]);
 
   const query = useOverviewCustomerGroupQuotes(customerCode, grupoCodigo, {
@@ -69,31 +63,12 @@ export function OverviewCustomerGroupQuotesPanel({
   );
 
   const outrosEnabled = revealAvailable && revealVisible;
-  const sellerOptions = useMemo(
-    () => listOverviewCustomerGroupQuoteSellerOptions(visibleRows),
-    [visibleRows],
-  );
-  const effectiveCodRep = sellerOptions.some((option) => option.codRep === codRep)
-    ? codRep
-    : null;
-  const effectiveStatus =
-    status === "outros" && !outrosEnabled ? "todas" : status;
-
-  const searchedRows = useMemo(
+  const filtered = useMemo(
     () =>
-      filterOverviewCustomerGroupQuoteRowsBySearchAndSeller(visibleRows, {
-        search,
-        codRep: effectiveCodRep,
+      applyOverviewCustomerGroupQuoteFilters(visibleRows, filters, {
+        outrosEnabled,
       }),
-    [visibleRows, search, effectiveCodRep],
-  );
-  const statusCounts = useMemo(
-    () => summarizeOverviewCustomerGroupQuoteStatusCounts(searchedRows),
-    [searchedRows],
-  );
-  const rows = useMemo(
-    () => filterOverviewCustomerGroupQuoteRowsByStatus(searchedRows, effectiveStatus),
-    [searchedRows, effectiveStatus],
+    [visibleRows, filters, outrosEnabled],
   );
 
   const errorMessage =
@@ -117,19 +92,17 @@ export function OverviewCustomerGroupQuotesPanel({
       products={products}
       selectedProductCode={resolvedSelected}
       selectedProductName={selectedProduct?.productName ?? null}
-      rows={rows}
+      rows={filtered.rows}
       hasUnfilteredRows={visibleRows.length > 0}
       filtersToolbar={
         <OverviewCustomerGroupQuoteFiltersToolbar
-          search={search}
-          codRep={effectiveCodRep}
-          status={effectiveStatus}
-          sellerOptions={sellerOptions}
-          counts={statusCounts}
+          filters={filtered.filters}
+          sellerOptions={filtered.sellerOptions}
+          counts={filtered.counts}
           outrosEnabled={outrosEnabled}
-          onSearchChange={setSearch}
-          onSellerChange={setCodRep}
-          onStatusChange={setStatus}
+          onFiltersChange={(patch) => {
+            setFilters((current) => ({ ...current, ...patch }));
+          }}
         />
       }
       isLoading={isInitialLoading}
@@ -138,14 +111,14 @@ export function OverviewCustomerGroupQuotesPanel({
       reveal={revealVisible}
       onProductChange={(productCode) => {
         setSelectedProductCode(productCode);
-        setSearch("");
-        setCodRep(null);
-        setStatus("todas");
+        setFilters(OVERVIEW_CUSTOMER_GROUP_QUOTE_DEFAULT_FILTERS);
       }}
       onRevealChange={(nextReveal) => {
         setRevealVisible(nextReveal);
         if (!nextReveal) {
-          setStatus((current) => (current === "outros" ? "todas" : current));
+          setFilters((current) =>
+            current.status === "outros" ? { ...current, status: "todas" } : current,
+          );
         }
       }}
       onRetry={() => {

@@ -16,20 +16,20 @@ export type OverviewCustomerGroupQuoteSellerOption = {
   label: string;
 };
 
-export type OverviewCustomerGroupQuoteSearchAndSellerFilter = {
+export type OverviewCustomerGroupQuoteFilters = {
   search: string;
   codRep: number | null;
+  status: OverviewCustomerGroupQuoteStatusFilter;
 };
 
-function normalizeOrderSearch(search: string): string {
-  return search.replace(/[#\s]/g, "");
-}
+export const OVERVIEW_CUSTOMER_GROUP_QUOTE_DEFAULT_FILTERS: OverviewCustomerGroupQuoteFilters =
+  { search: "", codRep: null, status: "todas" };
 
 export function filterOverviewCustomerGroupQuoteRowsBySearchAndSeller(
   rows: OverviewCustomerGroupQuoteRow[],
-  filter: OverviewCustomerGroupQuoteSearchAndSellerFilter,
+  filter: Pick<OverviewCustomerGroupQuoteFilters, "search" | "codRep">,
 ): OverviewCustomerGroupQuoteRow[] {
-  const search = normalizeOrderSearch(filter.search);
+  const search = filter.search.replace(/[#\s]/g, "");
 
   return rows.filter((row) => {
     if (filter.codRep != null && row.codRep !== filter.codRep) {
@@ -65,26 +65,16 @@ export function filterOverviewCustomerGroupQuoteRowsByStatus(
 export function summarizeOverviewCustomerGroupQuoteStatusCounts(
   rows: OverviewCustomerGroupQuoteRow[],
 ): OverviewCustomerGroupQuoteStatusCounts {
-  return {
-    todas: rows.length,
-    ganhas: rows.filter((row) => matchesStatus(row, "ganhas")).length,
-    perdidas: rows.filter((row) => matchesStatus(row, "perdidas")).length,
-    outros: rows.filter((row) => matchesStatus(row, "outros")).length,
-  };
+  const count = (status: OverviewCustomerGroupQuoteStatusFilter) =>
+    rows.filter((row) => matchesStatus(row, status)).length;
+  return { todas: rows.length, ganhas: count("ganhas"), perdidas: count("perdidas"), outros: count("outros") };
 }
 
 function formatSellerLabel(row: OverviewCustomerGroupQuoteRow): string {
-  const sellerName = row.sellerName?.trim() ?? "";
-  if (sellerName.length > 0) {
-    return sellerName;
-  }
-
-  const repShortName = row.repShortName?.trim() ?? "";
-  if (repShortName.length > 0) {
-    return repShortName;
-  }
-
-  return String(row.codRep);
+  const name = [row.sellerName, row.repShortName]
+    .map((value) => value?.trim() ?? "")
+    .find((value) => value.length > 0);
+  return name ?? String(row.codRep);
 }
 
 export function listOverviewCustomerGroupQuoteSellerOptions(
@@ -100,4 +90,28 @@ export function listOverviewCustomerGroupQuoteSellerOptions(
   return Array.from(byCodRep, ([codRep, label]) => ({ codRep, label })).sort(
     (a, b) => a.label.localeCompare(b.label, "pt-BR"),
   );
+}
+
+export function applyOverviewCustomerGroupQuoteFilters(
+  rows: OverviewCustomerGroupQuoteRow[],
+  filters: OverviewCustomerGroupQuoteFilters,
+  options: { outrosEnabled: boolean },
+) {
+  const sellerOptions = listOverviewCustomerGroupQuoteSellerOptions(rows);
+  const codRep = sellerOptions.some((option) => option.codRep === filters.codRep)
+    ? filters.codRep
+    : null;
+  const status =
+    filters.status === "outros" && !options.outrosEnabled ? "todas" : filters.status;
+  const searched = filterOverviewCustomerGroupQuoteRowsBySearchAndSeller(rows, {
+    search: filters.search,
+    codRep,
+  });
+
+  return {
+    sellerOptions,
+    filters: { search: filters.search, codRep, status },
+    counts: summarizeOverviewCustomerGroupQuoteStatusCounts(searched),
+    rows: filterOverviewCustomerGroupQuoteRowsByStatus(searched, status),
+  };
 }

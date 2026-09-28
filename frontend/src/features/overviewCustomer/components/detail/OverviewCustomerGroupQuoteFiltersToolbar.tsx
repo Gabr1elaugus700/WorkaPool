@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type {
+  OverviewCustomerGroupQuoteFilters,
   OverviewCustomerGroupQuoteSellerOption,
   OverviewCustomerGroupQuoteStatusCounts,
   OverviewCustomerGroupQuoteStatusFilter,
@@ -19,51 +20,32 @@ export const OVERVIEW_CUSTOMER_GROUP_QUOTES_ALL_SELLERS = "Todos os Vendedores";
 
 const ALL_SELLERS_VALUE = "all";
 
-const STATUS_LABELS: Record<OverviewCustomerGroupQuoteStatusFilter, string> = {
-  todas: "Todos",
-  ganhas: "Ganhas",
-  perdidas: "Perdidas",
-  outros: "Outros vendedores",
-};
-
-const STATUS_ORDER: OverviewCustomerGroupQuoteStatusFilter[] = [
-  "todas",
-  "ganhas",
-  "perdidas",
-  "outros",
+const STATUS_OPTIONS: { value: OverviewCustomerGroupQuoteStatusFilter; label: string }[] = [
+  { value: "todas", label: "Todos" },
+  { value: "ganhas", label: "Ganhas" },
+  { value: "perdidas", label: "Perdidas" },
+  { value: "outros", label: "Outros vendedores" },
 ];
 
-function isStatusFilter(
-  value: string,
-): value is OverviewCustomerGroupQuoteStatusFilter {
-  return (STATUS_ORDER as string[]).includes(value);
-}
-
 export type OverviewCustomerGroupQuoteFiltersToolbarProps = {
-  search: string;
-  codRep: number | null;
-  status: OverviewCustomerGroupQuoteStatusFilter;
+  filters: OverviewCustomerGroupQuoteFilters;
   sellerOptions: OverviewCustomerGroupQuoteSellerOption[];
   counts: OverviewCustomerGroupQuoteStatusCounts;
   outrosEnabled: boolean;
-  onSearchChange: (search: string) => void;
-  onSellerChange: (codRep: number | null) => void;
-  onStatusChange: (status: OverviewCustomerGroupQuoteStatusFilter) => void;
+  onFiltersChange: (patch: Partial<OverviewCustomerGroupQuoteFilters>) => void;
 };
 
 export function OverviewCustomerGroupQuoteFiltersToolbar({
-  search,
-  codRep,
-  status,
+  filters,
   sellerOptions,
   counts,
   outrosEnabled,
-  onSearchChange,
-  onSellerChange,
-  onStatusChange,
+  onFiltersChange,
 }: OverviewCustomerGroupQuoteFiltersToolbarProps) {
   const selectedSeller =
-    sellerOptions.find((option) => option.codRep === codRep) ?? null;
+    sellerOptions.find((option) => option.codRep === filters.codRep) ?? null;
+  const statusLabel =
+    STATUS_OPTIONS.find((option) => option.value === filters.status)?.label ?? "";
 
   return (
     <div
@@ -78,12 +60,12 @@ export function OverviewCustomerGroupQuoteFiltersToolbar({
         />
         <Input
           type="search"
-          value={search}
+          value={filters.search}
           placeholder={OVERVIEW_CUSTOMER_GROUP_QUOTES_SEARCH_PLACEHOLDER}
           aria-label="Buscar cotação pelo número do pedido"
           className="h-9 pl-8"
           onChange={(event) => {
-            onSearchChange(event.target.value);
+            onFiltersChange({ search: event.target.value });
           }}
         />
       </div>
@@ -91,13 +73,10 @@ export function OverviewCustomerGroupQuoteFiltersToolbar({
       <Select
         value={selectedSeller ? String(selectedSeller.codRep) : ALL_SELLERS_VALUE}
         onValueChange={(value) => {
-          onSellerChange(value === ALL_SELLERS_VALUE ? null : Number(value));
+          onFiltersChange({ codRep: value === ALL_SELLERS_VALUE ? null : Number(value) });
         }}
       >
-        <SelectTrigger
-          className="h-9 w-full sm:w-52"
-          aria-label="Filtrar por vendedor"
-        >
+        <SelectTrigger className="h-9 w-full sm:w-52" aria-label="Filtrar por vendedor">
           <SelectValue>
             {selectedSeller?.label ?? OVERVIEW_CUSTOMER_GROUP_QUOTES_ALL_SELLERS}
           </SelectValue>
@@ -115,27 +94,25 @@ export function OverviewCustomerGroupQuoteFiltersToolbar({
       </Select>
 
       <Select
-        value={status}
+        value={filters.status}
         onValueChange={(value) => {
-          if (isStatusFilter(value)) {
-            onStatusChange(value);
+          const option = STATUS_OPTIONS.find((item) => item.value === value);
+          if (option) {
+            onFiltersChange({ status: option.value });
           }
         }}
       >
-        <SelectTrigger
-          className="h-9 w-full sm:w-36"
-          aria-label="Filtrar por status"
-        >
-          <SelectValue>{`Status: ${STATUS_LABELS[status]}`}</SelectValue>
+        <SelectTrigger className="h-9 w-full sm:w-36" aria-label="Filtrar por status">
+          <SelectValue>{`Status: ${statusLabel}`}</SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {STATUS_ORDER.map((option) => (
+          {STATUS_OPTIONS.map((option) => (
             <SelectItem
-              key={option}
-              value={option}
-              disabled={option === "outros" && !outrosEnabled}
+              key={option.value}
+              value={option.value}
+              disabled={option.value === "outros" && !outrosEnabled}
             >
-              {`${STATUS_LABELS[option]} (${counts[option]})`}
+              {`${option.label} (${counts[option.value]})`}
             </SelectItem>
           ))}
         </SelectContent>
