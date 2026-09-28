@@ -11,10 +11,10 @@
 **Issue:** [#204](https://github.com/Gabr1elaugus700/WorkaPool/issues/204)  
 **Branch:** `feature/204-quotes-reveal-single-load`
 
-- [ ] ADMIN/GERENTE: fetch inicial com `reveal=true`; estado `revealVisible` só filtra exibição
-- [ ] Toggle reveal não muda query key / não refetch
-- [ ] VENDAS: sem reveal; sem botão
-- [ ] Testes hook/panel
+- [x] ADMIN/GERENTE: fetch inicial com `reveal=true`; estado `revealVisible` só filtra exibição
+- [x] Toggle reveal não muda query key / não refetch
+- [x] VENDAS: sem reveal; sem botão
+- [x] Testes hook/panel
 
 **Arquivos:** `OverviewCustomerGroupQuotesPanel.tsx`, `useOverviewCustomerGroupQuotes.ts`
 

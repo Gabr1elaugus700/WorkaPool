@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/auth/AuthContext";
 import { useOverviewCustomerGroupQuotes } from "../../hooks/useOverviewCustomerGroupQuotes";
 import { isOverviewCustomerForbiddenMessage } from "../../utils/overviewCustomerForbidden.utils";
 import { isOverviewCustomerGroupQuotesRevealRole } from "../../utils/overviewCustomerGroupQuoteBadge.utils";
+import { selectVisibleOverviewCustomerGroupQuoteRows } from "../../utils/overviewCustomerGroupQuotesReveal.utils";
 import { OverviewCustomerAccessDeniedState } from "../OverviewCustomerAccessDeniedState";
 import { OverviewCustomerGroupQuoteColumn } from "./OverviewCustomerGroupQuoteColumn";
 
@@ -22,16 +23,16 @@ export function OverviewCustomerGroupQuotesPanel({
   const [selectedProductCode, setSelectedProductCode] = useState<string | null>(
     null,
   );
-  const [reveal, setReveal] = useState(false);
+  const [revealVisible, setRevealVisible] = useState(false);
 
   useEffect(() => {
     setSelectedProductCode(null);
-    setReveal(false);
+    setRevealVisible(false);
   }, [customerCode, grupoCodigo]);
 
   const query = useOverviewCustomerGroupQuotes(customerCode, grupoCodigo, {
     productCode: selectedProductCode,
-    reveal: revealAvailable ? reveal : false,
+    includeOtherCustomers: revealAvailable,
     enabled: enabled && grupoCodigo != null,
   });
 
@@ -42,6 +43,16 @@ export function OverviewCustomerGroupQuotesPanel({
     }
   }, [query.data?.selectedProductCode, selectedProductCode]);
 
+  const allRows = query.data?.rows;
+  const rows = useMemo(
+    () =>
+      selectVisibleOverviewCustomerGroupQuoteRows(allRows ?? [], {
+        revealAvailable,
+        revealVisible,
+      }),
+    [allRows, revealAvailable, revealVisible],
+  );
+
   const errorMessage =
     query.error instanceof Error ? query.error.message : "";
 
@@ -50,7 +61,6 @@ export function OverviewCustomerGroupQuotesPanel({
   }
 
   const products = query.data?.products ?? [];
-  const rows = query.data?.rows ?? [];
   const resolvedSelected =
     selectedProductCode ?? query.data?.selectedProductCode ?? null;
   const selectedProduct =
@@ -68,9 +78,9 @@ export function OverviewCustomerGroupQuotesPanel({
       isLoading={isInitialLoading}
       isError={query.isError && query.data == null}
       revealAvailable={revealAvailable}
-      reveal={reveal}
+      reveal={revealVisible}
       onProductChange={setSelectedProductCode}
-      onRevealChange={setReveal}
+      onRevealChange={setRevealVisible}
       onRetry={() => {
         void query.refetch();
       }}
