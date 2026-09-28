@@ -259,9 +259,9 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Types match API DTO
-- [ ] Service methods call correct endpoints
-- [ ] Unit tests for URL/parsing if needed
+- [x] Types match API DTO
+- [x] Service methods call correct endpoints
+- [x] Unit tests for URL/parsing if needed
 
 **Tests**: unit
 **Gate**: quick
@@ -283,11 +283,11 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Fetches on open; POST success appends and clears composer
-- [ ] Keeps typed text on POST error
-- [ ] Disables submit while request in flight
-- [ ] Unit tests cover fetch, submit, error retention
-- [ ] Gate passes: quick frontend observation tests
+- [x] Fetches on open; POST success appends and clears composer
+- [x] Keeps typed text on POST error
+- [x] Disables submit while request in flight
+- [x] Unit tests cover fetch, submit, error retention
+- [x] Gate passes: quick frontend observation tests
 
 **Tests**: unit
 **Gate**: quick
