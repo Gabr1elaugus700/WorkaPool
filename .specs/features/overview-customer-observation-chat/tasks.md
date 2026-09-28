@@ -309,10 +309,10 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Own bubble renders right (`ml-auto`); others left (`mr-auto`)
-- [ ] Shows author, pt-BR timestamp, body, `editado` when `editedAt`
-- [ ] Unit tests assert alignment classes/markup
-- [ ] Gate passes: quick frontend observation tests
+- [x] Own bubble renders right (`ml-auto`); others left (`mr-auto`)
+- [x] Shows author, pt-BR timestamp, body, `editado` when `editedAt`
+- [x] Unit tests assert alignment classes/markup
+- [x] Gate passes: quick frontend observation tests
 
 **Tests**: unit
 **Gate**: quick
