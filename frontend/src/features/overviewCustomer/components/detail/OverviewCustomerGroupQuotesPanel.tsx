@@ -3,9 +3,17 @@ import { useAuth } from "@/auth/AuthContext";
 import { useOverviewCustomerGroupQuotes } from "../../hooks/useOverviewCustomerGroupQuotes";
 import { isOverviewCustomerForbiddenMessage } from "../../utils/overviewCustomerForbidden.utils";
 import { isOverviewCustomerGroupQuotesRevealRole } from "../../utils/overviewCustomerGroupQuoteBadge.utils";
+import {
+  filterOverviewCustomerGroupQuoteRowsBySearchAndSeller,
+  filterOverviewCustomerGroupQuoteRowsByStatus,
+  listOverviewCustomerGroupQuoteSellerOptions,
+  summarizeOverviewCustomerGroupQuoteStatusCounts,
+  type OverviewCustomerGroupQuoteStatusFilter,
+} from "../../utils/overviewCustomerGroupQuotesFilter.utils";
 import { selectVisibleOverviewCustomerGroupQuoteRows } from "../../utils/overviewCustomerGroupQuotesReveal.utils";
 import { OverviewCustomerAccessDeniedState } from "../OverviewCustomerAccessDeniedState";
 import { OverviewCustomerGroupQuoteColumn } from "./OverviewCustomerGroupQuoteColumn";
+import { OverviewCustomerGroupQuoteFiltersToolbar } from "./OverviewCustomerGroupQuoteFiltersToolbar";
 
 export type OverviewCustomerGroupQuotesPanelProps = {
   customerCode: number;
@@ -24,10 +32,17 @@ export function OverviewCustomerGroupQuotesPanel({
     null,
   );
   const [revealVisible, setRevealVisible] = useState(false);
+  const [search, setSearch] = useState("");
+  const [codRep, setCodRep] = useState<number | null>(null);
+  const [status, setStatus] =
+    useState<OverviewCustomerGroupQuoteStatusFilter>("todas");
 
   useEffect(() => {
     setSelectedProductCode(null);
     setRevealVisible(false);
+    setSearch("");
+    setCodRep(null);
+    setStatus("todas");
   }, [customerCode, grupoCodigo]);
 
   const query = useOverviewCustomerGroupQuotes(customerCode, grupoCodigo, {
@@ -44,13 +59,41 @@ export function OverviewCustomerGroupQuotesPanel({
   }, [query.data?.selectedProductCode, selectedProductCode]);
 
   const allRows = query.data?.rows;
-  const rows = useMemo(
+  const visibleRows = useMemo(
     () =>
       selectVisibleOverviewCustomerGroupQuoteRows(allRows ?? [], {
         revealAvailable,
         revealVisible,
       }),
     [allRows, revealAvailable, revealVisible],
+  );
+
+  const outrosEnabled = revealAvailable && revealVisible;
+  const sellerOptions = useMemo(
+    () => listOverviewCustomerGroupQuoteSellerOptions(visibleRows),
+    [visibleRows],
+  );
+  const effectiveCodRep = sellerOptions.some((option) => option.codRep === codRep)
+    ? codRep
+    : null;
+  const effectiveStatus =
+    status === "outros" && !outrosEnabled ? "todas" : status;
+
+  const searchedRows = useMemo(
+    () =>
+      filterOverviewCustomerGroupQuoteRowsBySearchAndSeller(visibleRows, {
+        search,
+        codRep: effectiveCodRep,
+      }),
+    [visibleRows, search, effectiveCodRep],
+  );
+  const statusCounts = useMemo(
+    () => summarizeOverviewCustomerGroupQuoteStatusCounts(searchedRows),
+    [searchedRows],
+  );
+  const rows = useMemo(
+    () => filterOverviewCustomerGroupQuoteRowsByStatus(searchedRows, effectiveStatus),
+    [searchedRows, effectiveStatus],
   );
 
   const errorMessage =
@@ -75,12 +118,36 @@ export function OverviewCustomerGroupQuotesPanel({
       selectedProductCode={resolvedSelected}
       selectedProductName={selectedProduct?.productName ?? null}
       rows={rows}
+      hasUnfilteredRows={visibleRows.length > 0}
+      filtersToolbar={
+        <OverviewCustomerGroupQuoteFiltersToolbar
+          search={search}
+          codRep={effectiveCodRep}
+          status={effectiveStatus}
+          sellerOptions={sellerOptions}
+          counts={statusCounts}
+          outrosEnabled={outrosEnabled}
+          onSearchChange={setSearch}
+          onSellerChange={setCodRep}
+          onStatusChange={setStatus}
+        />
+      }
       isLoading={isInitialLoading}
       isError={query.isError && query.data == null}
       revealAvailable={revealAvailable}
       reveal={revealVisible}
-      onProductChange={setSelectedProductCode}
-      onRevealChange={setRevealVisible}
+      onProductChange={(productCode) => {
+        setSelectedProductCode(productCode);
+        setSearch("");
+        setCodRep(null);
+        setStatus("todas");
+      }}
+      onRevealChange={(nextReveal) => {
+        setRevealVisible(nextReveal);
+        if (!nextReveal) {
+          setStatus((current) => (current === "outros" ? "todas" : current));
+        }
+      }}
       onRetry={() => {
         void query.refetch();
       }}

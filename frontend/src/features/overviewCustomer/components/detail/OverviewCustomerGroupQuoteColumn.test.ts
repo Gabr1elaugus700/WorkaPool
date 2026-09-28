@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { OverviewCustomerGroupQuoteRow } from "../../types/overviewCustomerGroupQuotes.types";
 import {
+  OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_FILTERED,
   OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_PRODUCTS,
   OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_ROWS,
   OVERVIEW_CUSTOMER_GROUP_QUOTES_ERROR,
@@ -95,6 +96,35 @@ describe("OverviewCustomerGroupQuoteColumn", () => {
     assert.match(markup, new RegExp(OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_ROWS));
     assert.match(markup, /P001/);
     assert.match(markup, /Produto 1/);
+  });
+
+  it("shows the filters toolbar and filtered empty copy when filters hide every row", () => {
+    const markup = renderToStaticMarkup(
+      React.createElement(OverviewCustomerGroupQuoteColumn, {
+        ...baseProps,
+        rows: [],
+        hasUnfilteredRows: true,
+        filtersToolbar: React.createElement("div", null, "toolbar-slot"),
+      }),
+    );
+
+    assert.match(markup, /toolbar-slot/);
+    assert.match(markup, new RegExp(OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_FILTERED));
+    assert.doesNotMatch(markup, new RegExp(OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_ROWS));
+  });
+
+  it("hides the filters toolbar when the product has no quotes", () => {
+    const markup = renderToStaticMarkup(
+      React.createElement(OverviewCustomerGroupQuoteColumn, {
+        ...baseProps,
+        rows: [],
+        hasUnfilteredRows: false,
+        filtersToolbar: React.createElement("div", null, "toolbar-slot"),
+      }),
+    );
+
+    assert.doesNotMatch(markup, /toolbar-slot/);
+    assert.match(markup, new RegExp(OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_ROWS));
   });
 
   it("shows error with retry and not empty copy", () => {

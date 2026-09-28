@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import type {
   OverviewCustomerGroupQuoteProductOption,
@@ -12,6 +13,8 @@ export const OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_PRODUCTS =
   "Nenhum produto deste grupo para este cliente.";
 export const OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_ROWS =
   "Nenhuma cotação deste produto nos últimos 12 dias.";
+export const OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_FILTERED =
+  "Nenhuma cotação corresponde aos filtros.";
 export const OVERVIEW_CUSTOMER_GROUP_QUOTES_ERROR =
   "Não foi possível carregar as cotações deste grupo.";
 export const OVERVIEW_CUSTOMER_GROUP_QUOTES_REVEAL_ON =
@@ -24,6 +27,8 @@ export type OverviewCustomerGroupQuoteColumnProps = {
   selectedProductCode: string | null;
   selectedProductName: string | null;
   rows: OverviewCustomerGroupQuoteRow[];
+  hasUnfilteredRows?: boolean;
+  filtersToolbar?: ReactNode;
   isLoading: boolean;
   isError: boolean;
   revealAvailable: boolean;
@@ -38,6 +43,8 @@ export function OverviewCustomerGroupQuoteColumn({
   selectedProductCode,
   selectedProductName,
   rows,
+  hasUnfilteredRows = rows.length > 0,
+  filtersToolbar = null,
   isLoading,
   isError,
   revealAvailable,
@@ -117,9 +124,15 @@ export function OverviewCustomerGroupQuoteColumn({
         </header>
       ) : null}
 
+      {hasUnfilteredRows ? filtersToolbar : null}
+
       {rows.length === 0 ? (
         <OverviewCustomerStateMessage
-          message={OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_ROWS}
+          message={
+            hasUnfilteredRows
+              ? OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_FILTERED
+              : OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_ROWS
+          }
         />
       ) : (
         <ul className="space-y-3">
