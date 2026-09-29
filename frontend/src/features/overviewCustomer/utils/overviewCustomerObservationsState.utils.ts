@@ -4,7 +4,7 @@ import type {
 } from "../types/overviewCustomerObservation.types";
 
 /** Same limit as the backend observation body (`VarChar(2000)` after trim). */
-const OBSERVATION_BODY_MAX_LENGTH = 2000;
+export const OBSERVATION_BODY_MAX_LENGTH = 2000;
 
 const OBSERVATION_SUBMIT_ERROR_FALLBACK = "Não foi possível enviar a observação";
 
