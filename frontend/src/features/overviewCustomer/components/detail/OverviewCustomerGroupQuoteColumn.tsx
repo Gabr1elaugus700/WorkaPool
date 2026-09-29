@@ -8,11 +8,11 @@ import type { OverviewCustomerGroupQuoteStatusCounts } from "../../utils/overvie
 import { OverviewCustomerStateMessage } from "../OverviewCustomerStateMessage";
 import { OverviewCustomerGroupQuoteLegend } from "./OverviewCustomerGroupQuoteLegend";
 import { OverviewCustomerGroupQuoteProductChips } from "./OverviewCustomerGroupQuoteProductChips";
-import { OverviewCustomerGroupQuoteRowView } from "./OverviewCustomerGroupQuoteRow";
 import {
   OVERVIEW_CUSTOMER_GROUP_QUOTES_TITLE,
   OverviewCustomerGroupQuotesHeader,
 } from "./OverviewCustomerGroupQuotesHeader";
+import { OverviewCustomerGroupQuotesTable } from "./OverviewCustomerGroupQuotesTable";
 import { OverviewCustomerSectionCardSkeleton } from "./OverviewCustomerSectionCardSkeleton";
 
 export const OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_PRODUCTS =
@@ -119,14 +119,7 @@ export function OverviewCustomerGroupQuoteColumn({
           }
         />
       ) : (
-        <ul className="space-y-3">
-          {rows.map((row, index) => (
-            <OverviewCustomerGroupQuoteRowView
-              key={`${row.orderNumber}-${row.productCode}-${row.issuedAt}-${index}`}
-              row={row}
-            />
-          ))}
-        </ul>
+        <OverviewCustomerGroupQuotesTable rows={rows} />
       )}
     </div>
   );

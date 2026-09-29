@@ -139,7 +139,7 @@ describe("OverviewCustomerGroupQuoteColumn", () => {
     assert.doesNotMatch(markup, new RegExp(OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_ROWS));
   });
 
-  it("renders own and revealed rows without the legacy two-card titles", () => {
+  it("renders own and revealed rows in the table without the legacy two-card titles", () => {
     const markup = renderToStaticMarkup(
       React.createElement(OverviewCustomerGroupQuoteColumn, {
         ...baseProps,
@@ -163,9 +163,12 @@ describe("OverviewCustomerGroupQuoteColumn", () => {
       }),
     );
 
-    assert.match(markup, /Pedido 10/);
-    assert.match(markup, /Pedido 20/);
+    assert.match(markup, /<table/);
+    assert.equal(markup.match(/data-tone=/g)?.length, 3);
+    assert.match(markup, />10</);
+    assert.match(markup, />20</);
     assert.match(markup, /Cliente B/);
+    assert.match(markup, /<tbody[^>]*><tr[^>]*data-tone=/);
     assert.doesNotMatch(markup, /Ganhos: Notas Faturadas/);
     assert.doesNotMatch(markup, /Perdidos: Cotações Sem Fechamento/);
     assert.doesNotMatch(markup, /Você/);
