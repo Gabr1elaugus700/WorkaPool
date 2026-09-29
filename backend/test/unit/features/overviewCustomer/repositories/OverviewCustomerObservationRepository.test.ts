@@ -103,21 +103,19 @@ function createInMemoryObservationPrisma(seed: StoredObservation[] = []) {
         where: {
           id: string;
           customerCode: number;
-          authorUserId: string;
         };
       }): Promise<StoredObservation | null> {
         const found = rows.find(
           (row) =>
             row.id === args.where.id &&
-            row.customerCode === args.where.customerCode &&
-            row.authorUserId === args.where.authorUserId,
+            row.customerCode === args.where.customerCode,
         );
         return found ? { ...found } : null;
       },
 
       async update(args: {
         where: { id: string };
-        data: { body: string; editedAt: Date };
+        data: { body: string; editedAt: Date; updatedAt: Date };
       }): Promise<StoredObservation> {
         const index = rows.findIndex((row) => row.id === args.where.id);
         if (index < 0) {
@@ -127,7 +125,7 @@ function createInMemoryObservationPrisma(seed: StoredObservation[] = []) {
           ...rows[index],
           body: args.data.body,
           editedAt: args.data.editedAt,
-          updatedAt: args.data.editedAt,
+          updatedAt: args.data.updatedAt,
         };
         rows[index] = updated;
         return { ...updated };
@@ -262,8 +260,50 @@ describe("OverviewCustomerObservationRepository", () => {
     });
   });
 
-  describe("updateByAuthor", () => {
-    it("updates body and sets editedAt for the author", async () => {
+  describe("findByIdForCustomer", () => {
+    it("returns the observation regardless of author", async () => {
+      const prisma = createInMemoryObservationPrisma([
+        observation({
+          id: "obs-1",
+          authorUserId: "user-42",
+          createdAt: "2026-09-10T00:00:00.000Z",
+        }),
+      ]);
+      const repo = new OverviewCustomerObservationRepository(prisma);
+
+      const found = await repo.findByIdForCustomer("obs-1", 1001);
+
+      assert.equal(found?.id, "obs-1");
+      assert.equal(found?.authorUserId, "user-42");
+    });
+
+    it("returns null when the observation belongs to another customer", async () => {
+      const prisma = createInMemoryObservationPrisma([
+        observation({
+          id: "obs-1",
+          customerCode: 2002,
+          createdAt: "2026-09-10T00:00:00.000Z",
+        }),
+      ]);
+      const repo = new OverviewCustomerObservationRepository(prisma);
+
+      const found = await repo.findByIdForCustomer("obs-1", 1001);
+
+      assert.equal(found, null);
+    });
+
+    it("returns null when observation id is missing", async () => {
+      const prisma = createInMemoryObservationPrisma();
+      const repo = new OverviewCustomerObservationRepository(prisma);
+
+      const found = await repo.findByIdForCustomer("missing", 1001);
+
+      assert.equal(found, null);
+    });
+  });
+
+  describe("updateBody", () => {
+    it("updates body and sets editedAt and updatedAt to the same instant", async () => {
       const prisma = createInMemoryObservationPrisma([
         observation({
           id: "obs-1",
@@ -275,55 +315,17 @@ describe("OverviewCustomerObservationRepository", () => {
       const repo = new OverviewCustomerObservationRepository(prisma);
       const editedAt = new Date("2026-09-22T15:00:00.000Z");
 
-      const updated = await repo.updateByAuthor({
+      const updated = await repo.updateBody({
         id: "obs-1",
-        customerCode: 1001,
-        authorUserId: "user-42",
         body: "texto novo",
         editedAt,
       });
 
-      assert.ok(updated);
       assert.equal(updated.body, "texto novo");
       assert.deepStrictEqual(updated.editedAt, editedAt);
+      assert.deepStrictEqual(updated.updatedAt, editedAt);
       assert.equal(updated.createdAt.toISOString(), "2026-09-10T00:00:00.000Z");
       assert.equal(updated.authorUserId, "user-42");
-    });
-
-    it("returns null when author does not match", async () => {
-      const prisma = createInMemoryObservationPrisma([
-        observation({
-          id: "obs-1",
-          authorUserId: "user-42",
-          createdAt: "2026-09-10T00:00:00.000Z",
-        }),
-      ]);
-      const repo = new OverviewCustomerObservationRepository(prisma);
-
-      const updated = await repo.updateByAuthor({
-        id: "obs-1",
-        customerCode: 1001,
-        authorUserId: "other-user",
-        body: "hack",
-        editedAt: new Date("2026-09-22T15:00:00.000Z"),
-      });
-
-      assert.equal(updated, null);
-    });
-
-    it("returns null when observation id is missing", async () => {
-      const prisma = createInMemoryObservationPrisma();
-      const repo = new OverviewCustomerObservationRepository(prisma);
-
-      const updated = await repo.updateByAuthor({
-        id: "missing",
-        customerCode: 1001,
-        authorUserId: "user-42",
-        body: "novo",
-        editedAt: new Date("2026-09-22T15:00:00.000Z"),
-      });
-
-      assert.equal(updated, null);
     });
   });
 });

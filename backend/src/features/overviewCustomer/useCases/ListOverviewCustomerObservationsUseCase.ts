@@ -8,6 +8,7 @@ import {
   assertOverviewCustomerAccess,
   type AssertOverviewCustomerAccessInput,
 } from "../utils/assertOverviewCustomerAccess";
+import { mapOverviewCustomerObservationItem } from "../utils/mapOverviewCustomerObservationItem";
 
 const PAGE_SIZE = 50;
 
@@ -68,16 +69,12 @@ export class ListOverviewCustomerObservationsUseCase {
       authorMatches.map((match) => [match.id, match.displayName]),
     );
 
-    const items: OverviewCustomerObservationListItem[] = records.map((row) => ({
-      id: row.id,
-      customerCode: row.customerCode,
-      authorUserId: row.authorUserId,
-      authorDisplayName: displayNameById.get(row.authorUserId) ?? "",
-      body: row.body,
-      createdAt: row.createdAt.toISOString(),
-      updatedAt: row.updatedAt.toISOString(),
-      editedAt: row.editedAt ? row.editedAt.toISOString() : null,
-    }));
+    const items: OverviewCustomerObservationListItem[] = records.map((row) =>
+      mapOverviewCustomerObservationItem(
+        row,
+        displayNameById.get(row.authorUserId) ?? "",
+      ),
+    );
 
     const oldest = items[0];
     const nextBefore =

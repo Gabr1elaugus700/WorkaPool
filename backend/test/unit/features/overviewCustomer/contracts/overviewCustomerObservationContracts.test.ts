@@ -17,6 +17,7 @@ type OpenApiOperation = {
 };
 
 const OBSERVATIONS_PATH = "/api/overview/customers/{clienteId}/observations";
+const OBSERVATION_ITEM_PATH = `${OBSERVATIONS_PATH}/{observationId}`;
 
 const document = buildOpenApiDocument(overviewCustomerContracts);
 
@@ -87,6 +88,49 @@ describe("overviewCustomer observation contracts", () => {
       assert.match(operation.responses["403"]?.description ?? "", /OVERVIEW_CUSTOMER_FORBIDDEN/);
       assert.match(operation.responses["404"]?.description ?? "", /OVERVIEW_CUSTOMER_NOT_FOUND/);
     }
+  });
+
+  it("documents PATCH observation with author-only edit error codes", () => {
+    const pathItem = document.paths[OBSERVATION_ITEM_PATH];
+    assert.ok(pathItem, `path ${OBSERVATION_ITEM_PATH} ausente do OpenAPI`);
+    const operation = pathItem.patch as OpenApiOperation | undefined;
+    assert.ok(operation, `PATCH ${OBSERVATION_ITEM_PATH} ausente`);
+
+    assert.deepEqual(Object.keys(operation.responses).sort(), [
+      "200",
+      "400",
+      "401",
+      "403",
+      "404",
+      "500",
+    ]);
+    assert.deepEqual(
+      (operation.parameters ?? []).map(({ in: location, name, required }) => ({
+        location,
+        name,
+        required,
+      })),
+      [
+        { location: "path", name: "clienteId", required: true },
+        { location: "path", name: "observationId", required: true },
+      ],
+    );
+    assert.ok(operation.requestBody, "PATCH sem requestBody");
+
+    const bodySchema = document.components.schemas[
+      "patch_api_overview_customers_clienteId_observations_observationId_body"
+    ] as { required?: string[]; properties?: Record<string, Record<string, unknown>> };
+    assert.deepEqual(bodySchema.required, ["body"]);
+    assert.equal(bodySchema.properties?.body?.minLength, 1);
+    assert.equal(bodySchema.properties?.body?.maxLength, 2000);
+
+    assert.match(operation.responses["400"]?.description ?? "", /OBSERVATION_INVALID_BODY/);
+    const forbidden = operation.responses["403"]?.description ?? "";
+    assert.match(forbidden, /OVERVIEW_CUSTOMER_FORBIDDEN/);
+    assert.match(forbidden, /OBSERVATION_EDIT_FORBIDDEN/);
+    const notFound = operation.responses["404"]?.description ?? "";
+    assert.match(notFound, /OVERVIEW_CUSTOMER_NOT_FOUND/);
+    assert.match(notFound, /OBSERVATION_NOT_FOUND/);
   });
 
   it("response schemas accept the use case outputs", () => {

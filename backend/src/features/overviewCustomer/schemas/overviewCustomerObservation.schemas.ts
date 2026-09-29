@@ -32,6 +32,19 @@ export const createOverviewCustomerObservationBodyContractSchema = z.object({
   body: z.string().trim().min(1).max(OVERVIEW_CUSTOMER_OBSERVATION_MAX_BODY_LENGTH),
 });
 
+export const updateOverviewCustomerObservationParamsSchema =
+  overviewCustomerObservationParamsSchema.extend({
+    observationId: z.string().trim().min(1),
+  });
+
+// Same lenient shape as create: the use case checks access and authorship
+// (403/404) before rejecting the body (400 OBSERVATION_INVALID_BODY).
+export const updateOverviewCustomerObservationBodySchema =
+  createOverviewCustomerObservationBodySchema;
+
+export const updateOverviewCustomerObservationBodyContractSchema =
+  createOverviewCustomerObservationBodyContractSchema;
+
 export const overviewCustomerObservationSchema = z.object({
   id: z.string(),
   customerCode: z.number().int().positive(),
