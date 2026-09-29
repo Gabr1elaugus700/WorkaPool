@@ -25,11 +25,11 @@
 **Issue:** [#205](https://github.com/Gabr1elaugus700/WorkaPool/issues/205)  
 **Branch:** `feature/205-quotes-comparative-header-chips`
 
-- [ ] Título/descrição alinhados ao mock
-- [ ] Badges Total / Ganhas / Perdidas / Outros (sem “(Você)”)
-- [ ] Chips INSUMO com estado selecionado
-- [ ] Legenda Ganha / Perdida / Outro vendedor
-- [ ] Botão “Outros Vendedores (N): Visíveis|Ocultos” (só se role permitir)
+- [x] Título/descrição alinhados ao mock
+- [x] Badges Total / Ganhas / Perdidas / Outros (sem “(Você)”)
+- [x] Chips INSUMO com estado selecionado
+- [x] Legenda Ganha / Perdida / Outro vendedor
+- [x] Botão “Outros Vendedores (N): Visíveis|Ocultos” (só se role permitir)
 
 **Arquivos:** Column, ProductSelector → chips, summary badges
 

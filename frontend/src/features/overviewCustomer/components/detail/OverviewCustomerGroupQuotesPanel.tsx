@@ -6,8 +6,12 @@ import { isOverviewCustomerGroupQuotesRevealRole } from "../../utils/overviewCus
 import {
   applyOverviewCustomerGroupQuoteFilters,
   OVERVIEW_CUSTOMER_GROUP_QUOTE_DEFAULT_FILTERS,
+  summarizeOverviewCustomerGroupQuoteStatusCounts,
 } from "../../utils/overviewCustomerGroupQuotesFilter.utils";
-import { selectVisibleOverviewCustomerGroupQuoteRows } from "../../utils/overviewCustomerGroupQuotesReveal.utils";
+import {
+  countOverviewCustomerGroupQuoteOtherCustomerRows,
+  selectVisibleOverviewCustomerGroupQuoteRows,
+} from "../../utils/overviewCustomerGroupQuotesReveal.utils";
 import { OverviewCustomerAccessDeniedState } from "../OverviewCustomerAccessDeniedState";
 import { OverviewCustomerGroupQuoteColumn } from "./OverviewCustomerGroupQuoteColumn";
 import { OverviewCustomerGroupQuoteFiltersToolbar } from "./OverviewCustomerGroupQuoteFiltersToolbar";
@@ -61,6 +65,14 @@ export function OverviewCustomerGroupQuotesPanel({
       }),
     [allRows, revealAvailable, revealVisible],
   );
+  const summaryCounts = useMemo(
+    () => summarizeOverviewCustomerGroupQuoteStatusCounts(visibleRows),
+    [visibleRows],
+  );
+  const otherCustomerCount = useMemo(
+    () => countOverviewCustomerGroupQuoteOtherCustomerRows(allRows ?? []),
+    [allRows],
+  );
 
   const outrosEnabled = revealAvailable && revealVisible;
   const filtered = useMemo(
@@ -81,9 +93,6 @@ export function OverviewCustomerGroupQuotesPanel({
   const products = query.data?.products ?? [];
   const resolvedSelected =
     selectedProductCode ?? query.data?.selectedProductCode ?? null;
-  const selectedProduct =
-    products.find((product) => product.productCode === resolvedSelected) ??
-    null;
   const isInitialLoading =
     query.isLoading && query.data == null && !query.isPlaceholderData;
 
@@ -91,8 +100,9 @@ export function OverviewCustomerGroupQuotesPanel({
     <OverviewCustomerGroupQuoteColumn
       products={products}
       selectedProductCode={resolvedSelected}
-      selectedProductName={selectedProduct?.productName ?? null}
       rows={filtered.rows}
+      summaryCounts={summaryCounts}
+      otherCustomerCount={otherCustomerCount}
       hasUnfilteredRows={visibleRows.length > 0}
       filtersToolbar={
         <OverviewCustomerGroupQuoteFiltersToolbar

@@ -10,3 +10,9 @@ export function selectVisibleOverviewCustomerGroupQuoteRows(
 
   return rows.filter((row) => !row.otherCustomer);
 }
+
+export function countOverviewCustomerGroupQuoteOtherCustomerRows(
+  rows: OverviewCustomerGroupQuoteRow[],
+): number {
+  return rows.filter((row) => row.otherCustomer).length;
+}
