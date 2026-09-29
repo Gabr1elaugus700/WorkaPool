@@ -334,11 +334,11 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Empty state: `Nenhuma observa├º├úo neste cliente` with composer visible
-- [ ] Thread renders ascending list of bubbles
-- [ ] Enter submits; Shift+Enter inserts newline
-- [ ] Unit tests cover empty state and keyboard behavior markup
-- [ ] Gate passes: quick frontend observation tests
+- [x] Empty state: `Nenhuma observa├º├úo neste cliente` with composer visible
+- [x] Thread renders ascending list of bubbles
+- [x] Enter submits; Shift+Enter inserts newline
+- [x] Unit tests cover empty state and keyboard behavior markup
+- [x] Gate passes: quick frontend observation tests
 
 **Tests**: unit
 **Gate**: quick
