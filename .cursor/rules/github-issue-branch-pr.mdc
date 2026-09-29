@@ -30,28 +30,31 @@ Se a issue estiver sem `type:*` ou sem natureza → completar labels **antes** d
 | epic (pai) | Issue pai com label `epic` | `epic/<n>-slug` | `origin/main` | `main` (só no fim da epic) |
 | epic (filha) | Issue com `Parte de #<n>` | `feature/<m>-slug` / `hotfix/<m>-slug` | `origin/epic/<n>-slug` | `epic/<n>-slug` |
 
-Uma issue = uma branch = uma worktree. Filha nasce **sempre** do pai no remoto, nunca da `main` nem de outra filha.
+Uma issue = uma branch. **Uma epic = uma worktree**: filhas **não** ganham worktree própria — são branches criadas dentro da worktree da epic, uma de cada vez. Standalone tem worktree própria. Filha nasce **sempre** do pai no remoto, nunca da `main` nem de outra filha.
 
 ## Worktrees (nome determinístico)
 
-Todas as worktrees ficam na pasta irmã `../WorkaPool.worktrees/`. O nome da pasta é a branch com `/` trocado por `-`; filha leva o prefixo da epic:
+Todas as worktrees ficam na pasta irmã `../WorkaPool.worktrees/`. O nome da pasta é a branch com `/` trocado por `-`:
 
 | Branch | Pasta |
 | --- | --- |
 | `epic/120-overview-customer` | `epic-120-overview-customer` |
-| `feature/123-observacoes` (filha da 120) | `epic-120--feature-123-observacoes` |
+| `feature/123-observacoes` (filha da 120) | nenhuma — branch dentro de `epic-120-overview-customer` |
 | `hotfix/130-ajuste-x` (standalone) | `hotfix-130-ajuste-x` |
 
 Atalho no chat: `/wt <issue>` ([skill wt](../skills/wt/SKILL.md)) coleta issue, epic e slug e roda o script.
 
-Crie e remova **sempre** pelo script (roda do repo principal ou de qualquer worktree):
+Crie e remova worktrees e branches de filha **sempre** pelo script (roda do repo principal ou de qualquer worktree):
 
 ```powershell
-./scripts/worktree.ps1 new-epic  -Issue 120 -Slug overview-customer              # epic/120-... de origin/main + push
-./scripts/worktree.ps1 new-child -Epic 120 -Issue 123 -Slug observacoes -Type feature   # de origin/epic/120-...
-./scripts/worktree.ps1 new       -Issue 130 -Slug ajuste-x -Type hotfix          # standalone, de origin/main
-./scripts/worktree.ps1 remove    -Issue 123                                       # pasta + branch local + prune
+./scripts/worktree.ps1 new-epic     -Issue 120 -Slug overview-customer                # worktree epic/120-... de origin/main + push
+./scripts/worktree.ps1 new-child    -Epic 120 -Issue 123 -Slug observacoes -Type feature  # branch na worktree da epic, de origin/epic/120-...
+./scripts/worktree.ps1 finish-child -Epic 120 -Issue 123                               # volta a worktree para epic/120-... atualizada + apaga a branch da filha
+./scripts/worktree.ps1 new          -Issue 130 -Slug ajuste-x -Type hotfix             # worktree standalone, de origin/main
+./scripts/worktree.ps1 remove       -Issue 130                                          # pasta + branch local + prune (epic ou standalone)
 ```
+
+`new-child` exige a worktree da epic limpa e na branch `epic/<n>-slug`; se houver filha em andamento, rode `finish-child` antes. `finish-child` recusa filha cujo conteúdo ainda não está em `origin/epic/<n>-slug` (PR não mergeado); `-Force` descarta a filha.
 
 Slug: kebab-case, minúsculo, sem acento.
 
@@ -68,20 +71,22 @@ gh pr merge --squash --delete-branch
 
 `closes #N` **só fecha a issue automaticamente em merge na branch padrão (`main`)**. Em PR para `epic/*` a issue filha precisa ser fechada explicitamente.
 
+Tudo roda na worktree da epic (`epic-120-overview-customer`):
+
 ```bash
 git push -u origin HEAD
 gh pr create --base epic/120-overview-customer --title "feat: X (#123)" --body "Resolve #123
 Parte de #120"
 gh pr merge <pr> --squash --delete-branch
 gh issue close 123 --comment "Entregue em #<pr> na epic/120-overview-customer"
-./scripts/worktree.ps1 remove -Issue 123
+./scripts/worktree.ps1 finish-child -Epic 120 -Issue 123
 ```
 
-Próxima filha: criar de novo com `new-child` (o script faz `fetch`, então já sai do pai atualizado).
+Próxima filha: `new-child` na mesma worktree (o script faz `fetch` e parte de `origin/epic/...`, nunca da branch local da filha anterior — o merge é squash).
 
 ## Sincronizar a epic com a main
 
-Epic longa: na worktree do pai, `git fetch origin && git merge origin/main && git push`. Sem rebase — a branch é compartilhada pelas filhas.
+Epic longa: na worktree do pai, sem filha em andamento (branch `epic/<n>-slug`), `git fetch origin && git merge origin/main && git push`. Sem rebase — a branch é compartilhada pelas filhas.
 
 ## PR — epic → main
 
@@ -105,6 +110,7 @@ No CI, PR `epic/*` → `main` dispensa só o limite de 300 linhas; o resto do qu
 - `closes #<pai>` em PR de filha
 - Deixar issue filha aberta depois do merge na epic
 - `git checkout main` dentro de worktree (use `origin/main` via script)
+- Worktree própria para issue filha de epic (filha é branch dentro da worktree da epic)
 - Worktree com nome fora do padrão, dentro do repo principal ou dentro de outra worktree (inclui as worktrees automáticas do Cursor com nome aleatório)
 - PR sem `closes #N` / `Resolve #N`
 - Push direto em `main` ou em `epic/*` (fluxo é sempre via PR; exceção: merge de sincronização `origin/main` na epic)

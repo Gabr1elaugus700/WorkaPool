@@ -5,6 +5,7 @@ import {
   formatDaysSinceLastPurchase,
   formatEstimatedDaysUntilNextPurchase,
   formatIsoDateLabel,
+  formatIsoDateTimeLabel,
   formatPurchaseFrequencyDays,
 } from "./formatDate";
 
@@ -38,5 +39,14 @@ describe("formatDate", () => {
   it("formats iso dates for pt-BR labels", () => {
     assert.equal(formatIsoDateLabel("2024-01-10"), "10/01/2024");
     assert.equal(formatIsoDateLabel(null), "Não informado");
+  });
+
+  it("formats iso timestamps as pt-BR date and time", () => {
+    assert.equal(
+      formatIsoDateTimeLabel("2026-09-28T13:05:00.000Z", "America/Sao_Paulo"),
+      "28/09/2026, 10:05",
+    );
+    assert.equal(formatIsoDateTimeLabel(null), "Não informado");
+    assert.equal(formatIsoDateTimeLabel("not-a-date"), "not-a-date");
   });
 });
