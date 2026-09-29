@@ -10,6 +10,8 @@ Cria e remove worktrees e branches de filha **sempre** por [`scripts/worktree.ps
 
 Uma epic = uma worktree. Filha de epic **não** ganha worktree: vira uma branch dentro da worktree da epic, uma de cada vez.
 
+**Só rode esta skill quando o usuário pedir worktree explicitamente** (`/wt` ou "crie uma worktree"). Pedido de "criar branch", "planejar" ou "implementar a issue" não é pedido de worktree: crie só a branch no checkout atual (ver "Branch ou worktree" na regra). Na dúvida, pergunte.
+
 Exemplos de uso:
 
 - `/wt 123` — descobre o modo pela issue
