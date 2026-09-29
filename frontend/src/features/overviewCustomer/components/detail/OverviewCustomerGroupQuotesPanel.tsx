@@ -3,9 +3,14 @@ import { useAuth } from "@/auth/AuthContext";
 import { useOverviewCustomerGroupQuotes } from "../../hooks/useOverviewCustomerGroupQuotes";
 import { isOverviewCustomerForbiddenMessage } from "../../utils/overviewCustomerForbidden.utils";
 import { isOverviewCustomerGroupQuotesRevealRole } from "../../utils/overviewCustomerGroupQuoteBadge.utils";
+import {
+  applyOverviewCustomerGroupQuoteFilters,
+  OVERVIEW_CUSTOMER_GROUP_QUOTE_DEFAULT_FILTERS,
+} from "../../utils/overviewCustomerGroupQuotesFilter.utils";
 import { selectVisibleOverviewCustomerGroupQuoteRows } from "../../utils/overviewCustomerGroupQuotesReveal.utils";
 import { OverviewCustomerAccessDeniedState } from "../OverviewCustomerAccessDeniedState";
 import { OverviewCustomerGroupQuoteColumn } from "./OverviewCustomerGroupQuoteColumn";
+import { OverviewCustomerGroupQuoteFiltersToolbar } from "./OverviewCustomerGroupQuoteFiltersToolbar";
 
 export type OverviewCustomerGroupQuotesPanelProps = {
   customerCode: number;
@@ -24,10 +29,14 @@ export function OverviewCustomerGroupQuotesPanel({
     null,
   );
   const [revealVisible, setRevealVisible] = useState(false);
+  const [filters, setFilters] = useState(
+    OVERVIEW_CUSTOMER_GROUP_QUOTE_DEFAULT_FILTERS,
+  );
 
   useEffect(() => {
     setSelectedProductCode(null);
     setRevealVisible(false);
+    setFilters(OVERVIEW_CUSTOMER_GROUP_QUOTE_DEFAULT_FILTERS);
   }, [customerCode, grupoCodigo]);
 
   const query = useOverviewCustomerGroupQuotes(customerCode, grupoCodigo, {
@@ -44,13 +53,22 @@ export function OverviewCustomerGroupQuotesPanel({
   }, [query.data?.selectedProductCode, selectedProductCode]);
 
   const allRows = query.data?.rows;
-  const rows = useMemo(
+  const visibleRows = useMemo(
     () =>
       selectVisibleOverviewCustomerGroupQuoteRows(allRows ?? [], {
         revealAvailable,
         revealVisible,
       }),
     [allRows, revealAvailable, revealVisible],
+  );
+
+  const outrosEnabled = revealAvailable && revealVisible;
+  const filtered = useMemo(
+    () =>
+      applyOverviewCustomerGroupQuoteFilters(visibleRows, filters, {
+        outrosEnabled,
+      }),
+    [visibleRows, filters, outrosEnabled],
   );
 
   const errorMessage =
@@ -74,13 +92,35 @@ export function OverviewCustomerGroupQuotesPanel({
       products={products}
       selectedProductCode={resolvedSelected}
       selectedProductName={selectedProduct?.productName ?? null}
-      rows={rows}
+      rows={filtered.rows}
+      hasUnfilteredRows={visibleRows.length > 0}
+      filtersToolbar={
+        <OverviewCustomerGroupQuoteFiltersToolbar
+          filters={filtered.filters}
+          sellerOptions={filtered.sellerOptions}
+          counts={filtered.counts}
+          outrosEnabled={outrosEnabled}
+          onFiltersChange={(patch) => {
+            setFilters((current) => ({ ...current, ...patch }));
+          }}
+        />
+      }
       isLoading={isInitialLoading}
       isError={query.isError && query.data == null}
       revealAvailable={revealAvailable}
       reveal={revealVisible}
-      onProductChange={setSelectedProductCode}
-      onRevealChange={setRevealVisible}
+      onProductChange={(productCode) => {
+        setSelectedProductCode(productCode);
+        setFilters(OVERVIEW_CUSTOMER_GROUP_QUOTE_DEFAULT_FILTERS);
+      }}
+      onRevealChange={(nextReveal) => {
+        setRevealVisible(nextReveal);
+        if (!nextReveal) {
+          setFilters((current) =>
+            current.status === "outros" ? { ...current, status: "todas" } : current,
+          );
+        }
+      }}
       onRetry={() => {
         void query.refetch();
       }}

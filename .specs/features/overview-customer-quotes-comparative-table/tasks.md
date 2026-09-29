@@ -42,11 +42,11 @@
 **Issue:** [#206](https://github.com/Gabr1elaugus700/WorkaPool/issues/206)  
 **Branch:** `feature/206-quotes-comparative-filters`
 
-- [ ] Botões Todas | Ganhas | Perdidas | Outros (regras em context.md)
-- [ ] Busca por `orderNumber`
-- [ ] Dropdown vendedores por `codRep`
-- [ ] Utils puros + testes unitários
-- [ ] Layout da toolbar igual ao print
+- [x] Select de status Todos | Ganhas | Perdidas | Outros vendedores, com contagens (regras em context.md)
+- [x] Busca por `orderNumber`
+- [x] Dropdown vendedores por `codRep`
+- [x] Utils puros + testes unitários
+- [x] Layout da toolbar igual ao print (busca, vendedor, status)
 
 **Arquivos:** `frontend/src/features/overviewCustomer/utils/*`, toolbar component
 
