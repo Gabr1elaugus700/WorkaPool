@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { MapPin } from "lucide-react";
+import { MapPin, MessageSquare } from "lucide-react";
 import React from "react";
 import { cn } from "@/lib/utils";
 import type {
@@ -38,6 +38,7 @@ type OverviewCustomerDetailHeroProps = {
   commercialSignals: OverviewCustomerDetailHeroCommercialSignals;
   billing: OverviewCustomerDetailHeroBilling;
   orderCounts?: OverviewCustomerOrderCounts | null;
+  onOpenObservations?: () => void;
 };
 
 type FooterItemProps = {
@@ -95,6 +96,7 @@ export function OverviewCustomerDetailHero({
   commercialSignals,
   billing,
   orderCounts,
+  onOpenObservations,
 }: OverviewCustomerDetailHeroProps) {
   const initials = deriveOverviewCustomerInitials(customer.tradeName);
   const estimatedNextPurchase = estimateNextPurchaseDate(
@@ -131,6 +133,17 @@ export function OverviewCustomerDetailHero({
                 <h2 className="text-xl font-semibold tracking-tight md:text-2xl">
                   {customer.tradeName}
                 </h2>
+                {onOpenObservations ? (
+                  <button
+                    type="button"
+                    onClick={onOpenObservations}
+                    aria-label="Histórico de observações"
+                    title="Histórico de observações"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-background/75 transition-colors hover:bg-background/10 hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-background/60"
+                  >
+                    <MessageSquare className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                ) : null}
               </div>
               <div className="flex flex-wrap gap-2">
                 <Badge
