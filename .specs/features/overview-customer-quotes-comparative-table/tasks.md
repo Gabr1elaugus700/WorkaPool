@@ -57,13 +57,13 @@
 ## T4 — Tabela densa com todos os campos do DTO
 
 **Issue:** [#207](https://github.com/Gabr1elaugus700/WorkaPool/issues/207)  
-**Branch:** `feature/207-quotes-comparative-table`
+**Branch:** `feature/207-tabela-densa-cotacoes`
 
-- [ ] Substituir cards por tabela
-- [ ] Colunas: ID, Data, Vendedor, Volume, Preço, Valor, Margem, Custo, IPI, ICMS, ICMS %, Frete (+ transportadora / frete incluso se couber), Status & motivo
-- [ ] Sem Ações; sem “Você”; sem NF-e/filial inventados
-- [ ] Cores de linha ganha / perdida / outro
-- [ ] Testes de row/table
+- [x] Substituir cards por tabela
+- [x] Colunas: ID, Data, Vendedor, Volume, Preço, Valor, Margem, Custo, IPI, ICMS, ICMS %, Frete (+ transportadora / frete incluso se couber), Status & motivo
+- [x] Sem Ações; sem “Você”; sem NF-e/filial inventados
+- [x] Cores de linha ganha / perdida / outro
+- [x] Testes de row/table
 
 **Depende de:** T2 / T3
 
