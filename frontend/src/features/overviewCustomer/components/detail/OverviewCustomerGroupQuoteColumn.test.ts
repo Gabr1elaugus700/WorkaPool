@@ -8,10 +8,9 @@ import {
   OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_PRODUCTS,
   OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_ROWS,
   OVERVIEW_CUSTOMER_GROUP_QUOTES_ERROR,
-  OVERVIEW_CUSTOMER_GROUP_QUOTES_REVEAL_OFF,
-  OVERVIEW_CUSTOMER_GROUP_QUOTES_REVEAL_ON,
   OverviewCustomerGroupQuoteColumn,
 } from "./OverviewCustomerGroupQuoteColumn";
+import { OVERVIEW_CUSTOMER_GROUP_QUOTES_TITLE } from "./OverviewCustomerGroupQuotesHeader";
 
 function sampleRow(
   overrides: Partial<OverviewCustomerGroupQuoteRow> = {},
@@ -47,8 +46,9 @@ function sampleRow(
 const baseProps = {
   products: [{ productCode: "P001", productName: "Produto 1" }],
   selectedProductCode: "P001",
-  selectedProductName: "Produto 1",
   rows: [] as OverviewCustomerGroupQuoteRow[],
+  summaryCounts: { todas: 0, ganhas: 0, perdidas: 0, outros: 0 },
+  otherCustomerCount: 0,
   isLoading: false,
   isError: false,
   revealAvailable: false,
@@ -78,7 +78,6 @@ describe("OverviewCustomerGroupQuoteColumn", () => {
         ...baseProps,
         products: [],
         selectedProductCode: null,
-        selectedProductName: null,
       }),
     );
 
@@ -167,16 +166,38 @@ describe("OverviewCustomerGroupQuoteColumn", () => {
     assert.match(markup, /Pedido 10/);
     assert.match(markup, /Pedido 20/);
     assert.match(markup, /Cliente B/);
-    assert.match(markup, new RegExp(OVERVIEW_CUSTOMER_GROUP_QUOTES_REVEAL_OFF));
     assert.doesNotMatch(markup, /Ganhos: Notas Faturadas/);
     assert.doesNotMatch(markup, /Perdidos: Cotações Sem Fechamento/);
+    assert.doesNotMatch(markup, /Você/);
   });
 
-  it("hides reveal button for VENDAS and shows reveal label when available and off", () => {
+  it("renders title, legend and product chips with the selected one marked", () => {
+    const markup = renderToStaticMarkup(
+      React.createElement(OverviewCustomerGroupQuoteColumn, {
+        ...baseProps,
+        products: [
+          { productCode: "P001", productName: "Produto 1" },
+          { productCode: "P002", productName: "Produto 2" },
+        ],
+        rows: [sampleRow()],
+      }),
+    );
+
+    assert.ok(markup.includes(OVERVIEW_CUSTOMER_GROUP_QUOTES_TITLE.replace("&", "&amp;")));
+    assert.match(markup, /Insumo/);
+    assert.match(markup, /aria-selected="true"[^>]*>.*?P001/);
+    assert.match(markup, /aria-selected="false"[^>]*>.*?P002/);
+    assert.match(markup, /Ganha</);
+    assert.match(markup, /Perdida</);
+    assert.match(markup, /Outro vendedor/);
+  });
+
+  it("hides the reveal toggle for VENDAS and shows it with the other-customer count otherwise", () => {
     const withoutReveal = renderToStaticMarkup(
       React.createElement(OverviewCustomerGroupQuoteColumn, {
         ...baseProps,
         revealAvailable: false,
+        otherCustomerCount: 3,
         rows: [sampleRow()],
       }),
     );
@@ -185,14 +206,13 @@ describe("OverviewCustomerGroupQuoteColumn", () => {
         ...baseProps,
         revealAvailable: true,
         reveal: false,
+        otherCustomerCount: 3,
         rows: [sampleRow()],
       }),
     );
 
-    assert.doesNotMatch(
-      withoutReveal,
-      new RegExp(OVERVIEW_CUSTOMER_GROUP_QUOTES_REVEAL_ON),
-    );
-    assert.match(withReveal, new RegExp(OVERVIEW_CUSTOMER_GROUP_QUOTES_REVEAL_ON));
+    assert.doesNotMatch(withoutReveal, /Outros Vendedores/);
+    assert.match(withReveal, /Outros Vendedores/);
+    assert.match(withReveal, />3</);
   });
 });
