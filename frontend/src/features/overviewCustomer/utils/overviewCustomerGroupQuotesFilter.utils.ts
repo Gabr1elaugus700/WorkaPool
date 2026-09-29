@@ -1,4 +1,5 @@
 import type { OverviewCustomerGroupQuoteRow } from "../types/overviewCustomerGroupQuotes.types";
+import { resolveOverviewCustomerGroupQuoteSellerName } from "./overviewCustomerGroupQuoteRow.utils";
 
 export type OverviewCustomerGroupQuoteStatusFilter =
   | "todas"
@@ -70,20 +71,13 @@ export function summarizeOverviewCustomerGroupQuoteStatusCounts(
   return { todas: rows.length, ganhas: count("ganhas"), perdidas: count("perdidas"), outros: count("outros") };
 }
 
-function formatSellerLabel(row: OverviewCustomerGroupQuoteRow): string {
-  const name = [row.sellerName, row.repShortName]
-    .map((value) => value?.trim() ?? "")
-    .find((value) => value.length > 0);
-  return name ?? String(row.codRep);
-}
-
 export function listOverviewCustomerGroupQuoteSellerOptions(
   rows: OverviewCustomerGroupQuoteRow[],
 ): OverviewCustomerGroupQuoteSellerOption[] {
   const byCodRep = new Map<number, string>();
   for (const row of rows) {
     if (!byCodRep.has(row.codRep)) {
-      byCodRep.set(row.codRep, formatSellerLabel(row));
+      byCodRep.set(row.codRep, resolveOverviewCustomerGroupQuoteSellerName(row));
     }
   }
 

@@ -1,3 +1,6 @@
+import type { ReactNode } from "react";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { formatIsoDateLabel } from "@/utils/formatDate";
 import type { OverviewCustomerGroupQuoteRow } from "../../types/overviewCustomerGroupQuotes.types";
 import {
@@ -5,133 +8,113 @@ import {
   formatOverviewDecimal,
   formatOverviewPercent,
 } from "../../utils/overviewCustomerFormatters";
-import { formatOverviewCustomerGroupQuoteSellerBadge } from "../../utils/overviewCustomerGroupQuoteBadge.utils";
+import {
+  formatOverviewCustomerGroupQuoteSituation,
+  getOverviewCustomerGroupQuoteRowTone,
+  resolveOverviewCustomerGroupQuoteSellerName,
+  type OverviewCustomerGroupQuoteRowTone,
+} from "../../utils/overviewCustomerGroupQuoteRow.utils";
 
 type OverviewCustomerGroupQuoteRowProps = {
   row: OverviewCustomerGroupQuoteRow;
 };
 
+const ROW_TONE_CLASS: Record<OverviewCustomerGroupQuoteRowTone, string> = {
+  ganha: "bg-primary/10 hover:bg-primary/15",
+  perdida: "bg-destructive/10 hover:bg-destructive/15",
+  outro: "bg-muted/40 text-muted-foreground hover:bg-muted/60",
+};
+
+const ORDER_TONE_CLASS: Record<OverviewCustomerGroupQuoteRowTone, string> = {
+  ganha: "text-primary",
+  perdida: "text-destructive",
+  outro: "text-foreground",
+};
+
 function formatNullableCurrency(value: number | null): string {
-  if (value == null) {
-    return "Não informado";
-  }
-  return formatOverviewCurrency(value);
+  return value == null ? "Não informado" : formatOverviewCurrency(value);
 }
 
-function formatFreightIncluded(value: boolean | null): string {
-  if (value == null) {
-    return "Não informado";
+function formatFreightDetail(row: OverviewCustomerGroupQuoteRow): string | null {
+  const parts: string[] = [];
+  if (row.carrierCode != null) {
+    parts.push(`Transp. ${row.carrierCode}`);
   }
-  return value ? "Sim" : "Não";
+  if (row.freightIncluded != null) {
+    parts.push(row.freightIncluded ? "Frete incluso" : "Frete não incluso");
+  }
+  return parts.length > 0 ? parts.join(" · ") : null;
 }
 
 export function OverviewCustomerGroupQuoteRowView({
   row,
 }: OverviewCustomerGroupQuoteRowProps) {
-  const isOther = row.otherCustomer;
+  const tone = getOverviewCustomerGroupQuoteRowTone(row);
   const isWon = row.outcome === "ganha";
 
-  const shellClass = isOther
-    ? "rounded-lg border border-border/60 bg-muted/40 p-3 opacity-80"
-    : isWon
-      ? "rounded-lg border border-primary/40 bg-primary/15 p-3"
-      : "rounded-lg border border-destructive/40 bg-destructive/15 p-3";
-
-  const orderClass = isOther
-    ? "text-sm font-semibold tabular-nums text-foreground"
-    : isWon
-      ? "text-sm font-semibold tabular-nums text-primary"
-      : "text-sm font-semibold tabular-nums text-destructive";
-
   return (
-    <li className={shellClass}>
-      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
-        <div className="min-w-0 space-y-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className={orderClass}>Pedido {row.orderNumber}</p>
-            {isOther ? (
-              <>
-                <span
-                  className={
-                    isWon
-                      ? "inline-flex rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground"
-                      : "inline-flex rounded-full bg-destructive px-2 py-0.5 text-[11px] font-semibold text-destructive-foreground"
-                  }
-                >
-                  {isWon ? "Ganha" : "Perdida"}
-                </span>
-                <span className="inline-flex rounded-full bg-sky-600 px-2 py-0.5 text-[11px] font-semibold text-white">
-                  {formatOverviewCustomerGroupQuoteSellerBadge({
-                    codRep: row.codRep,
-                    sellerName: row.sellerName,
-                    repShortName: row.repShortName,
-                  })}
-                </span>
-              </>
-            ) : null}
-          </div>
-          {isOther && row.customerTradeName ? (
-            <p className="text-xs font-medium text-muted-foreground">
-              {row.customerTradeName}
-            </p>
-          ) : null}
-          {!isWon && row.lossReason ? (
-            <p className="text-xs text-destructive">{row.lossReason}</p>
-          ) : null}
-        </div>
-        <p className="text-xs tabular-nums text-muted-foreground">
-          Emissão: {formatIsoDateLabel(row.issuedAt)}
-        </p>
-      </div>
-
-      <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm sm:grid-cols-3 lg:grid-cols-6">
-        <Metric label="Quantidade" value={`${formatOverviewDecimal(row.quantity)} kg`} />
-        <Metric label="Preço" value={`${formatOverviewCurrency(row.unitPrice)}/kg`} />
-        <Metric label="Valor" value={formatOverviewCurrency(row.lineAmount)} emphasize />
-        <Metric label="Margem" value={formatOverviewPercent(row.marginPercent)} emphasize />
-        <Metric label="IPI" value={formatNullableCurrency(row.ipiAmount)} />
-        <Metric label="ICMS" value={formatNullableCurrency(row.icmsAmount)} />
-        <Metric label="ICMS %" value={formatOverviewPercent(row.icmsPercent)} />
-        <Metric label="Custo" value={formatNullableCurrency(row.costPrice)} />
-        <Metric label="Frete" value={formatNullableCurrency(row.freightAmount)} />
-        <Metric
-          label="Transportadora"
-          value={
-            row.carrierCode == null ? "Não informado" : String(row.carrierCode)
-          }
-        />
-        <Metric
-          label="Frete incluso"
-          value={formatFreightIncluded(row.freightIncluded)}
-        />
-      </dl>
-    </li>
+    <TableRow data-tone={tone} className={ROW_TONE_CLASS[tone]}>
+      <Cell subtitle={formatOverviewCustomerGroupQuoteSituation(row.outcome)}>
+        <span className={cn("font-semibold", ORDER_TONE_CLASS[tone])}>
+          {row.orderNumber}
+        </span>
+      </Cell>
+      <Cell>{formatIsoDateLabel(row.issuedAt)}</Cell>
+      <Cell subtitle={row.otherCustomer ? row.customerTradeName : null}>
+        <span className="font-medium text-foreground">
+          {resolveOverviewCustomerGroupQuoteSellerName(row)}
+        </span>
+      </Cell>
+      <Cell numeric>{`${formatOverviewDecimal(row.quantity)} kg`}</Cell>
+      <Cell numeric>{`${formatOverviewCurrency(row.unitPrice)}/kg`}</Cell>
+      <Cell numeric emphasize>{formatOverviewCurrency(row.lineAmount)}</Cell>
+      <Cell numeric emphasize>{formatOverviewPercent(row.marginPercent)}</Cell>
+      <Cell numeric>{formatNullableCurrency(row.costPrice)}</Cell>
+      <Cell numeric>{formatNullableCurrency(row.ipiAmount)}</Cell>
+      <Cell numeric>{formatNullableCurrency(row.icmsAmount)}</Cell>
+      <Cell numeric>{formatOverviewPercent(row.icmsPercent)}</Cell>
+      <Cell numeric subtitle={formatFreightDetail(row)}>
+        {formatNullableCurrency(row.freightAmount)}
+      </Cell>
+      <Cell subtitle={isWon ? null : row.lossReason}>
+        <span
+          className={cn(
+            "font-semibold",
+            isWon ? "text-primary" : "text-destructive",
+          )}
+        >
+          {isWon ? "Ganha" : "Perdida"}
+        </span>
+      </Cell>
+    </TableRow>
   );
 }
 
-function Metric({
-  label,
-  value,
+function Cell({
+  children,
+  subtitle = null,
+  numeric = false,
   emphasize = false,
 }: {
-  label: string;
-  value: string;
+  children: ReactNode;
+  subtitle?: string | null;
+  numeric?: boolean;
   emphasize?: boolean;
 }) {
   return (
-    <div>
-      <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-        {label}
-      </dt>
-      <dd
-        className={
-          emphasize
-            ? "text-xs font-semibold tabular-nums text-foreground"
-            : "text-xs font-medium tabular-nums text-foreground"
-        }
-      >
-        {value}
-      </dd>
-    </div>
+    <TableCell
+      className={cn(
+        "whitespace-nowrap px-3 py-2 text-xs",
+        numeric && "text-right tabular-nums",
+        emphasize && "font-semibold text-foreground",
+      )}
+    >
+      {children}
+      {subtitle ? (
+        <span className="block text-[11px] font-normal text-muted-foreground">
+          {subtitle}
+        </span>
+      ) : null}
+    </TableCell>
   );
 }
