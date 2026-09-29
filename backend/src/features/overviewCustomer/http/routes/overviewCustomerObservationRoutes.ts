@@ -13,6 +13,7 @@ export function createOverviewCustomerObservationRoutes(
 
   router.get("/", authMiddleware, controller.list);
   router.post("/", authMiddleware, controller.create);
+  router.patch("/:observationId", authMiddleware, controller.update);
 
   return router;
 }

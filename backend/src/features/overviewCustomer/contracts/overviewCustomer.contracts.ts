@@ -17,6 +17,8 @@ import {
   overviewCustomerObservationListResponseSchema,
   overviewCustomerObservationParamsSchema,
   overviewCustomerObservationSchema,
+  updateOverviewCustomerObservationBodyContractSchema,
+  updateOverviewCustomerObservationParamsSchema,
 } from "../schemas/overviewCustomerObservation.schemas";
 import {
   appErrorSchema,
@@ -168,6 +170,43 @@ export const overviewCustomerContracts: RouteContract[] = [
           "clienteId inválido (OVERVIEW_CUSTOMER_INVALID_ID) ou body vazio/acima de 2000 caracteres (OBSERVATION_INVALID_BODY)",
         schema: appErrorSchema,
         componentName: "OverviewCustomerObservationCreateBadRequestError",
+      },
+    },
+  },
+  {
+    method: "patch",
+    path: "/api/overview/customers/{clienteId}/observations/{observationId}",
+    summary: "Edita observação do cliente no Overview",
+    description:
+      "Só o autor edita a própria observação, inclusive diante de ADMIN e GERENTE_DPTO. O body é aparado (trim) e precisa ter de 1 a 2000 caracteres. Grava editedAt e updatedAt no instante da edição; createdAt e authorUserId não mudam. Ordem das checagens: acesso à carteira, existência da observação no cliente, autoria, body.",
+    tags: ["OverviewCustomer"],
+    request: {
+      params: updateOverviewCustomerObservationParamsSchema,
+      body: updateOverviewCustomerObservationBodyContractSchema,
+    },
+    responses: {
+      "200": {
+        description: "Observação editada",
+        schema: overviewCustomerObservationSchema,
+      },
+      ...overviewErrorResponses,
+      "400": {
+        description:
+          "clienteId inválido (OVERVIEW_CUSTOMER_INVALID_ID) ou body vazio/acima de 2000 caracteres (OBSERVATION_INVALID_BODY)",
+        schema: appErrorSchema,
+        componentName: "OverviewCustomerObservationUpdateBadRequestError",
+      },
+      "403": {
+        description:
+          "Acesso negado à carteira do Overview (OVERVIEW_CUSTOMER_FORBIDDEN) ou chamador não é o autor da observação (OBSERVATION_EDIT_FORBIDDEN)",
+        schema: appErrorSchema,
+        componentName: "OverviewCustomerObservationUpdateForbiddenError",
+      },
+      "404": {
+        description:
+          "Cliente ausente do snapshot servido (OVERVIEW_CUSTOMER_NOT_FOUND) ou observação inexistente neste cliente (OBSERVATION_NOT_FOUND)",
+        schema: appErrorSchema,
+        componentName: "OverviewCustomerObservationUpdateNotFoundError",
       },
     },
   },

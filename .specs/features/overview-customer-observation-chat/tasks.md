@@ -413,11 +413,11 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] PATCH sets `editedAt`, keeps `createdAt` and `authorUserId`
-- [ ] Non-author (including ADMIN) gets 403 `OBSERVATION_EDIT_FORBIDDEN`
-- [ ] Wrong customer/id gets 404 `OBSERVATION_NOT_FOUND`
-- [ ] Unit + route tests cover ACs OBSCHAT-05
-- [ ] Gate passes: full backend tests
+- [x] PATCH sets `editedAt`, keeps `createdAt` and `authorUserId`
+- [x] Non-author (including ADMIN) gets 403 `OBSERVATION_EDIT_FORBIDDEN`
+- [x] Wrong customer/id gets 404 `OBSERVATION_NOT_FOUND`
+- [x] Unit + route tests cover ACs OBSCHAT-05
+- [x] Gate passes: full backend tests
 
 **Tests**: unit
 **Gate**: full

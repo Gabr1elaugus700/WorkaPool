@@ -14,6 +14,7 @@ import { GetOverviewCustomerGroupGanhosUseCase } from "../useCases/GetOverviewCu
 import { GetOverviewCustomerGroupQuotesUseCase } from "../useCases/GetOverviewCustomerGroupQuotesUseCase";
 import { ListOverviewCustomerObservationsUseCase } from "../useCases/ListOverviewCustomerObservationsUseCase";
 import { CreateOverviewCustomerObservationUseCase } from "../useCases/CreateOverviewCustomerObservationUseCase";
+import { UpdateOverviewCustomerObservationUseCase } from "../useCases/UpdateOverviewCustomerObservationUseCase";
 import { OverviewCustomerObservationRepository } from "../repositories/OverviewCustomerObservationRepository";
 import { OverviewCustomerObservationAuthorRepository } from "../repositories/OverviewCustomerObservationAuthorRepository";
 import { OverviewCustomerOrderLossRepository } from "../repositories/OverviewCustomerOrderLossRepository";
@@ -43,6 +44,11 @@ export function createOverviewCustomerRouter(
         observationAuthors,
       ),
       createObservation: new CreateOverviewCustomerObservationUseCase(
+        store,
+        observations,
+        observationAuthors,
+      ),
+      updateObservation: new UpdateOverviewCustomerObservationUseCase(
         store,
         observations,
         observationAuthors,
