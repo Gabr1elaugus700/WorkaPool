@@ -1,16 +1,21 @@
 import { useEffect, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { OverviewCustomerObservation } from "../../../types/overviewCustomerObservation.types";
+import type {
+  OverviewCustomerObservation,
+  OverviewCustomerObservationEditControls,
+} from "../../../types/overviewCustomerObservation.types";
 import { OverviewCustomerObservationBubble } from "./OverviewCustomerObservationBubble";
 
 type OverviewCustomerObservationThreadProps = {
   items: OverviewCustomerObservation[];
   currentUserId: string;
+  edit?: OverviewCustomerObservationEditControls;
 };
 
 export function OverviewCustomerObservationThread({
   items,
   currentUserId,
+  edit,
 }: OverviewCustomerObservationThreadProps) {
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -38,6 +43,7 @@ export function OverviewCustomerObservationThread({
             key={observation.id}
             observation={observation}
             isOwn={observation.authorUserId === currentUserId}
+            edit={edit}
           />
         ))}
         <div ref={endRef} aria-hidden="true" />

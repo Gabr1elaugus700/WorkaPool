@@ -7,10 +7,14 @@ import type {
   OverviewCustomerObservationCreateInput,
   OverviewCustomerObservationCursor,
   OverviewCustomerObservationListResponse,
+  OverviewCustomerObservationUpdateInput,
 } from "../types/overviewCustomerObservation.types";
 import type { OverviewCustomerPurchasedProductsResponse } from "../types/overviewCustomerPurchasedProducts.types";
 import type { OverviewCustomerRecentCommercialMotionResponse } from "../types/overviewCustomerRecentCommercialMotion.types";
-import { buildOverviewCustomerObservationsPath } from "../utils/overviewCustomerObservationsPath.utils";
+import {
+  buildOverviewCustomerObservationPath,
+  buildOverviewCustomerObservationsPath,
+} from "../utils/overviewCustomerObservationsPath.utils";
 
 export const OverviewCustomerService = {
   getDetail: async (
@@ -58,6 +62,20 @@ export const OverviewCustomerService = {
       buildOverviewCustomerObservationsPath(customerCode),
       {
         method: "POST",
+        body: JSON.stringify(payload),
+      },
+    );
+  },
+  updateObservation: async (
+    customerCode: number,
+    observationId: string,
+    body: string,
+  ): Promise<OverviewCustomerObservation> => {
+    const payload: OverviewCustomerObservationUpdateInput = { body };
+    return apiFetchJson<OverviewCustomerObservation>(
+      buildOverviewCustomerObservationPath(customerCode, observationId),
+      {
+        method: "PATCH",
         body: JSON.stringify(payload),
       },
     );

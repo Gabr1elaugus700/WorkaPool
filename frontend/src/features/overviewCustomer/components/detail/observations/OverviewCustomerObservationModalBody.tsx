@@ -1,5 +1,8 @@
 import { Button } from "@/components/ui/button";
-import type { OverviewCustomerObservation } from "../../../types/overviewCustomerObservation.types";
+import type {
+  OverviewCustomerObservation,
+  OverviewCustomerObservationEditControls,
+} from "../../../types/overviewCustomerObservation.types";
 import { OverviewCustomerObservationComposer } from "./OverviewCustomerObservationComposer";
 import { OverviewCustomerObservationThread } from "./OverviewCustomerObservationThread";
 
@@ -15,6 +18,7 @@ type OverviewCustomerObservationModalBodyProps = {
   canSubmit: boolean;
   isSubmitting: boolean;
   submitError: string | null;
+  edit?: OverviewCustomerObservationEditControls;
 };
 
 export function OverviewCustomerObservationModalBody({
@@ -29,6 +33,7 @@ export function OverviewCustomerObservationModalBody({
   canSubmit,
   isSubmitting,
   submitError,
+  edit,
 }: OverviewCustomerObservationModalBodyProps) {
   if (isLoading) {
     return (
@@ -53,7 +58,11 @@ export function OverviewCustomerObservationModalBody({
 
   return (
     <>
-      <OverviewCustomerObservationThread items={items} currentUserId={currentUserId} />
+      <OverviewCustomerObservationThread
+        items={items}
+        currentUserId={currentUserId}
+        edit={edit}
+      />
       <OverviewCustomerObservationComposer
         value={draft}
         onChange={onDraftChange}

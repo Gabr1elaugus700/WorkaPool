@@ -69,6 +69,33 @@ describe("OverviewCustomerObservationThread", () => {
     assert.deepEqual(flags, ["true", "false"]);
   });
 
+  it("puts only the bubble matching editingId in edit mode", () => {
+    const markup = renderToStaticMarkup(
+      React.createElement(OverviewCustomerObservationThread, {
+        items: [
+          buildObservation({ id: "obs-1", body: "Primeira" }),
+          buildObservation({ id: "obs-2", body: "Segunda" }),
+        ],
+        currentUserId: CURRENT_USER_ID,
+        edit: {
+          editingId: "obs-2",
+          draft: "Segunda revisada",
+          error: null,
+          isSaving: false,
+          canSave: true,
+          onStart: () => {},
+          onDraftChange: () => {},
+          onCancel: () => {},
+          onSave: () => {},
+        },
+      }),
+    );
+
+    assert.equal(markup.match(/<textarea/g)?.length, 1);
+    assert.match(markup, /Segunda revisada/);
+    assert.match(markup, /Primeira/);
+  });
+
   it("exposes the thread as an accessible log", () => {
     const markup = render([buildObservation()]);
 
