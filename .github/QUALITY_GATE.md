@@ -5,7 +5,7 @@ O workflow [`ci.yml`](./workflows/ci.yml) roda em cada PR para `main` e para `ep
 ## O que o CI faz
 
 1. Usa Node 22 (mesma versão dos Dockerfiles), instala `frontend/` e `backend/`, gera o Prisma client (necessário para typecheck/testes).
-2. `lint` (frontend), `typecheck`, `build` e `test:coverage` nos dois pacotes. Os scripts de teste passam um glob entre aspas (`"src/**/*.test.ts"`, `"test/unit/**/*.test.ts"`) para o próprio `node --test` expandir — passar só a pasta não descobre `.test.ts` e roda 0 testes. O frontend fixa `--tsconfig tsconfig.app.json` porque o `tsconfig.json` raiz só tem `references` e não define `jsx`.
+2. `lint` (frontend), `typecheck`, `build` e `test:coverage` nos dois pacotes. Os scripts de teste passam um glob entre aspas (`"src/**/*.test.ts"`, `"test/unit/**/*.test.ts"`) para o próprio `node --test` expandir — passar só a pasta não descobre `.test.ts` e roda 0 testes. O frontend fixa `--tsconfig tsconfig.app.json` porque o `tsconfig.json` raiz só tem `references` e não define `jsx`. O backend carrega `test/setup/silenceStdoutConsole.ts`, que silencia `console.log/info/debug` nos testes (logs no stdout quebram o runner de forma intermitente); use `TEST_VERBOSE=1` para vê-los.
 3. Gates de PR ([`pr-quality-gate.mjs`](./scripts/pr-quality-gate.mjs)):
    - **tamanho:** falha se o PR adiciona mais de **300 linhas** fora de arquivos de teste e Markdown
    - **testes:** falha se a quantidade de `test(` / `it(` no diff da base → head diminuiu
