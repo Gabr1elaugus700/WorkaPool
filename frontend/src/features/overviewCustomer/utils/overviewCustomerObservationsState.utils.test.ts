@@ -12,6 +12,7 @@ import {
   draftAfterObservationSubmitError,
   draftAfterObservationSubmitSuccess,
   isObservationListLoading,
+  prependOlderObservations,
   replaceObservation,
   resolveObservationEditError,
   resolveObservationSubmitError,
@@ -106,6 +107,71 @@ describe("appendObservation", () => {
       next.items.map((item) => item.id),
       ["obs-2", "obs-3"],
     );
+  });
+});
+
+function observationAt(index: number): OverviewCustomerObservation {
+  const createdAt = new Date(Date.UTC(2026, 8, 1, 12, index)).toISOString();
+  return {
+    ...observation(`obs-${String(index).padStart(2, "0")}`, `mensagem ${index}`),
+    createdAt,
+    updatedAt: createdAt,
+  };
+}
+
+describe("prependOlderObservations", () => {
+  const all = Array.from({ length: 60 }, (_, index) => observationAt(index));
+  const newestPage: OverviewCustomerObservationListResponse = {
+    items: all.slice(10),
+    hasOlder: true,
+    nextBefore: { createdAt: all[10]!.createdAt, id: all[10]!.id },
+  };
+  const olderPage: OverviewCustomerObservationListResponse = {
+    items: all.slice(0, 10),
+    hasOlder: false,
+    nextBefore: null,
+  };
+
+  it("puts the 10 older items before the 50 newest, ascending, and ends pagination", () => {
+    const next = prependOlderObservations(newestPage, olderPage);
+
+    assert.deepEqual(
+      next.items.map((item) => item.id),
+      all.map((item) => item.id),
+    );
+    assert.equal(next.hasOlder, false);
+    assert.equal(next.nextBefore, null);
+    assert.equal(newestPage.items.length, 50);
+  });
+
+  it("takes the cursor from the older page when more pages remain", () => {
+    const next = prependOlderObservations(newestPage, {
+      items: all.slice(5, 10),
+      hasOlder: true,
+      nextBefore: CURSOR,
+    });
+
+    assert.equal(next.items.length, 55);
+    assert.equal(next.hasOlder, true);
+    assert.deepEqual(next.nextBefore, CURSOR);
+  });
+
+  it("skips older items already loaded", () => {
+    const next = prependOlderObservations(newestPage, {
+      items: all.slice(8, 12),
+      hasOlder: false,
+      nextBefore: null,
+    });
+
+    assert.deepEqual(
+      next.items.slice(0, 3).map((item) => item.id),
+      ["obs-08", "obs-09", "obs-10"],
+    );
+    assert.equal(next.items.length, 52);
+  });
+
+  it("uses the older page when there is no current page", () => {
+    assert.deepEqual(prependOlderObservations(undefined, olderPage), olderPage);
   });
 });
 

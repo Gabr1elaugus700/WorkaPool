@@ -31,6 +31,22 @@ export function appendObservation(
   };
 }
 
+export function prependOlderObservations(
+  page: OverviewCustomerObservationListResponse | undefined,
+  olderPage: OverviewCustomerObservationListResponse,
+): OverviewCustomerObservationListResponse {
+  if (!page) {
+    return olderPage;
+  }
+
+  const loadedIds = new Set(page.items.map((item) => item.id));
+  return {
+    items: [...olderPage.items.filter((item) => !loadedIds.has(item.id)), ...page.items],
+    hasOlder: olderPage.hasOlder,
+    nextBefore: olderPage.nextBefore,
+  };
+}
+
 export function canSubmitObservation(draft: string, isSubmitting: boolean): boolean {
   if (isSubmitting) {
     return false;
