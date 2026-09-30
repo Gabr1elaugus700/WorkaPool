@@ -27,7 +27,15 @@ export function OverviewCustomerObservationModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[80vh] max-w-2xl flex-col gap-0 overflow-hidden p-0">
+      <DialogContent
+        className="flex h-[80vh] max-w-2xl flex-col gap-0 overflow-hidden p-0"
+        onEscapeKeyDown={(event) => {
+          if (observations.edit.editingId !== null) {
+            event.preventDefault();
+            observations.edit.onCancel();
+          }
+        }}
+      >
         <DialogHeader className="border-b border-border px-5 py-4 pr-12">
           <DialogTitle className="truncate">{tradeName}</DialogTitle>
           <DialogDescription>Histórico de observações</DialogDescription>
@@ -44,6 +52,7 @@ export function OverviewCustomerObservationModal({
           canSubmit={observations.canSubmit}
           isSubmitting={observations.isSubmitting}
           submitError={observations.submitError}
+          edit={observations.edit}
         />
       </DialogContent>
     </Dialog>

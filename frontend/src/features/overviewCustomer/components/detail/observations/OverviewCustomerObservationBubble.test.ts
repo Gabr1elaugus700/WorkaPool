@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { formatIsoDateTimeLabel } from "@/utils/formatDate";
-import type { OverviewCustomerObservation } from "../../../types/overviewCustomerObservation.types";
+import type {
+  OverviewCustomerObservation,
+  OverviewCustomerObservationEditControls,
+} from "../../../types/overviewCustomerObservation.types";
 import { OverviewCustomerObservationBubble } from "./OverviewCustomerObservationBubble";
 
 function buildObservation(
@@ -22,9 +25,30 @@ function buildObservation(
   };
 }
 
-function render(observation: OverviewCustomerObservation, isOwn: boolean): string {
+function buildEdit(
+  overrides: Partial<OverviewCustomerObservationEditControls> = {},
+): OverviewCustomerObservationEditControls {
+  return {
+    editingId: null,
+    draft: "",
+    error: null,
+    isSaving: false,
+    canSave: false,
+    onStart: () => {},
+    onDraftChange: () => {},
+    onCancel: () => {},
+    onSave: () => {},
+    ...overrides,
+  };
+}
+
+function render(
+  observation: OverviewCustomerObservation,
+  isOwn: boolean,
+  edit?: OverviewCustomerObservationEditControls,
+): string {
   return renderToStaticMarkup(
-    React.createElement(OverviewCustomerObservationBubble, { observation, isOwn }),
+    React.createElement(OverviewCustomerObservationBubble, { observation, isOwn, edit }),
   );
 }
 
@@ -68,5 +92,51 @@ describe("OverviewCustomerObservationBubble", () => {
     const markup = render(buildObservation({ authorDisplayName: "" }), false);
 
     assert.match(markup, /Usuário/);
+  });
+
+  it("shows the edit affordance only on own bubbles", () => {
+    const own = render(buildObservation(), true, buildEdit());
+    const other = render(buildObservation(), false, buildEdit());
+
+    assert.match(own, /aria-label="Editar observação"/);
+    assert.doesNotMatch(other, /Editar observação/);
+  });
+
+  it("never enters edit mode on a bubble from someone else", () => {
+    const markup = render(buildObservation(), false, buildEdit({ editingId: "obs-1" }));
+
+    assert.doesNotMatch(markup, /<textarea/);
+    assert.match(markup, /Cliente pediu retorno/);
+  });
+
+  it("renders the inline editor with the draft while editing", () => {
+    const markup = render(
+      buildObservation({ editedAt: "2026-09-28T14:00:00.000Z" }),
+      true,
+      buildEdit({ editingId: "obs-1", draft: "Texto revisado" }),
+    );
+
+    assert.match(markup, /<textarea[^>]*aria-label="Editar observação"[^>]*>Texto revisado<\/textarea>/);
+    assert.match(markup, /maxLength="2000"/);
+    assert.match(markup, /Cancelar/);
+    assert.match(markup, /<button[^>]*type="submit"[^>]*disabled=""[^>]*>Salvar<\/button>/);
+    assert.match(markup, /editado/);
+  });
+
+  it("enables save and shows the saving label and error", () => {
+    const ready = render(
+      buildObservation(),
+      true,
+      buildEdit({ editingId: "obs-1", draft: "Novo", canSave: true }),
+    );
+    const failed = render(
+      buildObservation(),
+      true,
+      buildEdit({ editingId: "obs-1", draft: "Novo", isSaving: true, error: "Sem permissão" }),
+    );
+
+    assert.doesNotMatch(ready, /disabled=""/);
+    assert.match(failed, /Salvando…/);
+    assert.match(failed, /role="alert"[^>]*>Sem permissão</);
   });
 });

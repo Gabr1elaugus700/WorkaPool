@@ -7,10 +7,13 @@ import type {
 } from "../types/overviewCustomerObservation.types";
 import {
   appendObservation,
+  canSaveObservationEdit,
   canSubmitObservation,
   draftAfterObservationSubmitError,
   draftAfterObservationSubmitSuccess,
   isObservationListLoading,
+  replaceObservation,
+  resolveObservationEditError,
   resolveObservationSubmitError,
 } from "./overviewCustomerObservationsState.utils";
 
@@ -163,6 +166,48 @@ describe("resolveObservationSubmitError", () => {
       resolveObservationSubmitError(null),
       "Não foi possível enviar a observação",
     );
+  });
+});
+
+describe("resolveObservationEditError", () => {
+  it("exposes the error message and falls back when empty", () => {
+    assert.equal(resolveObservationEditError(new Error("Proibido.")), "Proibido.");
+    assert.equal(resolveObservationEditError(null), "Não foi possível editar a observação");
+  });
+});
+
+describe("replaceObservation", () => {
+  it("swaps the item with the same id keeping order and cursor", () => {
+    const edited = { ...observation("obs-2", "novo"), editedAt: "2026-09-27T13:00:00.000Z" };
+    const next = replaceObservation(
+      { items: [observation("obs-1"), observation("obs-2")], hasOlder: true, nextBefore: CURSOR },
+      edited,
+    );
+
+    assert.deepEqual(
+      next?.items.map((item) => item.body),
+      ["texto", "novo"],
+    );
+    assert.equal(next?.items[1], edited);
+    assert.equal(next?.hasOlder, true);
+    assert.deepEqual(next?.nextBefore, CURSOR);
+  });
+
+  it("keeps a missing page missing", () => {
+    assert.equal(replaceObservation(undefined, observation("obs-1")), undefined);
+  });
+});
+
+describe("canSaveObservationEdit", () => {
+  it("requires a valid body different from the original", () => {
+    assert.equal(canSaveObservationEdit("novo", "antigo", false), true);
+    assert.equal(canSaveObservationEdit(" antigo ", "antigo", false), false);
+    assert.equal(canSaveObservationEdit("   ", "antigo", false), false);
+    assert.equal(canSaveObservationEdit("a".repeat(2001), "antigo", false), false);
+  });
+
+  it("blocks while saving", () => {
+    assert.equal(canSaveObservationEdit("novo", "antigo", true), false);
   });
 });
 

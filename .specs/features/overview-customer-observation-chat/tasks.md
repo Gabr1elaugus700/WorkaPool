@@ -439,10 +439,10 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Only own bubbles show edit affordance
-- [ ] PATCH success updates bubble and shows `editado`
-- [ ] Unit tests cover edit UI and error handling
-- [ ] Gate passes: quick frontend observation tests
+- [x] Only own bubbles show edit affordance
+- [x] PATCH success updates bubble and shows `editado`
+- [x] Unit tests cover edit UI and error handling
+- [x] Gate passes: quick frontend observation tests
 
 **Tests**: unit
 **Gate**: quick

@@ -14,6 +14,7 @@ import {
   isObservationListLoading,
   resolveObservationSubmitError,
 } from "../utils/overviewCustomerObservationsState.utils";
+import { useOverviewCustomerObservationEdit } from "./useOverviewCustomerObservationEdit";
 
 const EMPTY_OBSERVATIONS: OverviewCustomerObservation[] = [];
 
@@ -96,6 +97,8 @@ export function useOverviewCustomerObservations(
     });
   }, [draft, isPending, mutate, queryClient, queryKey]);
 
+  const edit = useOverviewCustomerObservationEdit(customerCode, { open, queryKey });
+
   const page = open ? query.data : undefined;
   const isError = open && query.isError;
 
@@ -117,5 +120,6 @@ export function useOverviewCustomerObservations(
     isSubmitting: isPending,
     submitError,
     canSubmit: canSubmitObservation(draft, isPending),
+    edit,
   };
 }

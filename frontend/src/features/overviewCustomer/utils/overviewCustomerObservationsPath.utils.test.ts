@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { buildOverviewCustomerObservationsPath } from "./overviewCustomerObservationsPath.utils";
+import {
+  buildOverviewCustomerObservationPath,
+  buildOverviewCustomerObservationsPath,
+} from "./overviewCustomerObservationsPath.utils";
 
 describe("buildOverviewCustomerObservationsPath", () => {
   it("builds the observations path without a cursor", () => {
@@ -24,6 +27,15 @@ describe("buildOverviewCustomerObservationsPath", () => {
     assert.equal(
       buildOverviewCustomerObservationsPath("10/20"),
       "/api/overview/customers/10%2F20/observations",
+    );
+  });
+});
+
+describe("buildOverviewCustomerObservationPath", () => {
+  it("appends the encoded observation id", () => {
+    assert.equal(
+      buildOverviewCustomerObservationPath(123, "obs/1"),
+      "/api/overview/customers/123/observations/obs%2F1",
     );
   });
 });

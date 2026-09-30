@@ -7,6 +7,7 @@ import type {
 export const OBSERVATION_BODY_MAX_LENGTH = 2000;
 
 const OBSERVATION_SUBMIT_ERROR_FALLBACK = "Não foi possível enviar a observação";
+const OBSERVATION_EDIT_ERROR_FALLBACK = "Não foi possível editar a observação";
 
 const EMPTY_OBSERVATION_PAGE: OverviewCustomerObservationListResponse = {
   items: [],
@@ -46,14 +47,43 @@ export function draftAfterObservationSubmitError(draft: string): string {
   return draft;
 }
 
-export function resolveObservationSubmitError(error: unknown): string {
+function resolveErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error) {
     const message = error.message.trim();
     if (message.length > 0) {
       return message;
     }
   }
-  return OBSERVATION_SUBMIT_ERROR_FALLBACK;
+  return fallback;
+}
+
+export function resolveObservationSubmitError(error: unknown): string {
+  return resolveErrorMessage(error, OBSERVATION_SUBMIT_ERROR_FALLBACK);
+}
+
+export function resolveObservationEditError(error: unknown): string {
+  return resolveErrorMessage(error, OBSERVATION_EDIT_ERROR_FALLBACK);
+}
+
+export function replaceObservation(
+  page: OverviewCustomerObservationListResponse | undefined,
+  item: OverviewCustomerObservation,
+): OverviewCustomerObservationListResponse | undefined {
+  if (!page) {
+    return page;
+  }
+  return {
+    ...page,
+    items: page.items.map((existing) => (existing.id === item.id ? item : existing)),
+  };
+}
+
+export function canSaveObservationEdit(
+  draft: string,
+  originalBody: string,
+  isSaving: boolean,
+): boolean {
+  return canSubmitObservation(draft, isSaving) && draft.trim() !== originalBody.trim();
 }
 
 export function isObservationListLoading(input: {

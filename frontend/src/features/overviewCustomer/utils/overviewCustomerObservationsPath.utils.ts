@@ -14,3 +14,10 @@ export function buildOverviewCustomerObservationsPath(
   params.set("beforeId", before.id);
   return `${base}?${params.toString()}`;
 }
+
+export function buildOverviewCustomerObservationPath(
+  customerCode: number | string,
+  observationId: string,
+): string {
+  return `${buildOverviewCustomerObservationsPath(customerCode)}/${encodeURIComponent(observationId)}`;
+}
