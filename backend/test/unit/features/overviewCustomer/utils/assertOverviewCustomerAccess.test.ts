@@ -118,6 +118,20 @@ describe("assertOverviewCustomerAccess", () => {
     );
   });
 
+  for (const role of [Role.ADMIN, Role.GERENTE_DPTO]) {
+    it(`allows ${role} when primaryCodRep is null`, async () => {
+      const store = new InMemoryOverviewCustomerSyncStore();
+      seedStore(store, null);
+
+      const result = await assertOverviewCustomerAccess(store, {
+        customerCode: 123,
+        role,
+      });
+
+      assert.equal(result.customer.primaryCodRep, null);
+    });
+  }
+
   it("forbids roles outside ADMIN, GERENTE_DPTO and VENDAS", async () => {
     const store = new InMemoryOverviewCustomerSyncStore();
     seedStore(store);

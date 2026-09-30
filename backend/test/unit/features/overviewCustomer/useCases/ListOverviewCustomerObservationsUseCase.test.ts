@@ -274,6 +274,28 @@ describe("ListOverviewCustomerObservationsUseCase", () => {
     }
   });
 
+  it("returns exactly 50 observations without hasOlder when the thread has 50 (OBSCHAT-06 AC3)", async () => {
+    const seed = Array.from({ length: 50 }, (_, index) => {
+      const n = index + 1;
+      return observation({
+        id: `id-${String(n).padStart(2, "0")}`,
+        createdAt: new Date(Date.UTC(2026, 8, 1, 0, n)).toISOString(),
+      });
+    });
+    const useCase = createUseCase({ seed });
+
+    const result = await useCase.execute({
+      customerCode: 123,
+      role: Role.ADMIN,
+    });
+
+    assert.equal(result.items.length, 50);
+    assert.equal(result.items[0]?.id, "id-01");
+    assert.equal(result.items[49]?.id, "id-50");
+    assert.equal(result.hasOlder, false);
+    assert.equal(result.nextBefore, null);
+  });
+
   it("orders by id ascending when createdAt ties", async () => {
     const tie = "2026-09-01T12:00:00.000Z";
     const useCase = createUseCase({
