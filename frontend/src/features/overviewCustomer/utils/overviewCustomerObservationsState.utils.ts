@@ -1,3 +1,4 @@
+import type { QueryClient, QueryKey } from "@tanstack/react-query";
 import type {
   OverviewCustomerObservation,
   OverviewCustomerObservationListResponse,
@@ -6,8 +7,8 @@ import type {
 /** Same limit as the backend observation body (`VarChar(2000)` after trim). */
 export const OBSERVATION_BODY_MAX_LENGTH = 2000;
 
-const OBSERVATION_SUBMIT_ERROR_FALLBACK = "Não foi possível enviar a observação";
-const OBSERVATION_EDIT_ERROR_FALLBACK = "Não foi possível editar a observação";
+export const OBSERVATION_SUBMIT_ERROR_MESSAGE = "Não foi possível enviar a observação";
+export const OBSERVATION_EDIT_ERROR_MESSAGE = "Não foi possível editar a observação";
 
 const EMPTY_OBSERVATION_PAGE: OverviewCustomerObservationListResponse = {
   items: [],
@@ -63,22 +64,15 @@ export function draftAfterObservationSubmitError(draft: string): string {
   return draft;
 }
 
-function resolveErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error) {
-    const message = error.message.trim();
-    if (message.length > 0) {
-      return message;
-    }
+export function dropObservationsPageWhenClosed(
+  queryClient: QueryClient,
+  queryKey: QueryKey,
+  open: boolean,
+): void {
+  if (open) {
+    return;
   }
-  return fallback;
-}
-
-export function resolveObservationSubmitError(error: unknown): string {
-  return resolveErrorMessage(error, OBSERVATION_SUBMIT_ERROR_FALLBACK);
-}
-
-export function resolveObservationEditError(error: unknown): string {
-  return resolveErrorMessage(error, OBSERVATION_EDIT_ERROR_FALLBACK);
+  queryClient.removeQueries({ queryKey, exact: true });
 }
 
 export function replaceObservation(

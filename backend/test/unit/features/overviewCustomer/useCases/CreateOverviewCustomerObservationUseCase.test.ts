@@ -122,7 +122,7 @@ function createHarness(options?: {
 }) {
   const store = options?.store ?? new InMemoryOverviewCustomerSyncStore();
   if (!options?.store) {
-    seedStore(store, options?.primaryCodRep ?? 10);
+    seedStore(store, options?.primaryCodRep);
   }
   const prisma = createInMemoryObservationPrisma();
   const repo = new OverviewCustomerObservationRepository(prisma);
@@ -196,6 +196,38 @@ describe("CreateOverviewCustomerObservationUseCase", () => {
     assert.equal(vendasResult.body, "nota do vendedor");
     assert.equal(gerenteResult.authorUserId, "user-gerente");
     assert.equal(gerenteResult.body, "nota do gerente");
+  });
+
+  it("persists for ADMIN and GERENTE_DPTO when primaryCodRep is null", async () => {
+    for (const role of [Role.ADMIN, Role.GERENTE_DPTO]) {
+      const { useCase, prisma } = createHarness({ primaryCodRep: null });
+
+      const result = await useCase.execute({
+        customerCode: 123,
+        role,
+        authorUserId: "user-admin",
+        body: "sem vendedor principal",
+      });
+
+      assert.equal(result.body, "sem vendedor principal");
+      assert.equal(prisma.createCount, 1);
+    }
+  });
+
+  it("rejects VENDAS without persisting when primaryCodRep is null", async () => {
+    const { useCase, prisma } = createHarness({ primaryCodRep: null });
+
+    await expectAppError(
+      useCase.execute({
+        customerCode: 123,
+        role: Role.VENDAS,
+        codRep: 10,
+        authorUserId: "user-vendas",
+        body: "nota",
+      }),
+      { statusCode: 403, code: "OVERVIEW_CUSTOMER_FORBIDDEN" },
+    );
+    assert.equal(prisma.createCount, 0);
   });
 
   it("rejects empty trimmed body without persisting (OBSCHAT-03 AC4)", async () => {

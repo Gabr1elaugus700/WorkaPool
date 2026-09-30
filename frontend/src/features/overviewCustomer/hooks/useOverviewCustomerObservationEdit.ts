@@ -9,8 +9,8 @@ import type {
 } from "../types/overviewCustomerObservation.types";
 import {
   canSaveObservationEdit,
+  OBSERVATION_EDIT_ERROR_MESSAGE,
   replaceObservation,
-  resolveObservationEditError,
 } from "../utils/overviewCustomerObservationsState.utils";
 
 type SaveEditInput = { observationId: string; body: string };
@@ -71,10 +71,9 @@ export function useOverviewCustomerObservationEdit(
         );
         onCancel();
       },
-      onError: (mutationError: unknown) => {
-        const message = resolveObservationEditError(mutationError);
-        setError(message);
-        toast.error(message);
+      onError: () => {
+        setError(OBSERVATION_EDIT_ERROR_MESSAGE);
+        toast.error(OBSERVATION_EDIT_ERROR_MESSAGE);
       },
       onSettled: () => {
         inFlightRef.current = false;

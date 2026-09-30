@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { QueryClient } from "@tanstack/react-query";
 import type {
   OverviewCustomerObservation,
   OverviewCustomerObservationCursor,
@@ -11,11 +12,12 @@ import {
   canSubmitObservation,
   draftAfterObservationSubmitError,
   draftAfterObservationSubmitSuccess,
+  dropObservationsPageWhenClosed,
   isObservationListLoading,
+  OBSERVATION_EDIT_ERROR_MESSAGE,
+  OBSERVATION_SUBMIT_ERROR_MESSAGE,
   prependOlderObservations,
   replaceObservation,
-  resolveObservationEditError,
-  resolveObservationSubmitError,
 } from "./overviewCustomerObservationsState.utils";
 
 const CURSOR: OverviewCustomerObservationCursor = {
@@ -215,30 +217,13 @@ describe("draft after submit", () => {
   });
 });
 
-describe("resolveObservationSubmitError", () => {
-  it("exposes the error message", () => {
-    assert.equal(
-      resolveObservationSubmitError(new Error("Acesso negado.")),
-      "Acesso negado.",
-    );
+describe("observation error copy", () => {
+  it("uses the spec copy for any submit failure (OBSCHAT-03 AC7)", () => {
+    assert.equal(OBSERVATION_SUBMIT_ERROR_MESSAGE, "Não foi possível enviar a observação");
   });
 
-  it("falls back when the failure has no message", () => {
-    assert.equal(
-      resolveObservationSubmitError(new Error("   ")),
-      "Não foi possível enviar a observação",
-    );
-    assert.equal(
-      resolveObservationSubmitError(null),
-      "Não foi possível enviar a observação",
-    );
-  });
-});
-
-describe("resolveObservationEditError", () => {
-  it("exposes the error message and falls back when empty", () => {
-    assert.equal(resolveObservationEditError(new Error("Proibido.")), "Proibido.");
-    assert.equal(resolveObservationEditError(null), "Não foi possível editar a observação");
+  it("uses a fixed copy for any edit failure", () => {
+    assert.equal(OBSERVATION_EDIT_ERROR_MESSAGE, "Não foi possível editar a observação");
   });
 });
 
@@ -330,5 +315,43 @@ describe("isObservationListLoading", () => {
       }),
       false,
     );
+  });
+});
+
+describe("dropObservationsPageWhenClosed", () => {
+  const queryKey = ["overview-customer-observations", 123] as const;
+  const page: OverviewCustomerObservationListResponse = {
+    items: [observation("obs-1")],
+    hasOlder: false,
+    nextBefore: null,
+  };
+
+  it("drops the cached thread on close so reopening cannot paint a stale page", () => {
+    const queryClient = new QueryClient();
+    queryClient.setQueryData(queryKey, page);
+
+    dropObservationsPageWhenClosed(queryClient, queryKey, false);
+
+    assert.equal(queryClient.getQueryData(queryKey), undefined);
+  });
+
+  it("keeps the cached thread while the modal is open", () => {
+    const queryClient = new QueryClient();
+    queryClient.setQueryData(queryKey, page);
+
+    dropObservationsPageWhenClosed(queryClient, queryKey, true);
+
+    assert.deepEqual(queryClient.getQueryData(queryKey), page);
+  });
+
+  it("drops only the thread of that customer", () => {
+    const queryClient = new QueryClient();
+    const otherKey = ["overview-customer-observations", 456] as const;
+    queryClient.setQueryData(queryKey, page);
+    queryClient.setQueryData(otherKey, page);
+
+    dropObservationsPageWhenClosed(queryClient, queryKey, false);
+
+    assert.deepEqual(queryClient.getQueryData(otherKey), page);
   });
 });

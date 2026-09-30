@@ -12,9 +12,10 @@ import {
   canSubmitObservation,
   draftAfterObservationSubmitError,
   draftAfterObservationSubmitSuccess,
+  dropObservationsPageWhenClosed,
   isObservationListLoading,
+  OBSERVATION_SUBMIT_ERROR_MESSAGE,
   prependOlderObservations,
-  resolveObservationSubmitError,
 } from "../utils/overviewCustomerObservationsState.utils";
 import { useOverviewCustomerObservationEdit } from "./useOverviewCustomerObservationEdit";
 
@@ -48,13 +49,10 @@ export function useOverviewCustomerObservations(
   });
 
   useEffect(() => {
-    if (open) {
-      return;
-    }
     // gcTime only drops the cache after the last observer leaves. This hook
     // stays mounted to read `open`, so drop the page on close and the next
     // open cannot paint the previous thread before the fresh GET.
-    queryClient.removeQueries({ queryKey, exact: true });
+    dropObservationsPageWhenClosed(queryClient, queryKey, open);
   }, [open, queryClient, queryKey]);
 
   const { mutate, isPending } = useMutation<
@@ -88,11 +86,10 @@ export function useOverviewCustomerObservations(
         );
         setDraftState(draftAfterObservationSubmitSuccess());
       },
-      onError: (error: unknown) => {
+      onError: () => {
         setDraftState((current) => draftAfterObservationSubmitError(current));
-        const message = resolveObservationSubmitError(error);
-        setSubmitError(message);
-        toast.error(message);
+        setSubmitError(OBSERVATION_SUBMIT_ERROR_MESSAGE);
+        toast.error(OBSERVATION_SUBMIT_ERROR_MESSAGE);
       },
       onSettled: () => {
         inFlightRef.current = false;
