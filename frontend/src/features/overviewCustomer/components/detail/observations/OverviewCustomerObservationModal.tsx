@@ -53,6 +53,9 @@ export function OverviewCustomerObservationModal({
           isSubmitting={observations.isSubmitting}
           submitError={observations.submitError}
           edit={observations.edit}
+          hasOlder={observations.hasOlder}
+          isLoadingOlder={observations.isLoadingOlder}
+          onLoadOlder={observations.loadOlder}
         />
       </DialogContent>
     </Dialog>

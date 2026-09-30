@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { OverviewCustomerObservation } from "../../../types/overviewCustomerObservation.types";
+import { prependOlderObservations } from "../../../utils/overviewCustomerObservationsState.utils";
 import { OverviewCustomerObservationThread } from "./OverviewCustomerObservationThread";
 
 const CURRENT_USER_ID = "user-me";
@@ -101,5 +102,68 @@ describe("OverviewCustomerObservationThread", () => {
 
     assert.match(markup, /role="log"/);
     assert.match(markup, /aria-label="Histórico de observações"/);
+  });
+});
+
+describe("OverviewCustomerObservationThread load older", () => {
+  const LOAD_OLDER_LABEL = "Carregar observações anteriores";
+  const all = Array.from({ length: 60 }, (_, index) => {
+    const createdAt = new Date(Date.UTC(2026, 8, 1, 12, index)).toISOString();
+    return buildObservation({
+      id: `obs-${index}`,
+      body: `Mensagem número ${index}.`,
+      createdAt,
+      updatedAt: createdAt,
+    });
+  });
+  const newest = all.slice(10);
+  const older = all.slice(0, 10);
+
+  function renderPage(
+    items: OverviewCustomerObservation[],
+    props: { hasOlder: boolean; isLoadingOlder?: boolean },
+  ): string {
+    return renderToStaticMarkup(
+      React.createElement(OverviewCustomerObservationThread, {
+        items,
+        currentUserId: CURRENT_USER_ID,
+        onLoadOlder: () => {},
+        ...props,
+      }),
+    );
+  }
+
+  it("shows the load-older control above the first bubble when older pages exist", () => {
+    const markup = renderPage(newest, { hasOlder: true });
+
+    assert.match(markup, new RegExp(LOAD_OLDER_LABEL));
+    assert.ok(markup.indexOf(LOAD_OLDER_LABEL) < markup.indexOf("Mensagem número 10."));
+    assert.equal(markup.match(/data-own=/g)?.length, 50);
+  });
+
+  it("hides the control when there is no older page", () => {
+    const markup = renderPage(newest, { hasOlder: false });
+
+    assert.doesNotMatch(markup, new RegExp(LOAD_OLDER_LABEL));
+  });
+
+  it("renders the 10 older messages on top of the 50 newest after prepending", () => {
+    const page = prependOlderObservations(
+      { items: newest, hasOlder: true, nextBefore: { createdAt: newest[0]!.createdAt, id: newest[0]!.id } },
+      { items: older, hasOlder: false, nextBefore: null },
+    );
+    const markup = renderPage(page.items, { hasOlder: page.hasOlder });
+
+    assert.equal(markup.match(/data-own=/g)?.length, 60);
+    assert.ok(markup.indexOf("Mensagem número 0.") < markup.indexOf("Mensagem número 9."));
+    assert.ok(markup.indexOf("Mensagem número 9.") < markup.indexOf("Mensagem número 10."));
+    assert.doesNotMatch(markup, new RegExp(LOAD_OLDER_LABEL));
+  });
+
+  it("disables the control while the older page is loading", () => {
+    const markup = renderPage(newest, { hasOlder: true, isLoadingOlder: true });
+
+    assert.match(markup, /<button[^>]*disabled=""[^>]*>Carregando…<\/button>/);
+    assert.doesNotMatch(markup, new RegExp(LOAD_OLDER_LABEL));
   });
 });

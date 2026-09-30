@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { OverviewCustomerService } from "../services/overviewCustomerService";
 import type {
   OverviewCustomerObservation,
+  OverviewCustomerObservationCursor,
   OverviewCustomerObservationListResponse,
 } from "../types/overviewCustomerObservation.types";
 import {
@@ -12,11 +13,13 @@ import {
   draftAfterObservationSubmitError,
   draftAfterObservationSubmitSuccess,
   isObservationListLoading,
+  prependOlderObservations,
   resolveObservationSubmitError,
 } from "../utils/overviewCustomerObservationsState.utils";
 import { useOverviewCustomerObservationEdit } from "./useOverviewCustomerObservationEdit";
 
 const EMPTY_OBSERVATIONS: OverviewCustomerObservation[] = [];
+const LOAD_OLDER_ERROR = "Não foi possível carregar observações anteriores";
 
 function overviewCustomerObservationsQueryKey(customerCode: number) {
   return ["overview-customer-observations", customerCode] as const;
@@ -101,11 +104,47 @@ export function useOverviewCustomerObservations(
 
   const page = open ? query.data : undefined;
   const isError = open && query.isError;
+  const hasOlder = page?.hasOlder ?? false;
+  const nextBefore = page?.nextBefore ?? null;
+
+  const loadOlderInFlightRef = useRef(false);
+  const { mutate: mutateLoadOlder, isPending: isLoadingOlder } = useMutation<
+    OverviewCustomerObservationListResponse,
+    Error,
+    OverviewCustomerObservationCursor
+  >({
+    mutationFn: (before) => OverviewCustomerService.getObservations(customerCode, before),
+  });
+
+  const loadOlder = useCallback(() => {
+    if (loadOlderInFlightRef.current || !hasOlder || nextBefore === null) {
+      return;
+    }
+
+    loadOlderInFlightRef.current = true;
+    mutateLoadOlder(nextBefore, {
+      onSuccess: (olderPage) => {
+        queryClient.setQueryData<OverviewCustomerObservationListResponse>(
+          queryKey,
+          // The modal may have closed (cache removed) while the request was in flight.
+          (current) => (current ? prependOlderObservations(current, olderPage) : current),
+        );
+      },
+      onError: () => {
+        toast.error(LOAD_OLDER_ERROR);
+      },
+      onSettled: () => {
+        loadOlderInFlightRef.current = false;
+      },
+    });
+  }, [hasOlder, mutateLoadOlder, nextBefore, queryClient, queryKey]);
 
   return {
     items: page?.items ?? EMPTY_OBSERVATIONS,
-    hasOlder: page?.hasOlder ?? false,
-    nextBefore: page?.nextBefore ?? null,
+    hasOlder,
+    nextBefore,
+    loadOlder,
+    isLoadingOlder,
     isLoading: isObservationListLoading({
       open,
       hasData: page !== undefined,

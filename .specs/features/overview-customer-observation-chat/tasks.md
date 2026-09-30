@@ -464,10 +464,10 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Control shown only when `hasOlder`
-- [ ] Prepend preserves scroll position
-- [ ] Unit tests with 60-message fixture (50 + 10)
-- [ ] Gate passes: quick frontend observation tests
+- [x] Control shown only when `hasOlder`
+- [x] Prepend preserves scroll position
+- [x] Unit tests with 60-message fixture (50 + 10)
+- [x] Gate passes: quick frontend observation tests
 
 **Tests**: unit
 **Gate**: quick

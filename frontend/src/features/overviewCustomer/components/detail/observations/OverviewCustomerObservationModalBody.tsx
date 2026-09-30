@@ -19,6 +19,9 @@ type OverviewCustomerObservationModalBodyProps = {
   isSubmitting: boolean;
   submitError: string | null;
   edit?: OverviewCustomerObservationEditControls;
+  hasOlder?: boolean;
+  isLoadingOlder?: boolean;
+  onLoadOlder?: () => void;
 };
 
 export function OverviewCustomerObservationModalBody({
@@ -34,6 +37,9 @@ export function OverviewCustomerObservationModalBody({
   isSubmitting,
   submitError,
   edit,
+  hasOlder,
+  isLoadingOlder,
+  onLoadOlder,
 }: OverviewCustomerObservationModalBodyProps) {
   if (isLoading) {
     return (
@@ -62,6 +68,9 @@ export function OverviewCustomerObservationModalBody({
         items={items}
         currentUserId={currentUserId}
         edit={edit}
+        hasOlder={hasOlder}
+        isLoadingOlder={isLoadingOlder}
+        onLoadOlder={onLoadOlder}
       />
       <OverviewCustomerObservationComposer
         value={draft}
