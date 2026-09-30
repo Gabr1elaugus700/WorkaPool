@@ -489,9 +489,9 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] `validation.md` written with PASS/FAIL and `file:line` evidence per AC
-- [ ] `validate_state.py` passes
-- [ ] Surviving mutants become fix tasks if any
+- [x] `validation.md` written with PASS/FAIL and `file:line` evidence per AC
+- [x] `validate_state.py` passes
+- [x] Surviving mutants become fix tasks if any
 
 **Tests**: unit
 **Gate**: full
