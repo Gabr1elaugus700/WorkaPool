@@ -125,4 +125,35 @@ describe("OverviewCustomerDetailHero", () => {
     const zeroMatches = withoutCounts.match(/>0</g) ?? [];
     assert.ok(zeroMatches.length >= 4);
   });
+
+  it("renders the observations icon button right after the trade name when wired", () => {
+    const markup = renderToStaticMarkup(
+      React.createElement(OverviewCustomerDetailHero, {
+        customer: customerFixture,
+        commercialSignals,
+        billing,
+        onOpenObservations: () => undefined,
+      }),
+    );
+
+    const tradeNameIdx = markup.indexOf("QUIBRAS QUIMICA BRASILEIRA");
+    const buttonIdx = markup.indexOf('aria-label="Histórico de observações"');
+    const branchIdx = markup.indexOf("Filial:");
+    assert.ok(tradeNameIdx >= 0);
+    assert.ok(buttonIdx > tradeNameIdx);
+    assert.ok(branchIdx > buttonIdx);
+    assert.match(markup, /<button type="button"[^>]*aria-label="Histórico de observações"/);
+  });
+
+  it("omits the observations icon button when no handler is provided", () => {
+    const markup = renderToStaticMarkup(
+      React.createElement(OverviewCustomerDetailHero, {
+        customer: customerFixture,
+        commercialSignals,
+        billing,
+      }),
+    );
+
+    assert.doesNotMatch(markup, /Histórico de observações/);
+  });
 });

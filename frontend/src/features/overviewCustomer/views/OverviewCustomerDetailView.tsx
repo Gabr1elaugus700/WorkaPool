@@ -2,7 +2,9 @@ import DefaultLayout from "@/layout/DefaultLayout";
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { OverviewCustomerAccessDeniedState } from "../components/OverviewCustomerAccessDeniedState";
+import { useAuth } from "@/auth/AuthContext";
 import { OverviewCustomerDetailHero } from "../components/detail/OverviewCustomerDetailHero";
+import { OverviewCustomerObservationModal } from "../components/detail/observations/OverviewCustomerObservationModal";
 import { OverviewCustomerDetailOverviewPanel } from "../components/detail/OverviewCustomerDetailOverviewPanel";
 import { OverviewCustomerDetailPageHeader } from "../components/detail/OverviewCustomerDetailPageHeader";
 import { OverviewCustomerDetailSyncFooter } from "../components/detail/OverviewCustomerDetailSyncFooter";
@@ -42,6 +44,8 @@ export function OverviewCustomerDetailView() {
   const [activeTab, setActiveTab] = useState<OverviewCustomerDetailTabId>(
     OVERVIEW_CUSTOMER_DETAIL_TABS.overview.id,
   );
+  const [observationsOpen, setObservationsOpen] = useState(false);
+  const { user } = useAuth();
   const customerCode = useMemo(
     () => parseCustomerCode(params.clienteId),
     [params.clienteId],
@@ -150,6 +154,7 @@ export function OverviewCustomerDetailView() {
         <OverviewCustomerDetailHero
           customer={detail.customer}
           orderCounts={detail.orderCounts}
+          onOpenObservations={() => setObservationsOpen(true)}
           commercialSignals={{
             purchaseFrequencyDays: detail.commercialSummary.purchaseFrequencyDays,
             daysSinceLastPurchase: detail.commercialSummary.daysSinceLastPurchase,
@@ -247,6 +252,13 @@ export function OverviewCustomerDetailView() {
           lastSuccessfulSyncAt={detail.sync.lastSuccessfulSyncAt}
         />
       </div>
+      <OverviewCustomerObservationModal
+        open={observationsOpen}
+        onOpenChange={setObservationsOpen}
+        customerCode={customerCode}
+        tradeName={detail.customer.tradeName}
+        currentUserId={user?.id ?? ""}
+      />
     </DefaultLayout>
   );
 }

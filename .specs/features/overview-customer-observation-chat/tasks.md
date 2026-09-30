@@ -360,12 +360,12 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Title = customer trade name
-- [ ] Error copy: `N├úo foi poss├¡vel carregar o hist├│rico`
-- [ ] Closes on overlay, close control, Escape
-- [ ] Does not render fabricated messages on error
-- [ ] Unit tests cover open/close/error states
-- [ ] Gate passes: quick frontend observation tests
+- [x] Title = customer trade name
+- [x] Error copy: `N├úo foi poss├¡vel carregar o hist├│rico`
+- [x] Closes on overlay, close control, Escape
+- [x] Does not render fabricated messages on error
+- [x] Unit tests cover open/close/error states
+- [x] Gate passes: quick frontend observation tests
 
 **Tests**: unit
 **Gate**: quick
@@ -387,11 +387,11 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Icon button with `aria-label="Hist├│rico de observa├º├Áes"` beside `tradeName`
-- [ ] Click opens modal; detail view remains behind
-- [ ] Re-fetch on each modal open (no stale cache)
-- [ ] `OverviewCustomerDetailHero.test.ts` updated
-- [ ] Gate passes: full frontend tests + lint
+- [x] Icon button with `aria-label="Hist├│rico de observa├º├Áes"` beside `tradeName`
+- [x] Click opens modal; detail view remains behind
+- [x] Re-fetch on each modal open (no stale cache)
+- [x] `OverviewCustomerDetailHero.test.ts` updated
+- [x] Gate passes: full frontend tests + lint
 
 **Tests**: unit
 **Gate**: full
