@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { DragEndEvent } from "@dnd-kit/core";
 import { toast } from "sonner";
-import { Carga, CargaSituacao, Pedido, CargaComPesoDTO } from "../types/cargo.types";
+import { Carga, CargaDespachoCloseInput, CargaSituacao, Pedido, CargaComPesoDTO } from "../types/cargo.types";
 import { cargoService } from "../services/cargoService";
 import { canMovePedido } from "../utils/permissions";
 import { cargoCapacity } from "../utils/cargoCapacity";
@@ -193,7 +193,11 @@ export function useCargasManager(
    * Altera situação de uma carga
    */
   const handleChangeSituacao = useCallback(
-    async (id: string, novaSituacao: CargaSituacao) => {
+    async (
+      id: string,
+      novaSituacao: CargaSituacao,
+      despacho?: CargaDespachoCloseInput,
+    ) => {
       console.log(`🔵 [useCargasManager] handleChangeSituacao chamado:`, { id, novaSituacao });
 
       try {
@@ -207,16 +211,22 @@ export function useCargasManager(
             return;
           }
 
+          if (!despacho?.caminhaoId) {
+            toast.error("Selecione o caminhão para fechar a carga");
+            return;
+          }
+
           console.log(`📤 [useCargasManager] Chamando closeCarga com codCar: ${cargaFechada.codCar}`);
 
           try {
-            // closeCarga já atualiza a situação + salva pedidos
-            const resultado = await cargoService.closeCarga(cargaFechada.codCar);
+            const resultado = await cargoService.closeCarga(
+              cargaFechada.codCar,
+              despacho,
+            );
             console.log(`✅ [useCargasManager] Resultado:`, resultado);
             
             toast.success(`Carga fechada com sucesso! ${resultado.pedidosSalvos} pedidos salvos.`);
             
-            // Recarregar dados para refletir mudanças
             await carregar();
           } catch (error) {
             console.error("❌ [useCargasManager] Erro ao fechar carga:", error);

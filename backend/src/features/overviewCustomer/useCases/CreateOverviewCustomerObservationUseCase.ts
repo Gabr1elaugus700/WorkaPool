@@ -7,6 +7,7 @@ import {
   assertOverviewCustomerAccess,
   type AssertOverviewCustomerAccessInput,
 } from "../utils/assertOverviewCustomerAccess";
+import { mapOverviewCustomerObservationItem } from "../utils/mapOverviewCustomerObservationItem";
 import type { OverviewCustomerObservationListItem } from "./ListOverviewCustomerObservationsUseCase";
 
 export type CreateOverviewCustomerObservationInput =
@@ -56,15 +57,6 @@ export class CreateOverviewCustomerObservationUseCase {
       authorMatches.find((match) => match.id === record.authorUserId)
         ?.displayName ?? "";
 
-    return {
-      id: record.id,
-      customerCode: record.customerCode,
-      authorUserId: record.authorUserId,
-      authorDisplayName,
-      body: record.body,
-      createdAt: record.createdAt.toISOString(),
-      updatedAt: record.updatedAt.toISOString(),
-      editedAt: record.editedAt ? record.editedAt.toISOString() : null,
-    };
+    return mapOverviewCustomerObservationItem(record, authorDisplayName);
   }
 }

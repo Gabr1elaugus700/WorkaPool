@@ -19,10 +19,8 @@ export type OverviewCustomerObservationCreateInput = {
   body: string;
 };
 
-export type OverviewCustomerObservationUpdateByAuthorInput = {
+export type OverviewCustomerObservationUpdateBodyInput = {
   id: string;
-  customerCode: number;
-  authorUserId: string;
   body: string;
   editedAt: Date;
 };
@@ -56,12 +54,11 @@ type ObservationPrisma = {
       where: {
         id: string;
         customerCode: number;
-        authorUserId: string;
       };
     }): Promise<OverviewCustomerObservationRecord | null>;
     update(args: {
       where: { id: string };
-      data: { body: string; editedAt: Date };
+      data: { body: string; editedAt: Date; updatedAt: Date };
     }): Promise<OverviewCustomerObservationRecord>;
   };
 };
@@ -107,26 +104,24 @@ export class OverviewCustomerObservationRepository {
     });
   }
 
-  async updateByAuthor(
-    input: OverviewCustomerObservationUpdateByAuthorInput,
+  async findByIdForCustomer(
+    id: string,
+    customerCode: number,
   ): Promise<OverviewCustomerObservationRecord | null> {
-    const existing = await this.prisma.overviewCustomerObservation.findFirst({
-      where: {
-        id: input.id,
-        customerCode: input.customerCode,
-        authorUserId: input.authorUserId,
-      },
+    return this.prisma.overviewCustomerObservation.findFirst({
+      where: { id, customerCode },
     });
+  }
 
-    if (!existing) {
-      return null;
-    }
-
+  async updateBody(
+    input: OverviewCustomerObservationUpdateBodyInput,
+  ): Promise<OverviewCustomerObservationRecord> {
     return this.prisma.overviewCustomerObservation.update({
       where: { id: input.id },
       data: {
         body: input.body,
         editedAt: input.editedAt,
+        updatedAt: input.editedAt,
       },
     });
   }

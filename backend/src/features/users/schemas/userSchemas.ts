@@ -1,11 +1,21 @@
 import { z } from "zod";
 
+export const roleSchema = z.enum([
+  "ADMIN",
+  "USER",
+  "VENDAS",
+  "LOGISTICA",
+  "ALMOX",
+  "GERENTE_DPTO",
+  "MOTORISTA",
+]);
+
 // Schemas para autenticação
 export const registerSchema = z.object({
   body: z.object({
     user: z.string().min(3, "Usuário deve ter pelo menos 3 caracteres"),
     password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
-    role: z.enum(["ADMIN", "USER", "VENDAS", "LOGISTICA", "ALMOX", "GERENTE_DPTO"]).optional(),
+    role: roleSchema.optional(),
     name: z.string().min(1, "Nome é obrigatório").optional(),
     codRep: z.number().int().positive().optional()
   })
@@ -26,15 +36,28 @@ export const changePasswordFirstLoginSchema = z.object({
 });
 
 // Schemas para CRUD de usuários
+export const createUserSchema = z.object({
+  body: z.object({
+    user: z.string().min(3, "Usuário deve ter pelo menos 3 caracteres"),
+    password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+    role: roleSchema,
+    name: z.string().min(1, "Nome é obrigatório"),
+    codRep: z.number().int().positive().optional(),
+    departamentoId: z.string().uuid("ID do departamento deve ser um UUID válido").optional(),
+  }),
+});
+
 export const findAllUsersQuerySchema = z.object({
   query: z.object({
     user: z.string().optional(),
     name: z.string().optional(),
-    role: z.enum(["ADMIN", "USER", "VENDAS", "LOGISTICA", "ALMOX", "GERENTE_DPTO"]).optional(),
+    role: roleSchema.optional(),
     codRep: z.number().int().positive().optional(),
     mustChangePassword: z.boolean().optional(),
     page: z.coerce.number().int().positive().optional(),
-    pageSize: z.coerce.number().int().positive().max(100).optional()
+    pageSize: z.coerce.number().int().positive().max(100).optional(),
+    includeInactive: z.enum(["true", "false"]).optional(),
+    search: z.string().optional(),
   })
 });
 
@@ -44,7 +67,7 @@ export const updateUserSchema = z.object({
   }),
   body: z.object({
     name: z.string().min(1).optional(),
-    role: z.enum(["ADMIN", "USER", "VENDAS", "LOGISTICA", "ALMOX", "GERENTE_DPTO"]).optional(),
+    role: roleSchema.optional(),
     codRep: z.number().int().positive().optional(),
     mustChangePassword: z.boolean().optional()
   })
@@ -54,6 +77,22 @@ export const deleteUserSchema = z.object({
   params: z.object({
     id: z.string().uuid("ID deve ser um UUID válido")
   })
+});
+
+export const setUserActiveParamsSchema = z.object({
+  params: z.object({
+    id: z.string().uuid("ID deve ser um UUID válido"),
+  }),
+});
+
+export const adminResetPasswordSchema = z.object({
+  params: z.object({
+    id: z.string().uuid("ID deve ser um UUID válido"),
+  }),
+  body: z.object({
+    password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+    mustChangePassword: z.boolean().optional(),
+  }),
 });
 
 export const getUserByIdSchema = z.object({
@@ -68,15 +107,6 @@ export const getUserDepartmentsSchema = z.object({
     id: z.string().uuid("ID do usuário deve ser um UUID válido")
   })
 });
-
-export const roleSchema = z.enum([
-  "ADMIN",
-  "USER",
-  "VENDAS",
-  "LOGISTICA",
-  "ALMOX",
-  "GERENTE_DPTO",
-]);
 
 export const departamentoSchema = z.object({
   id: z.string().uuid(),
@@ -107,6 +137,7 @@ export const userResponseSchema = z.object({
   role: roleSchema,
   codRep: z.number(),
   mustChangePassword: z.boolean(),
+  isActive: z.boolean(),
 });
 
 export const paginatedUsersResponseSchema = z.object({

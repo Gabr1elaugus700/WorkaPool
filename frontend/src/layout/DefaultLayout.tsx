@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ClipboardList, FileText, LogOutIcon,  Home } from "lucide-react";
 
 import ButtonLink from "@/components/navBar/ButtonLink";
+import { FROTA_ACCESS_ROLES } from "@/features/frota/utils/frotaAccessRoles";
 
 type Props = {
   children: React.ReactNode;
@@ -57,23 +58,25 @@ export default function DefaultLayout({ children }: Props) {
               Meus Pedidos
             </ButtonLink>
             <ButtonLink
+              to="/frota"
+              allowedRoles={[...FROTA_ACCESS_ROLES]}
+            >
+              Frota
+            </ButtonLink>
+            <ButtonLink
               to="/cargas"
               allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX", "GERENTE_DPTO"]}
             >
               Cargas
             </ButtonLink>
             
-            {/* <ButtonLink to="/">Início</ButtonLink>
-
-            
             <ButtonLink
               to="/users"
               allowedRoles={["ADMIN"]}
             >
               Usuários
-            </ButtonLink> */}
+            </ButtonLink>
 
-            
             <ButtonLink
               to="/os"
               // allowedRoles={["VENDAS", "LOGISTICA", "ADMIN", "ALMOX"]}

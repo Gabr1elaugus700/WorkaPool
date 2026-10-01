@@ -1,5 +1,5 @@
 ---
-description: Fluxo issue → branch → PR com worktrees — modo standalone (PR para main) e modo epic (filhas com PR para a branch pai epic/<n>-slug).
+description: Fluxo issue → branch → PR (padrão só branch; worktree só com pedido explícito) — modo standalone (PR para main) e modo epic (filhas com PR para a branch pai epic/<n>-slug).
 alwaysApply: true
 ---
 
@@ -30,9 +30,26 @@ Se a issue estiver sem `type:*` ou sem natureza → completar labels **antes** d
 | epic (pai) | Issue pai com label `epic` | `epic/<n>-slug` | `origin/main` | `main` (só no fim da epic) |
 | epic (filha) | Issue com `Parte de #<n>` | `feature/<m>-slug` / `hotfix/<m>-slug` | `origin/epic/<n>-slug` | `epic/<n>-slug` |
 
-Uma issue = uma branch. **Uma epic = uma worktree**: filhas **não** ganham worktree própria — são branches criadas dentro da worktree da epic, uma de cada vez. Standalone tem worktree própria. Filha nasce **sempre** do pai no remoto, nunca da `main` nem de outra filha.
+Uma issue = uma branch. Filha nasce **sempre** do pai no remoto, nunca da `main` nem de outra filha.
 
-## Worktrees (nome determinístico)
+## Branch ou worktree
+
+**Padrão: só branch, no checkout atual.** Worktree **só** quando o usuário pedir explicitamente (ex.: "crie uma worktree", `/wt`). "Crie uma branch", "planeje/implemente a issue N" **não** são pedido de worktree.
+
+Sem pedido de worktree, com o checkout atual limpo (senão pergunte antes):
+
+```powershell
+git fetch origin
+git switch -c feature/130-ajuste-x origin/main                 # standalone
+git switch -c epic/120-overview-customer origin/main; git push -u origin HEAD   # pai de epic
+git switch -c feature/123-observacoes origin/epic/120-overview-customer         # filha de epic
+```
+
+Com pedido de worktree, use o script (seções abaixo).
+
+## Worktrees (só com pedido explícito; nome determinístico)
+
+**Uma epic = uma worktree**: filhas **não** ganham worktree própria — são branches criadas dentro da worktree da epic, uma de cada vez. Standalone pode ter worktree própria.
 
 Todas as worktrees ficam na pasta irmã `../WorkaPool.worktrees/`. O nome da pasta é a branch com `/` trocado por `-`:
 
@@ -44,7 +61,7 @@ Todas as worktrees ficam na pasta irmã `../WorkaPool.worktrees/`. O nome da pas
 
 Atalho no chat: `/wt <issue>` ([skill wt](../skills/wt/SKILL.md)) coleta issue, epic e slug e roda o script.
 
-Crie e remova worktrees e branches de filha **sempre** pelo script (roda do repo principal ou de qualquer worktree):
+Quando houver worktree, crie e remova worktrees e branches de filha dentro dela **sempre** pelo script (roda do repo principal ou de qualquer worktree):
 
 ```powershell
 ./scripts/worktree.ps1 new-epic     -Issue 120 -Slug overview-customer                # worktree epic/120-... de origin/main + push
@@ -64,14 +81,14 @@ Slug: kebab-case, minúsculo, sem acento.
 git push -u origin HEAD
 gh pr create --base main --title "feat: X (closes #130)" --body "Resolve #130"
 gh pr merge --squash --delete-branch
-./scripts/worktree.ps1 remove -Issue 130
+./scripts/worktree.ps1 remove -Issue 130   # só se a issue tiver worktree; sem worktree: git branch -D feature/130-ajuste-x (fora dela)
 ```
 
 ## PR — filha → epic
 
 `closes #N` **só fecha a issue automaticamente em merge na branch padrão (`main`)**. Em PR para `epic/*` a issue filha precisa ser fechada explicitamente.
 
-Tudo roda na worktree da epic (`epic-120-overview-customer`):
+Tudo roda no checkout da epic (a worktree `epic-120-overview-customer`, se ela existir):
 
 ```bash
 git push -u origin HEAD
@@ -79,14 +96,14 @@ gh pr create --base epic/120-overview-customer --title "feat: X (#123)" --body "
 Parte de #120"
 gh pr merge <pr> --squash --delete-branch
 gh issue close 123 --comment "Entregue em #<pr> na epic/120-overview-customer"
-./scripts/worktree.ps1 finish-child -Epic 120 -Issue 123
+./scripts/worktree.ps1 finish-child -Epic 120 -Issue 123   # sem worktree: git fetch origin; git switch epic/120-overview-customer; git pull; git branch -D feature/123-observacoes
 ```
 
-Próxima filha: `new-child` na mesma worktree (o script faz `fetch` e parte de `origin/epic/...`, nunca da branch local da filha anterior — o merge é squash).
+Próxima filha: parte de `origin/epic/...` (com worktree, `new-child` na mesma worktree), nunca da branch local da filha anterior — o merge é squash.
 
 ## Sincronizar a epic com a main
 
-Epic longa: na worktree do pai, sem filha em andamento (branch `epic/<n>-slug`), `git fetch origin && git merge origin/main && git push`. Sem rebase — a branch é compartilhada pelas filhas.
+Epic longa: no checkout do pai (a worktree da epic, se existir), sem filha em andamento (branch `epic/<n>-slug`), `git fetch origin && git merge origin/main && git push`. Sem rebase — a branch é compartilhada pelas filhas.
 
 ## PR — epic → main
 
@@ -97,13 +114,14 @@ gh pr create --base main --label epic --title "feat: <épico> (closes #120)" --b
 
 Filhas: #123, #124"
 gh pr merge <pr> --merge --delete-branch     # merge commit: preserva um commit por filha
-./scripts/worktree.ps1 remove -Issue 120
+./scripts/worktree.ps1 remove -Issue 120   # só se a epic tiver worktree
 ```
 
 No CI, PR `epic/*` → `main` dispensa só o limite de 300 linhas; o resto do quality gate vale (ver [.github/QUALITY_GATE.md](../../.github/QUALITY_GATE.md)).
 
 ## Proibido
 
+- Criar worktree sem pedido explícito do usuário (padrão é só branch)
 - Trabalhar issue sem labels `type:*` + natureza
 - Branch sem número da issue, ou uma branch cobrindo várias issues
 - Filha criada a partir de outra filha ou da `main`; PR de filha direto para a `main`

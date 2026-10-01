@@ -24,3 +24,20 @@ export type OverviewCustomerObservationListResponse = {
 export type OverviewCustomerObservationCreateInput = {
   body: string;
 };
+
+export type OverviewCustomerObservationUpdateInput = {
+  body: string;
+};
+
+/** Inline edit state for the single observation being edited, if any. */
+export type OverviewCustomerObservationEditControls = {
+  editingId: string | null;
+  draft: string;
+  error: string | null;
+  isSaving: boolean;
+  canSave: boolean;
+  onStart: (observation: OverviewCustomerObservation) => void;
+  onDraftChange: (value: string) => void;
+  onCancel: () => void;
+  onSave: () => void;
+};

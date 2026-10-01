@@ -334,11 +334,11 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Empty state: `Nenhuma observa├º├úo neste cliente` with composer visible
-- [ ] Thread renders ascending list of bubbles
-- [ ] Enter submits; Shift+Enter inserts newline
-- [ ] Unit tests cover empty state and keyboard behavior markup
-- [ ] Gate passes: quick frontend observation tests
+- [x] Empty state: `Nenhuma observa├º├úo neste cliente` with composer visible
+- [x] Thread renders ascending list of bubbles
+- [x] Enter submits; Shift+Enter inserts newline
+- [x] Unit tests cover empty state and keyboard behavior markup
+- [x] Gate passes: quick frontend observation tests
 
 **Tests**: unit
 **Gate**: quick
@@ -360,12 +360,12 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Title = customer trade name
-- [ ] Error copy: `N├úo foi poss├¡vel carregar o hist├│rico`
-- [ ] Closes on overlay, close control, Escape
-- [ ] Does not render fabricated messages on error
-- [ ] Unit tests cover open/close/error states
-- [ ] Gate passes: quick frontend observation tests
+- [x] Title = customer trade name
+- [x] Error copy: `N├úo foi poss├¡vel carregar o hist├│rico`
+- [x] Closes on overlay, close control, Escape
+- [x] Does not render fabricated messages on error
+- [x] Unit tests cover open/close/error states
+- [x] Gate passes: quick frontend observation tests
 
 **Tests**: unit
 **Gate**: quick
@@ -387,11 +387,11 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Icon button with `aria-label="Hist├│rico de observa├º├Áes"` beside `tradeName`
-- [ ] Click opens modal; detail view remains behind
-- [ ] Re-fetch on each modal open (no stale cache)
-- [ ] `OverviewCustomerDetailHero.test.ts` updated
-- [ ] Gate passes: full frontend tests + lint
+- [x] Icon button with `aria-label="Hist├│rico de observa├º├Áes"` beside `tradeName`
+- [x] Click opens modal; detail view remains behind
+- [x] Re-fetch on each modal open (no stale cache)
+- [x] `OverviewCustomerDetailHero.test.ts` updated
+- [x] Gate passes: full frontend tests + lint
 
 **Tests**: unit
 **Gate**: full
@@ -413,11 +413,11 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] PATCH sets `editedAt`, keeps `createdAt` and `authorUserId`
-- [ ] Non-author (including ADMIN) gets 403 `OBSERVATION_EDIT_FORBIDDEN`
-- [ ] Wrong customer/id gets 404 `OBSERVATION_NOT_FOUND`
-- [ ] Unit + route tests cover ACs OBSCHAT-05
-- [ ] Gate passes: full backend tests
+- [x] PATCH sets `editedAt`, keeps `createdAt` and `authorUserId`
+- [x] Non-author (including ADMIN) gets 403 `OBSERVATION_EDIT_FORBIDDEN`
+- [x] Wrong customer/id gets 404 `OBSERVATION_NOT_FOUND`
+- [x] Unit + route tests cover ACs OBSCHAT-05
+- [x] Gate passes: full backend tests
 
 **Tests**: unit
 **Gate**: full
@@ -439,10 +439,10 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Only own bubbles show edit affordance
-- [ ] PATCH success updates bubble and shows `editado`
-- [ ] Unit tests cover edit UI and error handling
-- [ ] Gate passes: quick frontend observation tests
+- [x] Only own bubbles show edit affordance
+- [x] PATCH success updates bubble and shows `editado`
+- [x] Unit tests cover edit UI and error handling
+- [x] Gate passes: quick frontend observation tests
 
 **Tests**: unit
 **Gate**: quick
@@ -464,10 +464,10 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] Control shown only when `hasOlder`
-- [ ] Prepend preserves scroll position
-- [ ] Unit tests with 60-message fixture (50 + 10)
-- [ ] Gate passes: quick frontend observation tests
+- [x] Control shown only when `hasOlder`
+- [x] Prepend preserves scroll position
+- [x] Unit tests with 60-message fixture (50 + 10)
+- [x] Gate passes: quick frontend observation tests
 
 **Tests**: unit
 **Gate**: quick
@@ -489,9 +489,9 @@ T16 ÔåÆ T17
 
 **Done when**:
 
-- [ ] `validation.md` written with PASS/FAIL and `file:line` evidence per AC
-- [ ] `validate_state.py` passes
-- [ ] Surviving mutants become fix tasks if any
+- [x] `validation.md` written with PASS/FAIL and `file:line` evidence per AC
+- [x] `validate_state.py` passes
+- [x] Surviving mutants become fix tasks if any
 
 **Tests**: unit
 **Gate**: full

@@ -1,52 +1,89 @@
-import { getBaseUrl } from "@/lib/apiBase";
-import { User } from "../models/usersModel";
+import { apiFetchJson } from "@/lib/apiFetch";
+import type { User } from "../models/usersModel";
+import type {
+  CreateUserInput,
+  ListUsersQuery,
+  ResetUserPasswordInput,
+  UpdateUserInput,
+  UserDepartmentLinkInput,
+} from "../types/user.types";
+
+function toUsersQueryString(query?: ListUsersQuery): string {
+  const params = new URLSearchParams();
+  const search = query?.search?.trim();
+  if (search) {
+    params.set("search", search);
+  }
+  if (query?.includeInactive === true) {
+    params.set("includeInactive", "true");
+  }
+  const encoded = params.toString();
+  return encoded ? `?${encoded}` : "";
+}
 
 export const usersService = {
-  getAll: async (): Promise<User[]> => {
-    const response = await fetch(`${getBaseUrl()}/api/users`);
-    if (!response.ok) {
-      throw new Error("Failed to fetch users");
-    }
-    return response.json();
+  getAll: async (query?: ListUsersQuery): Promise<User[]> => {
+    return apiFetchJson<User[]>(`/api/users${toUsersQueryString(query)}`);
   },
 
-  findById: async (id: string): Promise<User | null> => {
-    const response = await fetch(`${getBaseUrl()}/api/users/${id}`);
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null;
-      }
-      throw new Error("Failed to fetch user");
-    }
-    return response.json();
+  findById: async (id: string): Promise<User> => {
+    return apiFetchJson<User>(`/api/users/${encodeURIComponent(id)}`);
   },
 
-  addToDepartment: async (userId: string, departamentoId: string, funcao: string): Promise<void> => {
-    console.log("Adding user to department: Service", { userId, departamentoId, funcao });
-    const response = await fetch(`${getBaseUrl()}/api/departamentos/users/add`, {
+  create: async (input: CreateUserInput): Promise<User> => {
+    return apiFetchJson<User>("/api/users", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ userId, departamentoId, funcao }),
+      body: JSON.stringify(input),
     });
-    if (!response.ok) {
-      throw new Error("Failed to add user to department");
-    }
   },
 
-  updateUser: async (userId: string, userData: Partial<User>): Promise<void> => {
-    console.log("Updating user with data: Service", userData);
-    const response = await fetch(`${getBaseUrl()}/api/users/${userId}/update`, {
+  updateUser: async (userId: string, input: UpdateUserInput): Promise<User> => {
+    return apiFetchJson<User>(`/api/users/${encodeURIComponent(userId)}/update`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(userData),
+      body: JSON.stringify(input),
     });
-    if (!response.ok) {
-      throw new Error("Failed to update user");
-    }
   },
 
+  resetPassword: async (userId: string, input: ResetUserPasswordInput): Promise<User> => {
+    return apiFetchJson<User>(`/api/users/${encodeURIComponent(userId)}/reset-password`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  deactivate: async (userId: string): Promise<User> => {
+    return apiFetchJson<User>(`/api/users/${encodeURIComponent(userId)}/deactivate`, {
+      method: "POST",
+    });
+  },
+
+  reactivate: async (userId: string): Promise<User> => {
+    return apiFetchJson<User>(`/api/users/${encodeURIComponent(userId)}/reactivate`, {
+      method: "POST",
+    });
+  },
+
+  addToDepartment: async (input: UserDepartmentLinkInput): Promise<void> => {
+    await apiFetchJson("/api/departamentos/users/add", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  updateDepartmentFunction: async (input: UserDepartmentLinkInput): Promise<void> => {
+    await apiFetchJson("/api/departamentos/users/function", {
+      method: "PUT",
+      body: JSON.stringify(input),
+    });
+  },
+
+  removeFromDepartment: async (
+    userId: string,
+    departamentoId: string,
+  ): Promise<void> => {
+    await apiFetchJson("/api/departamentos/users/remove", {
+      method: "DELETE",
+      body: JSON.stringify({ userId, departamentoId }),
+    });
+  },
 };

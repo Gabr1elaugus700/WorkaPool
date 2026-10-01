@@ -182,12 +182,12 @@ Explicitamente excluído para não crescer o slice.
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| OBSCHAT-01 | P1: Abrir o histórico no hero | Execute | T13 |
-| OBSCHAT-02 | P1: Ler o thread (50 mais recentes) | Execute | T4, T6, T8, T12 |
-| OBSCHAT-03 | P1: Registrar observação | Execute | T5, T6, T8, T9 |
-| OBSCHAT-04 | P1: Bolhas no padrão WhatsApp/Grok | Execute | T10, T11, T13 |
-| OBSCHAT-05 | P2: Editar a própria observação | Execute | T14, T15 |
-| OBSCHAT-06 | P2: Página anterior no topo | Execute | T2, T4, T16 |
+| OBSCHAT-01 | P1: Abrir o histórico no hero | Verified | T13 |
+| OBSCHAT-02 | P1: Ler o thread (50 mais recentes) | Verified | T4, T6, T8, T12 |
+| OBSCHAT-03 | P1: Registrar observação | Verified | T5, T6, T8, T9, T17 |
+| OBSCHAT-04 | P1: Bolhas no padrão WhatsApp/Grok | Verified | T10, T11, T13 |
+| OBSCHAT-05 | P2: Editar a própria observação | Verified | T14, T15 |
+| OBSCHAT-06 | P2: Página anterior no topo | Verified | T2, T4, T16, T17 |
 
 **Coverage:** 6 total, 6 mapped to tasks, 0 unmapped
 

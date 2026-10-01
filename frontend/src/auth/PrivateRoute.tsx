@@ -2,12 +2,29 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { ReactNode } from "react";
 
-export default function PrivateRoute({ children }: { children: ReactNode }) {
-  const { isAuthenticated, loading } = useAuth();
+type Props = {
+  children: ReactNode;
+  allowedRoles?: readonly string[];
+};
+
+export default function PrivateRoute({ children, allowedRoles }: Props) {
+  const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
     return null;
   }
 
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (
+    allowedRoles &&
+    allowedRoles.length > 0 &&
+    (!user?.role || !allowedRoles.includes(user.role))
+  ) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
 }

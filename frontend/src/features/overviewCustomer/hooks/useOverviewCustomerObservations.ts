@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { OverviewCustomerService } from "../services/overviewCustomerService";
 import type {
   OverviewCustomerObservation,
+  OverviewCustomerObservationCursor,
   OverviewCustomerObservationListResponse,
 } from "../types/overviewCustomerObservation.types";
 import {
@@ -11,11 +12,15 @@ import {
   canSubmitObservation,
   draftAfterObservationSubmitError,
   draftAfterObservationSubmitSuccess,
+  dropObservationsPageWhenClosed,
   isObservationListLoading,
-  resolveObservationSubmitError,
+  OBSERVATION_SUBMIT_ERROR_MESSAGE,
+  prependOlderObservations,
 } from "../utils/overviewCustomerObservationsState.utils";
+import { useOverviewCustomerObservationEdit } from "./useOverviewCustomerObservationEdit";
 
 const EMPTY_OBSERVATIONS: OverviewCustomerObservation[] = [];
+const LOAD_OLDER_ERROR = "Não foi possível carregar observações anteriores";
 
 function overviewCustomerObservationsQueryKey(customerCode: number) {
   return ["overview-customer-observations", customerCode] as const;
@@ -44,13 +49,10 @@ export function useOverviewCustomerObservations(
   });
 
   useEffect(() => {
-    if (open) {
-      return;
-    }
     // gcTime only drops the cache after the last observer leaves. This hook
     // stays mounted to read `open`, so drop the page on close and the next
     // open cannot paint the previous thread before the fresh GET.
-    queryClient.removeQueries({ queryKey, exact: true });
+    dropObservationsPageWhenClosed(queryClient, queryKey, open);
   }, [open, queryClient, queryKey]);
 
   const { mutate, isPending } = useMutation<
@@ -84,11 +86,10 @@ export function useOverviewCustomerObservations(
         );
         setDraftState(draftAfterObservationSubmitSuccess());
       },
-      onError: (error: unknown) => {
+      onError: () => {
         setDraftState((current) => draftAfterObservationSubmitError(current));
-        const message = resolveObservationSubmitError(error);
-        setSubmitError(message);
-        toast.error(message);
+        setSubmitError(OBSERVATION_SUBMIT_ERROR_MESSAGE);
+        toast.error(OBSERVATION_SUBMIT_ERROR_MESSAGE);
       },
       onSettled: () => {
         inFlightRef.current = false;
@@ -96,13 +97,51 @@ export function useOverviewCustomerObservations(
     });
   }, [draft, isPending, mutate, queryClient, queryKey]);
 
+  const edit = useOverviewCustomerObservationEdit(customerCode, { open, queryKey });
+
   const page = open ? query.data : undefined;
   const isError = open && query.isError;
+  const hasOlder = page?.hasOlder ?? false;
+  const nextBefore = page?.nextBefore ?? null;
+
+  const loadOlderInFlightRef = useRef(false);
+  const { mutate: mutateLoadOlder, isPending: isLoadingOlder } = useMutation<
+    OverviewCustomerObservationListResponse,
+    Error,
+    OverviewCustomerObservationCursor
+  >({
+    mutationFn: (before) => OverviewCustomerService.getObservations(customerCode, before),
+  });
+
+  const loadOlder = useCallback(() => {
+    if (loadOlderInFlightRef.current || !hasOlder || nextBefore === null) {
+      return;
+    }
+
+    loadOlderInFlightRef.current = true;
+    mutateLoadOlder(nextBefore, {
+      onSuccess: (olderPage) => {
+        queryClient.setQueryData<OverviewCustomerObservationListResponse>(
+          queryKey,
+          // The modal may have closed (cache removed) while the request was in flight.
+          (current) => (current ? prependOlderObservations(current, olderPage) : current),
+        );
+      },
+      onError: () => {
+        toast.error(LOAD_OLDER_ERROR);
+      },
+      onSettled: () => {
+        loadOlderInFlightRef.current = false;
+      },
+    });
+  }, [hasOlder, mutateLoadOlder, nextBefore, queryClient, queryKey]);
 
   return {
     items: page?.items ?? EMPTY_OBSERVATIONS,
-    hasOlder: page?.hasOlder ?? false,
-    nextBefore: page?.nextBefore ?? null,
+    hasOlder,
+    nextBefore,
+    loadOlder,
+    isLoadingOlder,
     isLoading: isObservationListLoading({
       open,
       hasData: page !== undefined,
@@ -117,5 +156,6 @@ export function useOverviewCustomerObservations(
     isSubmitting: isPending,
     submitError,
     canSubmit: canSubmitObservation(draft, isPending),
+    edit,
   };
 }

@@ -79,6 +79,18 @@ export enum CargaSituacao {
   SOLICITADA = "SOLICITADA",
   ENTREGUE = "ENTREGUE",
 }
+
+/** Payload de CargaDespacho ao fechar carga */
+export type CargaDespachoCloseInput = {
+  caminhaoId: string;
+};
+
+export type TruckDespacho = {
+  id: string;
+  name: string;
+  plate?: string;
+};
+
 /** Carga com campos calculados para o frontend */
 export interface Carga {
   id: string;

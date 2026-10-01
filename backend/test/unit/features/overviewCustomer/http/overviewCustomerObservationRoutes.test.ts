@@ -11,9 +11,11 @@ import {
 } from "../../../../../src/features/overviewCustomer/repositories/OverviewCustomerObservationRepository";
 import { CreateOverviewCustomerObservationUseCase } from "../../../../../src/features/overviewCustomer/useCases/CreateOverviewCustomerObservationUseCase";
 import { ListOverviewCustomerObservationsUseCase } from "../../../../../src/features/overviewCustomer/useCases/ListOverviewCustomerObservationsUseCase";
+import { UpdateOverviewCustomerObservationUseCase } from "../../../../../src/features/overviewCustomer/useCases/UpdateOverviewCustomerObservationUseCase";
 import { InMemoryOverviewCustomerSyncStore } from "../../../../helpers/InMemoryOverviewCustomerSyncStore";
 
 const BASE_URL = "/api/overview/customers";
+const EDIT_NOW = new Date("2026-09-29T15:30:00.000Z");
 
 function createToken(role: string, options?: { id?: string; codRep?: number }): string {
   return jwt.sign(
@@ -95,12 +97,28 @@ function createInMemoryObservationPrisma(seed: OverviewCustomerObservationRecord
         return { ...created };
       },
 
-      async findFirst(): Promise<OverviewCustomerObservationRecord | null> {
-        return null;
+      async findFirst(args: {
+        where: { id: string; customerCode: number };
+      }): Promise<OverviewCustomerObservationRecord | null> {
+        const found = rows.find(
+          (row) =>
+            row.id === args.where.id &&
+            row.customerCode === args.where.customerCode,
+        );
+        return found ? { ...found } : null;
       },
 
-      async update(): Promise<OverviewCustomerObservationRecord> {
-        throw new Error("update not used in observation route tests");
+      async update(args: {
+        where: { id: string };
+        data: { body: string; editedAt: Date; updatedAt: Date };
+      }): Promise<OverviewCustomerObservationRecord> {
+        const index = rows.findIndex((row) => row.id === args.where.id);
+        if (index < 0) {
+          throw new Error(`Observation not found: ${args.where.id}`);
+        }
+        const updated: OverviewCustomerObservationRecord = { ...rows[index]!, ...args.data };
+        rows[index] = updated;
+        return { ...updated };
       },
     },
   };
@@ -186,6 +204,12 @@ function createHarness(seed: OverviewCustomerObservationRecord[] = []): {
     createOverviewCustomerObservationRoutes({
       listObservations: new ListOverviewCustomerObservationsUseCase(store, repo, authors),
       createObservation: new CreateOverviewCustomerObservationUseCase(store, repo, authors),
+      updateObservation: new UpdateOverviewCustomerObservationUseCase(
+        store,
+        repo,
+        authors,
+        () => EDIT_NOW,
+      ),
     }),
   );
   return { app, prisma };
@@ -473,5 +497,142 @@ describe("POST /api/overview/customers/:clienteId/observations", () => {
     assert.equal(response.status, 404);
     assert.equal(response.body.code, "OVERVIEW_CUSTOMER_NOT_FOUND");
     assert.equal(prisma.rows.length, 0);
+  });
+});
+
+describe("PATCH /api/overview/customers/:clienteId/observations/:observationId", () => {
+  const vendasOwnerToken = () =>
+    createToken("VENDAS", { id: "user-vendas", codRep: 10 });
+
+  it("returns 401 without token", async () => {
+    const { app, prisma } = createHarness([observation(1)]);
+
+    const response = await request(app)
+      .patch(`${BASE_URL}/123/observations/obs-001`)
+      .send({ body: "novo" });
+
+    assert.equal(response.status, 401);
+    assert.equal(prisma.rows[0]?.body, "mensagem 1");
+  });
+
+  it("lets the author edit and returns 200 with editedAt set (OBSCHAT-05 AC1)", async () => {
+    const seed = observation(1);
+    const { app, prisma } = createHarness([seed]);
+
+    const response = await request(app)
+      .patch(`${BASE_URL}/123/observations/obs-001`)
+      .set("Authorization", `Bearer ${vendasOwnerToken()}`)
+      .send({ body: "  texto corrigido  " });
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.id, "obs-001");
+    assert.equal(response.body.body, "texto corrigido");
+    assert.equal(response.body.authorUserId, "user-vendas");
+    assert.equal(response.body.authorDisplayName, "Vendedor A");
+    assert.equal(response.body.createdAt, seed.createdAt.toISOString());
+    assert.equal(response.body.editedAt, EDIT_NOW.toISOString());
+    assert.equal(response.body.updatedAt, EDIT_NOW.toISOString());
+    assert.equal(prisma.rows[0]?.body, "texto corrigido");
+  });
+
+  for (const [role, id] of [
+    ["ADMIN", "user-admin"],
+    ["GERENTE_DPTO", "user-gerente"],
+  ] as const) {
+    it(`returns 403 OBSERVATION_EDIT_FORBIDDEN for ${role} who is not the author (OBSCHAT-05 AC3)`, async () => {
+      const { app, prisma } = createHarness([observation(1)]);
+
+      const response = await request(app)
+        .patch(`${BASE_URL}/123/observations/obs-001`)
+        .set("Authorization", `Bearer ${createToken(role, { id })}`)
+        .send({ body: "reescrito" });
+
+      assert.equal(response.status, 403);
+      assert.equal(response.body.code, "OBSERVATION_EDIT_FORBIDDEN");
+      assert.equal(prisma.rows[0]?.body, "mensagem 1");
+      assert.equal(prisma.rows[0]?.editedAt, null);
+    });
+  }
+
+  it("returns 404 OBSERVATION_NOT_FOUND when the observation belongs to another customer (OBSCHAT-05 AC4)", async () => {
+    const { app, prisma } = createHarness([observation(1, { customerCode: 456 })]);
+
+    const response = await request(app)
+      .patch(`${BASE_URL}/123/observations/obs-001`)
+      .set("Authorization", `Bearer ${vendasOwnerToken()}`)
+      .send({ body: "novo" });
+
+    assert.equal(response.status, 404);
+    assert.equal(response.body.code, "OBSERVATION_NOT_FOUND");
+    assert.equal(prisma.rows[0]?.body, "mensagem 1");
+  });
+
+  it("returns 404 OBSERVATION_NOT_FOUND for an unknown observation id", async () => {
+    const { app } = createHarness([observation(1)]);
+
+    const response = await request(app)
+      .patch(`${BASE_URL}/123/observations/missing`)
+      .set("Authorization", `Bearer ${vendasOwnerToken()}`)
+      .send({ body: "novo" });
+
+    assert.equal(response.status, 404);
+    assert.equal(response.body.code, "OBSERVATION_NOT_FOUND");
+  });
+
+  for (const [label, payload] of [
+    ["missing body", {}],
+    ["non-string body", { body: 42 }],
+    ["blank body", { body: "   " }],
+    ["body over 2000 chars", { body: "a".repeat(2001) }],
+  ] as const) {
+    it(`returns 400 OBSERVATION_INVALID_BODY for ${label} (OBSCHAT-05 AC5)`, async () => {
+      const { app, prisma } = createHarness([observation(1)]);
+
+      const response = await request(app)
+        .patch(`${BASE_URL}/123/observations/obs-001`)
+        .set("Authorization", `Bearer ${vendasOwnerToken()}`)
+        .send(payload);
+
+      assert.equal(response.status, 400);
+      assert.equal(response.body.code, "OBSERVATION_INVALID_BODY");
+      assert.equal(prisma.rows[0]?.body, "mensagem 1");
+    });
+  }
+
+  it("returns 400 OVERVIEW_CUSTOMER_INVALID_ID for non-numeric clienteId", async () => {
+    const { app } = createHarness([observation(1)]);
+
+    const response = await request(app)
+      .patch(`${BASE_URL}/abc/observations/obs-001`)
+      .set("Authorization", `Bearer ${vendasOwnerToken()}`)
+      .send({ body: "novo" });
+
+    assert.equal(response.status, 400);
+    assert.equal(response.body.code, "OVERVIEW_CUSTOMER_INVALID_ID");
+  });
+
+  it("returns 403 OVERVIEW_CUSTOMER_FORBIDDEN for VENDAS of another codRep", async () => {
+    const { app, prisma } = createHarness([observation(1)]);
+
+    const response = await request(app)
+      .patch(`${BASE_URL}/123/observations/obs-001`)
+      .set("Authorization", `Bearer ${createToken("VENDAS", { id: "user-vendas", codRep: 99 })}`)
+      .send({ body: "novo" });
+
+    assert.equal(response.status, 403);
+    assert.equal(response.body.code, "OVERVIEW_CUSTOMER_FORBIDDEN");
+    assert.equal(prisma.rows[0]?.body, "mensagem 1");
+  });
+
+  it("returns 404 OVERVIEW_CUSTOMER_NOT_FOUND for unknown customer", async () => {
+    const { app } = createHarness([observation(1)]);
+
+    const response = await request(app)
+      .patch(`${BASE_URL}/999/observations/obs-001`)
+      .set("Authorization", `Bearer ${createToken("ADMIN", { id: "user-admin" })}`)
+      .send({ body: "novo" });
+
+    assert.equal(response.status, 404);
+    assert.equal(response.body.code, "OVERVIEW_CUSTOMER_NOT_FOUND");
   });
 });

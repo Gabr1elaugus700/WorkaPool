@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 4,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "surviving_mutant::for page size cursors fetched as page size 1 test a dataset of exactly page size and assert hasolder false",
+      "text": "For page-size cursors fetched as PAGE_SIZE+1, test a dataset of exactly PAGE_SIZE and assert hasOlder false.",
+      "signal": "surviving_mutant",
+      "scope": "backend/useCases",
+      "status": "candidate",
+      "features": [
+        "overview-customer-observation-chat"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M5 ListOverviewCustomerObservationsUseCase.ts:63 (backend/useCases)"
+      ],
+      "created": "2026-09-30T13:34:55Z",
+      "last_seen": "2026-09-30T13:34:55Z"
+    },
+    {
+      "id": "L-002",
+      "key": "surviving_mutant::when a spec edge case depends on a cache side effect refetch on reopen extract the decision to a pure helper or test the hook with a real queryclient",
+      "text": "When a spec edge case depends on a cache side effect (refetch on reopen), extract the decision to a pure helper or test the hook with a real QueryClient.",
+      "signal": "surviving_mutant",
+      "scope": "frontend/hooks",
+      "status": "candidate",
+      "features": [
+        "overview-customer-observation-chat"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M7 useOverviewCustomerObservations.ts:57 (frontend/hooks)"
+      ],
+      "created": "2026-09-30T13:34:55Z",
+      "last_seen": "2026-09-30T13:34:55Z"
+    },
+    {
+      "id": "L-003",
+      "key": "spec_deviation::when the spec fixes an error copy assert the exact copy for server and network failures do not surface apifetch server messages instead",
+      "text": "When the spec fixes an error copy, assert the exact copy for server and network failures; do not surface apiFetch server messages instead.",
+      "signal": "spec_deviation",
+      "scope": "frontend/utils",
+      "status": "candidate",
+      "features": [
+        "overview-customer-observation-chat"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "OBSCHAT-03 AC7 overviewCustomerObservationsState.utils.test.ts:220 (frontend/utils)"
+      ],
+      "created": "2026-09-30T13:34:55Z",
+      "last_seen": "2026-09-30T13:34:55Z"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import {
   CargaFechadaData,
   CargaSituacao,
   Pedido,
+  TruckDespacho,
 } from "../types/cargo.types";
 
 export const cargoService = {
@@ -92,18 +93,29 @@ export const cargoService = {
   },
 
   /**
-   * Fecha uma carga salvando todos os pedidos vinculados
+   * Fecha uma carga salvando todos os pedidos vinculados e CargaDespacho
    */
   closeCarga: async (
     codCar: number,
+    despacho: { caminhaoId: string },
   ): Promise<{ message: string; pedidosSalvos: number }> => {
     return apiFetchJson<{ message: string; pedidosSalvos: number }>(
       "/api/cargo/close-carga",
       {
         method: "POST",
-        body: JSON.stringify({ codCar }),
+        body: JSON.stringify({
+          codCar,
+          caminhaoId: despacho.caminhaoId,
+        }),
       },
     );
+  },
+
+  /**
+   * Lista caminhões (Trucks) para CargaDespacho
+   */
+  listTrucks: async (): Promise<TruckDespacho[]> => {
+    return apiFetchJson<TruckDespacho[]>("/api/cargo/trucks");
   },
 
   /**

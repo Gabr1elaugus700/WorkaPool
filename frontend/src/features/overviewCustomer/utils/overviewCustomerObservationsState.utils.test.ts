@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { QueryClient } from "@tanstack/react-query";
 import type {
   OverviewCustomerObservation,
   OverviewCustomerObservationCursor,
@@ -7,11 +8,16 @@ import type {
 } from "../types/overviewCustomerObservation.types";
 import {
   appendObservation,
+  canSaveObservationEdit,
   canSubmitObservation,
   draftAfterObservationSubmitError,
   draftAfterObservationSubmitSuccess,
+  dropObservationsPageWhenClosed,
   isObservationListLoading,
-  resolveObservationSubmitError,
+  OBSERVATION_EDIT_ERROR_MESSAGE,
+  OBSERVATION_SUBMIT_ERROR_MESSAGE,
+  prependOlderObservations,
+  replaceObservation,
 } from "./overviewCustomerObservationsState.utils";
 
 const CURSOR: OverviewCustomerObservationCursor = {
@@ -106,6 +112,71 @@ describe("appendObservation", () => {
   });
 });
 
+function observationAt(index: number): OverviewCustomerObservation {
+  const createdAt = new Date(Date.UTC(2026, 8, 1, 12, index)).toISOString();
+  return {
+    ...observation(`obs-${String(index).padStart(2, "0")}`, `mensagem ${index}`),
+    createdAt,
+    updatedAt: createdAt,
+  };
+}
+
+describe("prependOlderObservations", () => {
+  const all = Array.from({ length: 60 }, (_, index) => observationAt(index));
+  const newestPage: OverviewCustomerObservationListResponse = {
+    items: all.slice(10),
+    hasOlder: true,
+    nextBefore: { createdAt: all[10]!.createdAt, id: all[10]!.id },
+  };
+  const olderPage: OverviewCustomerObservationListResponse = {
+    items: all.slice(0, 10),
+    hasOlder: false,
+    nextBefore: null,
+  };
+
+  it("puts the 10 older items before the 50 newest, ascending, and ends pagination", () => {
+    const next = prependOlderObservations(newestPage, olderPage);
+
+    assert.deepEqual(
+      next.items.map((item) => item.id),
+      all.map((item) => item.id),
+    );
+    assert.equal(next.hasOlder, false);
+    assert.equal(next.nextBefore, null);
+    assert.equal(newestPage.items.length, 50);
+  });
+
+  it("takes the cursor from the older page when more pages remain", () => {
+    const next = prependOlderObservations(newestPage, {
+      items: all.slice(5, 10),
+      hasOlder: true,
+      nextBefore: CURSOR,
+    });
+
+    assert.equal(next.items.length, 55);
+    assert.equal(next.hasOlder, true);
+    assert.deepEqual(next.nextBefore, CURSOR);
+  });
+
+  it("skips older items already loaded", () => {
+    const next = prependOlderObservations(newestPage, {
+      items: all.slice(8, 12),
+      hasOlder: false,
+      nextBefore: null,
+    });
+
+    assert.deepEqual(
+      next.items.slice(0, 3).map((item) => item.id),
+      ["obs-08", "obs-09", "obs-10"],
+    );
+    assert.equal(next.items.length, 52);
+  });
+
+  it("uses the older page when there is no current page", () => {
+    assert.deepEqual(prependOlderObservations(undefined, olderPage), olderPage);
+  });
+});
+
 describe("canSubmitObservation", () => {
   it("rejects an empty draft", () => {
     assert.equal(canSubmitObservation("", false), false);
@@ -146,23 +217,48 @@ describe("draft after submit", () => {
   });
 });
 
-describe("resolveObservationSubmitError", () => {
-  it("exposes the error message", () => {
-    assert.equal(
-      resolveObservationSubmitError(new Error("Acesso negado.")),
-      "Acesso negado.",
-    );
+describe("observation error copy", () => {
+  it("uses the spec copy for any submit failure (OBSCHAT-03 AC7)", () => {
+    assert.equal(OBSERVATION_SUBMIT_ERROR_MESSAGE, "Não foi possível enviar a observação");
   });
 
-  it("falls back when the failure has no message", () => {
-    assert.equal(
-      resolveObservationSubmitError(new Error("   ")),
-      "Não foi possível enviar a observação",
+  it("uses a fixed copy for any edit failure", () => {
+    assert.equal(OBSERVATION_EDIT_ERROR_MESSAGE, "Não foi possível editar a observação");
+  });
+});
+
+describe("replaceObservation", () => {
+  it("swaps the item with the same id keeping order and cursor", () => {
+    const edited = { ...observation("obs-2", "novo"), editedAt: "2026-09-27T13:00:00.000Z" };
+    const next = replaceObservation(
+      { items: [observation("obs-1"), observation("obs-2")], hasOlder: true, nextBefore: CURSOR },
+      edited,
     );
-    assert.equal(
-      resolveObservationSubmitError(null),
-      "Não foi possível enviar a observação",
+
+    assert.deepEqual(
+      next?.items.map((item) => item.body),
+      ["texto", "novo"],
     );
+    assert.equal(next?.items[1], edited);
+    assert.equal(next?.hasOlder, true);
+    assert.deepEqual(next?.nextBefore, CURSOR);
+  });
+
+  it("keeps a missing page missing", () => {
+    assert.equal(replaceObservation(undefined, observation("obs-1")), undefined);
+  });
+});
+
+describe("canSaveObservationEdit", () => {
+  it("requires a valid body different from the original", () => {
+    assert.equal(canSaveObservationEdit("novo", "antigo", false), true);
+    assert.equal(canSaveObservationEdit(" antigo ", "antigo", false), false);
+    assert.equal(canSaveObservationEdit("   ", "antigo", false), false);
+    assert.equal(canSaveObservationEdit("a".repeat(2001), "antigo", false), false);
+  });
+
+  it("blocks while saving", () => {
+    assert.equal(canSaveObservationEdit("novo", "antigo", true), false);
   });
 });
 
@@ -219,5 +315,43 @@ describe("isObservationListLoading", () => {
       }),
       false,
     );
+  });
+});
+
+describe("dropObservationsPageWhenClosed", () => {
+  const queryKey = ["overview-customer-observations", 123] as const;
+  const page: OverviewCustomerObservationListResponse = {
+    items: [observation("obs-1")],
+    hasOlder: false,
+    nextBefore: null,
+  };
+
+  it("drops the cached thread on close so reopening cannot paint a stale page", () => {
+    const queryClient = new QueryClient();
+    queryClient.setQueryData(queryKey, page);
+
+    dropObservationsPageWhenClosed(queryClient, queryKey, false);
+
+    assert.equal(queryClient.getQueryData(queryKey), undefined);
+  });
+
+  it("keeps the cached thread while the modal is open", () => {
+    const queryClient = new QueryClient();
+    queryClient.setQueryData(queryKey, page);
+
+    dropObservationsPageWhenClosed(queryClient, queryKey, true);
+
+    assert.deepEqual(queryClient.getQueryData(queryKey), page);
+  });
+
+  it("drops only the thread of that customer", () => {
+    const queryClient = new QueryClient();
+    const otherKey = ["overview-customer-observations", 456] as const;
+    queryClient.setQueryData(queryKey, page);
+    queryClient.setQueryData(otherKey, page);
+
+    dropObservationsPageWhenClosed(queryClient, queryKey, false);
+
+    assert.deepEqual(queryClient.getQueryData(otherKey), page);
   });
 });

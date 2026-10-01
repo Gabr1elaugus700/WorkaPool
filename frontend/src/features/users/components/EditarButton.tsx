@@ -3,21 +3,20 @@ import { Button } from "@/components/ui/button";
 
 interface EditButtonProps {
   userId: string;
+  userLogin: string;
   onEdit: (userId: string) => void;
 }
 
-export default function EditButton({ userId, onEdit }: EditButtonProps) {
-  const handleClick = () => {
-    onEdit(userId);
-  };
-
+export default function EditButton({ userId, userLogin, onEdit }: EditButtonProps) {
   return (
-    <Button 
-      variant="outline" 
-      className="h-8 w-8 p-0" 
-      onClick={handleClick}
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => onEdit(userId)}
+      aria-label={`Editar ${userLogin}`}
     >
-      <Pencil className="h-4 w-4 text-blue-500" />
+      <Pencil className="h-4 w-4" aria-hidden />
+      Editar
     </Button>
   );
 }
