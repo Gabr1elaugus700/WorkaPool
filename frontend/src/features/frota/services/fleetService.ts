@@ -1,5 +1,4 @@
 import { apiFetchJson } from "@/lib/apiFetch";
-import type { MotoristaDespacho } from "@/features/cargo/types/cargo.types";
 import type {
   CreateFleetTruckInput,
   FleetStats,
@@ -33,13 +32,5 @@ export const fleetService = {
       method: "PUT",
       body: JSON.stringify(input),
     });
-  },
-
-  listMotoristas: async (): Promise<MotoristaDespacho[]> => {
-    const users = await apiFetchJson<MotoristaDespacho[]>("/api/cargo/motoristas");
-    return users.map((user) => ({
-      ...user,
-      role: user.role ?? "MOTORISTA",
-    }));
   },
 };

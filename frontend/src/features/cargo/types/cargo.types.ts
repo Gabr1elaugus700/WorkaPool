@@ -85,12 +85,6 @@ export type CargaDespachoCloseInput = {
   caminhaoId: string;
 };
 
-export type MotoristaDespacho = {
-  id: string;
-  name: string;
-  role: string;
-};
-
 export type TruckDespacho = {
   id: string;
   name: string;

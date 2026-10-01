@@ -4,7 +4,6 @@ type FrotaMetrics = {
   trucksActive: number;
   trucksInactive: number;
   trucksOnTrip: number;
-  motoristaCount: number;
 };
 
 type Props = {
@@ -19,7 +18,7 @@ type MetricCard = {
 };
 
 export function FrotaPageHeader({ metrics, statsLoading = false }: Props) {
-  const { trucksActive, trucksInactive, trucksOnTrip, motoristaCount } = metrics;
+  const { trucksActive, trucksInactive, trucksOnTrip } = metrics;
 
   const cards: MetricCard[] = [
     {
@@ -36,10 +35,6 @@ export function FrotaPageHeader({ metrics, statsLoading = false }: Props) {
       value: trucksOnTrip,
       valueClassName: "text-carga-fechada",
     },
-    {
-      label: "Motoristas",
-      value: motoristaCount,
-    },
   ];
 
   return (
@@ -47,11 +42,11 @@ export function FrotaPageHeader({ metrics, statsLoading = false }: Props) {
       <div>
         <h1 className="text-2xl font-semibold">Frota</h1>
         <p className="text-sm text-muted-foreground">
-          Cadastre caminhões e consulte motoristas disponíveis para despacho.
+          Cadastre e gerencie os caminhões disponíveis para despacho.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         {cards.map((card) => (
           <div
             key={card.label}
