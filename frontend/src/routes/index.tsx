@@ -20,6 +20,8 @@ import UsersView from "@/features/users/views/usersView";
 import OverviewSyncAdminView from "@/features/overviewCustomer/views/OverviewSyncAdminView";
 import OverviewCustomerDetailView from "@/features/overviewCustomer/views/OverviewCustomerDetailView";
 import OverviewCustomerPortfolioView from "@/features/overviewCustomer/views/OverviewCustomerPortfolioView";
+import FrotaPage from "../pages/FrotaPage";
+import { FROTA_ACCESS_ROLES } from "@/features/frota/utils/frotaAccessRoles";
 
 const AppRoutes = () => {
   return (
@@ -65,6 +67,14 @@ const AppRoutes = () => {
             element={
               <PrivateRoute>
                 <VistoriaView />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/frota"
+            element={
+              <PrivateRoute allowedRoles={FROTA_ACCESS_ROLES}>
+                <FrotaPage />
               </PrivateRoute>
             }
           />

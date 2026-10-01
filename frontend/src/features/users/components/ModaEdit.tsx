@@ -162,6 +162,7 @@ export default function EditUserModal({ isOpen, onClose, user, fetchUsers }: { i
                                 <SelectItem value="GERENTE_DPTO">GERENTE DEPARTAMENTO</SelectItem>
                                 <SelectItem value="USER">USUÁRIO</SelectItem>
                                 <SelectItem value="ALMOX">ALMOXARIFADO</SelectItem>
+                                <SelectItem value="MOTORISTA">MOTORISTA</SelectItem>
                             </SelectContent>
                         </Select>
                         

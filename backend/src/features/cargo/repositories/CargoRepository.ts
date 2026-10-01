@@ -1,12 +1,32 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
 import { Carga, SituacaoCarga } from "../entities/Carga";
-import { Pedido, PedidoRaw } from "../entities/Pedido";
+import { Pedido } from "../entities/Pedido";
 import { ICargoRepository } from "./ICargoRepository";
 import { IPedidosRepository } from "../../pedidos/repositories/IPedidosRepository";
 import prismaInstance from "../../../config/prisma";
 
 import { sqlPool, sqlPoolConnect } from "../../../database/sqlServer";
 import { AppError } from "../../../utils/AppError";
+import {
+  CargaDespachoRecord,
+  CargoTruckRef,
+  CargoUserRef,
+  CloseCargaDespachoInput,
+} from "../types/CargaDespacho.types";
+
+function toCargoTruckRef(truck: {
+  id: string;
+  name: string;
+  plate: string;
+  active: boolean;
+}): CargoTruckRef {
+  return {
+    id: truck.id,
+    name: truck.name,
+    plate: truck.plate,
+    active: truck.active,
+  };
+}
 
 export class CargoRepository implements ICargoRepository {
   constructor(
@@ -67,11 +87,11 @@ export class CargoRepository implements ICargoRepository {
   }
 
   async closeCarga(
-    codCar: number,
-  ): Promise<{ carga: Carga; pedidosSalvos: number }> {
+    input: CloseCargaDespachoInput,
+  ): Promise<{ carga: Carga; pedidosSalvos: number; despacho: CargaDespachoRecord }> {
+    const { codCar, caminhaoId, fechadoPorId } = input;
     console.log(`🔵 [Repository] Iniciando fechamento da carga ${codCar}`);
 
-    // 1. Buscar a carga
     const carga = await this.getCargaByCodCar(codCar);
     if (!carga) {
       throw new AppError({
@@ -82,7 +102,25 @@ export class CargoRepository implements ICargoRepository {
       });
     }
 
-    // 2. Buscar TODOS os pedidos REAIS dessa carga do SQL Server
+    if (carga.situacao === SituacaoCarga.FECHADA) {
+      throw new AppError({
+        message: `Carga ${codCar} já está fechada`,
+        statusCode: 409,
+        code: "CARGO_JA_FECHADA",
+        details: { codCar },
+      });
+    }
+
+    const despachoExistente = await this.findDespachoByCargaId(carga.id);
+    if (despachoExistente) {
+      throw new AppError({
+        message: `Carga ${codCar} já possui CargaDespacho`,
+        statusCode: 409,
+        code: "CARGO_JA_FECHADA",
+        details: { codCar, despachoId: despachoExistente.id },
+      });
+    }
+
     const pedidosReais = await this.getPedidosPorCarga(codCar);
 
     if (pedidosReais.length === 0) {
@@ -98,20 +136,7 @@ export class CargoRepository implements ICargoRepository {
       `📦 [Repository] Encontrados ${pedidosReais.length} pedidos na carga`,
     );
 
-    // 3. Atualizar situação da carga para FECHADA
-    await this.prisma.cargas.update({
-      where: { codCar },
-      data: {
-        situacao: "FECHADA",
-        closedAt: new Date(),
-      },
-    });
-
-    // 4. Verificar se já existe registro de carga fechada (upsert)
-    const cargaFechadaExistente = await this.prisma.cargasFechadas.findFirst({
-      where: { cargaId: carga.id },
-    });
-
+    const closedAt = new Date();
     const pedidosJson = pedidosReais.map((pedido) => ({
       numPed: pedido.numPed,
       codCli: pedido.codCli,
@@ -125,37 +150,127 @@ export class CargoRepository implements ICargoRepository {
       produtos: pedido.produtos || [],
     }));
 
-    if (cargaFechadaExistente) {
-      // Atualizar registro existente
-      await this.prisma.cargasFechadas.update({
-        where: { id: cargaFechadaExistente.id },
+    const despacho = await this.prisma.$transaction(async (tx) => {
+      await tx.cargas.update({
+        where: { codCar },
         data: {
-          pedidos: pedidosJson,
-          createdAt: new Date(), // Atualizar timestamp
+          situacao: "FECHADA",
+          closedAt,
         },
       });
-      console.log(`✅ [Repository] Registro de carga fechada atualizado`);
-    } else {
-      // Criar novo registro
-      await this.prisma.cargasFechadas.create({
+
+      const createdDespacho = await tx.cargaDespacho.create({
         data: {
           cargaId: carga.id,
-          pedidos: pedidosJson,
+          caminhaoId,
+          fechadoPorId,
+          fechadoEm: closedAt,
         },
       });
-      console.log(`✅ [Repository] Novo registro de carga fechada criado`);
-    }
+
+      const cargaFechadaExistente = await tx.cargasFechadas.findFirst({
+        where: { cargaId: carga.id },
+      });
+
+      if (cargaFechadaExistente) {
+        await tx.cargasFechadas.update({
+          where: { id: cargaFechadaExistente.id },
+          data: {
+            pedidos: pedidosJson,
+            createdAt: closedAt,
+          },
+        });
+      } else {
+        await tx.cargasFechadas.create({
+          data: {
+            cargaId: carga.id,
+            pedidos: pedidosJson,
+          },
+        });
+      }
+
+      return createdDespacho;
+    });
 
     console.log(`🎉 [Repository] Carga ${codCar} fechada com sucesso`);
 
     return {
       carga: {
         ...carga,
-        situacao: "FECHADA" as SituacaoCarga,
-        closedAt: new Date(),
+        situacao: SituacaoCarga.FECHADA,
+        closedAt,
       },
       pedidosSalvos: pedidosReais.length,
+      despacho: {
+        id: despacho.id,
+        cargaId: despacho.cargaId,
+        caminhaoId: despacho.caminhaoId,
+        fechadoPorId: despacho.fechadoPorId,
+        fechadoEm: despacho.fechadoEm,
+      },
     };
+  }
+
+  async findUserById(id: string): Promise<CargoUserRef | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, name: true },
+    });
+    if (!user) {
+      return null;
+    }
+    return { id: user.id, role: user.role, name: user.name };
+  }
+
+  async findTruckById(id: string): Promise<CargoTruckRef | null> {
+    const truck = await this.prisma.trucks.findUnique({
+      where: { id },
+      select: { id: true, name: true, plate: true, active: true },
+    });
+    if (!truck) {
+      return null;
+    }
+    return toCargoTruckRef(truck);
+  }
+
+  async findDespachoByCargaId(
+    cargaId: string,
+  ): Promise<CargaDespachoRecord | null> {
+    const despacho = await this.prisma.cargaDespacho.findUnique({
+      where: { cargaId },
+    });
+    if (!despacho) {
+      return null;
+    }
+    return {
+      id: despacho.id,
+      cargaId: despacho.cargaId,
+      caminhaoId: despacho.caminhaoId,
+      fechadoPorId: despacho.fechadoPorId,
+      fechadoEm: despacho.fechadoEm,
+    };
+  }
+
+  async listMotoristas(): Promise<CargoUserRef[]> {
+    const users = await this.prisma.user.findMany({
+      where: { role: Role.MOTORISTA },
+      select: { id: true, role: true, name: true },
+      orderBy: { name: "asc" },
+    });
+    return users.map((user) => ({
+      id: user.id,
+      role: user.role,
+      name: user.name,
+    }));
+  }
+
+  async listTrucks(): Promise<CargoTruckRef[]> {
+    const trucks = await this.prisma.trucks.findMany({
+      where: { active: true },
+      select: { id: true, name: true, plate: true, active: true },
+      orderBy: { name: "asc" },
+    });
+    return trucks.map(toCargoTruckRef);
   }
 
   async deleteCarga(id: string): Promise<void> {
@@ -290,7 +405,23 @@ export class CargoRepository implements ICargoRepository {
       createdAt: carga.createdAt,
     };
   }
-  async getCargasFechadas(): Promise<any[]> {
+  async getCargasFechadas(): Promise<
+    Array<{
+      id: string;
+      cargaId: string;
+      createdAt: Date;
+      carga: {
+        id: string;
+        codCar: number;
+        destino: string;
+        pesoMaximo: number;
+        situacao: string;
+        previsaoSaida: Date;
+        closedAt: Date | null;
+      };
+      pedidos: unknown;
+    }>
+  > {
     console.log(`🔵 [Repository] Buscando cargas fechadas`);
 
     const cargasFechadas = await this.prisma.cargasFechadas.findMany({
@@ -322,18 +453,22 @@ export class CargoRepository implements ICargoRepository {
       pedidos: cf.pedidos,
     }));
   }
+  /**
+   * Confirma vínculo da carga customizada no Sapiens (`e120ped.usu_codcar`).
+   * Não usa `e135pes` (romaneio/pesagem) — pedidos alocados só via WorkaPool
+   * têm `usu_codcar` preenchido e ainda assim não aparecem em `e135pes`.
+   */
   async validarCargaSapiens(numPed: number): Promise<boolean> {
     await sqlPoolConnect;
     const result = await sqlPool
       .request()
       .input("numPed", numPed)
       .query(`
-        SELECT pes.numane, pes.numped FROM e135pes pes WHERE pes.numped = @numPed
+        SELECT ped.usu_codcar
+        FROM e120ped ped
+        WHERE ped.numped = @numPed
+          AND ISNULL(ped.usu_codcar, 0) > 0
       `);
-    if (result.recordset.length === 0) {
-      return false;
-    } else {
-      return true;
-    }
+    return result.recordset.length > 0;
   }
 }

@@ -14,6 +14,16 @@ export const CreateCargaSchema = z.object({
 
 export type CreateCargaDTO = z.infer<typeof CreateCargaSchema>;
 
+export const CloseCargaSchema = z.object({
+  codCar: z.coerce.number({
+    required_error: "Código da carga é obrigatório",
+    invalid_type_error: "Código da carga inválido",
+  }),
+  caminhaoId: z.string().uuid("caminhaoId deve ser um UUID válido"),
+});
+
+export type CloseCargaDTO = z.infer<typeof CloseCargaSchema>;
+
 export interface CargaResponseDTO {
   id: string;
   codCar: number;
