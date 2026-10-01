@@ -25,7 +25,7 @@ const userFormSchema = z
     name: z.string().min(1, "Nome é obrigatório"),
     user: z.string().min(3, "Login deve ter pelo menos 3 caracteres"),
     password: z.string().optional(),
-    role: z.enum(USER_ROLES, { required_error: "Nível de acesso é obrigatório" }),
+    role: z.enum(USER_ROLES, { error: "Nível de acesso é obrigatório" }),
     codRep: z.preprocess(
       (value) =>
         value === "" || value === null || (typeof value === "number" && Number.isNaN(value))
@@ -54,7 +54,8 @@ const userFormSchema = z
     }
   });
 
-type UserFormValues = z.infer<typeof userFormSchema>;
+type UserFormInput = z.input<typeof userFormSchema>;
+type UserFormValues = z.output<typeof userFormSchema>;
 
 type Props = {
   user?: User | null;
@@ -103,7 +104,7 @@ export function UserForm({
       .catch(() => toast.error("Não foi possível carregar departamentos"));
   }, [open]);
 
-  const defaultValues: UserFormValues = useMemo(
+  const defaultValues: UserFormInput = useMemo(
     () => ({
       name: user?.name ?? "",
       user: user?.user ?? "",
@@ -119,7 +120,7 @@ export function UserForm({
     [user],
   );
 
-  const sections: FormBuilderSection<UserFormValues>[] = useMemo(
+  const sections: FormBuilderSection<UserFormInput>[] = useMemo(
     () => [
       {
         title: "Identidade",

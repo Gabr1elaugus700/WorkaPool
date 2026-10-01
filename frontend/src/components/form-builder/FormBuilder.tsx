@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import {
   useForm,
   useWatch,
+  type Control,
   type FieldValues,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,12 +32,12 @@ import type {
   FormBuilderProps,
 } from "./formBuilder.types";
 
-function FieldControl<TFieldValues extends FieldValues>({
+function FieldControl<TFieldValues extends FieldValues, TOutput extends FieldValues>({
   field,
   control,
 }: {
   field: FormBuilderField<TFieldValues>;
-  control: ReturnType<typeof useForm<TFieldValues>>["control"];
+  control: Control<TFieldValues, unknown, TOutput>;
 }) {
   return (
     <FormField
@@ -117,7 +118,10 @@ function FieldControl<TFieldValues extends FieldValues>({
   );
 }
 
-export function FormBuilder<TFieldValues extends FieldValues>({
+export function FormBuilder<
+  TFieldValues extends FieldValues,
+  TOutput extends FieldValues = TFieldValues,
+>({
   schema,
   sections,
   defaultValues,
@@ -127,8 +131,8 @@ export function FormBuilder<TFieldValues extends FieldValues>({
   cancelLabel = "Cancelar",
   onCancel,
   submitting = false,
-}: FormBuilderProps<TFieldValues>) {
-  const form = useForm<TFieldValues>({
+}: FormBuilderProps<TFieldValues, TOutput>) {
+  const form = useForm<TFieldValues, unknown, TOutput>({
     resolver: zodResolver(schema),
     defaultValues,
   });

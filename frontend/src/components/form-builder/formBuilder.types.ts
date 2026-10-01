@@ -1,5 +1,5 @@
 import type { DefaultValues, FieldValues, Path } from "react-hook-form";
-import type { ZodType, ZodTypeDef } from "zod";
+import type { ZodType } from "zod";
 
 export type FormBuilderOption = {
   value: string;
@@ -31,12 +31,15 @@ export type FormBuilderSection<TFieldValues extends FieldValues> = {
   fields: FormBuilderField<TFieldValues>[];
 };
 
-export type FormBuilderProps<TFieldValues extends FieldValues> = {
-  schema: ZodType<TFieldValues, ZodTypeDef, unknown>;
+export type FormBuilderProps<
+  TFieldValues extends FieldValues,
+  TOutput extends FieldValues = TFieldValues,
+> = {
+  schema: ZodType<TOutput, TFieldValues>;
   sections: FormBuilderSection<TFieldValues>[];
   defaultValues: DefaultValues<TFieldValues>;
   values?: DefaultValues<TFieldValues>;
-  onSubmit: (data: TFieldValues) => Promise<void>;
+  onSubmit: (data: TOutput) => Promise<void>;
   submitLabel?: string;
   cancelLabel?: string;
   onCancel?: () => void;
