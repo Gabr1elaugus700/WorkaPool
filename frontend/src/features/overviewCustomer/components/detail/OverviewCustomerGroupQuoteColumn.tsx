@@ -4,8 +4,10 @@ import type {
   OverviewCustomerGroupQuoteProductOption,
   OverviewCustomerGroupQuoteRow,
 } from "../../types/overviewCustomerGroupQuotes.types";
+import type { OverviewCustomerGroupQuoteBenchmark } from "../../utils/overviewCustomerGroupQuotesBenchmark.utils";
 import type { OverviewCustomerGroupQuoteStatusCounts } from "../../utils/overviewCustomerGroupQuotesFilter.utils";
 import { OverviewCustomerStateMessage } from "../OverviewCustomerStateMessage";
+import { OverviewCustomerGroupQuotesBenchmarkBar } from "./OverviewCustomerGroupQuotesBenchmarkBar";
 import { OverviewCustomerGroupQuoteLegend } from "./OverviewCustomerGroupQuoteLegend";
 import { OverviewCustomerGroupQuoteProductChips } from "./OverviewCustomerGroupQuoteProductChips";
 import {
@@ -28,6 +30,7 @@ export type OverviewCustomerGroupQuoteColumnProps = {
   products: OverviewCustomerGroupQuoteProductOption[];
   selectedProductCode: string | null;
   rows: OverviewCustomerGroupQuoteRow[];
+  benchmark?: OverviewCustomerGroupQuoteBenchmark | null;
   summaryCounts: OverviewCustomerGroupQuoteStatusCounts;
   otherCustomerCount: number;
   hasUnfilteredRows?: boolean;
@@ -45,6 +48,7 @@ export function OverviewCustomerGroupQuoteColumn({
   products,
   selectedProductCode,
   rows,
+  benchmark = null,
   summaryCounts,
   otherCustomerCount,
   hasUnfilteredRows = rows.length > 0,
@@ -119,7 +123,12 @@ export function OverviewCustomerGroupQuoteColumn({
           }
         />
       ) : (
-        <OverviewCustomerGroupQuotesTable rows={rows} />
+        <>
+          <OverviewCustomerGroupQuotesTable rows={rows} />
+          {benchmark ? (
+            <OverviewCustomerGroupQuotesBenchmarkBar benchmark={benchmark} />
+          ) : null}
+        </>
       )}
     </div>
   );

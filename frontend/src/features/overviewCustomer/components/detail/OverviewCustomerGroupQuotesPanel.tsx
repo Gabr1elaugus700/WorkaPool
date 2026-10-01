@@ -3,6 +3,7 @@ import { useAuth } from "@/auth/AuthContext";
 import { useOverviewCustomerGroupQuotes } from "../../hooks/useOverviewCustomerGroupQuotes";
 import { isOverviewCustomerForbiddenMessage } from "../../utils/overviewCustomerForbidden.utils";
 import { isOverviewCustomerGroupQuotesRevealRole } from "../../utils/overviewCustomerGroupQuoteBadge.utils";
+import { summarizeOverviewCustomerGroupQuoteBenchmark } from "../../utils/overviewCustomerGroupQuotesBenchmark.utils";
 import {
   applyOverviewCustomerGroupQuoteFilters,
   OVERVIEW_CUSTOMER_GROUP_QUOTE_DEFAULT_FILTERS,
@@ -82,6 +83,10 @@ export function OverviewCustomerGroupQuotesPanel({
       }),
     [visibleRows, filters, outrosEnabled],
   );
+  const benchmark = useMemo(
+    () => summarizeOverviewCustomerGroupQuoteBenchmark(filtered.rows),
+    [filtered.rows],
+  );
 
   const errorMessage =
     query.error instanceof Error ? query.error.message : "";
@@ -101,6 +106,7 @@ export function OverviewCustomerGroupQuotesPanel({
       products={products}
       selectedProductCode={resolvedSelected}
       rows={filtered.rows}
+      benchmark={benchmark}
       summaryCounts={summaryCounts}
       otherCustomerCount={otherCustomerCount}
       hasUnfilteredRows={visibleRows.length > 0}
