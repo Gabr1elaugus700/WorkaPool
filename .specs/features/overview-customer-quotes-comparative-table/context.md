@@ -60,6 +60,14 @@ Campos sem coluna própria na tabela (T4):
 - `customerTradeName`: subtítulo do vendedor, só em linhas de outro cliente.
 - `codRep`: usado como último fallback do nome e no filtro de vendedor.
 
+### Benchmark (T5)
+
+Barra abaixo da tabela, calculada sobre as rows **já filtradas** (reveal, busca, vendedor, status):
+
+- Preço médio ganho / perdido: ponderado por volume, `soma(lineAmount) / soma(quantity)` por `outcome`. Inclui linhas de outro cliente quando visíveis.
+- Spread: perdido − ganho, em R$/kg e em % sobre o ganho.
+- Lado sem volume → “—”; spread só com os dois lados; % omitido se o ganho for zero.
+
 ### Fora de escopo
 
 - Coluna Ações; exportar relatório; NF-e; filial do vendedor
