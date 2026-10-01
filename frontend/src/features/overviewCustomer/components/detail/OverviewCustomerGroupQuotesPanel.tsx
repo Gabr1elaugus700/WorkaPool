@@ -1,10 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/auth/AuthContext";
 import { useOverviewCustomerGroupQuotes } from "../../hooks/useOverviewCustomerGroupQuotes";
 import { isOverviewCustomerForbiddenMessage } from "../../utils/overviewCustomerForbidden.utils";
 import { isOverviewCustomerGroupQuotesRevealRole } from "../../utils/overviewCustomerGroupQuoteBadge.utils";
+import { summarizeOverviewCustomerGroupQuoteBenchmark } from "../../utils/overviewCustomerGroupQuotesBenchmark.utils";
+import {
+  applyOverviewCustomerGroupQuoteFilters,
+  OVERVIEW_CUSTOMER_GROUP_QUOTE_DEFAULT_FILTERS,
+  summarizeOverviewCustomerGroupQuoteStatusCounts,
+} from "../../utils/overviewCustomerGroupQuotesFilter.utils";
+import {
+  countOverviewCustomerGroupQuoteOtherCustomerRows,
+  selectVisibleOverviewCustomerGroupQuoteRows,
+} from "../../utils/overviewCustomerGroupQuotesReveal.utils";
 import { OverviewCustomerAccessDeniedState } from "../OverviewCustomerAccessDeniedState";
 import { OverviewCustomerGroupQuoteColumn } from "./OverviewCustomerGroupQuoteColumn";
+import { OverviewCustomerGroupQuoteFiltersToolbar } from "./OverviewCustomerGroupQuoteFiltersToolbar";
 
 export type OverviewCustomerGroupQuotesPanelProps = {
   customerCode: number;
@@ -22,16 +33,20 @@ export function OverviewCustomerGroupQuotesPanel({
   const [selectedProductCode, setSelectedProductCode] = useState<string | null>(
     null,
   );
-  const [reveal, setReveal] = useState(false);
+  const [revealVisible, setRevealVisible] = useState(false);
+  const [filters, setFilters] = useState(
+    OVERVIEW_CUSTOMER_GROUP_QUOTE_DEFAULT_FILTERS,
+  );
 
   useEffect(() => {
     setSelectedProductCode(null);
-    setReveal(false);
+    setRevealVisible(false);
+    setFilters(OVERVIEW_CUSTOMER_GROUP_QUOTE_DEFAULT_FILTERS);
   }, [customerCode, grupoCodigo]);
 
   const query = useOverviewCustomerGroupQuotes(customerCode, grupoCodigo, {
     productCode: selectedProductCode,
-    reveal: revealAvailable ? reveal : false,
+    includeOtherCustomers: revealAvailable,
     enabled: enabled && grupoCodigo != null,
   });
 
@@ -42,6 +57,37 @@ export function OverviewCustomerGroupQuotesPanel({
     }
   }, [query.data?.selectedProductCode, selectedProductCode]);
 
+  const allRows = query.data?.rows;
+  const visibleRows = useMemo(
+    () =>
+      selectVisibleOverviewCustomerGroupQuoteRows(allRows ?? [], {
+        revealAvailable,
+        revealVisible,
+      }),
+    [allRows, revealAvailable, revealVisible],
+  );
+  const summaryCounts = useMemo(
+    () => summarizeOverviewCustomerGroupQuoteStatusCounts(visibleRows),
+    [visibleRows],
+  );
+  const otherCustomerCount = useMemo(
+    () => countOverviewCustomerGroupQuoteOtherCustomerRows(allRows ?? []),
+    [allRows],
+  );
+
+  const outrosEnabled = revealAvailable && revealVisible;
+  const filtered = useMemo(
+    () =>
+      applyOverviewCustomerGroupQuoteFilters(visibleRows, filters, {
+        outrosEnabled,
+      }),
+    [visibleRows, filters, outrosEnabled],
+  );
+  const benchmark = useMemo(
+    () => summarizeOverviewCustomerGroupQuoteBenchmark(filtered.rows),
+    [filtered.rows],
+  );
+
   const errorMessage =
     query.error instanceof Error ? query.error.message : "";
 
@@ -50,12 +96,8 @@ export function OverviewCustomerGroupQuotesPanel({
   }
 
   const products = query.data?.products ?? [];
-  const rows = query.data?.rows ?? [];
   const resolvedSelected =
     selectedProductCode ?? query.data?.selectedProductCode ?? null;
-  const selectedProduct =
-    products.find((product) => product.productCode === resolvedSelected) ??
-    null;
   const isInitialLoading =
     query.isLoading && query.data == null && !query.isPlaceholderData;
 
@@ -63,14 +105,38 @@ export function OverviewCustomerGroupQuotesPanel({
     <OverviewCustomerGroupQuoteColumn
       products={products}
       selectedProductCode={resolvedSelected}
-      selectedProductName={selectedProduct?.productName ?? null}
-      rows={rows}
+      rows={filtered.rows}
+      benchmark={benchmark}
+      summaryCounts={summaryCounts}
+      otherCustomerCount={otherCustomerCount}
+      hasUnfilteredRows={visibleRows.length > 0}
+      filtersToolbar={
+        <OverviewCustomerGroupQuoteFiltersToolbar
+          filters={filtered.filters}
+          sellerOptions={filtered.sellerOptions}
+          counts={filtered.counts}
+          outrosEnabled={outrosEnabled}
+          onFiltersChange={(patch) => {
+            setFilters((current) => ({ ...current, ...patch }));
+          }}
+        />
+      }
       isLoading={isInitialLoading}
       isError={query.isError && query.data == null}
       revealAvailable={revealAvailable}
-      reveal={reveal}
-      onProductChange={setSelectedProductCode}
-      onRevealChange={setReveal}
+      reveal={revealVisible}
+      onProductChange={(productCode) => {
+        setSelectedProductCode(productCode);
+        setFilters(OVERVIEW_CUSTOMER_GROUP_QUOTE_DEFAULT_FILTERS);
+      }}
+      onRevealChange={(nextReveal) => {
+        setRevealVisible(nextReveal);
+        if (!nextReveal) {
+          setFilters((current) =>
+            current.status === "outros" ? { ...current, status: "todas" } : current,
+          );
+        }
+      }}
       onRetry={() => {
         void query.refetch();
       }}

@@ -1,29 +1,40 @@
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import type {
   OverviewCustomerGroupQuoteProductOption,
   OverviewCustomerGroupQuoteRow,
 } from "../../types/overviewCustomerGroupQuotes.types";
+import type { OverviewCustomerGroupQuoteBenchmark } from "../../utils/overviewCustomerGroupQuotesBenchmark.utils";
+import type { OverviewCustomerGroupQuoteStatusCounts } from "../../utils/overviewCustomerGroupQuotesFilter.utils";
 import { OverviewCustomerStateMessage } from "../OverviewCustomerStateMessage";
-import { OverviewCustomerGroupQuoteProductSelector } from "./OverviewCustomerGroupQuoteProductSelector";
-import { OverviewCustomerGroupQuoteRowView } from "./OverviewCustomerGroupQuoteRow";
+import { OverviewCustomerGroupQuotesBenchmarkBar } from "./OverviewCustomerGroupQuotesBenchmarkBar";
+import { OverviewCustomerGroupQuoteLegend } from "./OverviewCustomerGroupQuoteLegend";
+import { OverviewCustomerGroupQuoteProductChips } from "./OverviewCustomerGroupQuoteProductChips";
+import {
+  OVERVIEW_CUSTOMER_GROUP_QUOTES_TITLE,
+  OverviewCustomerGroupQuotesHeader,
+} from "./OverviewCustomerGroupQuotesHeader";
+import { OverviewCustomerGroupQuotesTable } from "./OverviewCustomerGroupQuotesTable";
 import { OverviewCustomerSectionCardSkeleton } from "./OverviewCustomerSectionCardSkeleton";
 
 export const OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_PRODUCTS =
   "Nenhum produto deste grupo para este cliente.";
 export const OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_ROWS =
   "Nenhuma cotação deste produto nos últimos 12 dias.";
+export const OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_FILTERED =
+  "Nenhuma cotação corresponde aos filtros.";
 export const OVERVIEW_CUSTOMER_GROUP_QUOTES_ERROR =
   "Não foi possível carregar as cotações deste grupo.";
-export const OVERVIEW_CUSTOMER_GROUP_QUOTES_REVEAL_ON =
-  "Revelar cotações de outros vendedores";
-export const OVERVIEW_CUSTOMER_GROUP_QUOTES_REVEAL_OFF =
-  "Ocultar cotações de outros vendedores";
 
 export type OverviewCustomerGroupQuoteColumnProps = {
   products: OverviewCustomerGroupQuoteProductOption[];
   selectedProductCode: string | null;
-  selectedProductName: string | null;
   rows: OverviewCustomerGroupQuoteRow[];
+  benchmark?: OverviewCustomerGroupQuoteBenchmark | null;
+  summaryCounts: OverviewCustomerGroupQuoteStatusCounts;
+  otherCustomerCount: number;
+  hasUnfilteredRows?: boolean;
+  filtersToolbar?: ReactNode;
   isLoading: boolean;
   isError: boolean;
   revealAvailable: boolean;
@@ -36,8 +47,12 @@ export type OverviewCustomerGroupQuoteColumnProps = {
 export function OverviewCustomerGroupQuoteColumn({
   products,
   selectedProductCode,
-  selectedProductName,
   rows,
+  benchmark = null,
+  summaryCounts,
+  otherCustomerCount,
+  hasUnfilteredRows = rows.length > 0,
+  filtersToolbar = null,
   isLoading,
   isError,
   revealAvailable,
@@ -49,7 +64,7 @@ export function OverviewCustomerGroupQuoteColumn({
   if (isLoading) {
     return (
       <OverviewCustomerSectionCardSkeleton
-        title="Cotações do produto"
+        title={OVERVIEW_CUSTOMER_GROUP_QUOTES_TITLE}
         description="Carregando cotações do grupo selecionado."
         skeletonClassName="h-40"
         loadingLabel="Carregando cotações do grupo."
@@ -81,55 +96,39 @@ export function OverviewCustomerGroupQuoteColumn({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <OverviewCustomerGroupQuoteProductSelector
-          products={products}
-          selectedProductCode={selectedProductCode}
-          onProductChange={onProductChange}
-        />
-        {revealAvailable ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              onRevealChange(!reveal);
-            }}
-          >
-            {reveal
-              ? OVERVIEW_CUSTOMER_GROUP_QUOTES_REVEAL_OFF
-              : OVERVIEW_CUSTOMER_GROUP_QUOTES_REVEAL_ON}
-          </Button>
-        ) : null}
-      </div>
+      <OverviewCustomerGroupQuotesHeader
+        summaryCounts={summaryCounts}
+        otherCustomerCount={otherCustomerCount}
+        revealAvailable={revealAvailable}
+        reveal={reveal}
+        onRevealChange={onRevealChange}
+      />
 
-      {selectedProductCode ? (
-        <header className="space-y-0.5 border-b border-border/60 pb-3">
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Produto selecionado
-          </p>
-          <h3 className="text-base font-semibold tracking-wide text-foreground">
-            <span className="tabular-nums text-primary">{selectedProductCode}</span>
-            {selectedProductName ? (
-              <span className="text-foreground"> — {selectedProductName}</span>
-            ) : null}
-          </h3>
-        </header>
-      ) : null}
+      <OverviewCustomerGroupQuoteProductChips
+        products={products}
+        selectedProductCode={selectedProductCode}
+        onProductChange={onProductChange}
+      />
+
+      <OverviewCustomerGroupQuoteLegend />
+
+      {hasUnfilteredRows ? filtersToolbar : null}
 
       {rows.length === 0 ? (
         <OverviewCustomerStateMessage
-          message={OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_ROWS}
+          message={
+            hasUnfilteredRows
+              ? OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_FILTERED
+              : OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_ROWS
+          }
         />
       ) : (
-        <ul className="space-y-3">
-          {rows.map((row, index) => (
-            <OverviewCustomerGroupQuoteRowView
-              key={`${row.orderNumber}-${row.productCode}-${row.issuedAt}-${index}`}
-              row={row}
-            />
-          ))}
-        </ul>
+        <>
+          <OverviewCustomerGroupQuotesTable rows={rows} />
+          {benchmark ? (
+            <OverviewCustomerGroupQuotesBenchmarkBar benchmark={benchmark} />
+          ) : null}
+        </>
       )}
     </div>
   );
