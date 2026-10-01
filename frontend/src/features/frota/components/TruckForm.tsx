@@ -36,7 +36,7 @@ const truckSchema = z.object({
         ? undefined
         : value,
     z
-      .number({ required_error: "Capacidade é obrigatória" })
+      .number({ error: "Capacidade é obrigatória" })
       .int()
       .positive("Capacidade inválida"),
   ),
@@ -52,7 +52,8 @@ const truckSchema = z.object({
   active: z.boolean().default(true),
 });
 
-type TruckFormData = z.infer<typeof truckSchema>;
+type TruckFormInput = z.input<typeof truckSchema>;
+type TruckFormData = z.output<typeof truckSchema>;
 
 type Props = {
   truck?: FleetTruck;
@@ -72,7 +73,7 @@ export function TruckForm({ truck, onSubmit, triggerLabel }: Props) {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<TruckFormData>({
+  } = useForm<TruckFormInput, unknown, TruckFormData>({
     resolver: zodResolver(truckSchema),
     defaultValues: {
       name: "",
