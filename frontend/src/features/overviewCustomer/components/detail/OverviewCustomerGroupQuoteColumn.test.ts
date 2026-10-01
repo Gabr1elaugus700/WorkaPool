@@ -195,6 +195,54 @@ describe("OverviewCustomerGroupQuoteColumn", () => {
     assert.match(markup, /Outro vendedor/);
   });
 
+  it("renders the benchmark bar below the table without Ações or Você", () => {
+    const markup = renderToStaticMarkup(
+      React.createElement(OverviewCustomerGroupQuoteColumn, {
+        ...baseProps,
+        rows: [sampleRow()],
+        benchmark: {
+          wonAveragePrice: 10,
+          lostAveragePrice: 12,
+          spreadAmount: 2,
+          spreadPercent: 20,
+        },
+      }),
+    );
+
+    assert.match(markup, /<\/table>[\s\S]*Preço médio ganho/);
+    assert.match(markup, /Preço médio perdido/);
+    assert.match(markup, /Spread/);
+    assert.doesNotMatch(markup, /Ações/);
+    assert.doesNotMatch(markup, /Você/);
+  });
+
+  it("hides the benchmark bar when no row is left to compare", () => {
+    const benchmark = {
+      wonAveragePrice: null,
+      lostAveragePrice: null,
+      spreadAmount: null,
+      spreadPercent: null,
+    };
+    const empty = renderToStaticMarkup(
+      React.createElement(OverviewCustomerGroupQuoteColumn, {
+        ...baseProps,
+        rows: [],
+        benchmark,
+      }),
+    );
+    const filteredEmpty = renderToStaticMarkup(
+      React.createElement(OverviewCustomerGroupQuoteColumn, {
+        ...baseProps,
+        rows: [],
+        hasUnfilteredRows: true,
+        benchmark,
+      }),
+    );
+
+    assert.doesNotMatch(empty, /Preço médio/);
+    assert.doesNotMatch(filteredEmpty, /Preço médio/);
+  });
+
   it("hides the reveal toggle for VENDAS and shows it with the other-customer count otherwise", () => {
     const withoutReveal = renderToStaticMarkup(
       React.createElement(OverviewCustomerGroupQuoteColumn, {

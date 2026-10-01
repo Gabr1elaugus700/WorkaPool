@@ -74,10 +74,10 @@
 **Issue:** [#208](https://github.com/Gabr1elaugus700/WorkaPool/issues/208)  
 **Branch:** `feature/208-quotes-comparative-benchmark-tests`
 
-- [ ] Barra: preço médio ganha / perdido / spread das rows filtradas
-- [ ] Suite cobrindo filtros, reveal sem refetch, contagens, ausência de Ações/“Você”
-- [ ] `npm test` (front tocado) + `npx tsc --noEmit --project tsconfig.app.json`
-- [ ] Não rodar production build
+- [x] Barra: preço médio ganha / perdido / spread das rows filtradas
+- [x] Suite cobrindo filtros, reveal sem refetch, contagens, ausência de Ações/“Você”
+- [x] `npm test` (front tocado) + `npx tsc --noEmit --project tsconfig.app.json`
+- [x] Não rodar production build
 
 **Depende de:** T1–T4
 
