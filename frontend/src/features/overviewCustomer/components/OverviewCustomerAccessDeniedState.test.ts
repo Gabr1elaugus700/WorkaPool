@@ -8,12 +8,12 @@ describe("OverviewCustomerAccessDeniedState", () => {
   it("shows an access denied message with navigation back to list", () => {
     const markup = renderToStaticMarkup(
       React.createElement(OverviewCustomerAccessDeniedState, {
-        backHref: "/overview/customers",
+        backHref: "/crm",
       }),
     );
 
     assert.match(markup, /Acesso negado/);
     assert.match(markup, /Você não tem permissão para visualizar este cliente\./);
-    assert.match(markup, /href="\/overview\/customers"/);
+    assert.match(markup, /href="\/crm"/);
   });
 });

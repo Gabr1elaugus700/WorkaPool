@@ -19,10 +19,10 @@ describe("OverviewCustomerDetailPageHeader", () => {
     );
 
     assert.match(markup, /Análise Comercial 360°/);
-    assert.match(markup, /Carteira de clientes/);
+    assert.match(markup, />CRM</);
     assert.match(markup, /QUIBRAS QUIMICA/);
-    assert.match(markup, /href="\/overview\/customers"/);
-    assert.match(markup, /Voltar para carteira/);
+    assert.match(markup, /href="\/crm"/);
+    assert.match(markup, /Voltar para o CRM/);
     assert.match(markup, /Exportar relatório/i);
     assert.match(markup, /disabled/);
   });

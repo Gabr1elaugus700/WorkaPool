@@ -1,7 +1,9 @@
+import { buildCrmCustomerHref } from "./overviewCustomerRoutes.utils";
+
 const ORDER_LOSS_CUSTOMER_CODE_PARAM = "customerCode";
 
 export function buildOverviewCustomerDetailHref(customerCode: number): string {
-  return `/overview/customers/${customerCode}`;
+  return buildCrmCustomerHref(customerCode);
 }
 
 export function buildOverviewCustomerOrderLossHref(customerCode: number): string {

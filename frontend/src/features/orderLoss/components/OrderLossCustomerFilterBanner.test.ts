@@ -19,6 +19,6 @@ describe("OrderLossCustomerFilterBanner", () => {
 
     assert.match(markup, /Filtrando pedidos perdidos do cliente/);
     assert.match(markup, /#4821/);
-    assert.match(markup, /href="\/overview\/customers\/4821"/);
+    assert.match(markup, /href="\/crm\/4821"/);
   });
 });

@@ -19,7 +19,7 @@ describe("OrderLossCustomerLink", () => {
     );
 
     assert.match(markup, /Cliente ACME/);
-    assert.match(markup, /href="\/overview\/customers\/4821"/);
+    assert.match(markup, /href="\/crm\/4821"/);
     assert.doesNotMatch(markup, /target=/);
   });
 

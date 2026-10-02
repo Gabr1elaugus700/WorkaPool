@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/tooltip";
 import { ArrowLeft, FileDown } from "lucide-react";
 import { Link } from "react-router-dom";
+import { CRM_PORTFOLIO_PATH } from "../../utils/overviewCustomerRoutes.utils";
 
 type OverviewCustomerDetailPageHeaderProps = {
   tradeName: string;
@@ -28,8 +29,8 @@ export function OverviewCustomerDetailPageHeader({
           </li>
           <li aria-hidden="true">/</li>
           <li>
-            <Link to="/overview/customers" className="hover:text-foreground">
-              Carteira de clientes
+            <Link to={CRM_PORTFOLIO_PATH} className="hover:text-foreground">
+              CRM
             </Link>
           </li>
           <li aria-hidden="true">/</li>
@@ -58,9 +59,9 @@ export function OverviewCustomerDetailPageHeader({
             </Tooltip>
           </TooltipProvider>
           <Button type="button" variant="outline" className="gap-2" asChild>
-            <Link to="/overview/customers">
+            <Link to={CRM_PORTFOLIO_PATH}>
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Voltar para carteira
+              Voltar para o CRM
             </Link>
           </Button>
         </div>

@@ -1,27 +1,34 @@
 // src/routes/index.tsx
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AuthProvider } from "@/auth/AuthContext";
 import PrivateRoute from "@/auth/PrivateRoute";
 import Home from "../pages/Home";
-import VendedorMetas from "../pages/MetasPage";
 import Clientes from "../pages/Clientes";
 import Pedidos from "../pages/Pedidos";
-import Dashboard from "../pages/dashboardVendas";
-import DashboardTest from "../pages/dashboard";
 import CargasPage from "../pages/CargasPage";
 import ClientesInativos from "../pages/ClientesInativos";
-import { OrderLossView, SellerOrdersView } from "@/features/orderLoss";
+import { OrderLossView } from "@/features/orderLoss";
 import Login from "@/auth/Login";
-import FretesPage from "@/pages/FretesPage";
-import OsListView from "@/features/workOrder/views/osView";
-import VistoriaView from "@/features/workOrder/views/vistoriaView";
 import UsersView from "@/features/users/views/usersView";
 import OverviewSyncAdminView from "@/features/overviewCustomer/views/OverviewSyncAdminView";
 import OverviewCustomerDetailView from "@/features/overviewCustomer/views/OverviewCustomerDetailView";
 import OverviewCustomerPortfolioView from "@/features/overviewCustomer/views/OverviewCustomerPortfolioView";
-import FrotaPage from "../pages/FrotaPage";
-import { FROTA_ACCESS_ROLES } from "@/features/frota/utils/frotaAccessRoles";
+import {
+  buildCrmCustomerHref,
+  CRM_ACCESS_ROLES,
+  CRM_PORTFOLIO_PATH,
+} from "@/features/overviewCustomer/utils/overviewCustomerRoutes.utils";
+
+function LegacyOverviewCustomerRedirect() {
+  const { clienteId } = useParams();
+  return (
+    <Navigate
+      to={clienteId ? buildCrmCustomerHref(clienteId) : CRM_PORTFOLIO_PATH}
+      replace
+    />
+  );
+}
 
 const AppRoutes = () => {
   return (
@@ -47,38 +54,6 @@ const AppRoutes = () => {
             }
           />
           <Route
-            path="/Os"
-            element={
-              <PrivateRoute>
-                <OsListView />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/my-orders"
-            element={
-              <PrivateRoute>
-                <SellerOrdersView />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/vistoria"
-            element={
-              <PrivateRoute>
-                <VistoriaView />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/frota"
-            element={
-              <PrivateRoute allowedRoles={FROTA_ACCESS_ROLES}>
-                <FrotaPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
             path="/users"
             element={
               <PrivateRoute allowedRoles={["ADMIN"]}>
@@ -87,25 +62,30 @@ const AppRoutes = () => {
             }
           />
           <Route
-            path="/overview/customers"
+            path={CRM_PORTFOLIO_PATH}
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={CRM_ACCESS_ROLES}>
                 <OverviewCustomerPortfolioView />
               </PrivateRoute>
             }
           />
           <Route
-            path="/overview/customers/:clienteId"
+            path={`${CRM_PORTFOLIO_PATH}/:clienteId`}
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={CRM_ACCESS_ROLES}>
                 <OverviewCustomerDetailView />
               </PrivateRoute>
             }
           />
+          <Route path="/overview/customers" element={<LegacyOverviewCustomerRedirect />} />
+          <Route
+            path="/overview/customers/:clienteId"
+            element={<LegacyOverviewCustomerRedirect />}
+          />
           <Route
             path="/overview/sync"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={["ADMIN"]}>
                 <OverviewSyncAdminView />
               </PrivateRoute>
             }
@@ -115,22 +95,6 @@ const AppRoutes = () => {
             element={
               <PrivateRoute>
                 <ClientesInativos />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/metas/*"
-            element={
-              <PrivateRoute>
-                <VendedorMetas />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/fretes"
-            element={
-              <PrivateRoute>
-                <FretesPage />
               </PrivateRoute>
             }
           />
@@ -155,22 +119,6 @@ const AppRoutes = () => {
             element={
               <PrivateRoute>
                 <CargasPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <PrivateRoute>
-                <Dashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/dashboardTest"
-            element={
-              <PrivateRoute>
-                <DashboardTest />
               </PrivateRoute>
             }
           />
