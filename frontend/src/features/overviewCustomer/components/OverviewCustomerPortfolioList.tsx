@@ -11,6 +11,7 @@ import {
 import { Eye, MoreVertical } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { OverviewCustomerListRow } from "../types/overviewCustomerList.types";
+import { buildCrmCustomerHref } from "../utils/overviewCustomerRoutes.utils";
 
 type OverviewCustomerPortfolioListProps = {
   items: OverviewCustomerListRow[];
@@ -125,7 +126,7 @@ export function OverviewCustomerPortfolioList({
               <TableRow key={item.customerCode}>
                 <TableCell>
                   <Link
-                    to={`/overview/customers/${item.customerCode}`}
+                    to={buildCrmCustomerHref(item.customerCode)}
                     className="inline-flex rounded-md bg-muted px-2 py-1 text-xs font-semibold text-foreground transition-colors hover:bg-muted/80"
                   >
                     #{item.customerCode}
@@ -133,7 +134,7 @@ export function OverviewCustomerPortfolioList({
                 </TableCell>
                 <TableCell>
                   <Link
-                    to={`/overview/customers/${item.customerCode}`}
+                    to={buildCrmCustomerHref(item.customerCode)}
                     className="group flex items-start gap-3"
                   >
                     <span className="mt-0.5 inline-flex size-7 items-center justify-center rounded-md bg-emerald-100 text-[11px] font-semibold text-emerald-700">
@@ -179,7 +180,7 @@ export function OverviewCustomerPortfolioList({
                 <TableCell>
                   <div className="flex items-center justify-end gap-1">
                     <Button asChild variant="ghost" size="icon" className="h-8 w-8">
-                      <Link to={`/overview/customers/${item.customerCode}`} aria-label="Ver cliente">
+                      <Link to={buildCrmCustomerHref(item.customerCode)} aria-label="Ver cliente">
                         <Eye className="h-4 w-4" />
                       </Link>
                     </Button>

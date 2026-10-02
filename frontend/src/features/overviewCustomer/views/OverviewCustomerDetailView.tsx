@@ -27,6 +27,7 @@ import {
   shouldFetchPurchasedProducts,
   shouldFetchRecentCommercialMotion,
 } from "../utils/overviewCustomerDetailFetch.utils";
+import { CRM_PORTFOLIO_PATH } from "../utils/overviewCustomerRoutes.utils";
 
 function parseCustomerCode(raw: string | undefined): number | null {
   if (!raw) {
@@ -105,7 +106,7 @@ export function OverviewCustomerDetailView() {
             description="Este cliente ainda não foi sincronizado no Overview."
             className="max-w-2xl"
           >
-            <Link to="/overview/customers" className="text-sm text-primary underline">
+            <Link to={CRM_PORTFOLIO_PATH} className="text-sm text-primary underline">
               Voltar para a lista de clientes
             </Link>
           </OverviewCustomerSectionCard>

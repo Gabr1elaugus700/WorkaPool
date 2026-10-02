@@ -1,10 +1,11 @@
+import { CRM_PORTFOLIO_PATH } from "../utils/overviewCustomerRoutes.utils";
 
 type OverviewCustomerAccessDeniedStateProps = {
   backHref?: string;
 };
 
 export function OverviewCustomerAccessDeniedState({
-  backHref = "/overview/customers",
+  backHref = CRM_PORTFOLIO_PATH,
 }: OverviewCustomerAccessDeniedStateProps) {
   return (
     <section className="rounded-md border p-5">

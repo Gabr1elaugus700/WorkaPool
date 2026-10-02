@@ -10,7 +10,7 @@ describe("overviewCustomerOrderLoss.utils", () => {
   it("builds overview customer detail href by customer code", () => {
     assert.equal(
       buildOverviewCustomerDetailHref(4821),
-      "/overview/customers/4821",
+      "/crm/4821",
     );
   });
 

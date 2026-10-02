@@ -41,7 +41,7 @@ describe("orderLoss customer overview link surfaces", () => {
     );
 
     assert.match(markup, /Cliente ACME/);
-    assert.match(markup, /href="\/overview\/customers\/4821"/);
+    assert.match(markup, /href="\/crm\/4821"/);
   });
 
   it("SellersList links customer name to overview detail when seller is expanded", () => {
@@ -63,6 +63,6 @@ describe("orderLoss customer overview link surfaces", () => {
     );
 
     assert.match(markup, /Cliente ACME/);
-    assert.match(markup, /href="\/overview\/customers\/4821"/);
+    assert.match(markup, /href="\/crm\/4821"/);
   });
 });
