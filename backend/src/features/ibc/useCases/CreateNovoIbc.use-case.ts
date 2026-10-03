@@ -1,10 +1,12 @@
-import { allocateNextIbcIdentifier } from "../services/allocateNextIbcIdentifier";
 import { IIbcCadastroRepository } from "../repositories/IIbcCadastroRepository";
+import { IIbcProdutoRepository } from "../repositories/IIbcProdutoRepository";
 import { IbcCadastroRecord } from "../types/IbcCadastro.types";
 import { AppError } from "../../../utils/AppError";
+import { getIbcIdentifierPrefix } from "../services/getIbcIdentifierPrefix";
 
 export type CreateNovoIbcInput = {
   dataLimite: Date;
+  produtoId: string;
 };
 
 function startOfUtcDay(date: Date): Date {
@@ -15,9 +17,14 @@ function startOfUtcDay(date: Date): Date {
 
 export class CreateNovoIbcUseCase {
   private readonly repository: IIbcCadastroRepository;
+  private readonly produtoRepository: IIbcProdutoRepository;
 
-  constructor(repository: IIbcCadastroRepository) {
+  constructor(
+    repository: IIbcCadastroRepository,
+    produtoRepository: IIbcProdutoRepository,
+  ) {
     this.repository = repository;
+    this.produtoRepository = produtoRepository;
   }
 
   async execute(input: CreateNovoIbcInput): Promise<IbcCadastroRecord> {
@@ -33,18 +40,27 @@ export class CreateNovoIbcUseCase {
       });
     }
 
-    const highest = await this.repository.findHighestIdentificador();
-    const identificador = highest
-      ? allocateNextIbcIdentifier(highest)
-      : "HM0001";
+    const produto = await this.produtoRepository.findById(input.produtoId);
+    if (!produto) {
+      throw new AppError({
+        message: "Produto de container não encontrado",
+        statusCode: 404,
+        code: "IBC_PRODUTO_NOT_FOUND",
+      });
+    }
 
-    return this.repository.createNovoIbc({
-      identificador,
-      tipoCadastro: "NOVO",
-      aptidao: "INAPTO",
-      motivoInaptidao: "AGUARDANDO_INSPECAO",
-      custodia: "PATIO",
-      dataLimite: input.dataLimite,
-    });
+    const [created] = await this.repository.createNovoIbcs(
+      {
+        prefixo: getIbcIdentifierPrefix(produto.abreviacao),
+        tipoCadastro: "NOVO",
+        aptidao: "INAPTO",
+        motivoInaptidao: "AGUARDANDO_INSPECAO",
+        custodia: "PATIO",
+        dataLimite: input.dataLimite,
+        produtoId: produto.id,
+      },
+      1,
+    );
+    return created;
   }
 }

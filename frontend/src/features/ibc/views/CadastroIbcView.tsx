@@ -107,6 +107,7 @@ export default function CadastroIbcView() {
 
   const alertsCount = alertsQuery.data?.length;
   const poolCount = poolQuery.data?.length;
+  const produtos = produtosQuery.data ?? [];
   const loteResult: CreateLoteIbcResultDTO | undefined =
     createLoteMutation.data;
   const submitting =
@@ -118,8 +119,9 @@ export default function CadastroIbcView() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Cadastro IBC</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Novo IBC nasce Inapto / Aguardando inspeção com identificador HM
-            automático. Lote de compra gera N unidades com a mesma data limite.
+            Novo IBC nasce Inapto / Aguardando inspeção com identificador HM +
+            letra do produto. Lote de compra gera N unidades com a mesma data
+            limite.
           </p>
         </div>
 
@@ -129,7 +131,7 @@ export default function CadastroIbcView() {
           </h2>
           <div className="mb-3">
             <CadastroProdutoModal
-              produtos={produtosQuery.data ?? []}
+              produtos={produtos}
               disabled={submitting}
               onCreate={async (input) => {
                 await createProdutoMutation.mutateAsync(input);
@@ -144,16 +146,23 @@ export default function CadastroIbcView() {
             disabled={submitting}
             onChange={setMode}
           />
+          {!produtosQuery.isLoading && produtos.length === 0 ? (
+            <p className="mb-3 text-sm text-muted-foreground">
+              Cadastre ao menos um produto para liberar o cadastro de IBC.
+            </p>
+          ) : null}
           {mode === "unitario" ? (
             <CadastroIbcForm
               submitting={createMutation.isPending}
-              onSubmit={async (dataLimite) => {
-                await createMutation.mutateAsync({ dataLimite });
+              produtos={produtos}
+              onSubmit={async ({ dataLimite, produtoId }) => {
+                await createMutation.mutateAsync({ dataLimite, produtoId });
               }}
             />
           ) : (
             <CadastroIbcLoteForm
               submitting={createLoteMutation.isPending}
+              produtos={produtos}
               onSubmit={async (input) => {
                 await createLoteMutation.mutateAsync(input);
               }}

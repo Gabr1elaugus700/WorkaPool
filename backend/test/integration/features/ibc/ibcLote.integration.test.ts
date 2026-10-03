@@ -34,19 +34,38 @@ function createToken(role: Role, id = "ibc-lote-almox"): string {
 }
 
 async function cleanupFixtures(): Promise<void> {
-  await prisma.$executeRawUnsafe(
-    `DELETE FROM "AlocacaoIbc" WHERE "ibcId" IN (SELECT id FROM "Ibc" WHERE "identificador" LIKE '${FIXTURE_PREFIX}%' OR "identificador" LIKE 'HM%')`,
-  ).catch(() => undefined);
+  await prisma.$executeRawUnsafe(`
+    DELETE FROM "AlocacaoIbc"
+    WHERE "ibcId" IN (
+      SELECT i.id
+      FROM "Ibc" i
+      LEFT JOIN "IbcProduto" p ON p.id = i."produtoId"
+      WHERE i."identificador" LIKE '${FIXTURE_PREFIX}%'
+         OR p.nome LIKE '${FIXTURE_PREFIX}%'
+    )
+  `).catch(() => undefined);
   await prisma.ibc.deleteMany({
     where: {
       OR: [
         { identificador: { startsWith: FIXTURE_PREFIX } },
-        { identificador: { startsWith: "HM" } },
+        { produto: { is: { nome: { startsWith: FIXTURE_PREFIX } } } },
       ],
     },
   });
   try {
     await prisma.ibcLote.deleteMany({});
+  } catch {
+    // table may not exist until ensure schema runs
+  }
+  try {
+    await prisma.ibcProduto.deleteMany({
+      where: {
+        OR: [
+          { nome: { startsWith: FIXTURE_PREFIX } },
+          { abreviacao: { in: ["LO", "LX"] } },
+        ],
+      },
+    });
   } catch {
     // table may not exist until ensure schema runs
   }
@@ -70,26 +89,38 @@ describe("IBC lote HTTP persistence (#117 / #121)", () => {
     await prisma.$disconnect();
   });
 
+  async function createProduto(token: string): Promise<string> {
+    const app = createIbcTestApp();
+    const created = await request(app)
+      .post("/api/ibc/produtos")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: `${FIXTURE_PREFIX}Soda`, abreviacao: "LO" });
+    assert.equal(created.status, 201);
+    return String(created.body.id);
+  }
+
   it("POST lote persists N rows and returns identifiers", async () => {
     const app = createIbcTestApp();
     const token = createToken(Role.ALMOX);
+    const produtoId = await createProduto(token);
 
     const response = await request(app)
       .post("/api/ibc/lote")
       .set("Authorization", `Bearer ${token}`)
-      .send({ quantidade: 5, dataLimite: FUTURE_DATA_LIMITE });
+      .send({ quantidade: 5, dataLimite: FUTURE_DATA_LIMITE, produtoId });
 
     assert.equal(response.status, 201);
     assert.equal(response.body.items.length, 5);
     assert.ok(response.body.lote?.id);
     assert.equal(response.body.lote.numeroNf, null);
     for (const item of response.body.items) {
-      assert.match(item.identificador, /^HM\d{4}$/);
+      assert.match(item.identificador, /^HMLO\d{5}$/);
       assert.equal(item.tipoCadastro, "NOVO");
       assert.equal(item.aptidao, "INAPTO");
       assert.equal(item.motivoInaptidao, "AGUARDANDO_INSPECAO");
       assert.equal(item.custodia, "PATIO");
       assert.equal(item.loteId, response.body.lote.id);
+      assert.equal(item.produtoId, produtoId);
     }
 
     const pool = await request(app)
@@ -108,6 +139,7 @@ describe("IBC lote HTTP persistence (#117 / #121)", () => {
   it("POST lote with NF round-trips the NF trace", async () => {
     const app = createIbcTestApp();
     const token = createToken(Role.ALMOX);
+    const produtoId = await createProduto(token);
 
     const response = await request(app)
       .post("/api/ibc/lote")
@@ -116,6 +148,7 @@ describe("IBC lote HTTP persistence (#117 / #121)", () => {
         quantidade: 2,
         dataLimite: FUTURE_DATA_LIMITE,
         numeroNf: "998877",
+        produtoId,
       });
 
     assert.equal(response.status, 201);

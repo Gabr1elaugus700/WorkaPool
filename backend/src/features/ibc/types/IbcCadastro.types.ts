@@ -7,6 +7,8 @@ export type IbcMotivoInaptidao =
 export type IbcCadastroRecord = {
   id: string;
   identificador: string;
+  prefixo?: string | null;
+  sequencial?: number | null;
   tipoCadastro: IbcTipoCadastro;
   aptidao: "APTO" | "INAPTO";
   motivoInaptidao: IbcMotivoInaptidao | null;
@@ -15,6 +17,7 @@ export type IbcCadastroRecord = {
   baixadoEm: Date | null;
   createdAt: Date;
   loteId?: string | null;
+  produtoId?: string | null;
 };
 
 export type IbcLoteRecord = {
@@ -30,13 +33,14 @@ export type CreateIbcLoteData = {
 };
 
 export type CreateNovoIbcData = {
-  identificador: string;
+  prefixo: string;
   tipoCadastro: "NOVO";
   aptidao: "INAPTO";
   motivoInaptidao: "AGUARDANDO_INSPECAO";
   custodia: "PATIO";
   dataLimite: Date;
   loteId?: string | null;
+  produtoId: string;
 };
 
 export type IbcProdutoRecord = {

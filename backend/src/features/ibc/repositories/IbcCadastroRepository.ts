@@ -1,5 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import prismaInstance from "../../../config/prisma";
+import { AppError } from "../../../utils/AppError";
+import { formatIbcIdentifier } from "../services/formatIbcIdentifier";
 import {
   CreateIbcLoteData,
   CreateNovoIbcData,
@@ -14,6 +16,8 @@ import {
 type IbcRow = {
   id: string;
   identificador: string;
+  prefixo?: string | null;
+  sequencial?: number | null;
   tipoCadastro: "NOVO" | "TROCA";
   aptidao: "APTO" | "INAPTO";
   motivoInaptidao: "AGUARDANDO_INSPECAO" | "DATA_LIMITE" | null;
@@ -22,22 +26,20 @@ type IbcRow = {
   baixadoEm: Date | null;
   createdAt: Date;
   loteId?: string | null;
+  produtoId?: string | null;
 };
+
+function isUniqueViolation(err: unknown): boolean {
+  return (
+    err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002"
+  );
+}
 
 export class IbcCadastroRepository implements IIbcCadastroRepository {
   private readonly prisma: PrismaClient;
 
   constructor(prismaClient: PrismaClient = prismaInstance) {
     this.prisma = prismaClient;
-  }
-
-  async findHighestIdentificador(): Promise<string | null> {
-    const row = await this.prisma.ibc.findFirst({
-      where: { identificador: { startsWith: "HM" } },
-      orderBy: { identificador: "desc" },
-      select: { identificador: true },
-    });
-    return row?.identificador ?? null;
   }
 
   async createIbcLote(data: CreateIbcLoteData): Promise<IbcLoteRecord> {
@@ -55,20 +57,44 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
     };
   }
 
-  async createNovoIbc(data: CreateNovoIbcData): Promise<IbcCadastroRecord> {
-    const created = await this.prisma.ibc.create({
-      data: {
-        identificador: data.identificador,
-        tipoCadastro: data.tipoCadastro,
-        aquisicao: "COMPRA",
-        aptidao: data.aptidao,
-        motivoInaptidao: data.motivoInaptidao,
-        custodia: data.custodia,
-        dataLimite: data.dataLimite,
-        loteId: data.loteId ?? undefined,
-      },
-    });
-    return this.toRecord(created);
+  async createNovoIbcs(
+    data: CreateNovoIbcData,
+    quantidade: number,
+  ): Promise<IbcCadastroRecord[]> {
+    return this.withUniqueGuard(data.prefixo, () =>
+      this.prisma.$transaction(async (tx) => {
+        const first = await this.reserveSequencial(tx, data.prefixo);
+        const last = first + quantidade - 1;
+
+        await tx.ibc.createMany({
+          data: Array.from({ length: quantidade }, (_, index) => {
+            const sequencial = first + index;
+            return {
+              identificador: formatIbcIdentifier(data.prefixo, sequencial),
+              prefixo: data.prefixo,
+              sequencial,
+              tipoCadastro: data.tipoCadastro,
+              aquisicao: "COMPRA" as const,
+              aptidao: data.aptidao,
+              motivoInaptidao: data.motivoInaptidao,
+              custodia: data.custodia,
+              dataLimite: data.dataLimite,
+              loteId: data.loteId ?? null,
+              produtoId: data.produtoId,
+            };
+          }),
+        });
+
+        const rows = await tx.ibc.findMany({
+          where: {
+            prefixo: data.prefixo,
+            sequencial: { gte: first, lte: last },
+          },
+          orderBy: { sequencial: "asc" },
+        });
+        return rows.map((row) => this.toRecord(row));
+      }),
+    );
   }
 
   async listActiveIbcs(): Promise<IbcCadastroRecord[]> {
@@ -136,10 +162,47 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
     return this.toRecord(updated);
   }
 
+  /**
+   * Serializa a alocação por prefixo (advisory lock liberado no fim da transação)
+   * e devolve o próximo sequencial livre.
+   */
+  private async reserveSequencial(
+    tx: Prisma.TransactionClient,
+    prefixo: string,
+  ): Promise<number> {
+    await tx.$queryRaw`SELECT 1 FROM (SELECT pg_advisory_xact_lock(hashtext(${prefixo}))) AS lock`;
+    const result = await tx.ibc.aggregate({
+      where: { prefixo },
+      _max: { sequencial: true },
+    });
+    return (result._max.sequencial ?? 0) + 1;
+  }
+
+  private async withUniqueGuard<T>(
+    prefixo: string,
+    operation: () => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await operation();
+    } catch (err: unknown) {
+      if (isUniqueViolation(err)) {
+        throw new AppError({
+          message: "Identificador de IBC já existe",
+          statusCode: 409,
+          code: "IBC_IDENTIFICADOR_DUPLICADO",
+          details: { prefixo },
+        });
+      }
+      throw err;
+    }
+  }
+
   private toRecord(row: IbcRow): IbcCadastroRecord {
     return {
       id: row.id,
       identificador: row.identificador,
+      prefixo: row.prefixo ?? null,
+      sequencial: row.sequencial ?? null,
       tipoCadastro: row.tipoCadastro,
       aptidao: row.aptidao,
       motivoInaptidao: row.motivoInaptidao,
@@ -148,6 +211,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
       baixadoEm: row.baixadoEm,
       createdAt: row.createdAt,
       loteId: row.loteId ?? null,
+      produtoId: row.produtoId ?? null,
     };
   }
 }
