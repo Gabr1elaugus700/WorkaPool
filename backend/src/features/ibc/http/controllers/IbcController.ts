@@ -5,6 +5,7 @@ import { FecharExpedicaoIbcSchema } from "../schemas/FecharExpedicaoIbcSchema";
 import {
   IbcCadastroHttpSchemas,
 } from "../schemas/IbcCadastroSchema";
+import { IbcProdutoHttpSchemas } from "../schemas/IbcProdutoSchema";
 import { CreateAlocacaoIbcUseCase } from "../../useCases/CreateAlocacaoIbc.use-case";
 import { RemoveAlocacaoIbcUseCase } from "../../useCases/RemoveAlocacaoIbc.use-case";
 import { FecharExpedicaoIbcUseCase } from "../../useCases/FecharExpedicaoIbc.use-case";
@@ -17,8 +18,11 @@ import { ListIbcAlertsUseCase } from "../../useCases/ListIbcAlerts.use-case";
 import { PatchIbcDataLimiteUseCase } from "../../useCases/PatchIbcDataLimite.use-case";
 import { SoftDeleteIbcUseCase } from "../../useCases/SoftDeleteIbc.use-case";
 import { IbcCadastroRepository } from "../../repositories/IbcCadastroRepository";
+import { IbcProdutoRepository } from "../../repositories/IbcProdutoRepository";
 import { createSapiensSaldoIbcErpPort } from "../../adapters/createSapiensSaldoIbcErpPort";
 import { ibcSseGateway } from "../../realtime/ibcSseGateway";
+import { CreateIbcProdutoUseCase } from "../../useCases/CreateIbcProduto.use-case";
+import { ListIbcProdutosUseCase } from "../../useCases/ListIbcProdutos.use-case";
 
 function respondAppError(res: Response, err: unknown, fallbackMessage: string): Response {
   if (err instanceof AppError) {
@@ -34,6 +38,10 @@ function respondAppError(res: Response, err: unknown, fallbackMessage: string): 
 
 function cadastroRepository(): IbcCadastroRepository {
   return new IbcCadastroRepository();
+}
+
+function produtoRepository(): IbcProdutoRepository {
+  return new IbcProdutoRepository();
 }
 
 export class IbcController {
@@ -294,6 +302,35 @@ export class IbcController {
       });
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao fechar expedição IBC");
+    }
+  }
+
+  static async createProduto(req: Request, res: Response): Promise<Response> {
+    try {
+      const parsed = IbcProdutoHttpSchemas.create.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          error: "Dados inválidos para cadastro de produto",
+          code: "IBC_PRODUTO_INVALID_BODY",
+          details: parsed.error.format(),
+        });
+      }
+
+      const useCase = new CreateIbcProdutoUseCase(produtoRepository());
+      const produto = await useCase.execute(parsed.data);
+      return res.status(201).json(produto);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao cadastrar produto de container");
+    }
+  }
+
+  static async listProdutos(_req: Request, res: Response): Promise<Response> {
+    try {
+      const useCase = new ListIbcProdutosUseCase(produtoRepository());
+      const produtos = await useCase.execute();
+      return res.status(200).json(produtos);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao listar produtos de container");
     }
   }
 }
