@@ -26,6 +26,7 @@ import { ListIbcProdutosUseCase } from "../../useCases/ListIbcProdutos.use-case"
 import { UpdateIbcProdutoUseCase } from "../../useCases/UpdateIbcProduto.use-case";
 import { ConvertIbcHomologacaoUseCase } from "../../useCases/ConvertIbcHomologacao.use-case";
 import { ChangeIbcProdutoUseCase } from "../../useCases/ChangeIbcProduto.use-case";
+import { ListIbcHistoricoUseCase } from "../../useCases/ListIbcHistorico.use-case";
 
 function respondAppError(res: Response, err: unknown, fallbackMessage: string): Response {
   if (err instanceof AppError) {
@@ -110,6 +111,24 @@ export class IbcController {
       return res.status(200).json(ibcs);
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao listar pool de IBC");
+    }
+  }
+
+  static async listHistorico(req: Request, res: Response): Promise<Response> {
+    try {
+      const id = String(req.params.id ?? "").trim();
+      if (!id) {
+        return res.status(400).json({
+          error: "ID do IBC é obrigatório",
+          code: "IBC_ID_REQUIRED",
+        });
+      }
+
+      const useCase = new ListIbcHistoricoUseCase(cadastroRepository());
+      const historico = await useCase.execute(id);
+      return res.status(200).json(historico);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao listar histórico do IBC");
     }
   }
 

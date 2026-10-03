@@ -1,85 +1,118 @@
 import { describe, it, mock } from "node:test";
 import assert from "node:assert/strict";
-import {
-  ConvertIbcHomologacaoUseCase,
-} from "../../../../../src/features/ibc/useCases/ConvertIbcHomologacao.use-case";
+import { ConvertIbcHomologacaoUseCase } from "../../../../../src/features/ibc/useCases/ConvertIbcHomologacao.use-case";
 import { IIbcCadastroRepository } from "../../../../../src/features/ibc/repositories/IIbcCadastroRepository";
+import {
+  CreateDerivedIbcData,
+  IbcCadastroRecord,
+} from "../../../../../src/features/ibc/types/IbcCadastro.types";
 import { AppError } from "../../../../../src/utils/AppError";
+import { buildDerivedRecord, buildIbcRecord } from "./ibcRecordFixtures";
 
 type RepositoryMock = Pick<
   IIbcCadastroRepository,
-  "findById" | "findHighestIdentificadorByPrefix" | "createDerivedIbcFromSource"
+  "findById" | "createDerivedIbcFromSource"
 >;
 
-const buildRepo = (): RepositoryMock => ({
-  findById: mock.fn(async () => ({
-    id: "ibc-source-1",
-    identificador: "HMSA00015",
-    produtoId: "produto-1",
-  })),
-  findHighestIdentificadorByPrefix: mock.fn(async () => "NHMSA00086"),
-  createDerivedIbcFromSource: mock.fn(async (data) => ({
-    id: "ibc-target-1",
-    identificador: data.identificador,
-    produtoId: data.produtoId,
-  })),
-});
+const buildRepo = (source: IbcCadastroRecord | null = buildIbcRecord()) => {
+  const repository = {
+    findById: mock.fn(async (_id: string) => source),
+    createDerivedIbcFromSource: mock.fn(async (data: CreateDerivedIbcData) =>
+      buildDerivedRecord(data, 87),
+    ),
+  };
+  return repository;
+};
+
+function buildUseCase(repository: RepositoryMock) {
+  return new ConvertIbcHomologacaoUseCase(repository as IIbcCadastroRepository);
+}
+
+function expectAppError(code: string, statusCode: number) {
+  return (error: unknown) => {
+    assert.ok(error instanceof AppError);
+    assert.equal(error.code, code);
+    assert.equal(error.statusCode, statusCode);
+    return true;
+  };
+}
 
 describe("ConvertIbcHomologacaoUseCase", () => {
   it("creates a new non-homologated record and registers lineage", async () => {
     const repository = buildRepo();
-    const useCase = new ConvertIbcHomologacaoUseCase(repository as IIbcCadastroRepository);
 
-    const result = await useCase.execute({
+    const result = await buildUseCase(repository).execute({
       sourceIbcId: "ibc-source-1",
       actorId: "user-1",
-      observation: "avaria visual",
+      observation: "  avaria visual  ",
     });
 
     assert.equal(result.identificador, "NHMSA00087");
-    assert.equal(result.produtoId, "produto-1");
+    assert.equal(result.produtoId, "produto-a");
+    assert.deepEqual(repository.createDerivedIbcFromSource.mock.calls[0].arguments, [
+      {
+        sourceIbcId: "ibc-source-1",
+        prefixo: "NHMSA",
+        produtoId: "produto-a",
+        changeType: "conversion",
+        actorId: "user-1",
+        observation: "avaria visual",
+      },
+    ]);
+  });
 
-    assert.equal(repository.findById.mock.callCount(), 1);
-    assert.equal(repository.findHighestIdentificadorByPrefix.mock.callCount(), 1);
-    assert.deepEqual(
-      repository.findHighestIdentificadorByPrefix.mock.calls[0].arguments,
-      ["NHMSA"],
+  it("derives the prefix from the identifier when the record predates prefixo", async () => {
+    const repository = buildRepo(
+      buildIbcRecord({ identificador: "HM0007", prefixo: null, sequencial: null }),
     );
 
-    assert.equal(repository.createDerivedIbcFromSource.mock.callCount(), 1);
-    assert.deepEqual(
-      repository.createDerivedIbcFromSource.mock.calls[0].arguments,
-      [
-        {
-          sourceIbcId: "ibc-source-1",
-          identificador: "NHMSA00087",
-          produtoId: "produto-1",
-          changeType: "conversion",
-          actorId: "user-1",
-          observation: "avaria visual",
-        },
-      ],
-    );
+    await buildUseCase(repository).execute({ sourceIbcId: "ibc-source-1", actorId: "user-1" });
+
+    assert.equal(repository.createDerivedIbcFromSource.mock.calls[0].arguments[0].prefixo, "NHM");
+  });
+
+  it("stores a null observation when blank", async () => {
+    const repository = buildRepo();
+
+    await buildUseCase(repository).execute({
+      sourceIbcId: "ibc-source-1",
+      actorId: "user-1",
+      observation: "   ",
+    });
+
+    assert.equal(repository.createDerivedIbcFromSource.mock.calls[0].arguments[0].observation, null);
   });
 
   it("rejects conversion when IBC is already non-homologated", async () => {
-    const repository = buildRepo();
-    repository.findById = mock.fn(async () => ({
-      id: "ibc-source-1",
-      identificador: "NHMSA00015",
-      produtoId: "produto-1",
-    }));
-    const useCase = new ConvertIbcHomologacaoUseCase(repository as IIbcCadastroRepository);
+    const repository = buildRepo(
+      buildIbcRecord({ identificador: "NHMSA00015", prefixo: "NHMSA" }),
+    );
 
     await assert.rejects(
-      () =>
-        useCase.execute({
-          sourceIbcId: "ibc-source-1",
-          actorId: "user-1",
-        }),
-      (error: unknown) =>
-        error instanceof AppError &&
-        error.code === "IBC_ALREADY_NON_HOMOLOGATED",
+      () => buildUseCase(repository).execute({ sourceIbcId: "ibc-source-1", actorId: "user-1" }),
+      expectAppError("IBC_ALREADY_NON_HOMOLOGATED", 409),
+    );
+    assert.equal(repository.createDerivedIbcFromSource.mock.callCount(), 0);
+  });
+
+  it("rejects unknown source IBC with 404", async () => {
+    const repository = buildRepo(null);
+
+    await assert.rejects(
+      () => buildUseCase(repository).execute({ sourceIbcId: "missing", actorId: "user-1" }),
+      expectAppError("IBC_NOT_FOUND", 404),
+    );
+    assert.equal(repository.createDerivedIbcFromSource.mock.callCount(), 0);
+  });
+
+  it("rejects identifiers outside the HM family", async () => {
+    const repository = buildRepo(
+      buildIbcRecord({ identificador: "XY00001", prefixo: "XY" }),
+    );
+
+    await assert.rejects(
+      () => buildUseCase(repository).execute({ sourceIbcId: "ibc-source-1", actorId: "user-1" }),
+      expectAppError("IBC_PREFIXO_HOMOLOGADO_INVALIDO", 409),
     );
   });
 });

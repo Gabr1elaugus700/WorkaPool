@@ -64,6 +64,15 @@ export async function ensureIbcCadastroSchema(
   await prisma.$executeRawUnsafe(
     `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "convertedToContainerId" TEXT`,
   );
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "prefixo" TEXT`,
+  );
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "sequencial" INTEGER`,
+  );
+  await prisma.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "Ibc_prefixo_sequencial_key" ON "Ibc"("prefixo", "sequencial")`,
+  );
   await prisma.$executeRawUnsafe(`
     DO $$ BEGIN
       ALTER TABLE "Ibc" ADD CONSTRAINT "Ibc_loteId_fkey"

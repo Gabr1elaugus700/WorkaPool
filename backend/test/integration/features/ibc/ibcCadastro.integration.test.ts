@@ -49,6 +49,15 @@ async function cleanupFixtures(): Promise<void> {
     )
   `).catch(() => undefined);
   await prisma.$executeRawUnsafe(`
+    UPDATE "Ibc" SET "convertedToContainerId" = NULL
+    WHERE "id" IN (
+      SELECT i.id FROM "Ibc" i
+      LEFT JOIN "IbcProduto" p ON p.id = i."produtoId"
+      WHERE i."identificador" LIKE '${FIXTURE_PREFIX}%'
+         OR p.nome LIKE '${FIXTURE_PREFIX}%'
+    )
+  `).catch(() => undefined);
+  await prisma.$executeRawUnsafe(`
     DELETE FROM "AlocacaoIbc"
     WHERE "ibcId" IN (
       SELECT i.id
@@ -260,6 +269,177 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     );
     assert.ok(historyRows.some((row) => row.changeType === "product_change"));
     assert.ok(historyRows.some((row) => row.toContainerId === changed.body.id));
+  });
+
+  it("prefix allocation is exact: HMQ is not polluted by HMQZ", async () => {
+    const app = createIbcTestApp();
+    const token = createToken(Role.ALMOX);
+    const longId = await createProduto(token, {
+      nome: `${FIXTURE_PREFIX}Longo`,
+      abreviacao: "QZ",
+    });
+    const shortId = await createProduto(token, {
+      nome: `${FIXTURE_PREFIX}Curto`,
+      abreviacao: "Q",
+    });
+
+    const long = await request(app)
+      .post("/api/ibc")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ dataLimite: FUTURE_DATA_LIMITE, produtoId: longId });
+    assert.equal(long.status, 201);
+    assert.match(long.body.identificador, /^HMQZ\d{5}$/);
+
+    const short = await request(app)
+      .post("/api/ibc")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ dataLimite: FUTURE_DATA_LIMITE, produtoId: shortId });
+    assert.equal(short.status, 201);
+    assert.match(short.body.identificador, /^HMQ\d{5}$/);
+    assert.equal(short.body.prefixo, "HMQ");
+    assert.equal(short.body.identificador, `HMQ${String(short.body.sequencial).padStart(5, "0")}`);
+  });
+
+  it("concurrent creates on the same prefix get distinct sequenciais", async () => {
+    const app = createIbcTestApp();
+    const token = createToken(Role.ALMOX);
+    const produtoId = await createProduto(token, {
+      nome: `${FIXTURE_PREFIX}Concorrente`,
+      abreviacao: "CC",
+    });
+
+    const responses = await Promise.all(
+      Array.from({ length: 5 }, () =>
+        request(app)
+          .post("/api/ibc")
+          .set("Authorization", `Bearer ${token}`)
+          .send({ dataLimite: FUTURE_DATA_LIMITE, produtoId }),
+      ),
+    );
+
+    assert.ok(responses.every((response) => response.status === 201));
+    const sequenciais = responses
+      .map((response) => Number(response.body.sequencial))
+      .sort((a, b) => a - b);
+    assert.equal(new Set(sequenciais).size, 5);
+    assert.deepEqual(
+      sequenciais,
+      Array.from({ length: 5 }, (_, index) => sequenciais[0] + index),
+    );
+  });
+
+  it("duplicate identifier rolls back the whole conversion", async () => {
+    const app = createIbcTestApp();
+    const token = createToken(Role.ALMOX);
+    const produtoId = await createProduto(token, {
+      nome: `${FIXTURE_PREFIX}Rollback`,
+      abreviacao: "RB",
+    });
+    const created = await request(app)
+      .post("/api/ibc")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ dataLimite: FUTURE_DATA_LIMITE, produtoId });
+    assert.equal(created.status, 201);
+
+    const max = await prisma.ibc.aggregate({
+      where: { prefixo: "NHMRB" },
+      _max: { sequencial: true },
+    });
+    const nextSequencial = (max._max.sequencial ?? 0) + 1;
+    await prisma.ibc.create({
+      data: {
+        identificador: `NHMRB${String(nextSequencial).padStart(5, "0")}`,
+        aptidao: "INAPTO",
+        motivoInaptidao: "AGUARDANDO_INSPECAO",
+        custodia: "PATIO",
+        tipoCadastro: "NOVO",
+        produtoId,
+      },
+    });
+
+    const converted = await request(app)
+      .patch(`/api/ibc/${created.body.id}/converter-nao-homologado`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ confirmado: true });
+    assert.equal(converted.status, 409);
+    assert.equal(converted.body.code, "IBC_IDENTIFICADOR_DUPLICADO");
+
+    const source = await prisma.ibc.findUnique({ where: { id: created.body.id } });
+    assert.equal(source?.convertedToContainerId, null);
+    const history = await prisma.ibcConversionHistory.count({
+      where: { fromContainerId: created.body.id },
+    });
+    assert.equal(history, 0);
+  });
+
+  it("unauthorized conversion creates no record nor history", async () => {
+    const app = createIbcTestApp();
+    const almox = createToken(Role.ALMOX);
+    const produtoId = await createProduto(almox, {
+      nome: `${FIXTURE_PREFIX}Authz`,
+      abreviacao: "AZ",
+    });
+    const created = await request(app)
+      .post("/api/ibc")
+      .set("Authorization", `Bearer ${almox}`)
+      .send({ dataLimite: FUTURE_DATA_LIMITE, produtoId });
+    assert.equal(created.status, 201);
+
+    const forbidden = await request(app)
+      .patch(`/api/ibc/${created.body.id}/converter-nao-homologado`)
+      .set("Authorization", `Bearer ${createToken(Role.VENDAS, "ibc-vendas")}`)
+      .send({ confirmado: true });
+    assert.equal(forbidden.status, 403);
+
+    const derived = await prisma.ibc.count({ where: { prefixo: "NHMAZ" } });
+    assert.equal(derived, 0);
+    const history = await prisma.ibcConversionHistory.count({
+      where: { fromContainerId: created.body.id },
+    });
+    assert.equal(history, 0);
+  });
+
+  it("GET historico exposes lineage with observation from both ends", async () => {
+    const app = createIbcTestApp();
+    const token = createToken(Role.ALMOX);
+    const produtoId = await createProduto(token, {
+      nome: `${FIXTURE_PREFIX}Historico`,
+      abreviacao: "HI",
+    });
+    const created = await request(app)
+      .post("/api/ibc")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ dataLimite: FUTURE_DATA_LIMITE, produtoId });
+    const converted = await request(app)
+      .patch(`/api/ibc/${created.body.id}/converter-nao-homologado`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ confirmado: true, observacao: "trinca na base" });
+    assert.equal(converted.status, 201);
+
+    for (const id of [created.body.id, converted.body.id]) {
+      const response = await request(app)
+        .get(`/api/ibc/${id}/historico`)
+        .set("Authorization", `Bearer ${createToken(Role.LOGISTICA, "ibc-log")}`);
+      assert.equal(response.status, 200);
+      assert.equal(response.body.length, 1);
+      const [evento] = response.body;
+      assert.equal(evento.changeType, "conversion");
+      assert.equal(evento.observation, "trinca na base");
+      assert.equal(evento.actorId, "ibc-cadastro-almox");
+      assert.deepEqual(evento.from, {
+        id: created.body.id,
+        identificador: created.body.identificador,
+      });
+      assert.deepEqual(evento.to, {
+        id: converted.body.id,
+        identificador: converted.body.identificador,
+      });
+    }
+
+    const missing = await request(app)
+      .get("/api/ibc/00000000-0000-0000-0000-000000000000/historico")
+      .set("Authorization", `Bearer ${token}`);
+    assert.equal(missing.status, 404);
   });
 
   it("GET pool lists active IBCs and omits baixados by default", async () => {

@@ -1,4 +1,3 @@
-import { allocateNextIbcIdentifier } from "../services/allocateNextIbcIdentifier";
 import { IIbcCadastroRepository } from "../repositories/IIbcCadastroRepository";
 import { IIbcProdutoRepository } from "../repositories/IIbcProdutoRepository";
 import { IbcCadastroRecord } from "../types/IbcCadastro.types";
@@ -50,20 +49,18 @@ export class CreateNovoIbcUseCase {
       });
     }
 
-    const prefix = getIbcIdentifierPrefix(produto.abreviacao);
-    const highest = await this.repository.findHighestIdentificadorByPrefix(prefix);
-    const identificador = highest
-      ? allocateNextIbcIdentifier(highest)
-      : `${prefix}00001`;
-
-    return this.repository.createNovoIbc({
-      identificador,
-      tipoCadastro: "NOVO",
-      aptidao: "INAPTO",
-      motivoInaptidao: "AGUARDANDO_INSPECAO",
-      custodia: "PATIO",
-      dataLimite: input.dataLimite,
-      produtoId: produto.id,
-    });
+    const [created] = await this.repository.createNovoIbcs(
+      {
+        prefixo: getIbcIdentifierPrefix(produto.abreviacao),
+        tipoCadastro: "NOVO",
+        aptidao: "INAPTO",
+        motivoInaptidao: "AGUARDANDO_INSPECAO",
+        custodia: "PATIO",
+        dataLimite: input.dataLimite,
+        produtoId: produto.id,
+      },
+      1,
+    );
+    return created;
   }
 }

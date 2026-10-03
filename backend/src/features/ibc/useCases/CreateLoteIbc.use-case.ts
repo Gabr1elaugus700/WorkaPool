@@ -1,4 +1,3 @@
-import { allocateNextIbcIdentifier } from "../services/allocateNextIbcIdentifier";
 import { IIbcCadastroRepository } from "../repositories/IIbcCadastroRepository";
 import { IIbcProdutoRepository } from "../repositories/IIbcProdutoRepository";
 import { ISaldoIbcErp } from "../ports/ISaldoIbcErp";
@@ -110,18 +109,9 @@ export class CreateLoteIbcUseCase {
       dataLimite,
     });
 
-    const prefix = getIbcIdentifierPrefix(produto.abreviacao);
-    let highest = await this.repository.findHighestIdentificadorByPrefix(prefix);
-    const items: IbcCadastroRecord[] = [];
-
-    for (let i = 0; i < quantidade; i += 1) {
-      const identificador = highest
-        ? allocateNextIbcIdentifier(highest)
-        : `${prefix}00001`;
-      highest = identificador;
-
-      const created = await this.repository.createNovoIbc({
-        identificador,
+    const items = await this.repository.createNovoIbcs(
+      {
+        prefixo: getIbcIdentifierPrefix(produto.abreviacao),
         tipoCadastro: "NOVO",
         aptidao: "INAPTO",
         motivoInaptidao: "AGUARDANDO_INSPECAO",
@@ -129,9 +119,9 @@ export class CreateLoteIbcUseCase {
         dataLimite,
         loteId: lote.id,
         produtoId: produto.id,
-      });
-      items.push(created);
-    }
+      },
+      quantidade,
+    );
 
     return warning ? { items, lote, warning } : { items, lote };
   }

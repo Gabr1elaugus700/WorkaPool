@@ -1,7 +1,11 @@
 import { AppError } from "../../../utils/AppError";
 import { IIbcCadastroRepository } from "../repositories/IIbcCadastroRepository";
 import { IIbcProdutoRepository } from "../repositories/IIbcProdutoRepository";
-import { getIbcIdentifierPrefix } from "../services/getIbcIdentifierPrefix";
+import {
+  getIbcIdentifierPrefix,
+  isNaoHomologadoPrefixo,
+  resolveIbcPrefixo,
+} from "../services/getIbcIdentifierPrefix";
 import { IbcCadastroRecord } from "../types/IbcCadastro.types";
 
 export type ChangeIbcProdutoInput = {
@@ -11,34 +15,17 @@ export type ChangeIbcProdutoInput = {
   observation?: string | null;
 };
 
-function nextIdentifier(currentHighest: string): string {
-  const match = /^([A-Z]+)(\d{5})$/.exec(currentHighest);
-  if (!match) {
+function isSourceNaoHomologado(source: IbcCadastroRecord): boolean {
+  const prefixo = resolveIbcPrefixo(source);
+  if (!prefixo) {
     throw new AppError({
-      message: `Identificador inválido para mudança de produto: ${currentHighest}`,
+      message: `Identificador inválido para mudança de produto: ${source.identificador}`,
       statusCode: 409,
       code: "IBC_IDENTIFICADOR_INVALIDO",
-      details: { identificador: currentHighest },
+      details: { identificador: source.identificador },
     });
   }
-
-  const prefix = match[1];
-  const next = Number(match[2]) + 1;
-  return `${prefix}${String(next).padStart(5, "0")}`;
-}
-
-function isNonHomologated(identificador: string): boolean {
-  const match = /^([A-Z]+)(\d{5})$/.exec(identificador);
-  if (!match) {
-    throw new AppError({
-      message: `Identificador inválido para mudança de produto: ${identificador}`,
-      statusCode: 409,
-      code: "IBC_IDENTIFICADOR_INVALIDO",
-      details: { identificador },
-    });
-  }
-
-  return match[1].startsWith("NHM");
+  return isNaoHomologadoPrefixo(prefixo);
 }
 
 export class ChangeIbcProdutoUseCase {
@@ -83,16 +70,12 @@ export class ChangeIbcProdutoUseCase {
       });
     }
 
-    const prefix = getIbcIdentifierPrefix(
-      targetProduto.abreviacao,
-      !isNonHomologated(source.identificador),
-    );
-    const highest = await this.repository.findHighestIdentificadorByPrefix(prefix);
-    const identificador = highest ? nextIdentifier(highest) : `${prefix}00001`;
-
     return this.repository.createDerivedIbcFromSource({
       sourceIbcId: source.id,
-      identificador,
+      prefixo: getIbcIdentifierPrefix(
+        targetProduto.abreviacao,
+        !isSourceNaoHomologado(source),
+      ),
       produtoId: targetProduto.id,
       changeType: "product_change",
       actorId: input.actorId,

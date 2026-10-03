@@ -11,14 +11,14 @@ import {
 } from "../../../../../src/features/ibc/types/IbcCadastro.types";
 import { AppError } from "../../../../../src/utils/AppError";
 import { FakeSaldoIbcErp } from "../../../../../src/features/ibc/adapters/FakeSaldoIbcErp";
+import { formatIbcIdentifier } from "../../../../../src/features/ibc/services/formatIbcIdentifier";
 
 const FUTURE_DATA_LIMITE = new Date("2099-12-31T00:00:00.000Z");
 const PAST_DATA_LIMITE = new Date("2020-01-01T00:00:00.000Z");
 
 type RepoMock = Pick<
   IIbcCadastroRepository,
-  | "findHighestIdentificadorByPrefix"
-  | "createNovoIbc"
+  | "createNovoIbcs"
   | "countVivosWp"
   | "createIbcLote"
 >;
@@ -33,10 +33,12 @@ const buildLote = (data: CreateIbcLoteData): IbcLoteRecord => ({
 
 const buildCreatedIbc = (
   data: CreateNovoIbcData,
-  overrides: Partial<IbcCadastroRecord> = {},
+  sequencial: number,
 ): IbcCadastroRecord => ({
-  id: `ibc-${data.identificador}`,
-  identificador: data.identificador,
+  id: `ibc-${data.prefixo}-${sequencial}`,
+  identificador: formatIbcIdentifier(data.prefixo, sequencial),
+  prefixo: data.prefixo,
+  sequencial,
   tipoCadastro: data.tipoCadastro,
   aptidao: data.aptidao,
   motivoInaptidao: data.motivoInaptidao,
@@ -46,12 +48,17 @@ const buildCreatedIbc = (
   baixadoEm: null,
   createdAt: new Date("2026-09-14T12:00:00.000Z"),
   loteId: data.loteId ?? null,
-  ...overrides,
 });
 
+const createNovoIbcsFrom = (firstSequencial: number) =>
+  mock.fn(async (data: CreateNovoIbcData, quantidade: number) =>
+    Array.from({ length: quantidade }, (_, index) =>
+      buildCreatedIbc(data, firstSequencial + index),
+    ),
+  );
+
 const buildRepo = (overrides: Partial<RepoMock> = {}): RepoMock => ({
-  findHighestIdentificadorByPrefix: mock.fn(async () => "HMS00009"),
-  createNovoIbc: mock.fn(async (data: CreateNovoIbcData) => buildCreatedIbc(data)),
+  createNovoIbcs: createNovoIbcsFrom(10),
   countVivosWp: mock.fn(async () => 0),
   createIbcLote: mock.fn(async (data: CreateIbcLoteData) => buildLote(data)),
   ...overrides,
@@ -71,13 +78,8 @@ const buildProdutoRepo = (
 
 describe("CreateLoteIbcUseCase core (#117 / #121 slice 2)", () => {
   it("batch creates N IBCs with shared dataLimite and COMPRA defaults", async () => {
-    const created: CreateNovoIbcData[] = [];
-    const repo = buildRepo({
-      createNovoIbc: mock.fn(async (data: CreateNovoIbcData) => {
-        created.push(data);
-        return buildCreatedIbc(data);
-      }),
-    });
+    const createNovoIbcs = createNovoIbcsFrom(10);
+    const repo = buildRepo({ createNovoIbcs });
     const produtoRepo = buildProdutoRepo();
     const useCase = new CreateLoteIbcUseCase(
       repo as IIbcCadastroRepository,
@@ -101,13 +103,14 @@ describe("CreateLoteIbcUseCase core (#117 / #121 slice 2)", () => {
       assert.equal(item.loteId, "lote-1");
       assert.equal(item.produtoId, "produto-1");
     }
-    assert.equal(created.length, 3);
+    assert.equal(createNovoIbcs.mock.callCount(), 1);
+    const [data, quantidade] = createNovoIbcs.mock.calls[0].arguments;
+    assert.equal(data.prefixo, "HMS");
+    assert.equal(quantidade, 3);
   });
 
-  it("batch assigns sequential unique HM identifiers", async () => {
-    const repo = buildRepo({
-      findHighestIdentificadorByPrefix: mock.fn(async () => "HMS00009"),
-    });
+  it("batch assigns sequential unique HM+product identifiers", async () => {
+    const repo = buildRepo();
     const produtoRepo = buildProdutoRepo();
     const useCase = new CreateLoteIbcUseCase(
       repo as IIbcCadastroRepository,
@@ -127,13 +130,11 @@ describe("CreateLoteIbcUseCase core (#117 / #121 slice 2)", () => {
   });
 
   it("batch rejects past dataLimite like unit create", async () => {
-    const createNovoIbc = mock.fn(async (data: CreateNovoIbcData) =>
-      buildCreatedIbc(data),
-    );
+    const createNovoIbcs = createNovoIbcsFrom(1);
     const createIbcLote = mock.fn(async (data: CreateIbcLoteData) =>
       buildLote(data),
     );
-    const repo = buildRepo({ createNovoIbc, createIbcLote });
+    const repo = buildRepo({ createNovoIbcs, createIbcLote });
     const produtoRepo = buildProdutoRepo();
     const useCase = new CreateLoteIbcUseCase(
       repo as IIbcCadastroRepository,
@@ -153,15 +154,13 @@ describe("CreateLoteIbcUseCase core (#117 / #121 slice 2)", () => {
         return true;
       },
     );
-    assert.equal(createNovoIbc.mock.callCount(), 0);
+    assert.equal(createNovoIbcs.mock.callCount(), 0);
     assert.equal(createIbcLote.mock.callCount(), 0);
   });
 
   it("rejects invalid N", async () => {
-    const createNovoIbc = mock.fn(async (data: CreateNovoIbcData) =>
-      buildCreatedIbc(data),
-    );
-    const repo = buildRepo({ createNovoIbc });
+    const createNovoIbcs = createNovoIbcsFrom(1);
+    const repo = buildRepo({ createNovoIbcs });
     const produtoRepo = buildProdutoRepo();
     const useCase = new CreateLoteIbcUseCase(
       repo as IIbcCadastroRepository,
@@ -183,7 +182,7 @@ describe("CreateLoteIbcUseCase core (#117 / #121 slice 2)", () => {
         },
       );
     }
-    assert.equal(createNovoIbc.mock.callCount(), 0);
+    assert.equal(createNovoIbcs.mock.callCount(), 0);
   });
 });
 

@@ -1,10 +1,15 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import prismaInstance from "../../../config/prisma";
+import { AppError } from "../../../utils/AppError";
+import { formatIbcIdentifier } from "../services/formatIbcIdentifier";
 import {
+  CreateDerivedIbcData,
   CreateIbcLoteData,
   CreateNovoIbcData,
   IbcCadastroRecord,
+  IbcConversionHistoryRecord,
   IbcLoteRecord,
+  IbcStructuralChangeType,
 } from "../types/IbcCadastro.types";
 import {
   IIbcCadastroRepository,
@@ -14,6 +19,8 @@ import {
 type IbcRow = {
   id: string;
   identificador: string;
+  prefixo?: string | null;
+  sequencial?: number | null;
   tipoCadastro: "NOVO" | "TROCA";
   aptidao: "APTO" | "INAPTO";
   motivoInaptidao: "AGUARDANDO_INSPECAO" | "DATA_LIMITE" | null;
@@ -26,20 +33,31 @@ type IbcRow = {
   convertedToContainerId?: string | null;
 };
 
+const STRUCTURAL_CHANGE_TYPES: readonly IbcStructuralChangeType[] = [
+  "conversion",
+  "product_change",
+  "status_change",
+];
+
+function toStructuralChangeType(value: string): IbcStructuralChangeType {
+  const match = STRUCTURAL_CHANGE_TYPES.find((type) => type === value);
+  if (!match) {
+    throw new Error(`Unknown IBC change type: ${value}`);
+  }
+  return match;
+}
+
+function isUniqueViolation(err: unknown): boolean {
+  return (
+    err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002"
+  );
+}
+
 export class IbcCadastroRepository implements IIbcCadastroRepository {
   private readonly prisma: PrismaClient;
 
   constructor(prismaClient: PrismaClient = prismaInstance) {
     this.prisma = prismaClient;
-  }
-
-  async findHighestIdentificadorByPrefix(prefix: string): Promise<string | null> {
-    const row = await this.prisma.ibc.findFirst({
-      where: { identificador: { startsWith: prefix } },
-      orderBy: { identificador: "desc" },
-      select: { identificador: true },
-    });
-    return row?.identificador ?? null;
   }
 
   async createIbcLote(data: CreateIbcLoteData): Promise<IbcLoteRecord> {
@@ -57,71 +75,134 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
     };
   }
 
-  async createNovoIbc(data: CreateNovoIbcData): Promise<IbcCadastroRecord> {
-    const created = await this.prisma.ibc.create({
-      data: {
-        identificador: data.identificador,
-        tipoCadastro: data.tipoCadastro,
-        aquisicao: "COMPRA",
-        aptidao: data.aptidao,
-        motivoInaptidao: data.motivoInaptidao,
-        custodia: data.custodia,
-        dataLimite: data.dataLimite,
-        loteId: data.loteId ?? undefined,
-        produtoId: data.produtoId,
-      },
-    });
-    return this.toRecord(created);
+  async createNovoIbcs(
+    data: CreateNovoIbcData,
+    quantidade: number,
+  ): Promise<IbcCadastroRecord[]> {
+    return this.withUniqueGuard(data.prefixo, () =>
+      this.prisma.$transaction(async (tx) => {
+        const first = await this.reserveSequencial(tx, data.prefixo);
+        const last = first + quantidade - 1;
+
+        await tx.ibc.createMany({
+          data: Array.from({ length: quantidade }, (_, index) => {
+            const sequencial = first + index;
+            return {
+              identificador: formatIbcIdentifier(data.prefixo, sequencial),
+              prefixo: data.prefixo,
+              sequencial,
+              tipoCadastro: data.tipoCadastro,
+              aquisicao: "COMPRA" as const,
+              aptidao: data.aptidao,
+              motivoInaptidao: data.motivoInaptidao,
+              custodia: data.custodia,
+              dataLimite: data.dataLimite,
+              loteId: data.loteId ?? null,
+              produtoId: data.produtoId,
+            };
+          }),
+        });
+
+        const rows = await tx.ibc.findMany({
+          where: {
+            prefixo: data.prefixo,
+            sequencial: { gte: first, lte: last },
+          },
+          orderBy: { sequencial: "asc" },
+        });
+        return rows.map((row) => this.toRecord(row));
+      }),
+    );
   }
 
-  async createDerivedIbcFromSource(data: {
-    sourceIbcId: string;
-    identificador: string;
-    produtoId: string | null;
-    actorId: string;
-    observation: string | null;
-    changeType: "conversion" | "product_change" | "status_change";
-  }): Promise<IbcCadastroRecord> {
-    return this.prisma.$transaction(async (tx) => {
-      const source = await tx.ibc.findUnique({
-        where: { id: data.sourceIbcId },
-      });
+  async createDerivedIbcFromSource(
+    data: CreateDerivedIbcData,
+  ): Promise<IbcCadastroRecord> {
+    return this.withUniqueGuard(data.prefixo, () =>
+      this.prisma.$transaction(async (tx) => {
+        const source = await tx.ibc.findUnique({
+          where: { id: data.sourceIbcId },
+        });
 
-      if (!source) {
-        throw new Error(`IBC source not found: ${data.sourceIbcId}`);
-      }
+        if (!source) {
+          throw new AppError({
+            message: "IBC não encontrado",
+            statusCode: 404,
+            code: "IBC_NOT_FOUND",
+            details: { id: data.sourceIbcId },
+          });
+        }
 
-      const created = await tx.ibc.create({
-        data: {
-          identificador: data.identificador,
-          aptidao: source.aptidao,
-          custodia: source.custodia,
-          tipoCadastro: source.tipoCadastro,
-          aquisicao: source.aquisicao,
-          motivoInaptidao: source.motivoInaptidao,
-          dataLimite: source.dataLimite,
-          produtoId: data.produtoId,
-        },
-      });
+        const sequencial = await this.reserveSequencial(tx, data.prefixo);
+        const created = await tx.ibc.create({
+          data: {
+            identificador: formatIbcIdentifier(data.prefixo, sequencial),
+            prefixo: data.prefixo,
+            sequencial,
+            aptidao: source.aptidao,
+            custodia: source.custodia,
+            tipoCadastro: source.tipoCadastro,
+            aquisicao: source.aquisicao,
+            motivoInaptidao: source.motivoInaptidao,
+            dataLimite: source.dataLimite,
+            produtoId: data.produtoId,
+          },
+        });
 
-      await tx.$executeRawUnsafe(
-        `UPDATE "Ibc" SET "convertedToContainerId" = $1 WHERE "id" = $2`,
-        created.id,
-        source.id,
-      );
-      await tx.$executeRawUnsafe(
-        `INSERT INTO "IbcConversionHistory" ("id","fromContainerId","toContainerId","changeType","actorId","observation","createdAt")
-         VALUES ($1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP)`,
-        crypto.randomUUID(),
-        source.id,
-        created.id,
-        data.changeType,
-        data.actorId,
-        data.observation,
-      );
+        await tx.ibc.update({
+          where: { id: source.id },
+          data: { convertedToContainerId: created.id },
+        });
+        await tx.ibcConversionHistory.create({
+          data: {
+            fromContainerId: source.id,
+            toContainerId: created.id,
+            changeType: data.changeType,
+            actorId: data.actorId,
+            observation: data.observation,
+          },
+        });
 
-      return this.toRecord(created);
+        return this.toRecord(created);
+      }),
+    );
+  }
+
+  async listConversionHistory(
+    ibcId: string,
+  ): Promise<IbcConversionHistoryRecord[]> {
+    const rows = await this.prisma.ibcConversionHistory.findMany({
+      where: {
+        OR: [{ fromContainerId: ibcId }, { toContainerId: ibcId }],
+      },
+      orderBy: { createdAt: "asc" },
+      include: {
+        fromContainer: { select: { id: true, identificador: true } },
+        toContainer: { select: { id: true, identificador: true } },
+      },
     });
+
+    const actorIds = [...new Set(rows.map((row) => row.actorId))];
+    const actors = actorIds.length
+      ? await this.prisma.user.findMany({
+          where: { id: { in: actorIds } },
+          select: { id: true, name: true, user: true },
+        })
+      : [];
+    const actorNames = new Map(
+      actors.map((actor) => [actor.id, actor.name || actor.user]),
+    );
+
+    return rows.map((row) => ({
+      id: row.id,
+      changeType: toStructuralChangeType(row.changeType),
+      observation: row.observation,
+      actorId: row.actorId,
+      actorName: actorNames.get(row.actorId) ?? null,
+      createdAt: row.createdAt,
+      from: row.fromContainer,
+      to: row.toContainer,
+    }));
   }
 
   async listActiveIbcs(): Promise<IbcCadastroRecord[]> {
@@ -189,10 +270,47 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
     return this.toRecord(updated);
   }
 
+  /**
+   * Serializa a alocação por prefixo (advisory lock liberado no fim da transação)
+   * e devolve o próximo sequencial livre.
+   */
+  private async reserveSequencial(
+    tx: Prisma.TransactionClient,
+    prefixo: string,
+  ): Promise<number> {
+    await tx.$queryRaw`SELECT 1 FROM (SELECT pg_advisory_xact_lock(hashtext(${prefixo}))) AS lock`;
+    const result = await tx.ibc.aggregate({
+      where: { prefixo },
+      _max: { sequencial: true },
+    });
+    return (result._max.sequencial ?? 0) + 1;
+  }
+
+  private async withUniqueGuard<T>(
+    prefixo: string,
+    operation: () => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await operation();
+    } catch (err: unknown) {
+      if (isUniqueViolation(err)) {
+        throw new AppError({
+          message: "Identificador de IBC já existe",
+          statusCode: 409,
+          code: "IBC_IDENTIFICADOR_DUPLICADO",
+          details: { prefixo },
+        });
+      }
+      throw err;
+    }
+  }
+
   private toRecord(row: IbcRow): IbcCadastroRecord {
     return {
       id: row.id,
       identificador: row.identificador,
+      prefixo: row.prefixo ?? null,
+      sequencial: row.sequencial ?? null,
       tipoCadastro: row.tipoCadastro,
       aptidao: row.aptidao,
       motivoInaptidao: row.motivoInaptidao,

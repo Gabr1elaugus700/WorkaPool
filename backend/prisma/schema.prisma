@@ -143,6 +143,8 @@ model IbcLote {
 model Ibc {
   id                   String                 @id @default(uuid())
   identificador        String                 @unique
+  prefixo              String?
+  sequencial           Int?
   aptidao              IbcAptidao
   custodia             IbcCustodia            @default(PATIO)
   tipoCadastro         IbcTipoCadastro        @default(NOVO)
@@ -162,6 +164,7 @@ model Ibc {
   conversionHistoryFrom IbcConversionHistory[] @relation("IbcConversionFrom")
   conversionHistoryTo   IbcConversionHistory[] @relation("IbcConversionTo")
 
+  @@unique([prefixo, sequencial])
   @@index([loteId])
   @@index([produtoId])
   @@index([convertedToContainerId])
