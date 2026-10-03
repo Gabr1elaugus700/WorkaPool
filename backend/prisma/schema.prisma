@@ -159,9 +159,16 @@ model Ibc {
   produto          IbcProduto?         @relation(fields: [produtoId], references: [id])
   alocacao         AlocacaoIbc?
 
+  convertedToContainerId String?
+  convertedToContainer   Ibc?                   @relation("IbcConversionLink", fields: [convertedToContainerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  convertedFrom          Ibc[]                  @relation("IbcConversionLink")
+  conversionHistoryFrom  IbcConversionHistory[] @relation("IbcConversionFrom")
+  conversionHistoryTo    IbcConversionHistory[] @relation("IbcConversionTo")
+
   @@unique([prefixo, sequencial])
   @@index([loteId])
   @@index([produtoId])
+  @@index([convertedToContainerId])
 }
 
 model IbcProduto {
@@ -171,6 +178,22 @@ model IbcProduto {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   ibcs       Ibc[]
+}
+
+model IbcConversionHistory {
+  id              String   @id @default(uuid())
+  fromContainerId String
+  toContainerId   String
+  changeType      String
+  observation     String?
+  actorId         String
+  createdAt       DateTime @default(now())
+
+  fromContainer Ibc @relation("IbcConversionFrom", fields: [fromContainerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  toContainer   Ibc @relation("IbcConversionTo", fields: [toContainerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([fromContainerId])
+  @@index([toContainerId])
 }
 
 model AlocacaoIbc {

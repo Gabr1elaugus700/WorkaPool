@@ -1,7 +1,11 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { formatIbcIdentifier } from "../../../../../src/features/ibc/services/formatIbcIdentifier";
-import { getIbcIdentifierPrefix } from "../../../../../src/features/ibc/services/getIbcIdentifierPrefix";
+import {
+  getIbcIdentifierPrefix,
+  isNaoHomologadoPrefixo,
+  toNaoHomologadoPrefixo,
+} from "../../../../../src/features/ibc/services/getIbcIdentifierPrefix";
 
 describe("formatIbcIdentifier", () => {
   it("pads the sequencial to 5 digits after the prefix", () => {
@@ -27,5 +31,11 @@ describe("getIbcIdentifierPrefix", () => {
 
   it("non-homologated prefix is NHM + product abbreviation", () => {
     assert.equal(getIbcIdentifierPrefix("S", false), "NHMS");
+  });
+
+  it("converts and detects non-homologated prefixes", () => {
+    assert.equal(toNaoHomologadoPrefixo("HMS"), "NHMS");
+    assert.equal(isNaoHomologadoPrefixo("NHMS"), true);
+    assert.equal(isNaoHomologadoPrefixo("HMS"), false);
   });
 });

@@ -75,6 +75,13 @@ router.patch(
   IbcController.patchDataLimite,
 );
 
+router.patch(
+  "/:id/converter-nao-homologado",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcController.convertToNaoHomologado,
+);
+
 router.delete(
   "/:id",
   authMiddleware,

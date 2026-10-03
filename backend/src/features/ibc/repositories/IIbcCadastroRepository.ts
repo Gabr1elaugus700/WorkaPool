@@ -1,4 +1,5 @@
 import {
+  CreateDerivedIbcData,
   CreateIbcLoteData,
   CreateNovoIbcData,
   IbcCadastroRecord,
@@ -18,6 +19,11 @@ export interface IIbcCadastroRepository {
     data: CreateNovoIbcData,
     quantidade: number,
   ): Promise<IbcCadastroRecord[]>;
+  /**
+   * Cria o IBC destino no próximo sequencial de `data.prefixo`, vincula a origem
+   * (`convertedToContainerId`) e grava o histórico, tudo na mesma transação.
+   */
+  createDerivedIbcFromSource(data: CreateDerivedIbcData): Promise<IbcCadastroRecord>;
   createIbcLote(data: CreateIbcLoteData): Promise<IbcLoteRecord>;
   listActiveIbcs(): Promise<IbcCadastroRecord[]>;
   listIbcs(options: ListIbcsOptions): Promise<IbcCadastroRecord[]>;

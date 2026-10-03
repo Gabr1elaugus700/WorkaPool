@@ -18,6 +18,7 @@ export type IbcCadastroRecord = {
   createdAt: Date;
   loteId?: string | null;
   produtoId?: string | null;
+  convertedToContainerId?: string | null;
 };
 
 export type IbcLoteRecord = {
@@ -49,4 +50,15 @@ export type IbcProdutoRecord = {
   abreviacao: string;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type IbcStructuralChangeType = "conversion" | "product_change" | "status_change";
+
+export type CreateDerivedIbcData = {
+  sourceIbcId: string;
+  prefixo: string;
+  produtoId: string | null;
+  actorId: string;
+  observation: string | null;
+  changeType: IbcStructuralChangeType;
 };
