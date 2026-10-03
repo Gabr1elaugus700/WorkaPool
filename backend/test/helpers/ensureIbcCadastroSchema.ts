@@ -58,6 +58,21 @@ export async function ensureIbcCadastroSchema(
   await prisma.$executeRawUnsafe(
     `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "loteId" TEXT`,
   );
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "produtoId" TEXT`,
+  );
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "convertedToContainerId" TEXT`,
+  );
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "prefixo" TEXT`,
+  );
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "sequencial" INTEGER`,
+  );
+  await prisma.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "Ibc_prefixo_sequencial_key" ON "Ibc"("prefixo", "sequencial")`,
+  );
   await prisma.$executeRawUnsafe(`
     DO $$ BEGIN
       ALTER TABLE "Ibc" ADD CONSTRAINT "Ibc_loteId_fkey"
@@ -69,4 +84,87 @@ export async function ensureIbcCadastroSchema(
   await prisma.$executeRawUnsafe(
     `CREATE INDEX IF NOT EXISTS "Ibc_loteId_idx" ON "Ibc"("loteId")`,
   );
+
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      CREATE TABLE "IbcProduto" (
+        "id" TEXT NOT NULL,
+        "nome" TEXT NOT NULL,
+        "abreviacao" TEXT NOT NULL,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) NOT NULL,
+        CONSTRAINT "IbcProduto_pkey" PRIMARY KEY ("id")
+      );
+    EXCEPTION WHEN duplicate_table OR duplicate_object THEN NULL;
+    END $$
+  `);
+  await prisma.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "IbcProduto_abreviacao_key" ON "IbcProduto"("abreviacao")`,
+  );
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      ALTER TABLE "Ibc" ADD CONSTRAINT "Ibc_produtoId_fkey"
+        FOREIGN KEY ("produtoId") REFERENCES "IbcProduto"("id")
+        ON DELETE SET NULL ON UPDATE CASCADE;
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$
+  `);
+  await prisma.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "Ibc_produtoId_idx" ON "Ibc"("produtoId")`,
+  );
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      ALTER TABLE "Ibc" ADD CONSTRAINT "Ibc_convertedToContainerId_fkey"
+        FOREIGN KEY ("convertedToContainerId") REFERENCES "Ibc"("id")
+        ON DELETE RESTRICT ON UPDATE CASCADE;
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$
+  `);
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      CREATE INDEX "Ibc_convertedToContainerId_idx" ON "Ibc"("convertedToContainerId");
+    EXCEPTION WHEN duplicate_table OR duplicate_object THEN NULL;
+    END $$
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "IbcConversionHistory" (
+      "id" TEXT NOT NULL,
+      "fromContainerId" TEXT NOT NULL,
+      "toContainerId" TEXT NOT NULL,
+      "changeType" TEXT NOT NULL,
+      "observation" TEXT,
+      "actorId" TEXT NOT NULL,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "IbcConversionHistory_pkey" PRIMARY KEY ("id")
+    )
+  `);
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      ALTER TABLE "IbcConversionHistory" ADD CONSTRAINT "IbcConversionHistory_fromContainerId_fkey"
+        FOREIGN KEY ("fromContainerId") REFERENCES "Ibc"("id")
+        ON DELETE RESTRICT ON UPDATE CASCADE;
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$
+  `);
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      ALTER TABLE "IbcConversionHistory" ADD CONSTRAINT "IbcConversionHistory_toContainerId_fkey"
+        FOREIGN KEY ("toContainerId") REFERENCES "Ibc"("id")
+        ON DELETE RESTRICT ON UPDATE CASCADE;
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$
+  `);
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      CREATE INDEX "IbcConversionHistory_fromContainerId_idx" ON "IbcConversionHistory"("fromContainerId");
+    EXCEPTION WHEN duplicate_table OR duplicate_object THEN NULL;
+    END $$
+  `);
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      CREATE INDEX "IbcConversionHistory_toContainerId_idx" ON "IbcConversionHistory"("toContainerId");
+    EXCEPTION WHEN duplicate_table OR duplicate_object THEN NULL;
+    END $$
+  `);
 }

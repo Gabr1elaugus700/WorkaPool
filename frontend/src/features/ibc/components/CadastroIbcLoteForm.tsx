@@ -2,11 +2,13 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { CreateLoteIbcInput } from "../types/ibcCadastro.types";
+import type { CreateLoteIbcInput, IbcProdutoDTO } from "../types/ibcCadastro.types";
+import IbcProdutoSelect from "./IbcProdutoSelect";
 
 type Props = {
   disabled?: boolean;
   submitting?: boolean;
+  produtos: IbcProdutoDTO[];
   onSubmit: (input: CreateLoteIbcInput) => Promise<void> | void;
 };
 
@@ -22,11 +24,13 @@ function todayLocalIsoDate(): string {
 export default function CadastroIbcLoteForm({
   disabled = false,
   submitting = false,
+  produtos,
   onSubmit,
 }: Props) {
   const [quantidade, setQuantidade] = useState("1");
   const [dataLimite, setDataLimite] = useState("");
   const [numeroNf, setNumeroNf] = useState("");
+  const [produtoId, setProdutoId] = useState("");
   const minDate = todayLocalIsoDate();
   const quantidadeNum = Number(quantidade);
   const isPastDate = Boolean(dataLimite && dataLimite < minDate);
@@ -36,6 +40,7 @@ export default function CadastroIbcLoteForm({
     quantidadeNum > 200;
   const canSubmit =
     Boolean(dataLimite) &&
+    Boolean(produtoId) &&
     !isPastDate &&
     !isInvalidN &&
     !disabled &&
@@ -49,10 +54,12 @@ export default function CadastroIbcLoteForm({
         quantidade: quantidadeNum,
         dataLimite,
         numeroNf: numeroNf.trim() || null,
+        produtoId,
       });
       setQuantidade("1");
       setDataLimite("");
       setNumeroNf("");
+      setProdutoId("");
     } catch {
       // Erro de API: toast no caller; mantém o formulário.
     }
@@ -60,7 +67,14 @@ export default function CadastroIbcLoteForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-4">
+        <IbcProdutoSelect
+          id="ibc-lote-produto"
+          produtos={produtos}
+          value={produtoId}
+          disabled={disabled || submitting}
+          onChange={setProdutoId}
+        />
         <div className="space-y-1.5">
           <Label htmlFor="ibc-lote-quantidade" className="text-xs">
             Quantidade (N)

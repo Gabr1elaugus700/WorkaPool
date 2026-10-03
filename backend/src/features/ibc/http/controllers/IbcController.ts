@@ -57,8 +57,14 @@ export class IbcController {
         });
       }
 
-      const useCase = new CreateNovoIbcUseCase(cadastroRepository());
-      const ibc = await useCase.execute({ dataLimite: parsed.data.dataLimite });
+      const useCase = new CreateNovoIbcUseCase(
+        cadastroRepository(),
+        produtoRepository(),
+      );
+      const ibc = await useCase.execute({
+        dataLimite: parsed.data.dataLimite,
+        produtoId: parsed.data.produtoId,
+      });
       return res.status(201).json(ibc);
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao cadastrar IBC");
@@ -78,12 +84,14 @@ export class IbcController {
 
       const useCase = new CreateLoteIbcUseCase(
         cadastroRepository(),
+        produtoRepository(),
         createSapiensSaldoIbcErpPort(),
       );
       const result = await useCase.execute({
         quantidade: parsed.data.quantidade,
         dataLimite: parsed.data.dataLimite,
         numeroNf: parsed.data.numeroNf,
+        produtoId: parsed.data.produtoId,
       });
       return res.status(201).json(result);
     } catch (err: unknown) {

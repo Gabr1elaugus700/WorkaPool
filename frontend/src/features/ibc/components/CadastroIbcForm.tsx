@@ -2,11 +2,14 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { IbcProdutoDTO } from "../types/ibcCadastro.types";
+import IbcProdutoSelect from "./IbcProdutoSelect";
 
 type Props = {
   disabled?: boolean;
   submitting?: boolean;
-  onSubmit: (dataLimite: string) => Promise<void> | void;
+  produtos: IbcProdutoDTO[];
+  onSubmit: (payload: { dataLimite: string; produtoId: string }) => Promise<void> | void;
 };
 
 /** YYYY-MM-DD in the user's local calendar (date-only, no time drift). */
@@ -21,19 +24,23 @@ function todayLocalIsoDate(): string {
 export default function CadastroIbcForm({
   disabled = false,
   submitting = false,
+  produtos,
   onSubmit,
 }: Props) {
   const [dataLimite, setDataLimite] = useState("");
+  const [produtoId, setProdutoId] = useState("");
   const minDate = todayLocalIsoDate();
   const isPastDate = Boolean(dataLimite && dataLimite < minDate);
-  const canSubmit = Boolean(dataLimite) && !isPastDate && !disabled && !submitting;
+  const canSubmit =
+    Boolean(dataLimite) && Boolean(produtoId) && !isPastDate && !disabled && !submitting;
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!canSubmit) return;
     try {
-      await onSubmit(dataLimite);
+      await onSubmit({ dataLimite, produtoId });
       setDataLimite("");
+      setProdutoId("");
     } catch {
       // Erro de API: toast no caller; mantém a data preenchida.
     }
@@ -42,6 +49,13 @@ export default function CadastroIbcForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-1.5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <IbcProdutoSelect
+          id="ibc-produto"
+          produtos={produtos}
+          value={produtoId}
+          disabled={disabled || submitting}
+          onChange={setProdutoId}
+        />
         <div className="min-w-0 flex-1 space-y-1.5">
           <Label htmlFor="ibc-data-limite" className="text-xs">
             Data limite de uso
