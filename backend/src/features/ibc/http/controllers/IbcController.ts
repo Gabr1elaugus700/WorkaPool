@@ -23,6 +23,7 @@ import { createSapiensSaldoIbcErpPort } from "../../adapters/createSapiensSaldoI
 import { ibcSseGateway } from "../../realtime/ibcSseGateway";
 import { CreateIbcProdutoUseCase } from "../../useCases/CreateIbcProduto.use-case";
 import { ListIbcProdutosUseCase } from "../../useCases/ListIbcProdutos.use-case";
+import { UpdateIbcProdutoUseCase } from "../../useCases/UpdateIbcProduto.use-case";
 
 function respondAppError(res: Response, err: unknown, fallbackMessage: string): Response {
   if (err instanceof AppError) {
@@ -331,6 +332,33 @@ export class IbcController {
       return res.status(200).json(produtos);
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao listar produtos de container");
+    }
+  }
+
+  static async updateProduto(req: Request, res: Response): Promise<Response> {
+    try {
+      const id = String(req.params.id ?? "").trim();
+      if (!id) {
+        return res.status(400).json({
+          error: "ID do produto é obrigatório",
+          code: "IBC_PRODUTO_ID_REQUIRED",
+        });
+      }
+
+      const parsed = IbcProdutoHttpSchemas.update.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          error: "Dados inválidos para edição de produto",
+          code: "IBC_PRODUTO_INVALID_BODY",
+          details: parsed.error.format(),
+        });
+      }
+
+      const useCase = new UpdateIbcProdutoUseCase(produtoRepository());
+      const produto = await useCase.execute({ id, ...parsed.data });
+      return res.status(200).json(produto);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao editar produto de container");
     }
   }
 }

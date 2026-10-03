@@ -40,6 +40,13 @@ router.get(
   IbcController.listProdutos,
 );
 
+router.patch(
+  "/produtos/:id",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcController.updateProduto,
+);
+
 router.post(
   "/lote",
   authMiddleware,

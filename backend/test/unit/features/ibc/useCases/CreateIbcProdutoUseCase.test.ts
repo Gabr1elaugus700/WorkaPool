@@ -23,6 +23,9 @@ function createRepository(): IIbcProdutoRepository & { created: CreateIbcProduto
     async findById(): Promise<IbcProdutoRecord | null> {
       return null;
     },
+    async updateById(): Promise<IbcProdutoRecord> {
+      throw new Error("not used");
+    },
   };
 }
 

@@ -5,4 +5,8 @@ export const IbcProdutoHttpSchemas = {
     nome: z.string().trim().min(1),
     abreviacao: z.string().trim().min(1).max(2),
   }),
+  update: z.object({
+    nome: z.string().trim().min(1),
+    abreviacao: z.string().trim().min(1).max(2),
+  }),
 } as const;

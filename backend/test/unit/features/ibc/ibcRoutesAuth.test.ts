@@ -163,6 +163,9 @@ test("IBC Routes - autenticação e autorização", async (t) => {
       .post("/api/ibc/produtos")
       .send({ nome: "Soda", abreviacao: "S" });
     const listProdutos = await request(app).get("/api/ibc/produtos");
+    const updateProduto = await request(app)
+      .patch("/api/ibc/produtos/prod-1")
+      .send({ nome: "Soda A", abreviacao: "SA" });
 
     assert.strictEqual(create.status, 401);
     assert.strictEqual(createLote.status, 401);
@@ -172,6 +175,7 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(softDelete.status, 401);
     assert.strictEqual(createProduto.status, 401);
     assert.strictEqual(listProdutos.status, 401);
+    assert.strictEqual(updateProduto.status, 401);
   });
 
   await t.test("LOGISTICA não pode mutar cadastro", async () => {
@@ -195,12 +199,17 @@ test("IBC Routes - autenticação e autorização", async (t) => {
       .post("/api/ibc/produtos")
       .set("Authorization", `Bearer ${token}`)
       .send({ nome: "Soda", abreviacao: "S" });
+    const updateProduto = await request(app)
+      .patch("/api/ibc/produtos/prod-1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: "Soda A", abreviacao: "SA" });
 
     assert.strictEqual(create.status, 403);
     assert.strictEqual(createLote.status, 403);
     assert.strictEqual(patch.status, 403);
     assert.strictEqual(softDelete.status, 403);
     assert.strictEqual(createProduto.status, 403);
+    assert.strictEqual(updateProduto.status, 403);
   });
 
   await t.test("LOGISTICA pode ler pool, alerts e produtos", async () => {
