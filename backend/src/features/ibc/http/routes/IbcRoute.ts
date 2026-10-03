@@ -27,6 +27,20 @@ router.post(
 );
 
 router.post(
+  "/produtos",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcController.createProduto,
+);
+
+router.get(
+  "/produtos",
+  authMiddleware,
+  requireRoles(ibcReadRoles),
+  IbcController.listProdutos,
+);
+
+router.post(
   "/lote",
   authMiddleware,
   requireRoles(ibcWriteRoles),

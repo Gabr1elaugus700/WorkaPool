@@ -38,3 +38,11 @@ export type CreateNovoIbcData = {
   dataLimite: Date;
   loteId?: string | null;
 };
+
+export type IbcProdutoRecord = {
+  id: string;
+  nome: string;
+  abreviacao: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
