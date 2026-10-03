@@ -1,7 +1,9 @@
 import {
+  CreateDerivedIbcData,
   CreateIbcLoteData,
   CreateNovoIbcData,
   IbcCadastroRecord,
+  IbcConversionHistoryRecord,
   IbcLoteRecord,
 } from "../types/IbcCadastro.types";
 
@@ -10,8 +12,20 @@ export type ListIbcsOptions = {
 };
 
 export interface IIbcCadastroRepository {
-  findHighestIdentificador(): Promise<string | null>;
-  createNovoIbc(data: CreateNovoIbcData): Promise<IbcCadastroRecord>;
+  /**
+   * Aloca `quantidade` sequenciais livres de `data.prefixo` e persiste os IBCs
+   * numa única transação serializada por prefixo.
+   */
+  createNovoIbcs(
+    data: CreateNovoIbcData,
+    quantidade: number,
+  ): Promise<IbcCadastroRecord[]>;
+  /**
+   * Cria o IBC destino no próximo sequencial de `data.prefixo`, vincula a origem
+   * (`convertedToContainerId`) e grava o histórico, tudo na mesma transação.
+   */
+  createDerivedIbcFromSource(data: CreateDerivedIbcData): Promise<IbcCadastroRecord>;
+  listConversionHistory(ibcId: string): Promise<IbcConversionHistoryRecord[]>;
   createIbcLote(data: CreateIbcLoteData): Promise<IbcLoteRecord>;
   listActiveIbcs(): Promise<IbcCadastroRecord[]>;
   listIbcs(options: ListIbcsOptions): Promise<IbcCadastroRecord[]>;

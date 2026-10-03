@@ -27,6 +27,27 @@ router.post(
 );
 
 router.post(
+  "/produtos",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcController.createProduto,
+);
+
+router.get(
+  "/produtos",
+  authMiddleware,
+  requireRoles(ibcReadRoles),
+  IbcController.listProdutos,
+);
+
+router.patch(
+  "/produtos/:id",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcController.updateProduto,
+);
+
+router.post(
   "/lote",
   authMiddleware,
   requireRoles(ibcWriteRoles),
@@ -52,6 +73,27 @@ router.patch(
   authMiddleware,
   requireRoles(ibcWriteRoles),
   IbcController.patchDataLimite,
+);
+
+router.get(
+  "/:id/historico",
+  authMiddleware,
+  requireRoles(ibcReadRoles),
+  IbcController.listHistorico,
+);
+
+router.patch(
+  "/:id/converter-nao-homologado",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcController.convertToNaoHomologado,
+);
+
+router.patch(
+  "/:id/produto",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcController.changeProduto,
 );
 
 router.delete(

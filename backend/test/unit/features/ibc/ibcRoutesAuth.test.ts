@@ -159,6 +159,19 @@ test("IBC Routes - autenticação e autorização", async (t) => {
       .patch("/api/ibc/ibc-1")
       .send({ dataLimite: "2099-12-31" });
     const softDelete = await request(app).delete("/api/ibc/ibc-1");
+    const createProduto = await request(app)
+      .post("/api/ibc/produtos")
+      .send({ nome: "Soda", abreviacao: "S" });
+    const listProdutos = await request(app).get("/api/ibc/produtos");
+    const updateProduto = await request(app)
+      .patch("/api/ibc/produtos/prod-1")
+      .send({ nome: "Soda A", abreviacao: "SA" });
+    const convertStatus = await request(app)
+      .patch("/api/ibc/ibc-1/converter-nao-homologado")
+      .send({ confirmado: true });
+    const changeProduto = await request(app)
+      .patch("/api/ibc/ibc-1/produto")
+      .send({ produtoId: "8d7f903e-f53d-4c62-80b2-48f3c9655d71", confirmado: true });
 
     assert.strictEqual(create.status, 401);
     assert.strictEqual(createLote.status, 401);
@@ -166,6 +179,11 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(alerts.status, 401);
     assert.strictEqual(patch.status, 401);
     assert.strictEqual(softDelete.status, 401);
+    assert.strictEqual(createProduto.status, 401);
+    assert.strictEqual(listProdutos.status, 401);
+    assert.strictEqual(updateProduto.status, 401);
+    assert.strictEqual(convertStatus.status, 401);
+    assert.strictEqual(changeProduto.status, 401);
   });
 
   await t.test("LOGISTICA não pode mutar cadastro", async () => {
@@ -185,14 +203,88 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     const softDelete = await request(app)
       .delete("/api/ibc/ibc-1")
       .set("Authorization", `Bearer ${token}`);
+    const createProduto = await request(app)
+      .post("/api/ibc/produtos")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: "Soda", abreviacao: "S" });
+    const updateProduto = await request(app)
+      .patch("/api/ibc/produtos/prod-1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: "Soda A", abreviacao: "SA" });
+    const convertStatus = await request(app)
+      .patch("/api/ibc/ibc-1/converter-nao-homologado")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ confirmado: true });
+    const changeProduto = await request(app)
+      .patch("/api/ibc/ibc-1/produto")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ produtoId: "8d7f903e-f53d-4c62-80b2-48f3c9655d71", confirmado: true });
 
     assert.strictEqual(create.status, 403);
     assert.strictEqual(createLote.status, 403);
     assert.strictEqual(patch.status, 403);
     assert.strictEqual(softDelete.status, 403);
+    assert.strictEqual(createProduto.status, 403);
+    assert.strictEqual(updateProduto.status, 403);
+    assert.strictEqual(convertStatus.status, 403);
+    assert.strictEqual(changeProduto.status, 403);
   });
 
-  await t.test("LOGISTICA pode ler pool e alerts", async () => {
+  await t.test("GET /:id/historico sem token retorna 401 e VENDAS retorna 403", async () => {
+    const anonymous = await request(app).get("/api/ibc/ibc-1/historico");
+    const vendas = await request(app)
+      .get("/api/ibc/ibc-1/historico")
+      .set("Authorization", `Bearer ${createToken("VENDAS")}`);
+
+    assert.strictEqual(anonymous.status, 401);
+    assert.strictEqual(vendas.status, 403);
+  });
+
+  await t.test("VENDAS e USER não podem converter nem mudar produto", async () => {
+    for (const role of ["VENDAS", "USER"]) {
+      const token = createToken(role);
+      const convertStatus = await request(app)
+        .patch("/api/ibc/ibc-1/converter-nao-homologado")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ confirmado: true });
+      const changeProduto = await request(app)
+        .patch("/api/ibc/ibc-1/produto")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ produtoId: "8d7f903e-f53d-4c62-80b2-48f3c9655d71", confirmado: true });
+
+      assert.strictEqual(convertStatus.status, 403);
+      assert.strictEqual(changeProduto.status, 403);
+    }
+  });
+
+  await t.test("mutação sem confirmação é rejeitada antes de tocar o banco", async () => {
+    const token = createToken("ALMOX");
+    const convertWithoutFlag = await request(app)
+      .patch("/api/ibc/ibc-1/converter-nao-homologado")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ observacao: "sem confirmar" });
+    const convertFalse = await request(app)
+      .patch("/api/ibc/ibc-1/converter-nao-homologado")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ confirmado: false });
+    const changeWithoutFlag = await request(app)
+      .patch("/api/ibc/ibc-1/produto")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ produtoId: "8d7f903e-f53d-4c62-80b2-48f3c9655d71" });
+    const observacaoLonga = await request(app)
+      .patch("/api/ibc/ibc-1/converter-nao-homologado")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ confirmado: true, observacao: "x".repeat(501) });
+
+    assert.strictEqual(convertWithoutFlag.status, 400);
+    assert.strictEqual(convertWithoutFlag.body.code, "IBC_STATUS_CONFIRMATION_REQUIRED");
+    assert.strictEqual(convertFalse.status, 400);
+    assert.strictEqual(changeWithoutFlag.status, 400);
+    assert.strictEqual(changeWithoutFlag.body.code, "IBC_PRODUCT_CHANGE_CONFIRMATION_REQUIRED");
+    assert.strictEqual(observacaoLonga.status, 400);
+  });
+
+  await t.test("LOGISTICA pode ler pool, alerts e produtos", async () => {
     const token = createToken("LOGISTICA");
     const list = await request(app)
       .get("/api/ibc")
@@ -200,10 +292,15 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     const alerts = await request(app)
       .get("/api/ibc/alerts")
       .set("Authorization", `Bearer ${token}`);
+    const produtos = await request(app)
+      .get("/api/ibc/produtos")
+      .set("Authorization", `Bearer ${token}`);
 
     assert.notStrictEqual(list.status, 401);
     assert.notStrictEqual(list.status, 403);
     assert.notStrictEqual(alerts.status, 401);
     assert.notStrictEqual(alerts.status, 403);
+    assert.notStrictEqual(produtos.status, 401);
+    assert.notStrictEqual(produtos.status, 403);
   });
 });

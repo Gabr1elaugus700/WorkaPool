@@ -1,10 +1,15 @@
 import { apiFetchJson } from "@/lib/apiFetch";
 import type {
+  ChangeIbcProdutoInput,
+  IbcHistoricoDTO,
+  IbcMudancaConfirmacaoInput,
+  CreateIbcProdutoInput,
   CreateLoteIbcInput,
   CreateLoteIbcResultDTO,
   CreateNovoIbcInput,
   IbcAlertDTO,
   IbcCadastroDTO,
+  IbcProdutoDTO,
 } from "../types/ibcCadastro.types";
 
 export const ibcCadastroService = {
@@ -27,4 +32,43 @@ export const ibcCadastroService = {
 
   listAlerts: (): Promise<IbcAlertDTO[]> =>
     apiFetchJson<IbcAlertDTO[]>("/api/ibc/alerts"),
+
+  listProdutos: (): Promise<IbcProdutoDTO[]> =>
+    apiFetchJson<IbcProdutoDTO[]>("/api/ibc/produtos"),
+
+  createProduto: (input: CreateIbcProdutoInput): Promise<IbcProdutoDTO> =>
+    apiFetchJson<IbcProdutoDTO>("/api/ibc/produtos", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+
+  updateProduto: (
+    id: string,
+    input: CreateIbcProdutoInput,
+  ): Promise<IbcProdutoDTO> =>
+    apiFetchJson<IbcProdutoDTO>(`/api/ibc/produtos/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+
+  convertToNaoHomologado: (
+    id: string,
+    input: IbcMudancaConfirmacaoInput,
+  ): Promise<IbcCadastroDTO> =>
+    apiFetchJson<IbcCadastroDTO>(`/api/ibc/${id}/converter-nao-homologado`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+
+  changeProduto: (
+    id: string,
+    input: ChangeIbcProdutoInput,
+  ): Promise<IbcCadastroDTO> =>
+    apiFetchJson<IbcCadastroDTO>(`/api/ibc/${id}/produto`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+
+  listHistorico: (id: string): Promise<IbcHistoricoDTO[]> =>
+    apiFetchJson<IbcHistoricoDTO[]>(`/api/ibc/${id}/historico`),
 };
