@@ -15,4 +15,8 @@ export const IbcCadastroHttpSchemas = {
     dataLimite: z.coerce.date(),
     identificador: z.string().optional(),
   }),
+  convertToNaoHomologado: z.object({
+    confirmado: z.literal(true),
+    observacao: z.string().trim().min(1).max(500).optional().nullable(),
+  }),
 } as const;

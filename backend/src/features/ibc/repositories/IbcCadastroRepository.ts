@@ -3,6 +3,7 @@ import prismaInstance from "../../../config/prisma";
 import { AppError } from "../../../utils/AppError";
 import { formatIbcIdentifier } from "../services/formatIbcIdentifier";
 import {
+  CreateDerivedIbcData,
   CreateIbcLoteData,
   CreateNovoIbcData,
   IbcCadastroRecord,
@@ -27,6 +28,7 @@ type IbcRow = {
   createdAt: Date;
   loteId?: string | null;
   produtoId?: string | null;
+  convertedToContainerId?: string | null;
 };
 
 function isUniqueViolation(err: unknown): boolean {
@@ -93,6 +95,59 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
           orderBy: { sequencial: "asc" },
         });
         return rows.map((row) => this.toRecord(row));
+      }),
+    );
+  }
+
+  async createDerivedIbcFromSource(
+    data: CreateDerivedIbcData,
+  ): Promise<IbcCadastroRecord> {
+    return this.withUniqueGuard(data.prefixo, () =>
+      this.prisma.$transaction(async (tx) => {
+        const source = await tx.ibc.findUnique({
+          where: { id: data.sourceIbcId },
+        });
+
+        if (!source) {
+          throw new AppError({
+            message: "IBC não encontrado",
+            statusCode: 404,
+            code: "IBC_NOT_FOUND",
+            details: { id: data.sourceIbcId },
+          });
+        }
+
+        const sequencial = await this.reserveSequencial(tx, data.prefixo);
+        const created = await tx.ibc.create({
+          data: {
+            identificador: formatIbcIdentifier(data.prefixo, sequencial),
+            prefixo: data.prefixo,
+            sequencial,
+            aptidao: source.aptidao,
+            custodia: source.custodia,
+            tipoCadastro: source.tipoCadastro,
+            aquisicao: source.aquisicao,
+            motivoInaptidao: source.motivoInaptidao,
+            dataLimite: source.dataLimite,
+            produtoId: data.produtoId,
+          },
+        });
+
+        await tx.ibc.update({
+          where: { id: source.id },
+          data: { convertedToContainerId: created.id },
+        });
+        await tx.ibcConversionHistory.create({
+          data: {
+            fromContainerId: source.id,
+            toContainerId: created.id,
+            changeType: data.changeType,
+            actorId: data.actorId,
+            observation: data.observation,
+          },
+        });
+
+        return this.toRecord(created);
       }),
     );
   }
@@ -212,6 +267,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
       createdAt: row.createdAt,
       loteId: row.loteId ?? null,
       produtoId: row.produtoId ?? null,
+      convertedToContainerId: row.convertedToContainerId ?? null,
     };
   }
 }
