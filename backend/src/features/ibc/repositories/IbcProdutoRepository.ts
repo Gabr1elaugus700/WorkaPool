@@ -4,6 +4,7 @@ import { AppError } from "../../../utils/AppError";
 import {
   CreateIbcProdutoData,
   IIbcProdutoRepository,
+  UpdateIbcProdutoData,
 } from "./IIbcProdutoRepository";
 import { IbcProdutoRecord } from "../types/IbcCadastro.types";
 
@@ -34,6 +35,22 @@ export class IbcProdutoRepository implements IIbcProdutoRepository {
   async findById(id: string): Promise<IbcProdutoRecord | null> {
     const row = await this.prisma.ibcProduto.findUnique({ where: { id } });
     return row ? this.toRecord(row) : null;
+  }
+
+  async updateById(
+    id: string,
+    data: UpdateIbcProdutoData,
+  ): Promise<IbcProdutoRecord> {
+    try {
+      const updated = await this.prisma.ibcProduto.update({
+        where: { id },
+        data,
+      });
+      return this.toRecord(updated);
+    } catch (error: unknown) {
+      this.handlePersistenceError(error);
+      throw error;
+    }
   }
 
   private handlePersistenceError(error: unknown): never | void {
