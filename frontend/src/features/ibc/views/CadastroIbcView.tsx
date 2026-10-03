@@ -16,8 +16,16 @@ import CadastroIbcPoolList from "../components/CadastroIbcPoolList";
 import CadastroIbcAlertsPanel from "../components/CadastroIbcAlertsPanel";
 import CadastroIbcSectionError from "../components/CadastroIbcSectionError";
 import CadastroIbcSectionSkeleton from "../components/CadastroIbcSectionSkeleton";
+import ConfirmarMudancaIbcModal, {
+  type IbcMudancaModo,
+} from "../components/ConfirmarMudancaIbcModal";
+import IbcHistoricoDrawer from "../components/IbcHistoricoDrawer";
+import { useIbcConversao, useIbcHistorico } from "../hooks/useIbcConversao";
 import { ibcCadastroService } from "../services/ibcCadastroService";
-import type { CreateLoteIbcResultDTO } from "../types/ibcCadastro.types";
+import type {
+  CreateLoteIbcResultDTO,
+  IbcCadastroDTO,
+} from "../types/ibcCadastro.types";
 import { canAccessIbcCadastro } from "../utils/canAccessIbcCadastro";
 import { toError } from "../utils/toError";
 
@@ -30,6 +38,13 @@ export default function CadastroIbcView() {
   const allowed = canAccessIbcCadastro(user?.role);
   const queryClient = useQueryClient();
   const [mode, setMode] = useState<CadastroIbcMode>("unitario");
+  const [mudanca, setMudanca] = useState<{
+    ibc: IbcCadastroDTO;
+    modo: IbcMudancaModo;
+  } | null>(null);
+  const [historicoIbc, setHistoricoIbc] = useState<IbcCadastroDTO | null>(null);
+  const conversao = useIbcConversao();
+  const historicoQuery = useIbcHistorico(historicoIbc?.id ?? null);
 
   const poolQuery = useQuery({
     queryKey: POOL_KEY,
@@ -119,8 +134,9 @@ export default function CadastroIbcView() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Cadastro IBC</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Novo IBC nasce Inapto / Aguardando inspeção com identificador HM
-            automático. Lote de compra gera N unidades com a mesma data limite.
+            Novo IBC nasce Inapto / Aguardando inspeção com identificador HM +
+            letra do produto. Lote de compra gera N unidades com a mesma data
+            limite. Conversão e mudança de produto criam um novo registro.
           </p>
         </div>
 
@@ -249,10 +265,46 @@ export default function CadastroIbcView() {
               }}
             />
           ) : (
-            <CadastroIbcPoolList items={poolQuery.data ?? []} />
+            <CadastroIbcPoolList
+              items={poolQuery.data ?? []}
+              actionsDisabled={conversao.isPending}
+              onConverter={(ibc) => setMudanca({ ibc, modo: "conversion" })}
+              onMudarProduto={(ibc) => setMudanca({ ibc, modo: "product_change" })}
+              onVerHistorico={setHistoricoIbc}
+            />
           )}
         </section>
       </div>
+      {mudanca ? (
+        <ConfirmarMudancaIbcModal
+          key={`${mudanca.ibc.id}-${mudanca.modo}`}
+          ibc={mudanca.ibc}
+          modo={mudanca.modo}
+          produtos={produtos}
+          submitting={conversao.isPending}
+          onClose={() => setMudanca(null)}
+          onConfirm={async ({ confirmacao, produtoId }) => {
+            if (mudanca.modo === "product_change" && produtoId) {
+              await conversao.mudarProduto(mudanca.ibc.id, { ...confirmacao, produtoId });
+            } else {
+              await conversao.converter(mudanca.ibc.id, confirmacao);
+            }
+            setMudanca(null);
+          }}
+        />
+      ) : null}
+      {historicoIbc ? (
+        <IbcHistoricoDrawer
+          identificador={historicoIbc.identificador}
+          eventos={historicoQuery.data ?? []}
+          isLoading={historicoQuery.isLoading}
+          errorMessage={historicoQuery.error ? toError(historicoQuery.error).message : null}
+          onRetry={() => {
+            void historicoQuery.refetch();
+          }}
+          onClose={() => setHistoricoIbc(null)}
+        />
+      ) : null}
     </DefaultLayout>
   );
 }
