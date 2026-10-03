@@ -51,3 +51,16 @@ export type CreateLoteIbcResultDTO = {
   lote: IbcLoteDTO;
   warning?: LoteSaldoWarningDTO;
 };
+
+export type IbcProdutoDTO = {
+  id: string;
+  nome: string;
+  abreviacao: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateIbcProdutoInput = {
+  nome: string;
+  abreviacao: string;
+};

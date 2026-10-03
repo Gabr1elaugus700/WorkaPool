@@ -7,6 +7,7 @@ import { useAuth } from "@/auth/AuthContext";
 import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
 import CadastroIbcForm from "../components/CadastroIbcForm";
 import CadastroIbcLoteForm from "../components/CadastroIbcLoteForm";
+import CadastroProdutoModal from "../components/CadastroProdutoModal";
 import CadastroIbcLoteWarningBanner from "../components/CadastroIbcLoteWarningBanner";
 import CadastroIbcModeSelector, {
   type CadastroIbcMode,
@@ -22,6 +23,7 @@ import { toError } from "../utils/toError";
 
 const POOL_KEY = ["ibc", "pool"] as const;
 const ALERTS_KEY = ["ibc", "alerts"] as const;
+const PRODUTOS_KEY = ["ibc", "produtos"] as const;
 
 export default function CadastroIbcView() {
   const { user } = useAuth();
@@ -37,6 +39,11 @@ export default function CadastroIbcView() {
   const alertsQuery = useQuery({
     queryKey: ALERTS_KEY,
     queryFn: ibcCadastroService.listAlerts,
+    enabled: allowed,
+  });
+  const produtosQuery = useQuery({
+    queryKey: PRODUTOS_KEY,
+    queryFn: ibcCadastroService.listProdutos,
     enabled: allowed,
   });
 
@@ -69,6 +76,29 @@ export default function CadastroIbcView() {
     },
   });
 
+  const createProdutoMutation = useMutation({
+    mutationFn: ibcCadastroService.createProduto,
+    onSuccess: async (created) => {
+      toast.success(`Produto ${created.nome} (${created.abreviacao}) cadastrado`);
+      await queryClient.invalidateQueries({ queryKey: PRODUTOS_KEY });
+    },
+    onError: (err) => {
+      toast.error(toError(err).message || "Falha ao cadastrar produto");
+    },
+  });
+
+  const updateProdutoMutation = useMutation({
+    mutationFn: ({ id, nome, abreviacao }: { id: string; nome: string; abreviacao: string }) =>
+      ibcCadastroService.updateProduto(id, { nome, abreviacao }),
+    onSuccess: async () => {
+      toast.success("Produto atualizado");
+      await queryClient.invalidateQueries({ queryKey: PRODUTOS_KEY });
+    },
+    onError: (err) => {
+      toast.error(toError(err).message || "Falha ao atualizar produto");
+    },
+  });
+
   if (!allowed) {
     return (
       <ExpedicaoIbcAccessDeniedAlert targetPhrase="o Cadastro IBC" />
@@ -97,6 +127,18 @@ export default function CadastroIbcView() {
           <h2 className="mb-3 text-base font-semibold tracking-tight">
             Novo IBC
           </h2>
+          <div className="mb-3">
+            <CadastroProdutoModal
+              produtos={produtosQuery.data ?? []}
+              disabled={submitting}
+              onCreate={async (input) => {
+                await createProdutoMutation.mutateAsync(input);
+              }}
+              onUpdate={async (id, input) => {
+                await updateProdutoMutation.mutateAsync({ id, ...input });
+              }}
+            />
+          </div>
           <CadastroIbcModeSelector
             mode={mode}
             disabled={submitting}
