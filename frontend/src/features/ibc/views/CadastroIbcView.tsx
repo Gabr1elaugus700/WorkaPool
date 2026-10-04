@@ -16,8 +16,15 @@ import CadastroIbcPoolList from "../components/CadastroIbcPoolList";
 import CadastroIbcAlertsPanel from "../components/CadastroIbcAlertsPanel";
 import CadastroIbcSectionError from "../components/CadastroIbcSectionError";
 import CadastroIbcSectionSkeleton from "../components/CadastroIbcSectionSkeleton";
+import ConfirmarMudancaIbcModal, {
+  type IbcMudancaModo,
+} from "../components/ConfirmarMudancaIbcModal";
+import { useIbcConversao } from "../hooks/useIbcConversao";
 import { ibcCadastroService } from "../services/ibcCadastroService";
-import type { CreateLoteIbcResultDTO } from "../types/ibcCadastro.types";
+import type {
+  CreateLoteIbcResultDTO,
+  IbcCadastroDTO,
+} from "../types/ibcCadastro.types";
 import { canAccessIbcCadastro } from "../utils/canAccessIbcCadastro";
 import { toError } from "../utils/toError";
 
@@ -30,6 +37,11 @@ export default function CadastroIbcView() {
   const allowed = canAccessIbcCadastro(user?.role);
   const queryClient = useQueryClient();
   const [mode, setMode] = useState<CadastroIbcMode>("unitario");
+  const [mudanca, setMudanca] = useState<{
+    ibc: IbcCadastroDTO;
+    modo: IbcMudancaModo;
+  } | null>(null);
+  const conversao = useIbcConversao();
 
   const poolQuery = useQuery({
     queryKey: POOL_KEY,
@@ -51,6 +63,7 @@ export default function CadastroIbcView() {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: POOL_KEY }),
       queryClient.invalidateQueries({ queryKey: ALERTS_KEY }),
+      queryClient.invalidateQueries({ queryKey: PRODUTOS_KEY }),
     ]);
   };
 
@@ -80,7 +93,7 @@ export default function CadastroIbcView() {
     mutationFn: ibcCadastroService.createProduto,
     onSuccess: async (created) => {
       toast.success(`Produto ${created.nome} (${created.abreviacao}) cadastrado`);
-      await queryClient.invalidateQueries({ queryKey: PRODUTOS_KEY });
+      await invalidateLists();
     },
     onError: (err) => {
       toast.error(toError(err).message || "Falha ao cadastrar produto");
@@ -92,7 +105,7 @@ export default function CadastroIbcView() {
       ibcCadastroService.updateProduto(id, { nome, abreviacao }),
     onSuccess: async () => {
       toast.success("Produto atualizado");
-      await queryClient.invalidateQueries({ queryKey: PRODUTOS_KEY });
+      await invalidateLists();
     },
     onError: (err) => {
       toast.error(toError(err).message || "Falha ao atualizar produto");
@@ -121,7 +134,7 @@ export default function CadastroIbcView() {
           <p className="mt-1 text-sm text-muted-foreground">
             Novo IBC nasce Inapto / Aguardando inspeção com identificador HM +
             letra do produto. Lote de compra gera N unidades com a mesma data
-            limite.
+            limite. Conversão e mudança de produto criam um novo registro.
           </p>
         </div>
 
@@ -247,10 +260,36 @@ export default function CadastroIbcView() {
               }}
             />
           ) : (
-            <CadastroIbcPoolList items={poolQuery.data ?? []} />
+            <CadastroIbcPoolList
+              items={poolQuery.data ?? []}
+              actionsDisabled={conversao.isPending}
+              onConverter={(ibc) => setMudanca({ ibc, modo: "conversion" })}
+              onMudarProduto={(ibc) => setMudanca({ ibc, modo: "product_change" })}
+            />
           )}
         </section>
       </div>
+      {mudanca ? (
+        <ConfirmarMudancaIbcModal
+          key={`${mudanca.ibc.id}-${mudanca.modo}`}
+          ibc={mudanca.ibc}
+          modo={mudanca.modo}
+          produtos={produtos}
+          submitting={conversao.isPending}
+          onClose={() => setMudanca(null)}
+          onConfirm={async ({ confirmacao, produtoId }) => {
+            if (mudanca.modo === "product_change" && produtoId) {
+              await conversao.mudarProduto(mudanca.ibc.id, {
+                ...confirmacao,
+                produtoId,
+              });
+            } else {
+              await conversao.converter(mudanca.ibc.id, confirmacao);
+            }
+            setMudanca(null);
+          }}
+        />
+      ) : null}
     </DefaultLayout>
   );
 }
