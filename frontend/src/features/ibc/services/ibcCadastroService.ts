@@ -7,6 +7,7 @@ import type {
   CreateNovoIbcInput,
   IbcAlertDTO,
   IbcCadastroDTO,
+  IbcHistoricoDTO,
   IbcMudancaConfirmacaoInput,
   IbcProdutoDTO,
 } from "../types/ibcCadastro.types";
@@ -67,4 +68,7 @@ export const ibcCadastroService = {
       method: "PATCH",
       body: JSON.stringify(input),
     }),
+
+  listHistorico: (id: string): Promise<IbcHistoricoDTO[]> =>
+    apiFetchJson<IbcHistoricoDTO[]>(`/api/ibc/${id}/historico`),
 };

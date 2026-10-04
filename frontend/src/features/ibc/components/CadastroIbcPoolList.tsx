@@ -9,6 +9,7 @@ type Props = {
   actionsDisabled?: boolean;
   onConverter: (ibc: IbcCadastroDTO) => void;
   onMudarProduto: (ibc: IbcCadastroDTO) => void;
+  onVerHistorico: (ibc: IbcCadastroDTO) => void;
 };
 
 function formatDataLimite(value: string | null): string {
@@ -21,6 +22,7 @@ export default function CadastroIbcPoolList({
   actionsDisabled = false,
   onConverter,
   onMudarProduto,
+  onVerHistorico,
 }: Props) {
   if (items.length === 0) {
     return (
@@ -79,6 +81,14 @@ export default function CadastroIbcPoolList({
               onClick={() => onMudarProduto(ibc)}
             >
               Mudar produto
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => onVerHistorico(ibc)}
+            >
+              Histórico
             </Button>
           </div>
         </li>
