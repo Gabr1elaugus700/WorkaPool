@@ -52,6 +52,22 @@ Usar só o DTO atual:
 
 Vendedor: sempre nome (`sellerName` → `repShortName` → `codRep`). Nunca badge “Você”.
 
+Campos sem coluna própria na tabela (T4):
+
+- `productCode` / `productName`: a tabela é de um único produto; o chip INSUMO selecionado já mostra qual.
+- `situation`: só vale 9 ou 5 e repete `outcome`; aparece como subtítulo do pedido (“Faturado” / “Sem fechamento”).
+- `carrierCode` / `freightIncluded`: subtítulo da coluna Frete.
+- `customerTradeName`: subtítulo do vendedor, só em linhas de outro cliente.
+- `codRep`: usado como último fallback do nome e no filtro de vendedor.
+
+### Benchmark (T5)
+
+Barra abaixo da tabela, calculada sobre as rows **já filtradas** (reveal, busca, vendedor, status):
+
+- Preço médio ganho / perdido: ponderado por volume, `soma(lineAmount) / soma(quantity)` por `outcome`. Inclui linhas de outro cliente quando visíveis.
+- Spread: perdido − ganho, em R$/kg e em % sobre o ganho.
+- Lado sem volume → “—”; spread só com os dois lados; % omitido se o ganho for zero.
+
 ### Fora de escopo
 
 - Coluna Ações; exportar relatório; NF-e; filial do vendedor

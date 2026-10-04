@@ -4,13 +4,13 @@ import { describe, it } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { OverviewCustomerGroupQuoteRow } from "../../types/overviewCustomerGroupQuotes.types";
 import {
+  OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_FILTERED,
   OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_PRODUCTS,
   OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_ROWS,
   OVERVIEW_CUSTOMER_GROUP_QUOTES_ERROR,
-  OVERVIEW_CUSTOMER_GROUP_QUOTES_REVEAL_OFF,
-  OVERVIEW_CUSTOMER_GROUP_QUOTES_REVEAL_ON,
   OverviewCustomerGroupQuoteColumn,
 } from "./OverviewCustomerGroupQuoteColumn";
+import { OVERVIEW_CUSTOMER_GROUP_QUOTES_TITLE } from "./OverviewCustomerGroupQuotesHeader";
 
 function sampleRow(
   overrides: Partial<OverviewCustomerGroupQuoteRow> = {},
@@ -46,8 +46,9 @@ function sampleRow(
 const baseProps = {
   products: [{ productCode: "P001", productName: "Produto 1" }],
   selectedProductCode: "P001",
-  selectedProductName: "Produto 1",
   rows: [] as OverviewCustomerGroupQuoteRow[],
+  summaryCounts: { todas: 0, ganhas: 0, perdidas: 0, outros: 0 },
+  otherCustomerCount: 0,
   isLoading: false,
   isError: false,
   revealAvailable: false,
@@ -77,7 +78,6 @@ describe("OverviewCustomerGroupQuoteColumn", () => {
         ...baseProps,
         products: [],
         selectedProductCode: null,
-        selectedProductName: null,
       }),
     );
 
@@ -97,6 +97,35 @@ describe("OverviewCustomerGroupQuoteColumn", () => {
     assert.match(markup, /Produto 1/);
   });
 
+  it("shows the filters toolbar and filtered empty copy when filters hide every row", () => {
+    const markup = renderToStaticMarkup(
+      React.createElement(OverviewCustomerGroupQuoteColumn, {
+        ...baseProps,
+        rows: [],
+        hasUnfilteredRows: true,
+        filtersToolbar: React.createElement("div", null, "toolbar-slot"),
+      }),
+    );
+
+    assert.match(markup, /toolbar-slot/);
+    assert.match(markup, new RegExp(OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_FILTERED));
+    assert.doesNotMatch(markup, new RegExp(OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_ROWS));
+  });
+
+  it("hides the filters toolbar when the product has no quotes", () => {
+    const markup = renderToStaticMarkup(
+      React.createElement(OverviewCustomerGroupQuoteColumn, {
+        ...baseProps,
+        rows: [],
+        hasUnfilteredRows: false,
+        filtersToolbar: React.createElement("div", null, "toolbar-slot"),
+      }),
+    );
+
+    assert.doesNotMatch(markup, /toolbar-slot/);
+    assert.match(markup, new RegExp(OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_ROWS));
+  });
+
   it("shows error with retry and not empty copy", () => {
     const markup = renderToStaticMarkup(
       React.createElement(OverviewCustomerGroupQuoteColumn, {
@@ -110,7 +139,7 @@ describe("OverviewCustomerGroupQuoteColumn", () => {
     assert.doesNotMatch(markup, new RegExp(OVERVIEW_CUSTOMER_GROUP_QUOTES_EMPTY_ROWS));
   });
 
-  it("renders own and revealed rows without the legacy two-card titles", () => {
+  it("renders own and revealed rows in the table without the legacy two-card titles", () => {
     const markup = renderToStaticMarkup(
       React.createElement(OverviewCustomerGroupQuoteColumn, {
         ...baseProps,
@@ -134,19 +163,92 @@ describe("OverviewCustomerGroupQuoteColumn", () => {
       }),
     );
 
-    assert.match(markup, /Pedido 10/);
-    assert.match(markup, /Pedido 20/);
+    assert.match(markup, /<table/);
+    assert.equal(markup.match(/data-tone=/g)?.length, 3);
+    assert.match(markup, />10</);
+    assert.match(markup, />20</);
     assert.match(markup, /Cliente B/);
-    assert.match(markup, new RegExp(OVERVIEW_CUSTOMER_GROUP_QUOTES_REVEAL_OFF));
+    assert.match(markup, /<tbody[^>]*><tr[^>]*data-tone=/);
     assert.doesNotMatch(markup, /Ganhos: Notas Faturadas/);
     assert.doesNotMatch(markup, /Perdidos: Cotações Sem Fechamento/);
+    assert.doesNotMatch(markup, /Você/);
   });
 
-  it("hides reveal button for VENDAS and shows reveal label when available and off", () => {
+  it("renders title, legend and product chips with the selected one marked", () => {
+    const markup = renderToStaticMarkup(
+      React.createElement(OverviewCustomerGroupQuoteColumn, {
+        ...baseProps,
+        products: [
+          { productCode: "P001", productName: "Produto 1" },
+          { productCode: "P002", productName: "Produto 2" },
+        ],
+        rows: [sampleRow()],
+      }),
+    );
+
+    assert.ok(markup.includes(OVERVIEW_CUSTOMER_GROUP_QUOTES_TITLE.replace("&", "&amp;")));
+    assert.match(markup, /Insumo/);
+    assert.match(markup, /aria-selected="true"[^>]*>.*?P001/);
+    assert.match(markup, /aria-selected="false"[^>]*>.*?P002/);
+    assert.match(markup, /Ganha</);
+    assert.match(markup, /Perdida</);
+    assert.match(markup, /Outro vendedor/);
+  });
+
+  it("renders the benchmark bar below the table without Ações or Você", () => {
+    const markup = renderToStaticMarkup(
+      React.createElement(OverviewCustomerGroupQuoteColumn, {
+        ...baseProps,
+        rows: [sampleRow()],
+        benchmark: {
+          wonAveragePrice: 10,
+          lostAveragePrice: 12,
+          spreadAmount: 2,
+          spreadPercent: 20,
+        },
+      }),
+    );
+
+    assert.match(markup, /<\/table>[\s\S]*Preço médio ganho/);
+    assert.match(markup, /Preço médio perdido/);
+    assert.match(markup, /Spread/);
+    assert.doesNotMatch(markup, /Ações/);
+    assert.doesNotMatch(markup, /Você/);
+  });
+
+  it("hides the benchmark bar when no row is left to compare", () => {
+    const benchmark = {
+      wonAveragePrice: null,
+      lostAveragePrice: null,
+      spreadAmount: null,
+      spreadPercent: null,
+    };
+    const empty = renderToStaticMarkup(
+      React.createElement(OverviewCustomerGroupQuoteColumn, {
+        ...baseProps,
+        rows: [],
+        benchmark,
+      }),
+    );
+    const filteredEmpty = renderToStaticMarkup(
+      React.createElement(OverviewCustomerGroupQuoteColumn, {
+        ...baseProps,
+        rows: [],
+        hasUnfilteredRows: true,
+        benchmark,
+      }),
+    );
+
+    assert.doesNotMatch(empty, /Preço médio/);
+    assert.doesNotMatch(filteredEmpty, /Preço médio/);
+  });
+
+  it("hides the reveal toggle for VENDAS and shows it with the other-customer count otherwise", () => {
     const withoutReveal = renderToStaticMarkup(
       React.createElement(OverviewCustomerGroupQuoteColumn, {
         ...baseProps,
         revealAvailable: false,
+        otherCustomerCount: 3,
         rows: [sampleRow()],
       }),
     );
@@ -155,14 +257,13 @@ describe("OverviewCustomerGroupQuoteColumn", () => {
         ...baseProps,
         revealAvailable: true,
         reveal: false,
+        otherCustomerCount: 3,
         rows: [sampleRow()],
       }),
     );
 
-    assert.doesNotMatch(
-      withoutReveal,
-      new RegExp(OVERVIEW_CUSTOMER_GROUP_QUOTES_REVEAL_ON),
-    );
-    assert.match(withReveal, new RegExp(OVERVIEW_CUSTOMER_GROUP_QUOTES_REVEAL_ON));
+    assert.doesNotMatch(withoutReveal, /Outros Vendedores/);
+    assert.match(withReveal, /Outros Vendedores/);
+    assert.match(withReveal, />3</);
   });
 });

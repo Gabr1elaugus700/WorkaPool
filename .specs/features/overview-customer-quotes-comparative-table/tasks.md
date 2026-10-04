@@ -11,10 +11,10 @@
 **Issue:** [#204](https://github.com/Gabr1elaugus700/WorkaPool/issues/204)  
 **Branch:** `feature/204-quotes-reveal-single-load`
 
-- [ ] ADMIN/GERENTE: fetch inicial com `reveal=true`; estado `revealVisible` só filtra exibição
-- [ ] Toggle reveal não muda query key / não refetch
-- [ ] VENDAS: sem reveal; sem botão
-- [ ] Testes hook/panel
+- [x] ADMIN/GERENTE: fetch inicial com `reveal=true`; estado `revealVisible` só filtra exibição
+- [x] Toggle reveal não muda query key / não refetch
+- [x] VENDAS: sem reveal; sem botão
+- [x] Testes hook/panel
 
 **Arquivos:** `OverviewCustomerGroupQuotesPanel.tsx`, `useOverviewCustomerGroupQuotes.ts`
 
@@ -25,11 +25,11 @@
 **Issue:** [#205](https://github.com/Gabr1elaugus700/WorkaPool/issues/205)  
 **Branch:** `feature/205-quotes-comparative-header-chips`
 
-- [ ] Título/descrição alinhados ao mock
-- [ ] Badges Total / Ganhas / Perdidas / Outros (sem “(Você)”)
-- [ ] Chips INSUMO com estado selecionado
-- [ ] Legenda Ganha / Perdida / Outro vendedor
-- [ ] Botão “Outros Vendedores (N): Visíveis|Ocultos” (só se role permitir)
+- [x] Título/descrição alinhados ao mock
+- [x] Badges Total / Ganhas / Perdidas / Outros (sem “(Você)”)
+- [x] Chips INSUMO com estado selecionado
+- [x] Legenda Ganha / Perdida / Outro vendedor
+- [x] Botão “Outros Vendedores (N): Visíveis|Ocultos” (só se role permitir)
 
 **Arquivos:** Column, ProductSelector → chips, summary badges
 
@@ -42,11 +42,11 @@
 **Issue:** [#206](https://github.com/Gabr1elaugus700/WorkaPool/issues/206)  
 **Branch:** `feature/206-quotes-comparative-filters`
 
-- [ ] Botões Todas | Ganhas | Perdidas | Outros (regras em context.md)
-- [ ] Busca por `orderNumber`
-- [ ] Dropdown vendedores por `codRep`
-- [ ] Utils puros + testes unitários
-- [ ] Layout da toolbar igual ao print
+- [x] Select de status Todos | Ganhas | Perdidas | Outros vendedores, com contagens (regras em context.md)
+- [x] Busca por `orderNumber`
+- [x] Dropdown vendedores por `codRep`
+- [x] Utils puros + testes unitários
+- [x] Layout da toolbar igual ao print (busca, vendedor, status)
 
 **Arquivos:** `frontend/src/features/overviewCustomer/utils/*`, toolbar component
 
@@ -57,13 +57,13 @@
 ## T4 — Tabela densa com todos os campos do DTO
 
 **Issue:** [#207](https://github.com/Gabr1elaugus700/WorkaPool/issues/207)  
-**Branch:** `feature/207-quotes-comparative-table`
+**Branch:** `feature/207-tabela-densa-cotacoes`
 
-- [ ] Substituir cards por tabela
-- [ ] Colunas: ID, Data, Vendedor, Volume, Preço, Valor, Margem, Custo, IPI, ICMS, ICMS %, Frete (+ transportadora / frete incluso se couber), Status & motivo
-- [ ] Sem Ações; sem “Você”; sem NF-e/filial inventados
-- [ ] Cores de linha ganha / perdida / outro
-- [ ] Testes de row/table
+- [x] Substituir cards por tabela
+- [x] Colunas: ID, Data, Vendedor, Volume, Preço, Valor, Margem, Custo, IPI, ICMS, ICMS %, Frete (+ transportadora / frete incluso se couber), Status & motivo
+- [x] Sem Ações; sem “Você”; sem NF-e/filial inventados
+- [x] Cores de linha ganha / perdida / outro
+- [x] Testes de row/table
 
 **Depende de:** T2 / T3
 
@@ -74,10 +74,10 @@
 **Issue:** [#208](https://github.com/Gabr1elaugus700/WorkaPool/issues/208)  
 **Branch:** `feature/208-quotes-comparative-benchmark-tests`
 
-- [ ] Barra: preço médio ganha / perdido / spread das rows filtradas
-- [ ] Suite cobrindo filtros, reveal sem refetch, contagens, ausência de Ações/“Você”
-- [ ] `npm test` (front tocado) + `npx tsc --noEmit --project tsconfig.app.json`
-- [ ] Não rodar production build
+- [x] Barra: preço médio ganha / perdido / spread das rows filtradas
+- [x] Suite cobrindo filtros, reveal sem refetch, contagens, ausência de Ações/“Você”
+- [x] `npm test` (front tocado) + `npx tsc --noEmit --project tsconfig.app.json`
+- [x] Não rodar production build
 
 **Depende de:** T1–T4
 
