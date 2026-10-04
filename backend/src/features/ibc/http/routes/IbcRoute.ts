@@ -75,6 +75,13 @@ router.patch(
   IbcController.patchDataLimite,
 );
 
+router.get(
+  "/:id/historico",
+  authMiddleware,
+  requireRoles(ibcReadRoles),
+  IbcController.listHistorico,
+);
+
 router.patch(
   "/:id/converter-nao-homologado",
   authMiddleware,
