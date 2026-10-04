@@ -1,6 +1,7 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import prismaInstance from "../../../config/prisma";
 import { AppError } from "../../../utils/AppError";
+import { ibcJaSubstituidoError } from "../services/assertIbcNotReplaced";
 import { formatIbcIdentifier } from "../services/formatIbcIdentifier";
 import {
   CreateDerivedIbcData,
@@ -149,10 +150,13 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
           },
         });
 
-        await tx.ibc.update({
-          where: { id: source.id },
+        const linked = await tx.ibc.updateMany({
+          where: { id: source.id, convertedToContainerId: null },
           data: { convertedToContainerId: created.id },
         });
+        if (linked.count === 0) {
+          throw ibcJaSubstituidoError({ identificador: source.identificador });
+        }
         await tx.ibcConversionHistory.create({
           data: {
             fromContainerId: source.id,
