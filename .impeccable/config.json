@@ -1,3 +1,15 @@
 {
-  "buildPath": "comp"
+  "buildPath": "comp",
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font-size",
+        "value": "10px",
+        "createdAt": "2026-10-04T19:34:28.929Z",
+        "reason": "pre-existing CadastroIbcPoolList badge size from epic/31 IBC cadastro; matching PR #243 reference"
+      }
+    ]
+  }
 }
