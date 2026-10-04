@@ -12,6 +12,18 @@ export type IbcCadastroDTO = {
   produtoId?: string | null;
   prefixo?: string | null;
   sequencial?: number | null;
+  convertedToContainerId?: string | null;
+};
+
+export type IbcMudancaTipo = "conversion" | "product_change" | "status_change";
+
+export type IbcMudancaConfirmacaoInput = {
+  confirmado: true;
+  observacao: string | null;
+};
+
+export type ChangeIbcProdutoInput = IbcMudancaConfirmacaoInput & {
+  produtoId: string;
 };
 
 export type IbcAlertDTO = {
