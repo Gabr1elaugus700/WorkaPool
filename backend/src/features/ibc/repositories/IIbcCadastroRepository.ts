@@ -3,6 +3,7 @@ import {
   CreateIbcLoteData,
   CreateNovoIbcData,
   IbcCadastroRecord,
+  IbcConversionHistoryRecord,
   IbcLoteRecord,
 } from "../types/IbcCadastro.types";
 
@@ -24,6 +25,7 @@ export interface IIbcCadastroRepository {
    * (`convertedToContainerId`) e grava o histórico, tudo na mesma transação.
    */
   createDerivedIbcFromSource(data: CreateDerivedIbcData): Promise<IbcCadastroRecord>;
+  listConversionHistory(ibcId: string): Promise<IbcConversionHistoryRecord[]>;
   createIbcLote(data: CreateIbcLoteData): Promise<IbcLoteRecord>;
   listActiveIbcs(): Promise<IbcCadastroRecord[]>;
   listIbcs(options: ListIbcsOptions): Promise<IbcCadastroRecord[]>;

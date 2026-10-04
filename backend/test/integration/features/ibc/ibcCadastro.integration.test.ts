@@ -399,6 +399,49 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     assert.equal(history, 0);
   });
 
+  it("GET historico exposes lineage with observation from both ends", async () => {
+    const app = createIbcTestApp();
+    const token = createToken(Role.ALMOX);
+    const produtoId = await createProduto(token, {
+      nome: `${FIXTURE_PREFIX}Historico`,
+      abreviacao: "HI",
+    });
+    const created = await request(app)
+      .post("/api/ibc")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ dataLimite: FUTURE_DATA_LIMITE, produtoId });
+    const converted = await request(app)
+      .patch(`/api/ibc/${created.body.id}/converter-nao-homologado`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ confirmado: true, observacao: "trinca na base" });
+    assert.equal(converted.status, 201);
+
+    for (const id of [created.body.id, converted.body.id]) {
+      const response = await request(app)
+        .get(`/api/ibc/${id}/historico`)
+        .set("Authorization", `Bearer ${createToken(Role.LOGISTICA, "ibc-log")}`);
+      assert.equal(response.status, 200);
+      assert.equal(response.body.length, 1);
+      const [evento] = response.body;
+      assert.equal(evento.changeType, "conversion");
+      assert.equal(evento.observation, "trinca na base");
+      assert.equal(evento.actorId, "ibc-cadastro-almox");
+      assert.deepEqual(evento.from, {
+        id: created.body.id,
+        identificador: created.body.identificador,
+      });
+      assert.deepEqual(evento.to, {
+        id: converted.body.id,
+        identificador: converted.body.identificador,
+      });
+    }
+
+    const missing = await request(app)
+      .get("/api/ibc/00000000-0000-0000-0000-000000000000/historico")
+      .set("Authorization", `Bearer ${token}`);
+    assert.equal(missing.status, 404);
+  });
+
   it("GET pool lists active IBCs and omits baixados by default", async () => {
     const app = createIbcTestApp();
     const token = createToken(Role.ALMOX);

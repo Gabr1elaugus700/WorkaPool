@@ -230,6 +230,16 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(changeProduto.status, 403);
   });
 
+  await t.test("GET /:id/historico sem token retorna 401 e VENDAS retorna 403", async () => {
+    const anonymous = await request(app).get("/api/ibc/ibc-1/historico");
+    const vendas = await request(app)
+      .get("/api/ibc/ibc-1/historico")
+      .set("Authorization", `Bearer ${createToken("VENDAS")}`);
+
+    assert.strictEqual(anonymous.status, 401);
+    assert.strictEqual(vendas.status, 403);
+  });
+
   await t.test("VENDAS e USER não podem converter nem mudar produto", async () => {
     for (const role of ["VENDAS", "USER"]) {
       const token = createToken(role);

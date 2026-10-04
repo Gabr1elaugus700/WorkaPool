@@ -7,7 +7,9 @@ import {
   CreateIbcLoteData,
   CreateNovoIbcData,
   IbcCadastroRecord,
+  IbcConversionHistoryRecord,
   IbcLoteRecord,
+  IbcStructuralChangeType,
 } from "../types/IbcCadastro.types";
 import {
   IIbcCadastroRepository,
@@ -30,6 +32,20 @@ type IbcRow = {
   produtoId?: string | null;
   convertedToContainerId?: string | null;
 };
+
+const STRUCTURAL_CHANGE_TYPES: readonly IbcStructuralChangeType[] = [
+  "conversion",
+  "product_change",
+  "status_change",
+];
+
+function toStructuralChangeType(value: string): IbcStructuralChangeType {
+  const match = STRUCTURAL_CHANGE_TYPES.find((type) => type === value);
+  if (!match) {
+    throw new Error(`Unknown IBC change type: ${value}`);
+  }
+  return match;
+}
 
 function isUniqueViolation(err: unknown): boolean {
   return (
@@ -150,6 +166,43 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
         return this.toRecord(created);
       }),
     );
+  }
+
+  async listConversionHistory(
+    ibcId: string,
+  ): Promise<IbcConversionHistoryRecord[]> {
+    const rows = await this.prisma.ibcConversionHistory.findMany({
+      where: {
+        OR: [{ fromContainerId: ibcId }, { toContainerId: ibcId }],
+      },
+      orderBy: { createdAt: "asc" },
+      include: {
+        fromContainer: { select: { id: true, identificador: true } },
+        toContainer: { select: { id: true, identificador: true } },
+      },
+    });
+
+    const actorIds = [...new Set(rows.map((row) => row.actorId))];
+    const actors = actorIds.length
+      ? await this.prisma.user.findMany({
+          where: { id: { in: actorIds } },
+          select: { id: true, name: true, user: true },
+        })
+      : [];
+    const actorNames = new Map(
+      actors.map((actor) => [actor.id, actor.name || actor.user]),
+    );
+
+    return rows.map((row) => ({
+      id: row.id,
+      changeType: toStructuralChangeType(row.changeType),
+      observation: row.observation,
+      actorId: row.actorId,
+      actorName: actorNames.get(row.actorId) ?? null,
+      createdAt: row.createdAt,
+      from: row.fromContainer,
+      to: row.toContainer,
+    }));
   }
 
   async listActiveIbcs(): Promise<IbcCadastroRecord[]> {

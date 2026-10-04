@@ -62,3 +62,14 @@ export type CreateDerivedIbcData = {
   observation: string | null;
   changeType: IbcStructuralChangeType;
 };
+
+export type IbcConversionHistoryRecord = {
+  id: string;
+  changeType: IbcStructuralChangeType;
+  observation: string | null;
+  actorId: string;
+  actorName: string | null;
+  createdAt: Date;
+  from: { id: string; identificador: string };
+  to: { id: string; identificador: string };
+};
