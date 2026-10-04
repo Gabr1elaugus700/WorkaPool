@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ibcCadastroService } from "../services/ibcCadastroService";
 import type {
@@ -7,6 +7,8 @@ import type {
 } from "../types/ibcCadastro.types";
 import { toError } from "../utils/toError";
 
+const HISTORICO_KEY = ["ibc", "historico"] as const;
+
 export function useIbcConversao() {
   const queryClient = useQueryClient();
 
@@ -14,6 +16,7 @@ export function useIbcConversao() {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["ibc", "pool"] }),
       queryClient.invalidateQueries({ queryKey: ["ibc", "alerts"] }),
+      queryClient.invalidateQueries({ queryKey: HISTORICO_KEY }),
     ]);
   };
 
@@ -48,4 +51,12 @@ export function useIbcConversao() {
       mudarProdutoMutation.mutateAsync({ id, input }),
     isPending: converterMutation.isPending || mudarProdutoMutation.isPending,
   };
+}
+
+export function useIbcHistorico(ibcId: string | null) {
+  return useQuery({
+    queryKey: [...HISTORICO_KEY, ibcId],
+    queryFn: () => ibcCadastroService.listHistorico(ibcId ?? ""),
+    enabled: ibcId != null,
+  });
 }

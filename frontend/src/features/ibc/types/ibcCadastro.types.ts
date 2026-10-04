@@ -17,6 +17,17 @@ export type IbcCadastroDTO = {
 
 export type IbcMudancaTipo = "conversion" | "product_change" | "status_change";
 
+export type IbcHistoricoDTO = {
+  id: string;
+  changeType: IbcMudancaTipo;
+  observation: string | null;
+  actorId: string;
+  actorName: string | null;
+  createdAt: string;
+  from: { id: string; identificador: string };
+  to: { id: string; identificador: string };
+};
+
 export type IbcMudancaConfirmacaoInput = {
   confirmado: true;
   observacao: string | null;

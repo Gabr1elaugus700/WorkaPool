@@ -124,8 +124,28 @@ _Avoid_: leaving pool origin blank, calling every inbound empty an Empréstimo r
 An IBC from this Carga/trip that was confirmed in Custódia no Cliente and has not returned with a company QR. Default pick-list when linking a Troca de IBC (#out → #in). Older Empréstimos at the same Cliente are a secondary path, not the default.
 _Avoid_: free search across the whole pool as the primary Troca UI, linking a return to an IBC still in the yard
 
+**Produto para Container**:
+Cadastrable product (`IbcProduto`: nome + abreviação of 1–2 letters A–Z, unique) that composes the IBC identifier. Every new IBC must have one.
+_Avoid_: hardcoding product prefixes (fixed HMS/NHS list), product shelf life
+
+**Identificador do IBC (prefixo + sequencial)**:
+`prefixo` + 5-digit zero-padded `sequencial`. Prefixo = `HM` + abreviação (homologado) or `NHM` + abreviação (não homologado); e.g. Soda (S) → `HMS00001` / `NHMS00001`. `(prefixo, sequencial)` and `identificador` are unique; the next sequencial is the max of that exact prefixo + 1, allocated under a per-prefix lock. Baixa does not free a sequencial. Legacy `HM####` (4 digits, no product) keeps its identifier with prefixo `HM`.
+_Avoid_: deriving the next code by `startsWith` on the identifier (HMS ≠ HMSO), reusing sequenciais
+
+**Conversão para não homologado**:
+Manual, confirmed action that never edits the source IBC: creates a new IBC in `N` + source prefixo (HMS → NHMS) with the next sequencial, links the source via `convertedToContainerId` and records an `IbcConversionHistory` event (`conversion`) with actor and optional observação.
+_Avoid_: editing homologação in place, automatic expiry-driven conversion (out of scope)
+
+**Mudança de produto**:
+Same lineage mechanics as Conversão, but the new IBC takes the target product prefixo in the same homologação family (HMS → HMSO, NHMS → NHMSO); history event `product_change`.
+_Avoid_: patching `produtoId` on the existing IBC
+
+**Histórico de conversões**:
+Audit trail of structural changes (`from` → `to`, tipo, observação, actor, date), queryable from either end via `GET /api/ibc/:id/historico`.
+_Avoid_: mixing with inspeção or custódia history
+
 **Cadastro em lote**:
-Purchase batch: operator provides N, one shared `dataLimite`, optional NF trace; system creates N Novo IBCs (COMPRA / PATIO / AGUARDANDO_INSPECAO) with sequential HM ids. Soft-warns when vivos+N > ERP saldo for codpro 251001; never hard-blocks.
+Purchase batch: operator provides N, one shared `dataLimite`, optional NF trace and the Produto; system creates N Novo IBCs (COMPRA / PATIO / AGUARDANDO_INSPECAO) with consecutive sequenciais of the product prefixo in one transaction. Soft-warns when vivos+N > ERP saldo for codpro 251001; never hard-blocks.
 _Avoid_: troca/return batch, hard cap vs ERP, ERP stock write-back
 
 **Saldo ERP IBC (codpro 251001)**:

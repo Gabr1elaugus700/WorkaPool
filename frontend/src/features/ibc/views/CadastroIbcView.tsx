@@ -19,7 +19,8 @@ import CadastroIbcSectionSkeleton from "../components/CadastroIbcSectionSkeleton
 import ConfirmarMudancaIbcModal, {
   type IbcMudancaModo,
 } from "../components/ConfirmarMudancaIbcModal";
-import { useIbcConversao } from "../hooks/useIbcConversao";
+import IbcHistoricoDrawer from "../components/IbcHistoricoDrawer";
+import { useIbcConversao, useIbcHistorico } from "../hooks/useIbcConversao";
 import { ibcCadastroService } from "../services/ibcCadastroService";
 import type {
   CreateLoteIbcResultDTO,
@@ -41,7 +42,9 @@ export default function CadastroIbcView() {
     ibc: IbcCadastroDTO;
     modo: IbcMudancaModo;
   } | null>(null);
+  const [historicoIbc, setHistoricoIbc] = useState<IbcCadastroDTO | null>(null);
   const conversao = useIbcConversao();
+  const historicoQuery = useIbcHistorico(historicoIbc?.id ?? null);
 
   const poolQuery = useQuery({
     queryKey: POOL_KEY,
@@ -265,6 +268,7 @@ export default function CadastroIbcView() {
               actionsDisabled={conversao.isPending}
               onConverter={(ibc) => setMudanca({ ibc, modo: "conversion" })}
               onMudarProduto={(ibc) => setMudanca({ ibc, modo: "product_change" })}
+              onVerHistorico={setHistoricoIbc}
             />
           )}
         </section>
@@ -288,6 +292,20 @@ export default function CadastroIbcView() {
             }
             setMudanca(null);
           }}
+        />
+      ) : null}
+      {historicoIbc ? (
+        <IbcHistoricoDrawer
+          identificador={historicoIbc.identificador}
+          eventos={historicoQuery.data ?? []}
+          isLoading={historicoQuery.isLoading}
+          errorMessage={
+            historicoQuery.error ? toError(historicoQuery.error).message : null
+          }
+          onRetry={() => {
+            void historicoQuery.refetch();
+          }}
+          onClose={() => setHistoricoIbc(null)}
         />
       ) : null}
     </DefaultLayout>
