@@ -169,6 +169,9 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     const convertStatus = await request(app)
       .patch("/api/ibc/ibc-1/converter-nao-homologado")
       .send({ confirmado: true });
+    const changeProduto = await request(app)
+      .patch("/api/ibc/ibc-1/produto")
+      .send({ produtoId: "8d7f903e-f53d-4c62-80b2-48f3c9655d71", confirmado: true });
 
     assert.strictEqual(create.status, 401);
     assert.strictEqual(createLote.status, 401);
@@ -180,6 +183,7 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(listProdutos.status, 401);
     assert.strictEqual(updateProduto.status, 401);
     assert.strictEqual(convertStatus.status, 401);
+    assert.strictEqual(changeProduto.status, 401);
   });
 
   await t.test("LOGISTICA não pode mutar cadastro", async () => {
@@ -211,6 +215,10 @@ test("IBC Routes - autenticação e autorização", async (t) => {
       .patch("/api/ibc/ibc-1/converter-nao-homologado")
       .set("Authorization", `Bearer ${token}`)
       .send({ confirmado: true });
+    const changeProduto = await request(app)
+      .patch("/api/ibc/ibc-1/produto")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ produtoId: "8d7f903e-f53d-4c62-80b2-48f3c9655d71", confirmado: true });
 
     assert.strictEqual(create.status, 403);
     assert.strictEqual(createLote.status, 403);
@@ -219,20 +227,27 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(createProduto.status, 403);
     assert.strictEqual(updateProduto.status, 403);
     assert.strictEqual(convertStatus.status, 403);
+    assert.strictEqual(changeProduto.status, 403);
   });
 
-  await t.test("VENDAS e USER não podem converter", async () => {
+  await t.test("VENDAS e USER não podem converter nem mudar produto", async () => {
     for (const role of ["VENDAS", "USER"]) {
+      const token = createToken(role);
       const convertStatus = await request(app)
         .patch("/api/ibc/ibc-1/converter-nao-homologado")
-        .set("Authorization", `Bearer ${createToken(role)}`)
+        .set("Authorization", `Bearer ${token}`)
         .send({ confirmado: true });
+      const changeProduto = await request(app)
+        .patch("/api/ibc/ibc-1/produto")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ produtoId: "8d7f903e-f53d-4c62-80b2-48f3c9655d71", confirmado: true });
 
       assert.strictEqual(convertStatus.status, 403);
+      assert.strictEqual(changeProduto.status, 403);
     }
   });
 
-  await t.test("conversão sem confirmação é rejeitada antes de tocar o banco", async () => {
+  await t.test("mutação sem confirmação é rejeitada antes de tocar o banco", async () => {
     const token = createToken("ALMOX");
     const convertWithoutFlag = await request(app)
       .patch("/api/ibc/ibc-1/converter-nao-homologado")
@@ -242,6 +257,10 @@ test("IBC Routes - autenticação e autorização", async (t) => {
       .patch("/api/ibc/ibc-1/converter-nao-homologado")
       .set("Authorization", `Bearer ${token}`)
       .send({ confirmado: false });
+    const changeWithoutFlag = await request(app)
+      .patch("/api/ibc/ibc-1/produto")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ produtoId: "8d7f903e-f53d-4c62-80b2-48f3c9655d71" });
     const observacaoLonga = await request(app)
       .patch("/api/ibc/ibc-1/converter-nao-homologado")
       .set("Authorization", `Bearer ${token}`)
@@ -250,6 +269,8 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(convertWithoutFlag.status, 400);
     assert.strictEqual(convertWithoutFlag.body.code, "IBC_STATUS_CONFIRMATION_REQUIRED");
     assert.strictEqual(convertFalse.status, 400);
+    assert.strictEqual(changeWithoutFlag.status, 400);
+    assert.strictEqual(changeWithoutFlag.body.code, "IBC_PRODUCT_CHANGE_CONFIRMATION_REQUIRED");
     assert.strictEqual(observacaoLonga.status, 400);
   });
 

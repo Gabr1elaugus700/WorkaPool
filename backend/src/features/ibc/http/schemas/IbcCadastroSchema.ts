@@ -19,4 +19,9 @@ export const IbcCadastroHttpSchemas = {
     confirmado: z.literal(true),
     observacao: z.string().trim().min(1).max(500).optional().nullable(),
   }),
+  changeProduto: z.object({
+    produtoId: z.string().uuid(),
+    confirmado: z.literal(true),
+    observacao: z.string().trim().min(1).max(500).optional().nullable(),
+  }),
 } as const;

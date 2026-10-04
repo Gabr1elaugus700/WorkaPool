@@ -25,6 +25,7 @@ import { CreateIbcProdutoUseCase } from "../../useCases/CreateIbcProduto.use-cas
 import { ListIbcProdutosUseCase } from "../../useCases/ListIbcProdutos.use-case";
 import { UpdateIbcProdutoUseCase } from "../../useCases/UpdateIbcProduto.use-case";
 import { ConvertIbcHomologacaoUseCase } from "../../useCases/ConvertIbcHomologacao.use-case";
+import { ChangeIbcProdutoUseCase } from "../../useCases/ChangeIbcProduto.use-case";
 
 function respondAppError(res: Response, err: unknown, fallbackMessage: string): Response {
   if (err instanceof AppError) {
@@ -410,6 +411,49 @@ export class IbcController {
       return res.status(201).json(converted);
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao converter IBC para não homologado");
+    }
+  }
+
+  static async changeProduto(req: Request, res: Response): Promise<Response> {
+    try {
+      const id = String(req.params.id ?? "").trim();
+      if (!id) {
+        return res.status(400).json({
+          error: "ID do IBC é obrigatório",
+          code: "IBC_ID_REQUIRED",
+        });
+      }
+
+      const parsed = IbcCadastroHttpSchemas.changeProduto.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          error: "Confirmação obrigatória para mudança de produto",
+          code: "IBC_PRODUCT_CHANGE_CONFIRMATION_REQUIRED",
+          details: parsed.error.format(),
+        });
+      }
+
+      const actorId = req.user?.id;
+      if (!actorId) {
+        return res.status(401).json({
+          error: "Usuário não autenticado",
+          code: "IBC_ACTOR_REQUIRED",
+        });
+      }
+
+      const useCase = new ChangeIbcProdutoUseCase(
+        cadastroRepository(),
+        produtoRepository(),
+      );
+      const converted = await useCase.execute({
+        sourceIbcId: id,
+        targetProdutoId: parsed.data.produtoId,
+        actorId,
+        observation: parsed.data.observacao ?? null,
+      });
+      return res.status(201).json(converted);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao alterar produto do IBC");
     }
   }
 }

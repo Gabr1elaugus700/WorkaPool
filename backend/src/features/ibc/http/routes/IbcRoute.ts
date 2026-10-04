@@ -82,6 +82,13 @@ router.patch(
   IbcController.convertToNaoHomologado,
 );
 
+router.patch(
+  "/:id/produto",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcController.changeProduto,
+);
+
 router.delete(
   "/:id",
   authMiddleware,

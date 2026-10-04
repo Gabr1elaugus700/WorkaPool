@@ -287,6 +287,47 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     assert.equal(historyRows[0].observation, "avaria visual");
   });
 
+  it("product change creates a new record and product-change history", async () => {
+    const app = createIbcTestApp();
+    const token = createToken(Role.ALMOX);
+    const produtoOrigemId = await createProduto(token, {
+      nome: `${FIXTURE_PREFIX}Origem`,
+      abreviacao: "SO",
+    });
+    const produtoDestinoId = await createProduto(token, {
+      nome: `${FIXTURE_PREFIX}Destino`,
+      abreviacao: "NX",
+    });
+
+    const created = await request(app)
+      .post("/api/ibc")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ dataLimite: FUTURE_DATA_LIMITE, produtoId: produtoOrigemId });
+    assert.equal(created.status, 201);
+
+    const changed = await request(app)
+      .patch(`/api/ibc/${created.body.id}/produto`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        produtoId: produtoDestinoId,
+        confirmado: true,
+        observacao: "mudanca de produto operacional",
+      });
+    assert.equal(changed.status, 201);
+    assert.match(changed.body.identificador, /^HMNX\d{5}$/);
+    assert.equal(changed.body.produtoId, produtoDestinoId);
+
+    const historyRows = await prisma.$queryRawUnsafe<
+      Array<{ changeType: string; toContainerId: string }>
+    >(
+      `SELECT "changeType","toContainerId"
+       FROM "IbcConversionHistory"
+       WHERE "fromContainerId" = '${created.body.id}'`,
+    );
+    assert.ok(historyRows.some((row) => row.changeType === "product_change"));
+    assert.ok(historyRows.some((row) => row.toContainerId === changed.body.id));
+  });
+
   it("duplicate identifier rolls back the whole conversion", async () => {
     const app = createIbcTestApp();
     const token = createToken(Role.ALMOX);
