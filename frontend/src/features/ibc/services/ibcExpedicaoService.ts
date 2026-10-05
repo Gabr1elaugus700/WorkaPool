@@ -1,3 +1,4 @@
+import { getBaseUrl } from "@/lib/apiBase";
 import { apiFetchJson } from "@/lib/apiFetch";
 import type {
   CargaExpedicaoDetalheDTO,
@@ -55,4 +56,10 @@ export const ibcExpedicaoService = {
       body: JSON.stringify(input),
     });
   },
+
+  openEventStream: (token: string, signal: AbortSignal): Promise<Response> =>
+    fetch(`${getBaseUrl()}/api/ibc/events`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal,
+    }),
 };
