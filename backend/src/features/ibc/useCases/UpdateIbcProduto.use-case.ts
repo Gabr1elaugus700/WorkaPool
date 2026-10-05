@@ -36,6 +36,16 @@ export class UpdateIbcProdutoUseCase {
     }
     const abreviacao = normalizeIbcProdutoAbreviacao(input.abreviacao);
 
+    if (abreviacao !== existing.abreviacao && (await this.repository.hasIbcs(input.id))) {
+      throw new AppError({
+        message:
+          "Sigla não pode ser alterada: produto já possui containers vinculados. Cadastre um novo produto e use a mudança de produto.",
+        statusCode: 409,
+        code: "IBC_PRODUTO_ABREVIACAO_EM_USO",
+        details: { abreviacaoAtual: existing.abreviacao },
+      });
+    }
+
     return this.repository.updateById(input.id, { nome, abreviacao });
   }
 }

@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { IbcProdutoDTO } from "../types/ibcCadastro.types";
+import type { IbcProdutoListItemDTO } from "../types/ibcCadastro.types";
 
 type ProdutoForm = {
   nome: string;
@@ -18,7 +18,7 @@ type ProdutoForm = {
 };
 
 type Props = {
-  produtos: IbcProdutoDTO[];
+  produtos: IbcProdutoListItemDTO[];
   disabled?: boolean;
   onCreate: (input: ProdutoForm) => Promise<void>;
   onUpdate: (id: string, input: ProdutoForm) => Promise<void>;
@@ -41,6 +41,9 @@ export default function CadastroProdutoModal({
     setAbreviacao("");
     setEditingId(null);
   };
+
+  const editingProduto = produtos.find((produto) => produto.id === editingId);
+  const siglaBloqueada = Boolean(editingProduto?.possuiIbcs);
 
   const canSubmit =
     nome.trim().length > 0 &&
@@ -106,8 +109,15 @@ export default function CadastroProdutoModal({
               onChange={(event) => setAbreviacao(event.target.value.toUpperCase())}
               placeholder="Ex.: S"
               maxLength={2}
-              disabled={disabled || isSubmitting}
+              disabled={disabled || isSubmitting || siglaBloqueada}
+              aria-describedby={siglaBloqueada ? "produto-abreviacao-bloqueada" : undefined}
             />
+            {siglaBloqueada ? (
+              <p id="produto-abreviacao-bloqueada" className="text-xs text-muted-foreground">
+                Sigla bloqueada: este produto já tem containers. Para usar outra sigla,
+                cadastre um novo produto e use a mudança de produto.
+              </p>
+            ) : null}
           </div>
         </div>
         <div className="flex gap-2">
