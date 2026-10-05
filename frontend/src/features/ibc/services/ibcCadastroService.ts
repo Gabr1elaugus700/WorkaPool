@@ -10,6 +10,7 @@ import type {
   IbcHistoricoDTO,
   IbcMudancaConfirmacaoInput,
   IbcProdutoDTO,
+  IbcProdutoListItemDTO,
 } from "../types/ibcCadastro.types";
 
 export const ibcCadastroService = {
@@ -33,8 +34,8 @@ export const ibcCadastroService = {
   listAlerts: (): Promise<IbcAlertDTO[]> =>
     apiFetchJson<IbcAlertDTO[]>("/api/ibc/alerts"),
 
-  listProdutos: (): Promise<IbcProdutoDTO[]> =>
-    apiFetchJson<IbcProdutoDTO[]>("/api/ibc/produtos"),
+  listProdutos: (): Promise<IbcProdutoListItemDTO[]> =>
+    apiFetchJson<IbcProdutoListItemDTO[]>("/api/ibc/produtos"),
 
   createProduto: (input: CreateIbcProdutoInput): Promise<IbcProdutoDTO> =>
     apiFetchJson<IbcProdutoDTO>("/api/ibc/produtos", {

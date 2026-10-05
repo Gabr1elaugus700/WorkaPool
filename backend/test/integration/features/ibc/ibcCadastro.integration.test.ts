@@ -162,8 +162,8 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     assert.equal(list.status, 200);
     assert.ok(
       list.body.some(
-        (row: { id: string; abreviacao: string }) =>
-          row.id === created.body.id && row.abreviacao === "A",
+        (row: { id: string; abreviacao: string; possuiIbcs: boolean }) =>
+          row.id === created.body.id && row.abreviacao === "A" && row.possuiIbcs === false,
       ),
     );
 
@@ -173,6 +173,56 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
       .send({ nome: `${FIXTURE_PREFIX}Acido Novo`, abreviacao: "SO" });
     assert.equal(updated.status, 200);
     assert.equal(updated.body.abreviacao, "SO");
+  });
+
+  it("PATCH produto blocks abreviacao change once it has IBCs, even baixados", async () => {
+    const app = createIbcTestApp();
+    const token = createToken(Role.ALMOX);
+    const produtoId = await createProduto(token, {
+      nome: `${FIXTURE_PREFIX}Bloqueado`,
+      abreviacao: "BX",
+    });
+
+    const ibc = await request(app)
+      .post("/api/ibc")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ dataLimite: FUTURE_DATA_LIMITE, produtoId });
+    assert.equal(ibc.status, 201);
+
+    const list = await request(app)
+      .get("/api/ibc/produtos")
+      .set("Authorization", `Bearer ${token}`);
+    const listed = list.body.find((row: { id: string }) => row.id === produtoId);
+    assert.equal(listed?.possuiIbcs, true);
+
+    const blocked = await request(app)
+      .patch(`/api/ibc/produtos/${produtoId}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: `${FIXTURE_PREFIX}Bloqueado`, abreviacao: "BY" });
+    assert.equal(blocked.status, 409);
+    assert.equal(blocked.body.code, "IBC_PRODUTO_ABREVIACAO_EM_USO");
+
+    await prisma.ibc.update({
+      where: { identificador: ibc.body.identificador },
+      data: { baixadoEm: new Date() },
+    });
+    const blockedBaixado = await request(app)
+      .patch(`/api/ibc/produtos/${produtoId}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: `${FIXTURE_PREFIX}Bloqueado`, abreviacao: "BY" });
+    assert.equal(blockedBaixado.status, 409);
+    assert.equal(blockedBaixado.body.code, "IBC_PRODUTO_ABREVIACAO_EM_USO");
+
+    const renamed = await request(app)
+      .patch(`/api/ibc/produtos/${produtoId}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: `${FIXTURE_PREFIX}Bloqueado Novo`, abreviacao: "bx" });
+    assert.equal(renamed.status, 200);
+    assert.equal(renamed.body.nome, `${FIXTURE_PREFIX}Bloqueado Novo`);
+    assert.equal(renamed.body.abreviacao, "BX");
+
+    const row = await prisma.ibcProduto.findUnique({ where: { id: produtoId } });
+    assert.equal(row?.abreviacao, "BX");
   });
 
   it("prefix allocation is exact: HMQ is not polluted by HMQZ", async () => {

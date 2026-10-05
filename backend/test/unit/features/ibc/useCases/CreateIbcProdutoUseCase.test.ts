@@ -5,7 +5,10 @@ import {
   CreateIbcProdutoData,
   IIbcProdutoRepository,
 } from "../../../../../src/features/ibc/repositories/IIbcProdutoRepository";
-import { IbcProdutoRecord } from "../../../../../src/features/ibc/types/IbcCadastro.types";
+import {
+  IbcProdutoListItem,
+  IbcProdutoRecord,
+} from "../../../../../src/features/ibc/types/IbcCadastro.types";
 import { AppError } from "../../../../../src/utils/AppError";
 
 function createRepository(): IIbcProdutoRepository & { created: CreateIbcProdutoData[] } {
@@ -17,11 +20,14 @@ function createRepository(): IIbcProdutoRepository & { created: CreateIbcProduto
       const now = new Date("2026-10-01T00:00:00.000Z");
       return { id: "prod-1", ...data, createdAt: now, updatedAt: now };
     },
-    async list(): Promise<IbcProdutoRecord[]> {
+    async list(): Promise<IbcProdutoListItem[]> {
       return [];
     },
     async findById(): Promise<IbcProdutoRecord | null> {
       return null;
+    },
+    async hasIbcs(): Promise<boolean> {
+      return false;
     },
     async updateById(): Promise<IbcProdutoRecord> {
       throw new Error("not used");

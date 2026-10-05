@@ -52,6 +52,8 @@ export type IbcProdutoRecord = {
   updatedAt: Date;
 };
 
+export type IbcProdutoListItem = IbcProdutoRecord & { possuiIbcs: boolean };
+
 export type IbcStructuralChangeType = "conversion" | "product_change" | "status_change";
 
 export type CreateDerivedIbcData = {

@@ -126,7 +126,8 @@ _Avoid_: free search across the whole pool as the primary Troca UI, linking a re
 
 **Produto para Container**:
 Cadastrable product (`IbcProduto`: nome + abreviação of 1–2 letters A–Z, unique) that composes the IBC identifier. Every new IBC must have one.
-_Avoid_: hardcoding product prefixes (fixed HMS/NHS list), product shelf life
+Nome is always editable. Abreviação (sigla) is frozen once any IBC is linked to the product — baixados included, since baixa does not free a sequencial and the stored prefixo is never recalculated (409 `IBC_PRODUTO_ABREVIACAO_EM_USO`; sending the same sigla after normalization is not a change). To use another sigla, register a new product and apply a Mudança de produto. The product list exposes `possuiIbcs` so the UI can lock the field.
+_Avoid_: hardcoding product prefixes (fixed HMS/NHS list), product shelf life, renaming the sigla of a product in use (one product with two prefixos, or one prefixo meaning two products)
 
 **Identificador do IBC (prefixo + sequencial)**:
 `prefixo` + 5-digit zero-padded `sequencial`. Prefixo = `HM` + abreviação (homologado) or `NHM` + abreviação (não homologado); e.g. Soda (S) → `HMS00001` / `NHMS00001`. `(prefixo, sequencial)` and `identificador` are unique; the next sequencial is the max of that exact prefixo + 1, allocated under a per-prefix lock. Baixa does not free a sequencial. Legacy `HM####` (4 digits, no product) keeps its identifier with prefixo `HM`.

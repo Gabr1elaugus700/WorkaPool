@@ -1,5 +1,5 @@
 import { IIbcProdutoRepository } from "../repositories/IIbcProdutoRepository";
-import { IbcProdutoRecord } from "../types/IbcCadastro.types";
+import { IbcProdutoListItem } from "../types/IbcCadastro.types";
 
 export class ListIbcProdutosUseCase {
   private readonly repository: IIbcProdutoRepository;
@@ -8,7 +8,7 @@ export class ListIbcProdutosUseCase {
     this.repository = repository;
   }
 
-  execute(): Promise<IbcProdutoRecord[]> {
+  execute(): Promise<IbcProdutoListItem[]> {
     return this.repository.list();
   }
 }

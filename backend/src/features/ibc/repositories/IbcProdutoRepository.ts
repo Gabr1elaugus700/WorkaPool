@@ -6,7 +6,7 @@ import {
   IIbcProdutoRepository,
   UpdateIbcProdutoData,
 } from "./IIbcProdutoRepository";
-import { IbcProdutoRecord } from "../types/IbcCadastro.types";
+import { IbcProdutoListItem, IbcProdutoRecord } from "../types/IbcCadastro.types";
 
 export class IbcProdutoRepository implements IIbcProdutoRepository {
   private readonly prisma: PrismaClient;
@@ -25,16 +25,25 @@ export class IbcProdutoRepository implements IIbcProdutoRepository {
     }
   }
 
-  async list(): Promise<IbcProdutoRecord[]> {
+  async list(): Promise<IbcProdutoListItem[]> {
     const rows = await this.prisma.ibcProduto.findMany({
       orderBy: [{ nome: "asc" }, { abreviacao: "asc" }],
+      include: { _count: { select: { ibcs: true } } },
     });
-    return rows.map((row) => this.toRecord(row));
+    return rows.map((row) => ({
+      ...this.toRecord(row),
+      possuiIbcs: row._count.ibcs > 0,
+    }));
   }
 
   async findById(id: string): Promise<IbcProdutoRecord | null> {
     const row = await this.prisma.ibcProduto.findUnique({ where: { id } });
     return row ? this.toRecord(row) : null;
+  }
+
+  async hasIbcs(produtoId: string): Promise<boolean> {
+    const total = await this.prisma.ibc.count({ where: { produtoId } });
+    return total > 0;
   }
 
   async updateById(
