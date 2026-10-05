@@ -1,5 +1,6 @@
 import { AppError } from "../../../utils/AppError";
 import { IIbcCadastroRepository } from "../repositories/IIbcCadastroRepository";
+import { assertIbcNotReplaced } from "../services/assertIbcNotReplaced";
 import {
   isHomologadoPrefixo,
   isNaoHomologadoPrefixo,
@@ -63,6 +64,7 @@ export class ConvertIbcHomologacaoUseCase {
         details: { id: input.sourceIbcId },
       });
     }
+    assertIbcNotReplaced(source);
 
     return this.repository.createDerivedIbcFromSource({
       sourceIbcId: source.id,

@@ -96,6 +96,28 @@ describe("ChangeIbcProdutoUseCase", () => {
     assert.equal(cadastroRepo.createDerivedIbcFromSource.mock.callCount(), 0);
   });
 
+  it("rejects product change when the source was already replaced", async () => {
+    const cadastroRepo = buildCadastroRepo(
+      buildIbcRecord({ convertedToContainerId: "ibc-target-0" }),
+    );
+    const findProduto = mock.fn(async () => buildProdutoRecord());
+
+    await assert.rejects(
+      () =>
+        buildUseCase(cadastroRepo, { findById: findProduto }).execute({
+          sourceIbcId: "ibc-source-1",
+          targetProdutoId: "produto-b",
+          actorId: "user-1",
+        }),
+      (error: unknown) =>
+        error instanceof AppError &&
+        error.code === "IBC_JA_SUBSTITUIDO" &&
+        error.statusCode === 409,
+    );
+    assert.equal(cadastroRepo.createDerivedIbcFromSource.mock.callCount(), 0);
+    assert.equal(findProduto.mock.callCount(), 0);
+  });
+
   it("rejects unknown target product with 404", async () => {
     const cadastroRepo = buildCadastroRepo();
 

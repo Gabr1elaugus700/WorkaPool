@@ -4,6 +4,7 @@ import {
   IBC_OBSERVACAO_MAX,
   buildIbcMudancaConfirmacao,
   isIbcNaoHomologado,
+  isIbcSubstituido,
   previewConversaoPrefixo,
   previewMudancaProdutoPrefixo,
   resolveIbcPrefixo,
@@ -57,5 +58,13 @@ describe("prefix previews", () => {
       "NHMSO",
     );
     assert.equal(isIbcNaoHomologado({ identificador: "NHMS00001", prefixo: "NHMS" }), true);
+  });
+});
+
+describe("isIbcSubstituido", () => {
+  it("is true only when the IBC points to a replacement", () => {
+    assert.equal(isIbcSubstituido({ convertedToContainerId: "ibc-target-1" }), true);
+    assert.equal(isIbcSubstituido({ convertedToContainerId: null }), false);
+    assert.equal(isIbcSubstituido({}), false);
   });
 });

@@ -1,6 +1,7 @@
 import { AppError } from "../../../utils/AppError";
 import { IIbcCadastroRepository } from "../repositories/IIbcCadastroRepository";
 import { IIbcProdutoRepository } from "../repositories/IIbcProdutoRepository";
+import { assertIbcNotReplaced } from "../services/assertIbcNotReplaced";
 import {
   getIbcIdentifierPrefix,
   isNaoHomologadoPrefixo,
@@ -50,6 +51,7 @@ export class ChangeIbcProdutoUseCase {
         details: { id: input.sourceIbcId },
       });
     }
+    assertIbcNotReplaced(source);
 
     const targetProduto = await this.produtoRepository.findById(input.targetProdutoId);
     if (!targetProduto) {

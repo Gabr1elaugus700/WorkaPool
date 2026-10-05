@@ -23,6 +23,8 @@ export interface IIbcCadastroRepository {
   /**
    * Cria o IBC destino no próximo sequencial de `data.prefixo`, vincula a origem
    * (`convertedToContainerId`) e grava o histórico, tudo na mesma transação.
+   * A origem só é vinculada se ainda estiver livre; caso contrário a transação
+   * é desfeita com 409 `IBC_JA_SUBSTITUIDO`.
    */
   createDerivedIbcFromSource(data: CreateDerivedIbcData): Promise<IbcCadastroRecord>;
   listConversionHistory(ibcId: string): Promise<IbcConversionHistoryRecord[]>;

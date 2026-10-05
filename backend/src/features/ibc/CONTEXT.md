@@ -140,6 +140,8 @@ _Avoid_: editing homologação in place, automatic expiry-driven conversion (out
 Same lineage mechanics as Conversão, but the new IBC takes the target product prefixo in the same homologação family (HMS → HMSO, NHMS → NHMSO); history event `product_change`.
 _Avoid_: patching `produtoId` on the existing IBC
 
+A source with `convertedToContainerId` already set cannot be converted nor have its product changed again (409 `IBC_JA_SUBSTITUIDO`); further changes start from the replacement IBC. The link is set only while the source is still free, so concurrent requests produce a single replacement.
+
 **Histórico de conversões**:
 Audit trail of structural changes (`from` → `to`, tipo, observação, actor, date), queryable from either end via `GET /api/ibc/:id/historico`.
 _Avoid_: mixing with inspeção or custódia history

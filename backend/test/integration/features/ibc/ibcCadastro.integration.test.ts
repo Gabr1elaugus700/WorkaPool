@@ -399,6 +399,90 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     assert.equal(history, 0);
   });
 
+  it("replaced source cannot be converted again nor change product", async () => {
+    const app = createIbcTestApp();
+    const token = createToken(Role.ALMOX);
+    const produtoId = await createProduto(token, {
+      nome: `${FIXTURE_PREFIX}Reconv`,
+      abreviacao: "RV",
+    });
+    const outroProdutoId = await createProduto(token, {
+      nome: `${FIXTURE_PREFIX}Reconv Destino`,
+      abreviacao: "RD",
+    });
+    const created = await request(app)
+      .post("/api/ibc")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ dataLimite: FUTURE_DATA_LIMITE, produtoId });
+    assert.equal(created.status, 201);
+
+    const first = await request(app)
+      .patch(`/api/ibc/${created.body.id}/converter-nao-homologado`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ confirmado: true });
+    assert.equal(first.status, 201);
+
+    const again = await request(app)
+      .patch(`/api/ibc/${created.body.id}/converter-nao-homologado`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ confirmado: true });
+    assert.equal(again.status, 409);
+    assert.equal(again.body.code, "IBC_JA_SUBSTITUIDO");
+
+    const productChange = await request(app)
+      .patch(`/api/ibc/${created.body.id}/produto`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ produtoId: outroProdutoId, confirmado: true });
+    assert.equal(productChange.status, 409);
+    assert.equal(productChange.body.code, "IBC_JA_SUBSTITUIDO");
+
+    const source = await prisma.ibc.findUnique({ where: { id: created.body.id } });
+    assert.equal(source?.convertedToContainerId, first.body.id);
+    const history = await prisma.ibcConversionHistory.count({
+      where: { fromContainerId: created.body.id },
+    });
+    assert.equal(history, 1);
+    const derived = await prisma.ibc.count({
+      where: { prefixo: { in: ["NHMRV", "HMRD"] } },
+    });
+    assert.equal(derived, 1);
+  });
+
+  it("concurrent conversions of the same source create a single target", async () => {
+    const app = createIbcTestApp();
+    const token = createToken(Role.ALMOX);
+    const produtoId = await createProduto(token, {
+      nome: `${FIXTURE_PREFIX}Corrida`,
+      abreviacao: "CR",
+    });
+    const created = await request(app)
+      .post("/api/ibc")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ dataLimite: FUTURE_DATA_LIMITE, produtoId });
+    assert.equal(created.status, 201);
+
+    const responses = await Promise.all(
+      Array.from({ length: 2 }, () =>
+        request(app)
+          .patch(`/api/ibc/${created.body.id}/converter-nao-homologado`)
+          .set("Authorization", `Bearer ${token}`)
+          .send({ confirmado: true }),
+      ),
+    );
+
+    const statuses = responses.map((response) => response.status).sort();
+    assert.deepEqual(statuses, [201, 409]);
+    const rejected = responses.find((response) => response.status === 409);
+    assert.equal(rejected?.body.code, "IBC_JA_SUBSTITUIDO");
+
+    const derived = await prisma.ibc.count({ where: { prefixo: "NHMCR" } });
+    assert.equal(derived, 1);
+    const history = await prisma.ibcConversionHistory.count({
+      where: { fromContainerId: created.body.id },
+    });
+    assert.equal(history, 1);
+  });
+
   it("GET historico exposes lineage with observation from both ends", async () => {
     const app = createIbcTestApp();
     const token = createToken(Role.ALMOX);

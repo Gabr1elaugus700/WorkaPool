@@ -95,6 +95,18 @@ describe("ConvertIbcHomologacaoUseCase", () => {
     assert.equal(repository.createDerivedIbcFromSource.mock.callCount(), 0);
   });
 
+  it("rejects conversion when the source was already replaced", async () => {
+    const repository = buildRepo(
+      buildIbcRecord({ convertedToContainerId: "ibc-target-0" }),
+    );
+
+    await assert.rejects(
+      () => buildUseCase(repository).execute({ sourceIbcId: "ibc-source-1", actorId: "user-1" }),
+      expectAppError("IBC_JA_SUBSTITUIDO", 409),
+    );
+    assert.equal(repository.createDerivedIbcFromSource.mock.callCount(), 0);
+  });
+
   it("rejects unknown source IBC with 404", async () => {
     const repository = buildRepo(null);
 

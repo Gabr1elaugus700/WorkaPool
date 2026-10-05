@@ -21,6 +21,12 @@ export function isIbcNaoHomologado(
   return resolveIbcPrefixo(ibc)?.startsWith(NAO_HOMOLOGADO_PREFIX) ?? false;
 }
 
+export function isIbcSubstituido(
+  ibc: Pick<IbcCadastroDTO, "convertedToContainerId">,
+): boolean {
+  return Boolean(ibc.convertedToContainerId);
+}
+
 /** Prefixo que a conversão vai gerar, ou null quando o IBC não pode ser convertido. */
 export function previewConversaoPrefixo(
   ibc: Pick<IbcCadastroDTO, "identificador" | "prefixo">,
