@@ -33,7 +33,6 @@ model User {
   cargasDespachoFechadasPor   CargaDespacho[] @relation("CargaDespachoFechadoPor")
   alocacoesIbc                AlocacaoIbc[]   @relation("AlocacaoIbcAlocadoPor")
   expedicoesIbcFechadasPor    ExpedicaoIbc[]  @relation("ExpedicaoIbcFechadoPor")
-
   @@index([role])
 }
 
@@ -444,6 +443,8 @@ model ItemChecklist {
 model ChecklistItem {
   id                   String                @id @default(uuid())
   descricao            String
+  critico              Boolean               @default(false)
+  ativo                Boolean               @default(true)
   checklistInspections ChecklistInspection[]
   checklistModelItems  ChecklistModelItem[]
   modelos              ChecklistModeloItem[]
@@ -460,15 +461,26 @@ model ChecklistModel {
   items                ChecklistModelItem[]
 }
 
+enum ChecklistTipo {
+  VISTORIA
+  IBC
+}
+
 model ChecklistModelo {
   id                   String                @id @default(uuid())
   nome                 String
   createdAt            DateTime              @default(now())
   departamento_id      String?
+  tipo                 ChecklistTipo         @default(VISTORIA)
+  notaMinimaCritico    Float?
+  mediaMinima          Float?
+  ativo                Boolean               @default(true)
   checklistInspections ChecklistInspection[]
   departamento         Departamento?         @relation(fields: [departamento_id], references: [id])
   itens                ChecklistModeloItem[]
   vistorias            ChecklistVistoria[]
+
+  @@index([tipo])
 }
 
 model ChecklistModelItem {
@@ -487,6 +499,7 @@ model ChecklistModeloItem {
   id                String          @id @default(uuid())
   checklistModeloId String
   checklistItemId   String
+  ordem             Int             @default(0)
   checklistItem     ChecklistItem   @relation(fields: [checklistItemId], references: [id])
   checklistModelo   ChecklistModelo @relation(fields: [checklistModeloId], references: [id])
 

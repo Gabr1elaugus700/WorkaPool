@@ -22,6 +22,7 @@ export const checklistModeloRepository = {
 
     findAll: async () => {
         return await prisma.checklistModelo.findMany({
+            where: { tipo: "VISTORIA" },
             include: {
                 departamento: true,
                 itens: {
@@ -34,8 +35,8 @@ export const checklistModeloRepository = {
     },
 
     findById: async (id: string) => {
-        return await prisma.checklistModelo.findUnique({
-            where: { id },
+        return await prisma.checklistModelo.findFirst({
+            where: { id, tipo: "VISTORIA" },
             include: {
                 departamento: true,
                 itens: {

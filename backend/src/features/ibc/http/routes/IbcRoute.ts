@@ -5,6 +5,7 @@ import {
   requireRoles,
 } from "../../../../middlewares/authMiddleware";
 import { IbcController } from "../controllers/IbcController";
+import { IbcChecklistController } from "../controllers/IbcChecklistController";
 
 const router = Router();
 
@@ -18,6 +19,13 @@ const ibcReadRoles: Role[] = [
 
 /** Mutações de preparação/expedição: somente ADMIN + ALMOX (LOGISTICA → 403). */
 const ibcWriteRoles: Role[] = [Role.ADMIN, Role.ALMOX];
+
+const readAuth = [authMiddleware, requireRoles(ibcReadRoles)];
+const writeAuth = [authMiddleware, requireRoles(ibcWriteRoles)];
+
+router.get("/checklist-itens", readAuth, IbcChecklistController.listItens);
+router.post("/checklist-itens", writeAuth, IbcChecklistController.createItem);
+router.patch("/checklist-itens/:itemId", writeAuth, IbcChecklistController.updateItem);
 
 router.post(
   "/",

@@ -28,7 +28,7 @@ import { ConvertIbcHomologacaoUseCase } from "../../useCases/ConvertIbcHomologac
 import { ChangeIbcProdutoUseCase } from "../../useCases/ChangeIbcProduto.use-case";
 import { ListIbcHistoricoUseCase } from "../../useCases/ListIbcHistorico.use-case";
 
-function respondAppError(res: Response, err: unknown, fallbackMessage: string): Response {
+export function respondAppError(res: Response, err: unknown, fallbackMessage: string): Response {
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       error: err.message,
