@@ -284,6 +284,28 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(observacaoLonga.status, 400);
   });
 
+  await t.test("checklist-itens: 401 sem token, LOGISTICA lê mas não muta", async () => {
+    const anonymous = await request(app).get("/api/ibc/checklist-itens");
+    const token = createToken("LOGISTICA");
+    const list = await request(app)
+      .get("/api/ibc/checklist-itens")
+      .set("Authorization", `Bearer ${token}`);
+    const create = await request(app)
+      .post("/api/ibc/checklist-itens")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ descricao: "Tampa" });
+    const update = await request(app)
+      .patch("/api/ibc/checklist-itens/item-1")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ ativo: false });
+
+    assert.strictEqual(anonymous.status, 401);
+    assert.notStrictEqual(list.status, 401);
+    assert.notStrictEqual(list.status, 403);
+    assert.strictEqual(create.status, 403);
+    assert.strictEqual(update.status, 403);
+  });
+
   await t.test("LOGISTICA pode ler pool, alerts e produtos", async () => {
     const token = createToken("LOGISTICA");
     const list = await request(app)

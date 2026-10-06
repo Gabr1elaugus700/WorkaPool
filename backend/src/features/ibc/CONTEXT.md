@@ -61,8 +61,12 @@ A recorded quality check of an IBC. The operator scores every **active** checkli
 _Avoid_: treating “qualidade” as a single vague field with no checklist, hardcoding factors only in UI without a catalog table
 
 **Item de checklist**:
-A cadastrable quality POP factor/question (fator, ensaio, whether critical, order, active). New inspections load all active items; deactivated items stay on historical respostas only.
-_Avoid_: embedding checklist only as code constants with no admin cadastro
+A cadastrable quality POP factor/question in the single shared catalog (`ChecklistItem`, also used by Vistoria). `critico` is a property of the item and holds in every checklist it appears in. An inactive item cannot be added to checklists but stays in history. Managed via `/api/ibc/checklist-itens` (ADMIN/ALMOX).
+_Avoid_: embedding checklist only as code constants with no admin cadastro, marking "crítico" per checklist instead of per item
+
+**Checklist de IBC**:
+A named set of catalog items (e.g. "Checklist Soda", "Estrutural") stored in `ChecklistModelo` with `tipo = IBC`, ordered items (`ChecklistModeloItem.ordem`), `notaMinimaCritico` and `mediaMinima` (0–10, required for IBC), and `ativo`. Vistoria screens only see `tipo = VISTORIA`.
+_Avoid_: separate checklist tables for IBC, showing IBC checklists in Vistoria
 
 **Aptidão**:
 Whether the IBC may be used in circulation right now: **Apto** or **Inapto**. Inapto must surface as an alert in the IBC module (identifier visible, with reason).
