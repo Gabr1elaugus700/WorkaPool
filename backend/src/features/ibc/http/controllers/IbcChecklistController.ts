@@ -11,6 +11,8 @@ import { IbcChecklistRepository } from "../../repositories/IbcChecklistRepositor
 import { ListIbcChecklistsUseCase } from "../../useCases/ListIbcChecklists.use-case";
 import { GetIbcChecklistUseCase } from "../../useCases/GetIbcChecklist.use-case";
 import { CreateIbcChecklistUseCase } from "../../useCases/CreateIbcChecklist.use-case";
+import { UpdateIbcChecklistUseCase } from "../../useCases/UpdateIbcChecklist.use-case";
+
 function actorRole(req: Request): Role {
   if (!req.user) {
     throw new AppError({ message: "Usuário não autenticado", statusCode: 401, code: "IBC_ACTOR_REQUIRED" });
@@ -95,6 +97,25 @@ export class IbcChecklistController {
       return res.status(201).json(checklist);
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao cadastrar checklist de IBC");
+    }
+  }
+
+  static async updateChecklist(req: Request, res: Response): Promise<Response> {
+    try {
+      const parsed = IbcChecklistHttpSchemas.updateChecklist.safeParse(req.body);
+      if (!parsed.success) throw invalidBody("IBC_CHECKLIST_INVALID_BODY", parsed.error.format());
+
+      const checklist = await new UpdateIbcChecklistUseCase(
+        new IbcChecklistRepository(),
+        new IbcChecklistItemRepository(),
+      ).execute({
+        actorRole: actorRole(req),
+        id: String(req.params.checklistId),
+        ...parsed.data,
+      });
+      return res.status(200).json(checklist);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao editar checklist de IBC");
     }
   }
 }
