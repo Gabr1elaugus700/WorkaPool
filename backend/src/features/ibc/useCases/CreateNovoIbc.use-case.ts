@@ -53,10 +53,11 @@ export class CreateNovoIbcUseCase {
       {
         prefixo: getIbcIdentifierPrefix(produto.abreviacao),
         tipoCadastro: "NOVO",
-        aptidao: "INAPTO",
-        motivoInaptidao: "AGUARDANDO_INSPECAO",
+        aptidao: "APTO",
+        motivoInaptidao: null,
         custodia: "PATIO",
         dataLimite: input.dataLimite,
+        primeiraInspecaoEm: null,
         produtoId: produto.id,
       },
       1,

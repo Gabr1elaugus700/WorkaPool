@@ -30,6 +30,7 @@ const buildCreatedIbc = (
   motivoInaptidao: data.motivoInaptidao,
   custodia: data.custodia,
   dataLimite: data.dataLimite,
+  primeiraInspecaoEm: data.primeiraInspecaoEm,
   produtoId: data.produtoId,
   baixadoEm: null,
   createdAt: new Date("2026-09-08T12:00:00.000Z"),
@@ -64,7 +65,7 @@ function buildUseCase(repo: RepoMock, produtoRepo: ProdutoRepoMock) {
 }
 
 describe("CreateNovoIbcUseCase", () => {
-  it("creating a Novo IBC starts awaiting inspection", async () => {
+  it("creating a Novo IBC starts Apto and sem inspeção", async () => {
     const repo: RepoMock = { createNovoIbcs: createNovoIbcsFrom(8) };
     const useCase = buildUseCase(repo, buildProdutoRepo());
 
@@ -74,8 +75,9 @@ describe("CreateNovoIbcUseCase", () => {
     });
 
     assert.equal(result.tipoCadastro, "NOVO");
-    assert.equal(result.aptidao, "INAPTO");
-    assert.equal(result.motivoInaptidao, "AGUARDANDO_INSPECAO");
+    assert.equal(result.aptidao, "APTO");
+    assert.equal(result.motivoInaptidao, null);
+    assert.equal(result.primeiraInspecaoEm, null);
     assert.equal(result.custodia, "PATIO");
     assert.equal(result.identificador, "HMS00008");
     assert.equal(result.dataLimite?.toISOString(), FUTURE_DATA_LIMITE.toISOString());

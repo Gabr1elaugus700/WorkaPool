@@ -45,6 +45,9 @@ export async function ensureIbcCadastroSchema(
   await prisma.$executeRawUnsafe(
     `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "baixadoEm" TIMESTAMP(3)`,
   );
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "primeiraInspecaoEm" TIMESTAMP(3)`,
+  );
 
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS "IbcLote" (

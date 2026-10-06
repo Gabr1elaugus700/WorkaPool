@@ -30,7 +30,7 @@ export default function CadastroIbcAlertsPanel({ alerts }: Props) {
             <span className="font-medium">{alert.identificador}</span>
             <span className="text-muted-foreground">
               {" — "}
-              {ibcCadastroLabels.motivoInaptidao[alert.motivo]}
+              {ibcCadastroLabels.alertaMotivo[alert.motivo]}
             </span>
           </li>
         );

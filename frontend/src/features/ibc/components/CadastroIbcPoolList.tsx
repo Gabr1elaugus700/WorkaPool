@@ -58,6 +58,11 @@ export default function CadastroIbcPoolList({
                     {ibcCadastroLabels.motivoInaptidao[ibc.motivoInaptidao]}
                   </Badge>
                 ) : null}
+                {ibc.primeiraInspecaoEm == null ? (
+                  <Badge variant="outline" className="text-[10px]">
+                    {ibcCadastroLabels.alertaMotivo.SEM_INSPECAO}
+                  </Badge>
+                ) : null}
                 {isIbcNaoHomologado(ibc) ? (
                   <Badge variant="outline" className="text-[10px]">
                     Não homologado

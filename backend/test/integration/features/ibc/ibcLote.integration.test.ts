@@ -116,8 +116,9 @@ describe("IBC lote HTTP persistence (#117 / #121)", () => {
     for (const item of response.body.items) {
       assert.match(item.identificador, /^HMLO\d{5}$/);
       assert.equal(item.tipoCadastro, "NOVO");
-      assert.equal(item.aptidao, "INAPTO");
-      assert.equal(item.motivoInaptidao, "AGUARDANDO_INSPECAO");
+      assert.equal(item.aptidao, "APTO");
+      assert.equal(item.motivoInaptidao, null);
+      assert.equal(item.primeiraInspecaoEm, null);
       assert.equal(item.custodia, "PATIO");
       assert.equal(item.loteId, response.body.lote.id);
       assert.equal(item.produtoId, produtoId);

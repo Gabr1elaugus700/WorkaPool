@@ -132,7 +132,7 @@ Grill fechado. Decisão-mãe: **SoT dual** — não sincronizar nem igualar os d
 
 | Fluxo | Regra |
 |-------|--------|
-| **Lote (compra)** | UI: Entrada → N novos → `dataLimite` única do lote → **NF opcional** (rastro no WP) → gera N identificadores. Defaults iguais ao cadastro unitário: `Aquisição=COMPRA`, `tipoCadastro=NOVO`, `custodia=PATIO`, `AGUARDANDO_INSPECAO` (Inapto). |
+| **Lote (compra)** | UI: Entrada → N novos → `dataLimite` única do lote → **NF opcional** (rastro no WP) → gera N identificadores. Defaults iguais ao cadastro unitário: `Aquisição=COMPRA`, `tipoCadastro=NOVO`, `custodia=PATIO`, Apto com alerta **Sem inspeção** (`primeiraInspecaoEm` nulo; não bloqueia alocação — #271). |
 | **Unitário** | Continua (#32). |
 | **Troca** | **Sem lote.** Na volta (#38): X vazios para cadastrar; cada `#in` vinculado 1:1 a um `#out` pendente daquele cliente/viagem. |
 | **Estoque legado no pátio** | Serializar com um ou mais **lotes de compra** (mesmo sem NF histórica no fluxo). |

@@ -132,8 +132,9 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     assert.equal(response.status, 201);
     assert.match(response.body.identificador, /^HMSA\d{5}$/);
     assert.equal(response.body.tipoCadastro, "NOVO");
-    assert.equal(response.body.aptidao, "INAPTO");
-    assert.equal(response.body.motivoInaptidao, "AGUARDANDO_INSPECAO");
+    assert.equal(response.body.aptidao, "APTO");
+    assert.equal(response.body.motivoInaptidao, null);
+    assert.equal(response.body.primeiraInspecaoEm, null);
     assert.equal(response.body.custodia, "PATIO");
 
     const row = await prisma.ibc.findUnique({
@@ -141,7 +142,9 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     });
     assert.ok(row);
     assert.equal(row.tipoCadastro, "NOVO");
-    assert.equal(row.motivoInaptidao, "AGUARDANDO_INSPECAO");
+    assert.equal(row.aptidao, "APTO");
+    assert.equal(row.motivoInaptidao, null);
+    assert.equal(row.primeiraInspecaoEm, null);
     assert.equal(row.produtoId, produtoId);
   });
 
@@ -399,8 +402,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     await prisma.ibc.create({
       data: {
         identificador: `NHMRB${String(nextSequencial).padStart(5, "0")}`,
-        aptidao: "INAPTO",
-        motivoInaptidao: "AGUARDANDO_INSPECAO",
+        aptidao: "APTO",
         custodia: "PATIO",
         tipoCadastro: "NOVO",
         produtoId,
@@ -583,8 +585,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     const active = await prisma.ibc.create({
       data: {
         identificador: "TCA0101",
-        aptidao: "INAPTO",
-        motivoInaptidao: "AGUARDANDO_INSPECAO",
+        aptidao: "APTO",
         custodia: "PATIO",
         tipoCadastro: "NOVO",
         dataLimite: new Date("2099-12-31T00:00:00.000Z"),
@@ -593,8 +594,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     await prisma.ibc.create({
       data: {
         identificador: "TCA0102",
-        aptidao: "INAPTO",
-        motivoInaptidao: "AGUARDANDO_INSPECAO",
+        aptidao: "APTO",
         custodia: "PATIO",
         tipoCadastro: "NOVO",
         dataLimite: new Date("2099-12-31T00:00:00.000Z"),
@@ -616,15 +616,14 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     );
   });
 
-  it("GET alerts returns awaiting and expired identifiers", async () => {
+  it("GET alerts returns sem inspeção and expired identifiers", async () => {
     const app = createIbcTestApp();
     const token = createToken(Role.ALMOX);
 
     await prisma.ibc.create({
       data: {
         identificador: "TCA0201",
-        aptidao: "INAPTO",
-        motivoInaptidao: "AGUARDANDO_INSPECAO",
+        aptidao: "APTO",
         custodia: "PATIO",
         tipoCadastro: "NOVO",
         dataLimite: new Date("2099-12-31T00:00:00.000Z"),
@@ -633,11 +632,21 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     await prisma.ibc.create({
       data: {
         identificador: "TCA0202",
-        aptidao: "INAPTO",
-        motivoInaptidao: "AGUARDANDO_INSPECAO",
+        aptidao: "APTO",
         custodia: "PATIO",
         tipoCadastro: "NOVO",
         dataLimite: new Date("2020-01-01T00:00:00.000Z"),
+        primeiraInspecaoEm: new Date("2019-12-01T00:00:00.000Z"),
+      },
+    });
+    await prisma.ibc.create({
+      data: {
+        identificador: "TCA0203",
+        aptidao: "APTO",
+        custodia: "PATIO",
+        tipoCadastro: "NOVO",
+        dataLimite: new Date("2099-12-31T00:00:00.000Z"),
+        primeiraInspecaoEm: new Date("2026-09-01T00:00:00.000Z"),
       },
     });
 
@@ -646,14 +655,19 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
       .set("Authorization", `Bearer ${token}`);
 
     assert.equal(response.status, 200);
-    const byId = new Map(
-      response.body.map((row: { identificador: string; motivo: string }) => [
-        row.identificador,
-        row.motivo,
-      ]),
-    );
-    assert.equal(byId.get("TCA0201"), "AGUARDANDO_INSPECAO");
-    assert.equal(byId.get("TCA0202"), "DATA_LIMITE");
+    const motivosOf = (identificador: string): string[] =>
+      response.body
+        .filter((row: { identificador: string }) => row.identificador === identificador)
+        .map((row: { motivo: string }) => row.motivo);
+    assert.deepEqual(motivosOf("TCA0201"), ["SEM_INSPECAO"]);
+    assert.deepEqual(motivosOf("TCA0202"), ["DATA_LIMITE"]);
+    assert.deepEqual(motivosOf("TCA0203"), []);
+
+    const expired = await prisma.ibc.findUnique({
+      where: { identificador: "TCA0202" },
+    });
+    assert.equal(expired?.aptidao, "INAPTO");
+    assert.equal(expired?.motivoInaptidao, "DATA_LIMITE");
   });
 
   it("PATCH data limite and DELETE soft-delete round-trip", async () => {
@@ -662,8 +676,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     const created = await prisma.ibc.create({
       data: {
         identificador: "TCA0301",
-        aptidao: "INAPTO",
-        motivoInaptidao: "AGUARDANDO_INSPECAO",
+        aptidao: "APTO",
         custodia: "PATIO",
         tipoCadastro: "NOVO",
         dataLimite: new Date("2099-06-01T00:00:00.000Z"),

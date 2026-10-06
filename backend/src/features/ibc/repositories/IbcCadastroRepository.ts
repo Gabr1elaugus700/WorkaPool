@@ -27,6 +27,7 @@ type IbcRow = {
   motivoInaptidao: "AGUARDANDO_INSPECAO" | "DATA_LIMITE" | null;
   custodia: "PATIO" | "EM_VIAGEM";
   dataLimite: Date | null;
+  primeiraInspecaoEm: Date | null;
   baixadoEm: Date | null;
   createdAt: Date;
   loteId?: string | null;
@@ -98,6 +99,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
               motivoInaptidao: data.motivoInaptidao,
               custodia: data.custodia,
               dataLimite: data.dataLimite,
+              primeiraInspecaoEm: data.primeiraInspecaoEm,
               loteId: data.loteId ?? null,
               produtoId: data.produtoId,
             };
@@ -146,6 +148,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
             aquisicao: source.aquisicao,
             motivoInaptidao: source.motivoInaptidao,
             dataLimite: source.dataLimite,
+            primeiraInspecaoEm: source.primeiraInspecaoEm,
             produtoId: data.produtoId,
           },
         });
@@ -320,6 +323,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
       motivoInaptidao: row.motivoInaptidao,
       custodia: row.custodia,
       dataLimite: row.dataLimite,
+      primeiraInspecaoEm: row.primeiraInspecaoEm,
       baixadoEm: row.baixadoEm,
       createdAt: row.createdAt,
       loteId: row.loteId ?? null,

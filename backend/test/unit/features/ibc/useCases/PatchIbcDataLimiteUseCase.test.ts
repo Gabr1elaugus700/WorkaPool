@@ -14,10 +14,11 @@ const buildIbc = (
   id: "ibc-1",
   identificador: "HM0001",
   tipoCadastro: "NOVO",
-  aptidao: "INAPTO",
-  motivoInaptidao: "AGUARDANDO_INSPECAO",
+  aptidao: "APTO",
+  motivoInaptidao: null,
   custodia: "PATIO",
   dataLimite: FUTURE_DATA_LIMITE,
+  primeiraInspecaoEm: null,
   baixadoEm: null,
   createdAt: new Date("2026-09-01T00:00:00.000Z"),
   ...overrides,
@@ -47,7 +48,7 @@ describe("PatchIbcDataLimiteUseCase", () => {
     assert.equal(result.dataLimite.toISOString(), NEW_DATA_LIMITE.toISOString());
     assert.equal(result.identificador, "HM0001");
     assert.equal(result.tipoCadastro, "NOVO");
-    assert.equal(result.aptidao, "INAPTO");
+    assert.equal(result.aptidao, "APTO");
     assert.equal(result.custodia, "PATIO");
     assert.deepEqual(updateDataLimite.mock.calls[0].arguments, [
       "ibc-1",

@@ -148,7 +148,7 @@ Audit trail of structural changes (`from` → `to`, tipo, observação, actor, d
 _Avoid_: mixing with inspeção or custódia history
 
 **Cadastro em lote**:
-Purchase batch: operator provides N, one shared `dataLimite`, optional NF trace and the Produto; system creates N Novo IBCs (COMPRA / PATIO / AGUARDANDO_INSPECAO) with consecutive sequenciais of the product prefixo in one transaction. Soft-warns when vivos+N > ERP saldo for codpro 251001; never hard-blocks.
+Purchase batch: operator provides N, one shared `dataLimite`, optional NF trace and the Produto; system creates N Novo IBCs (COMPRA / PATIO / Apto + Sem inspeção) with consecutive sequenciais of the product prefixo in one transaction. Soft-warns when vivos+N > ERP saldo for codpro 251001; never hard-blocks.
 _Avoid_: troca/return batch, hard cap vs ERP, ERP stock write-back
 
 **Saldo ERP IBC (codpro 251001)**:
@@ -156,8 +156,12 @@ Read-only Sapiens stock of product-container via `e210est.qtdest` (`SUM` for com
 _Avoid_: treating packaging expected count as fiscal saldo, writing stock to ERP
 
 **Aguardando inspeção**:
-Aptidão state in which the IBC is **Inapto** until an operator completes Inspeção (checklist + score) on the aptidão screen. Applies on every cadastro and on **every Entrada no pátio** (Transbordo, Empréstimo devolvido, Troca) — no reuse / Preparação de expedição until Apto. Outbound IBC replaced in a Troca de IBC leaves the company pool.
-_Avoid_: putting a never-inspected or just-returned IBC Em viagem, treating Troca inbound as Apto by default, skipping verification on “known good” returns
+Aptidão state in which the IBC is **Inapto** until an operator completes Inspeção (checklist + score) on the aptidão screen. Applies on **every Entrada no pátio** (Transbordo, Empréstimo devolvido, Troca) — no reuse / Preparação de expedição until Apto. Does **not** apply on cadastro: a new IBC is born Apto with the **Sem inspeção** alert (#271). The fate of the `AGUARDANDO_INSPECAO` enum value is decided with Entrada no pátio. Outbound IBC replaced in a Troca de IBC leaves the company pool.
+_Avoid_: putting a just-returned IBC Em viagem, treating Troca inbound as Apto by default, skipping verification on “known good” returns, blocking cadastro on missing checklist/inspeção
+
+**Sem inspeção**:
+Non-blocking alert (`SEM_INSPECAO`) for an IBC that was never inspected (`primeiraInspecaoEm` null). Every cadastro (unitário and lote) starts this way; the IBC is Apto and can be allocated. The alert clears on the first approved Inspeção. Independent of aptidão: an expired IBC can show both `DATA_LIMITE` and `SEM_INSPECAO`. Conversão and Mudança de produto inherit it from the source.
+_Avoid_: treating it as Inapto, blocking AlocacaoIbc because of it, deriving it from `motivoInaptidao`
 
 **Aviso ao Representante**:
 Operational notice to the Pedido’s Representante when, after the trip return, containers for that Pedido remained with the Cliente (did not return on the truck). Raised in the return/closing flow (operator-involved), not a vague generic alert.
