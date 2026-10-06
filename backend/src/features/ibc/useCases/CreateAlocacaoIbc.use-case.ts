@@ -4,6 +4,7 @@ import {
   AlocacaoIbcRecord,
 } from "../types/IbcExpedicao.types";
 import { AppError } from "../../../utils/AppError";
+import { isDataLimiteDue } from "../utils/ibcDataLimite";
 
 export type CreateAlocacaoIbcInput = {
   codCar: number;
@@ -19,16 +20,6 @@ export type CreateAlocacaoIbcResult = {
 };
 
 const SITUACOES_PREPARACAO = new Set(["ABERTA", "FECHADA"]);
-
-function startOfUtcDay(date: Date): Date {
-  return new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
-  );
-}
-
-function isDataLimiteDue(dataLimite: Date, now: Date): boolean {
-  return startOfUtcDay(dataLimite) <= startOfUtcDay(now);
-}
 
 export class CreateAlocacaoIbcUseCase {
   private readonly repository: IIbcExpedicaoRepository;

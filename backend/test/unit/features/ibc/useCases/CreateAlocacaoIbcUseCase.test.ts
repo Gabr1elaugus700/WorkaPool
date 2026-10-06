@@ -131,6 +131,29 @@ describe("CreateAlocacaoIbcUseCase", () => {
     );
   });
 
+  it("aceita IBC recém-cadastrado (Apto, sem inspeção) com data limite futura", async () => {
+    const markIbcDataLimite = mock.fn(async () => buildIbc());
+    const repo = buildHappyRepo({
+      findIbcByIdentificador: mock.fn(async () =>
+        buildIbc({ identificador: "HMS00001", aptidao: "APTO" }),
+      ),
+      markIbcDataLimite,
+    });
+    const useCase = new CreateAlocacaoIbcUseCase(
+      repo as IIbcExpedicaoRepository,
+    );
+
+    const result = await useCase.execute({
+      codCar: COD_CAR,
+      numPed: "1120",
+      identificador: "HMS00001",
+      alocadoPorId: ALOCADO_POR_ID,
+    });
+
+    assert.strictEqual(result.quantidadeAlocada, 1);
+    assert.strictEqual(markIbcDataLimite.mock.calls.length, 0);
+  });
+
   it("rejeita alocação quando IBC é Inapto", async () => {
     const createAlocacao = mock.fn(async () => {
       throw new Error("não deve criar");

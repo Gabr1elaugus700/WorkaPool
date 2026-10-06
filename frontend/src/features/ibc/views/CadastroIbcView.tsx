@@ -135,8 +135,8 @@ export default function CadastroIbcView() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Cadastro IBC</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Novo IBC nasce Inapto / Aguardando inspeção com identificador HM +
-            letra do produto. Lote de compra gera N unidades com a mesma data
+            Novo IBC nasce Apto, com alerta Sem inspeção até a primeira
+            inspeção, e identificador HM + letra do produto. Lote de compra gera N unidades com a mesma data
             limite. Conversão e mudança de produto criam um novo registro.
           </p>
         </div>

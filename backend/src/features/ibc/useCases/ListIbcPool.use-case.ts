@@ -1,19 +1,10 @@
 import { IIbcCadastroRepository } from "../repositories/IIbcCadastroRepository";
 import { IbcCadastroRecord } from "../types/IbcCadastro.types";
+import { shouldMarkDataLimite } from "../utils/ibcDataLimite";
 
 export type ListIbcPoolInput = {
   incluirBaixados?: boolean;
 };
-
-function startOfUtcDay(date: Date): Date {
-  return new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
-  );
-}
-
-function isDataLimiteDue(dataLimite: Date, now: Date): boolean {
-  return startOfUtcDay(dataLimite) <= startOfUtcDay(now);
-}
 
 export class ListIbcPoolUseCase {
   private readonly repository: IIbcCadastroRepository;
@@ -32,12 +23,7 @@ export class ListIbcPoolUseCase {
     const result: IbcCadastroRecord[] = [];
 
     for (const ibc of ibcs) {
-      if (
-        ibc.baixadoEm == null &&
-        ibc.dataLimite != null &&
-        ibc.motivoInaptidao === "AGUARDANDO_INSPECAO" &&
-        isDataLimiteDue(ibc.dataLimite, now)
-      ) {
+      if (shouldMarkDataLimite(ibc, now)) {
         result.push(await this.repository.markDataLimite(ibc.id));
       } else {
         result.push(ibc);

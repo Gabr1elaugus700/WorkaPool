@@ -151,6 +151,7 @@ model Ibc {
   aquisicao        IbcAquisicao        @default(COMPRA)
   motivoInaptidao  IbcMotivoInaptidao?
   dataLimite       DateTime?
+  primeiraInspecaoEm DateTime?
   baixadoEm        DateTime?
   createdAt        DateTime            @default(now())
   loteId           String?

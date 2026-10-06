@@ -6,6 +6,7 @@ export type IbcCadastroDTO = {
   motivoInaptidao: "AGUARDANDO_INSPECAO" | "DATA_LIMITE" | null;
   custodia: "PATIO" | "EM_VIAGEM";
   dataLimite: string | null;
+  primeiraInspecaoEm: string | null;
   baixadoEm: string | null;
   createdAt: string;
   loteId?: string | null;
@@ -39,7 +40,7 @@ export type ChangeIbcProdutoInput = IbcMudancaConfirmacaoInput & {
 
 export type IbcAlertDTO = {
   identificador: string;
-  motivo: "AGUARDANDO_INSPECAO" | "DATA_LIMITE";
+  motivo: "AGUARDANDO_INSPECAO" | "DATA_LIMITE" | "SEM_INSPECAO";
 };
 
 export type CreateNovoIbcInput = {

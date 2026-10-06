@@ -113,10 +113,11 @@ export class CreateLoteIbcUseCase {
       {
         prefixo: getIbcIdentifierPrefix(produto.abreviacao),
         tipoCadastro: "NOVO",
-        aptidao: "INAPTO",
-        motivoInaptidao: "AGUARDANDO_INSPECAO",
+        aptidao: "APTO",
+        motivoInaptidao: null,
         custodia: "PATIO",
         dataLimite,
+        primeiraInspecaoEm: null,
         loteId: lote.id,
         produtoId: produto.id,
       },

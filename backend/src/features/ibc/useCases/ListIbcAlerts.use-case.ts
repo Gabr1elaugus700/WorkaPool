@@ -1,23 +1,14 @@
 import { IIbcCadastroRepository } from "../repositories/IIbcCadastroRepository";
 import {
+  IbcAlertMotivo,
   IbcCadastroRecord,
-  IbcMotivoInaptidao,
 } from "../types/IbcCadastro.types";
+import { shouldMarkDataLimite } from "../utils/ibcDataLimite";
 
 export type IbcAlert = {
   identificador: string;
-  motivo: IbcMotivoInaptidao;
+  motivo: IbcAlertMotivo;
 };
-
-function startOfUtcDay(date: Date): Date {
-  return new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
-  );
-}
-
-function isDataLimiteDue(dataLimite: Date, now: Date): boolean {
-  return startOfUtcDay(dataLimite) <= startOfUtcDay(now);
-}
 
 export class ListIbcAlertsUseCase {
   private readonly repository: IIbcCadastroRepository;
@@ -42,6 +33,12 @@ export class ListIbcAlertsUseCase {
           motivo: materialized.motivoInaptidao,
         });
       }
+      if (materialized.primeiraInspecaoEm == null) {
+        alerts.push({
+          identificador: materialized.identificador,
+          motivo: "SEM_INSPECAO",
+        });
+      }
     }
 
     return alerts;
@@ -51,11 +48,7 @@ export class ListIbcAlertsUseCase {
     ibc: IbcCadastroRecord,
     now: Date,
   ): Promise<IbcCadastroRecord> {
-    if (
-      ibc.dataLimite != null &&
-      ibc.motivoInaptidao === "AGUARDANDO_INSPECAO" &&
-      isDataLimiteDue(ibc.dataLimite, now)
-    ) {
+    if (shouldMarkDataLimite(ibc, now)) {
       return this.repository.markDataLimite(ibc.id);
     }
     return ibc;

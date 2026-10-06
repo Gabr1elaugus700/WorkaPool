@@ -44,6 +44,7 @@ const buildCreatedIbc = (
   motivoInaptidao: data.motivoInaptidao,
   custodia: data.custodia,
   dataLimite: data.dataLimite,
+  primeiraInspecaoEm: data.primeiraInspecaoEm,
   produtoId: data.produtoId,
   baixadoEm: null,
   createdAt: new Date("2026-09-14T12:00:00.000Z"),
@@ -96,8 +97,9 @@ describe("CreateLoteIbcUseCase core (#117 / #121 slice 2)", () => {
     assert.equal(result.lote.id, "lote-1");
     for (const item of result.items) {
       assert.equal(item.tipoCadastro, "NOVO");
-      assert.equal(item.aptidao, "INAPTO");
-      assert.equal(item.motivoInaptidao, "AGUARDANDO_INSPECAO");
+      assert.equal(item.aptidao, "APTO");
+      assert.equal(item.motivoInaptidao, null);
+      assert.equal(item.primeiraInspecaoEm, null);
       assert.equal(item.custodia, "PATIO");
       assert.equal(item.dataLimite?.toISOString(), FUTURE_DATA_LIMITE.toISOString());
       assert.equal(item.loteId, "lote-1");
