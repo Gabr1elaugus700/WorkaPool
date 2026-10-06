@@ -28,6 +28,9 @@ function createRepository(found: IbcChecklistItemRecord | null) {
     async findById() {
       return found;
     },
+    async findManyByIds() {
+      return found ? [found] : [];
+    },
     async create(data) {
       creates.push(data);
       return { ...tampa, ...data };

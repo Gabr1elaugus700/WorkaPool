@@ -7,6 +7,11 @@ import { IbcChecklistItemRepository } from "../../repositories/IbcChecklistItemR
 import { ListIbcChecklistItensUseCase } from "../../useCases/ListIbcChecklistItens.use-case";
 import { CreateIbcChecklistItemUseCase } from "../../useCases/CreateIbcChecklistItem.use-case";
 import { UpdateIbcChecklistItemUseCase } from "../../useCases/UpdateIbcChecklistItem.use-case";
+import { IbcChecklistRepository } from "../../repositories/IbcChecklistRepository";
+import { ListIbcChecklistsUseCase } from "../../useCases/ListIbcChecklists.use-case";
+import { GetIbcChecklistUseCase } from "../../useCases/GetIbcChecklist.use-case";
+import { CreateIbcChecklistUseCase } from "../../useCases/CreateIbcChecklist.use-case";
+import { UpdateIbcChecklistUseCase } from "../../useCases/UpdateIbcChecklist.use-case";
 
 function actorRole(req: Request): Role {
   if (!req.user) {
@@ -57,6 +62,60 @@ export class IbcChecklistController {
       return res.status(200).json(item);
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao editar item de checklist");
+    }
+  }
+
+  static async listChecklists(_req: Request, res: Response): Promise<Response> {
+    try {
+      const checklists = await new ListIbcChecklistsUseCase(new IbcChecklistRepository()).execute();
+      return res.status(200).json(checklists);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao listar checklists de IBC");
+    }
+  }
+
+  static async getChecklist(req: Request, res: Response): Promise<Response> {
+    try {
+      const checklist = await new GetIbcChecklistUseCase(new IbcChecklistRepository()).execute(
+        String(req.params.checklistId),
+      );
+      return res.status(200).json(checklist);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao buscar checklist de IBC");
+    }
+  }
+
+  static async createChecklist(req: Request, res: Response): Promise<Response> {
+    try {
+      const parsed = IbcChecklistHttpSchemas.createChecklist.safeParse(req.body);
+      if (!parsed.success) throw invalidBody("IBC_CHECKLIST_INVALID_BODY", parsed.error.format());
+
+      const checklist = await new CreateIbcChecklistUseCase(
+        new IbcChecklistRepository(),
+        new IbcChecklistItemRepository(),
+      ).execute({ actorRole: actorRole(req), ...parsed.data });
+      return res.status(201).json(checklist);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao cadastrar checklist de IBC");
+    }
+  }
+
+  static async updateChecklist(req: Request, res: Response): Promise<Response> {
+    try {
+      const parsed = IbcChecklistHttpSchemas.updateChecklist.safeParse(req.body);
+      if (!parsed.success) throw invalidBody("IBC_CHECKLIST_INVALID_BODY", parsed.error.format());
+
+      const checklist = await new UpdateIbcChecklistUseCase(
+        new IbcChecklistRepository(),
+        new IbcChecklistItemRepository(),
+      ).execute({
+        actorRole: actorRole(req),
+        id: String(req.params.checklistId),
+        ...parsed.data,
+      });
+      return res.status(200).json(checklist);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao editar checklist de IBC");
     }
   }
 }

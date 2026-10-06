@@ -26,6 +26,11 @@ export class IbcChecklistItemRepository implements IIbcChecklistItemRepository {
     return row ? toChecklistItemRecord(row) : null;
   }
 
+  async findManyByIds(ids: string[]): Promise<IbcChecklistItemRecord[]> {
+    const rows = await this.prisma.checklistItem.findMany({ where: { id: { in: ids } } });
+    return rows.map(toChecklistItemRecord);
+  }
+
   async create(data: CreateIbcChecklistItemData): Promise<IbcChecklistItemRecord> {
     return toChecklistItemRecord(await this.prisma.checklistItem.create({ data }));
   }
