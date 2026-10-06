@@ -27,6 +27,9 @@ router.get("/checklist-itens", readAuth, IbcChecklistController.listItens);
 router.post("/checklist-itens", writeAuth, IbcChecklistController.createItem);
 router.patch("/checklist-itens/:itemId", writeAuth, IbcChecklistController.updateItem);
 
+router.get("/checklists", readAuth, IbcChecklistController.listChecklists);
+router.post("/checklists", writeAuth, IbcChecklistController.createChecklist);
+router.get("/checklists/:checklistId", readAuth, IbcChecklistController.getChecklist);
 router.post(
   "/",
   authMiddleware,

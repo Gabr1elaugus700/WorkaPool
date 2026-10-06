@@ -306,6 +306,23 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(update.status, 403);
   });
 
+  await t.test("checklists: 401 sem token, LOGISTICA lê mas não cria", async () => {
+    const anonymous = await request(app).get("/api/ibc/checklists");
+    const token = createToken("LOGISTICA");
+    const list = await request(app)
+      .get("/api/ibc/checklists")
+      .set("Authorization", `Bearer ${token}`);
+    const create = await request(app)
+      .post("/api/ibc/checklists")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: "Checklist Soda" });
+
+    assert.strictEqual(anonymous.status, 401);
+    assert.notStrictEqual(list.status, 401);
+    assert.notStrictEqual(list.status, 403);
+    assert.strictEqual(create.status, 403);
+  });
+
   await t.test("LOGISTICA pode ler pool, alerts e produtos", async () => {
     const token = createToken("LOGISTICA");
     const list = await request(app)
