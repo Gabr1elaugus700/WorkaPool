@@ -66,8 +66,8 @@ _Avoid_: embedding checklist only as code constants with no admin cadastro, mark
 
 **Checklist de IBC**:
 A named set of catalog items (e.g. "Checklist Soda", "Estrutural") stored in `ChecklistModelo` with `tipo = IBC`, ordered items (`ChecklistModeloItem.ordem`), `notaMinimaCritico` and `mediaMinima` (0–10, required for IBC), and `ativo`. Vistoria screens only see `tipo = VISTORIA`.
-Managed via `/api/ibc/checklists` (GET/POST) and `/api/ibc/checklists/:checklistId` (GET/PATCH); reads ADMIN/ALMOX/LOGISTICA/GERENTE_DPTO, writes ADMIN/ALMOX. `itensIds` is the full ordered list (array index = `ordem`, no duplicates, at least one); sending it on PATCH replaces all items. An inactive item cannot be added (422 `IBC_CHECKLIST_ITEM_INATIVO`), but one already in the checklist that was deactivated later may stay. Unknown item → 404 `IBC_CHECKLIST_ITEM_NOT_FOUND`; missing or non-IBC checklist → 404 `IBC_CHECKLIST_NOT_FOUND`. Deactivation is `ativo: false` (no delete).
-_Avoid_: separate checklist tables for IBC, showing IBC checklists in Vistoria, adding inactive items, deleting checklists
+Managed via `/api/ibc/checklists` (GET/POST) and `/api/ibc/checklists/:checklistId` (GET); reads ADMIN/ALMOX/LOGISTICA/GERENTE_DPTO, writes ADMIN/ALMOX. `itensIds` is the full ordered list (array index = `ordem`, no duplicates, at least one). An inactive item cannot be added (422 `IBC_CHECKLIST_ITEM_INATIVO`). Unknown item → 404 `IBC_CHECKLIST_ITEM_NOT_FOUND`; missing or non-IBC checklist → 404 `IBC_CHECKLIST_NOT_FOUND`.
+_Avoid_: separate checklist tables for IBC, showing IBC checklists in Vistoria, adding inactive items
 
 **Aptidão**:
 Whether the IBC may be used in circulation right now: **Apto** or **Inapto**. Inapto must surface as an alert in the IBC module (identifier visible, with reason).

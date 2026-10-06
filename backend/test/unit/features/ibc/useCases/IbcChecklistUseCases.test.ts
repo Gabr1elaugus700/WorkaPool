@@ -2,12 +2,10 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { Role } from "@prisma/client";
 import { CreateIbcChecklistUseCase } from "../../../../../src/features/ibc/useCases/CreateIbcChecklist.use-case";
-import { UpdateIbcChecklistUseCase } from "../../../../../src/features/ibc/useCases/UpdateIbcChecklist.use-case";
 import { GetIbcChecklistUseCase } from "../../../../../src/features/ibc/useCases/GetIbcChecklist.use-case";
 import {
   CreateIbcChecklistData,
   IIbcChecklistRepository,
-  UpdateIbcChecklistData,
 } from "../../../../../src/features/ibc/repositories/IIbcChecklistRepository";
 import { IIbcChecklistItemRepository } from "../../../../../src/features/ibc/repositories/IIbcChecklistItemRepository";
 import {
@@ -32,16 +30,12 @@ const checklistSoda: IbcChecklistRecord = {
   mediaMinima: 6,
   ativo: true,
   createdAt: "2026-10-06T00:00:00.000Z",
-  itens: [{ itemId: "item-3", descricao: "Válvula", critico: false, ativo: false, ordem: 0 }],
+  itens: [{ itemId: "item-1", descricao: "Tampa", critico: true, ativo: true, ordem: 0 }],
 };
 
-function createRepositories(options: {
-  checklist?: IbcChecklistRecord | null;
-  catalog?: IbcChecklistItemRecord[];
-}) {
+function createRepositories(options: { checklist?: IbcChecklistRecord | null }) {
   const creates: CreateIbcChecklistData[] = [];
-  const updates: UpdateIbcChecklistData[] = [];
-  const catalog = options.catalog ?? [tampa, base, valvulaInativa];
+  const catalog = [tampa, base, valvulaInativa];
 
   const checklists: IIbcChecklistRepository = {
     async list() {
@@ -53,10 +47,6 @@ function createRepositories(options: {
     async create(data) {
       creates.push(data);
       return { ...checklistSoda, ...data, itens: [] };
-    },
-    async updateById(id, data) {
-      updates.push(data);
-      return { ...checklistSoda, id };
     },
   };
 
@@ -78,7 +68,7 @@ function createRepositories(options: {
     },
   };
 
-  return { checklists, itens, creates, updates };
+  return { checklists, itens, creates };
 }
 
 function hasCode(code: string, statusCode: number) {
@@ -135,64 +125,19 @@ describe("IBC checklist use-cases", () => {
     assert.equal(creates.length, 0);
   });
 
-  it("keeps an item that was deactivated after joining the checklist", async () => {
-    const { checklists, itens, updates } = createRepositories({ checklist: checklistSoda });
-    await new UpdateIbcChecklistUseCase(checklists, itens).execute({
-      actorRole: Role.ALMOX,
-      id: "checklist-1",
-      itensIds: ["item-1", "item-3"],
-    });
-    assert.deepEqual(updates[0]?.itensIds, ["item-1", "item-3"]);
-  });
+  it("returns the checklist or 404 for missing (including non-IBC ids)", async () => {
+    const found = createRepositories({ checklist: checklistSoda });
+    assert.equal((await new GetIbcChecklistUseCase(found.checklists).execute("checklist-1")).id, "checklist-1");
 
-  it("refuses a newly added inactive item on update", async () => {
-    const { checklists, itens, updates } = createRepositories({
-      checklist: { ...checklistSoda, itens: [] },
-    });
+    const missing = createRepositories({ checklist: null });
     await assert.rejects(
-      () =>
-        new UpdateIbcChecklistUseCase(checklists, itens).execute({
-          actorRole: Role.ALMOX,
-          id: "checklist-1",
-          itensIds: ["item-3"],
-        }),
-      hasCode("IBC_CHECKLIST_ITEM_INATIVO", 422),
-    );
-    assert.equal(updates.length, 0);
-  });
-
-  it("updates fields without touching itens when itensIds is absent", async () => {
-    const { checklists, itens, updates } = createRepositories({ checklist: checklistSoda });
-    await new UpdateIbcChecklistUseCase(checklists, itens).execute({
-      actorRole: Role.ADMIN,
-      id: "checklist-1",
-      ativo: false,
-    });
-    assert.deepEqual(updates, [
-      { nome: undefined, notaMinimaCritico: undefined, mediaMinima: undefined, ativo: false, itensIds: undefined },
-    ]);
-  });
-
-  it("returns 404 for missing checklist (including non-IBC ids)", async () => {
-    const { checklists, itens, updates } = createRepositories({ checklist: null });
-    await assert.rejects(
-      () => new GetIbcChecklistUseCase(checklists).execute("vistoria-id"),
+      () => new GetIbcChecklistUseCase(missing.checklists).execute("vistoria-id"),
       hasCode("IBC_CHECKLIST_NOT_FOUND", 404),
     );
-    await assert.rejects(
-      () =>
-        new UpdateIbcChecklistUseCase(checklists, itens).execute({
-          actorRole: Role.ADMIN,
-          id: "vistoria-id",
-          ativo: false,
-        }),
-      hasCode("IBC_CHECKLIST_NOT_FOUND", 404),
-    );
-    assert.equal(updates.length, 0);
   });
 
   it("forbids roles other than ADMIN and ALMOX", async () => {
-    const { checklists, itens, creates, updates } = createRepositories({ checklist: checklistSoda });
+    const { checklists, itens, creates } = createRepositories({});
     await assert.rejects(
       () =>
         new CreateIbcChecklistUseCase(checklists, itens).execute({
@@ -204,15 +149,6 @@ describe("IBC checklist use-cases", () => {
         }),
       hasCode("IBC_CHECKLIST_FORBIDDEN", 403),
     );
-    await assert.rejects(
-      () =>
-        new UpdateIbcChecklistUseCase(checklists, itens).execute({
-          actorRole: Role.VENDAS,
-          id: "checklist-1",
-          ativo: false,
-        }),
-      hasCode("IBC_CHECKLIST_FORBIDDEN", 403),
-    );
-    assert.equal(creates.length + updates.length, 0);
+    assert.equal(creates.length, 0);
   });
 });

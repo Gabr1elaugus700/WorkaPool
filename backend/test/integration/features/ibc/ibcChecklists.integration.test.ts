@@ -69,11 +69,10 @@ describe("IBC checklists HTTP persistence (#276)", () => {
     await prisma.$disconnect();
   });
 
-  it("creates, lists, reads, edits itens order and deactivates a checklist", async () => {
+  it("creates, lists and reads a checklist with ordered itens", async () => {
     const app = createTestApp();
     const tampa = await createItem("Tampa");
     const base = await createItem("Base");
-    const valvula = await createItem("Válvula");
 
     const created = await request(app)
       .post("/api/ibc/checklists")
@@ -105,32 +104,11 @@ describe("IBC checklists HTTP persistence (#276)", () => {
     const summary = listed.body.find((checklist: { id: string }) => checklist.id === id);
     assert.equal(summary?.totalItens, 2);
 
-    const edited = await request(app)
-      .patch(`/api/ibc/checklists/${id}`)
-      .set("Authorization", bearer(Role.ADMIN))
-      .send({ nome: `${FIXTURE_PREFIX}Estrutural`, mediaMinima: 8, itensIds: [valvula, tampa] });
-    assert.equal(edited.status, 200);
-    assert.equal(edited.body.nome, `${FIXTURE_PREFIX}Estrutural`);
-    assert.equal(edited.body.mediaMinima, 8);
-    assert.equal(edited.body.notaMinimaCritico, 7);
-    assert.deepEqual(
-      edited.body.itens.map((item: ItemNoChecklist) => [item.itemId, item.ordem]),
-      [[valvula, 0], [tampa, 1]],
-    );
-
-    const deactivated = await request(app)
-      .patch(`/api/ibc/checklists/${id}`)
-      .set("Authorization", bearer(Role.ALMOX))
-      .send({ ativo: false });
-    assert.equal(deactivated.status, 200);
-    assert.equal(deactivated.body.ativo, false);
-    assert.equal(deactivated.body.itens.length, 2);
-
     const read = await request(app)
       .get(`/api/ibc/checklists/${id}`)
       .set("Authorization", bearer(Role.ALMOX));
     assert.equal(read.status, 200);
-    assert.equal(read.body.ativo, false);
+    assert.deepEqual(read.body, created.body);
   });
 
   it("requires notas between 0 and 10 and rejects duplicate itens", async () => {
@@ -161,15 +139,9 @@ describe("IBC checklists HTTP persistence (#276)", () => {
       .set("Authorization", bearer(Role.ALMOX))
       .send({ ...valid, notaMinimaCritico: 0, mediaMinima: 10 });
     assert.equal(boundaries.status, 201);
-
-    const patchNull = await request(app)
-      .patch(`/api/ibc/checklists/${boundaries.body.id}`)
-      .set("Authorization", bearer(Role.ALMOX))
-      .send({ notaMinimaCritico: null });
-    assert.equal(patchNull.status, 400);
   });
 
-  it("refuses inactive item on create and on newly added, keeps one already present", async () => {
+  it("refuses inactive item on create", async () => {
     const app = createTestApp();
     const tampa = await createItem("Tampa");
     const inativo = await createItem("Inativo", false);
@@ -181,27 +153,7 @@ describe("IBC checklists HTTP persistence (#276)", () => {
     assert.equal(createWithInactive.status, 422);
     assert.equal(createWithInactive.body.code, "IBC_CHECKLIST_ITEM_INATIVO");
     assert.deepEqual(createWithInactive.body.details, { itensIds: [inativo] });
-
-    const created = await request(app)
-      .post("/api/ibc/checklists")
-      .set("Authorization", bearer(Role.ALMOX))
-      .send({ nome: `${FIXTURE_PREFIX}Soda`, notaMinimaCritico: 7, mediaMinima: 6, itensIds: [tampa] });
-    assert.equal(created.status, 201);
-
-    const addInactive = await request(app)
-      .patch(`/api/ibc/checklists/${created.body.id}`)
-      .set("Authorization", bearer(Role.ALMOX))
-      .send({ itensIds: [tampa, inativo] });
-    assert.equal(addInactive.status, 422);
-    assert.equal(addInactive.body.code, "IBC_CHECKLIST_ITEM_INATIVO");
-
-    await prisma.checklistItem.update({ where: { id: tampa }, data: { ativo: false } });
-    const keep = await request(app)
-      .patch(`/api/ibc/checklists/${created.body.id}`)
-      .set("Authorization", bearer(Role.ALMOX))
-      .send({ itensIds: [tampa] });
-    assert.equal(keep.status, 200);
-    assert.equal(keep.body.itens[0].ativo, false);
+    assert.equal(await prisma.checklistModelo.count({ where: { nome: `${FIXTURE_PREFIX}Soda` } }), 0);
   });
 
   it("returns 404 for unknown item, missing checklist and Vistoria checklist", async () => {
@@ -223,13 +175,8 @@ describe("IBC checklists HTTP persistence (#276)", () => {
       const get = await request(app)
         .get(`/api/ibc/checklists/${id}`)
         .set("Authorization", bearer(Role.ALMOX));
-      const patch = await request(app)
-        .patch(`/api/ibc/checklists/${id}`)
-        .set("Authorization", bearer(Role.ALMOX))
-        .send({ ativo: false });
       assert.equal(get.status, 404);
       assert.equal(get.body.code, "IBC_CHECKLIST_NOT_FOUND");
-      assert.equal(patch.status, 404);
     }
 
     const listed = await request(app)

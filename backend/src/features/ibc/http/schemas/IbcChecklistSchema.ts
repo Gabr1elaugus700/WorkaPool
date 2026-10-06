@@ -31,15 +31,4 @@ export const IbcChecklistHttpSchemas = {
     mediaMinima: nota,
     itensIds,
   }),
-  updateChecklist: z
-    .object({
-      nome: checklistNome.optional(),
-      notaMinimaCritico: nota.optional(),
-      mediaMinima: nota.optional(),
-      ativo: z.boolean().optional(),
-      itensIds: itensIds.optional(),
-    })
-    .refine((data) => Object.keys(data).length > 0, {
-      message: "Informe ao menos um campo",
-    }),
 } as const;
