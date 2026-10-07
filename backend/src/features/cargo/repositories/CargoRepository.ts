@@ -4,6 +4,8 @@ import { Carga, SituacaoCarga } from "../entities/Carga";
 import { Pedido } from "../entities/Pedido";
 import { ICargoRepository } from "./ICargoRepository";
 import { IPedidosRepository } from "../../pedidos/repositories/IPedidosRepository";
+import { PedidoCargo } from "../../pedidos/types/PedidoCargo.types";
+import { buildCargaPedidoIbcSnapshot } from "../../ibc/services/buildCargaPedidoIbcSnapshot";
 import prismaInstance from "../../../config/prisma";
 
 import { sqlPool, sqlPoolConnect } from "../../../database/sqlServer";
@@ -149,8 +151,15 @@ export class CargoRepository implements ICargoRepository {
       codRep: pedido.codRep,
       peso: pedido.peso,
       bloqueado: pedido.bloqueado,
-      produtos: pedido.produtos || [],
+      produtos: (pedido.produtos || []).map((produto) => ({
+        nome: produto.nome,
+        derivacao: produto.derivacao,
+        quantidade: produto.quantidade,
+        peso: produto.peso,
+      })),
     }));
+
+    const pedidosIbc = buildCargaPedidoIbcSnapshot(pedidosReais);
 
     const despacho = await this.prisma.$transaction(async (tx) => {
       await tx.cargas.update({
@@ -160,6 +169,16 @@ export class CargoRepository implements ICargoRepository {
           closedAt,
         },
       });
+
+      if (pedidosIbc.length > 0) {
+        await tx.cargaPedidoIbc.createMany({
+          data: pedidosIbc.map((pedido) => ({
+            ...pedido,
+            cargaId: carga.id,
+            createdAt: closedAt,
+          })),
+        });
+      }
 
       const createdDespacho = await tx.cargaDespacho.create({
         data: {
@@ -295,7 +314,7 @@ export class CargoRepository implements ICargoRepository {
     });
   }
 
-  async getPedidosPorCarga(codCar: number): Promise<Pedido[]> {
+  async getPedidosPorCarga(codCar: number): Promise<PedidoCargo[]> {
     // Delega para o repositório de pedidos
     console.log(`🔵 [Repository] Buscando pedidos para carga ${codCar}`);
     if (!this.pedidosRepository) {

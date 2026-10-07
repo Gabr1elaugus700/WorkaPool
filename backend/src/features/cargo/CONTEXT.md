@@ -17,7 +17,7 @@ Lifecycle of the load: ABERTA → SOLICITADA → FECHADA, or CANCELADA / ENTREGU
 _Avoid_: sitped, sitcar, status de Negociação
 
 **Fechar Carga**:
-Finalize an open load after each allocated Pedido has a valid shipping entry in Sapiens; produces a snapshot of what went on the load. **Requires `CargaDespacho`**: one active truck (`Trucks`) — mandatory in v1. Motorista is not part of close (#89).
+Finalize an open load after each allocated Pedido has a valid shipping entry in Sapiens; produces a snapshot of what went on the load. **Requires `CargaDespacho`**: one active truck (`Trucks`) — mandatory in v1. Motorista is not part of close (#89). The same transaction also writes the **Foto de pedidos IBC** (`CargaPedidoIbc`, see ibc `CONTEXT.md`) for Pedidos with 251001, using the pedidos already read for close — no extra Sapiens query; if the close fails, neither the Carga nor the foto is saved.
 _Avoid_: “fechar pedido” when you mean marking a Pedido Fechado; confusing with Pedido Fechado; closing without truck; requiring motorista on close
 
 **CargaDespacho**:

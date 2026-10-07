@@ -65,6 +65,7 @@ model Cargas {
   despacho             CargaDespacho?
   alocacoesIbc         AlocacaoIbc[]
   expedicaoIbc         ExpedicaoIbc?
+  pedidosIbc           CargaPedidoIbc[]
 }
 
 model OutboxEvent {
@@ -224,6 +225,24 @@ model ExpedicaoIbc {
   carga      Cargas        @relation(fields: [cargaId], references: [id])
   fechadoPor User          @relation("ExpedicaoIbcFechadoPor", fields: [fechadoPorId], references: [id])
   alocacoes  AlocacaoIbc[]
+}
+
+model CargaPedidoIbc {
+  id                           String   @id @default(uuid())
+  cargaId                      String
+  numPed                       String
+  codCli                       String?
+  cliente                      String
+  quantidadeEsperadaTotal      Int
+  quantidadeEsperadaVenda      Int
+  quantidadeEsperadaEmprestimo Int
+  ibcInvalido                  Boolean  @default(false)
+  createdAt                    DateTime @default(now())
+
+  carga Cargas @relation(fields: [cargaId], references: [id])
+
+  @@unique([cargaId, numPed])
+  @@index([cargaId])
 }
 
 model HistoricoPesoPedidos {

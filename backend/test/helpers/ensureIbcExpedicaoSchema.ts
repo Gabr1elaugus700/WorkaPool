@@ -130,4 +130,38 @@ export async function ensureIbcExpedicaoSchema(
     EXCEPTION WHEN duplicate_object THEN NULL;
     END $$
   `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "CargaPedidoIbc" (
+      "id" TEXT NOT NULL,
+      "cargaId" TEXT NOT NULL,
+      "numPed" TEXT NOT NULL,
+      "codCli" TEXT,
+      "cliente" TEXT NOT NULL,
+      "quantidadeEsperadaTotal" INTEGER NOT NULL,
+      "quantidadeEsperadaVenda" INTEGER NOT NULL,
+      "quantidadeEsperadaEmprestimo" INTEGER NOT NULL,
+      "ibcInvalido" BOOLEAN NOT NULL DEFAULT false,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "CargaPedidoIbc_pkey" PRIMARY KEY ("id")
+    )
+  `);
+
+  await prisma.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "CargaPedidoIbc_cargaId_idx" ON "CargaPedidoIbc"("cargaId")`,
+  );
+
+  await prisma.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "CargaPedidoIbc_cargaId_numPed_key" ON "CargaPedidoIbc"("cargaId", "numPed")`,
+  );
+
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      ALTER TABLE "CargaPedidoIbc"
+        ADD CONSTRAINT "CargaPedidoIbc_cargaId_fkey"
+        FOREIGN KEY ("cargaId") REFERENCES "Cargas"("id")
+        ON DELETE RESTRICT ON UPDATE CASCADE;
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$
+  `);
 }
