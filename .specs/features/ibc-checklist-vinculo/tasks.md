@@ -212,9 +212,9 @@ T9
 
 **Done when**:
 
-- [ ] Unit 1:1 com ACs 1–7 de "Vincular" (inclui corrida → 409)
-- [ ] Use-case não chama nenhuma escrita no IBC (aptidão intocada)
-- [ ] Gate check passes: `cd backend && npm test`
+- [x] Unit 1:1 com ACs 1–7 de "Vincular" (inclui corrida → 409)
+- [x] Use-case não chama nenhuma escrita no IBC (aptidão intocada)
+- [x] Gate check passes: `cd backend && npm test`
 
 **Tests**: unit
 **Gate**: quick

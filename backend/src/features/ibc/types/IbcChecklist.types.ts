@@ -1,3 +1,5 @@
+import { ChecklistTipo } from "@prisma/client";
+
 export type IbcChecklistItemRecord = {
   id: string;
   descricao: string;
@@ -25,6 +27,11 @@ export type IbcChecklistSummary = {
 
 export type IbcChecklistRecord = Omit<IbcChecklistSummary, "totalItens"> & {
   itens: IbcChecklistItemNoChecklist[];
+};
+
+export type IbcChecklistElegibilidade = {
+  tipo: ChecklistTipo;
+  ativo: boolean;
 };
 
 export type IbcChecklistVinculoDto = {
