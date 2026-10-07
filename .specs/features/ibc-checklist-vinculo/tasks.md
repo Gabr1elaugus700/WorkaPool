@@ -8,8 +8,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 Regras desta feature:
 
-- Branch: `feature/277-vinculo-checklist-api`, rebaseada em `origin/epic/31-modulo-ibc` **depois** do merge do revert (#285).
-- Um commit atômico por task. Cada fase é uma fatia entregável (tamanho de PR), mas **nenhum push/PR sem pedido explícito do usuário**.
+- Dois PRs para `epic/31-modulo-ibc` (ver "Agrupamento em PRs"): PR A em `feature/277-vinculo-checklist-api`, PR B em `feature/277-vinculo-checklist-api-escrita` criada de `origin/epic/31-modulo-ibc` depois do merge do PR A.
+- Um commit atômico por task. **Nenhum push/PR/merge sem pedido explícito do usuário**.
 - Sem `any`; sem build de produção.
 
 ---
@@ -41,6 +41,19 @@ Regras desta feature:
 | Quick | Tasks com testes unitários | `cd backend && npm test` |
 | Full | Tasks com integração HTTP/persistência | `cd backend && npm test && npm run test:integration` |
 | Build | Fim de fase | `cd backend && npm run lint && npx tsc --noEmit && npm test && npm run test:integration` |
+
+---
+
+## Agrupamento em PRs
+
+Limite do CI: 300 linhas adicionadas sem testes nem Markdown. A #277 inteira tem ~374 linhas de produção.
+
+| PR | Fases | Tasks | Branch | Linhas de produção (estim.) | Fecha a #277? |
+| -- | ----- | ----- | ------ | --------------------------- | ------------- |
+| A (parte 1/2) | 1–2 | T1–T4 | `feature/277-vinculo-checklist-api` | ~160 | Não (`Parte de #277`) |
+| B (parte 2/2) | 3–5 | T5–T9 | `feature/277-vinculo-checklist-api-escrita` | ~215 | Sim (`gh issue close 277` após o merge) |
+
+Checkpoint do PR B: depois de T6, se o diff de produção contra `origin/epic/31-modulo-ibc` passar de ~230 linhas, mover T7–T8 para um PR C.
 
 ---
 
