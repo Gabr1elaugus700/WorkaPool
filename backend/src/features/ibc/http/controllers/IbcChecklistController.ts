@@ -16,6 +16,7 @@ import { IbcCadastroRepository } from "../../repositories/IbcCadastroRepository"
 import { IbcChecklistVinculoRepository } from "../../repositories/IbcChecklistVinculoRepository";
 import { ListIbcChecklistVinculosUseCase } from "../../useCases/ListIbcChecklistVinculos.use-case";
 import { VincularIbcChecklistUseCase } from "../../useCases/VincularIbcChecklist.use-case";
+import { DesvincularIbcChecklistUseCase } from "../../useCases/DesvincularIbcChecklist.use-case";
 
 function actor(req: Request): { actorRole: Role; actorId: string } {
   if (!req.user) {
@@ -152,6 +153,22 @@ export class IbcChecklistController {
       return res.status(201).json(vinculo);
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao vincular checklist ao IBC");
+    }
+  }
+
+  static async desvincular(req: Request, res: Response): Promise<Response> {
+    try {
+      await new DesvincularIbcChecklistUseCase(
+        new IbcCadastroRepository(),
+        new IbcChecklistVinculoRepository(),
+      ).execute({
+        actorRole: actorRole(req),
+        ibcId: String(req.params.id),
+        checklistModeloId: String(req.params.checklistModeloId),
+      });
+      return res.status(204).send();
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao desvincular checklist do IBC");
     }
   }
 }

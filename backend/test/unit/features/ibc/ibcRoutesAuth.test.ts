@@ -358,6 +358,18 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     }
   });
 
+  await t.test("DELETE /:id/checklists/:checklistModeloId: 401 sem token, 403 para LOGISTICA/GERENTE_DPTO/VENDAS", async () => {
+    const anonymous = await request(app).delete("/api/ibc/ibc-1/checklists/checklist-1");
+    assert.strictEqual(anonymous.status, 401);
+
+    for (const role of ["LOGISTICA", "GERENTE_DPTO", "VENDAS"]) {
+      const response = await request(app)
+        .delete("/api/ibc/ibc-1/checklists/checklist-1")
+        .set("Authorization", `Bearer ${createToken(role)}`);
+      assert.strictEqual(response.status, 403, role);
+    }
+  });
+
   await t.test("LOGISTICA pode ler pool, alerts e produtos", async () => {
     const token = createToken("LOGISTICA");
     const list = await request(app)

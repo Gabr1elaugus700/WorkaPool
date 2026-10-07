@@ -276,4 +276,76 @@ describe("IBC checklist vínculos HTTP persistence (#277)", () => {
       assert.equal(response.body.code, "IBC_NOT_FOUND");
     }
   });
+
+  it("unlinks (204) keeping aptidão, 404s a missing vínculo and relinks with new author", async () => {
+    const app = createTestApp();
+    const ana = await createUser("ana", "Ana Almox");
+    const bruno = await createUser("bruno", "Bruno Admin");
+    const ibc = await createIbcInapto("H050");
+    const soda = await createChecklist("Soda");
+    const antes = await readAptidao(ibc.id);
+    const vincular = (userId: string) =>
+      request(app)
+        .post(`/api/ibc/${ibc.id}/checklists`)
+        .set("Authorization", bearer(userId, Role.ALMOX))
+        .send({ checklistModeloId: soda.id });
+    const desvincular = () =>
+      request(app)
+        .delete(`/api/ibc/${ibc.id}/checklists/${soda.id}`)
+        .set("Authorization", bearer(ana.id, Role.ALMOX));
+
+    assert.equal((await vincular(ana.id)).status, 201);
+    const removed = await desvincular();
+    assert.equal(removed.status, 204);
+    assert.deepEqual(await readAptidao(ibc.id), antes);
+
+    const listed = await request(app)
+      .get(`/api/ibc/${ibc.id}/checklists`)
+      .set("Authorization", bearer(ana.id, Role.ALMOX));
+    assert.deepEqual(listed.body, []);
+
+    const missing = await desvincular();
+    assert.equal(missing.status, 404);
+    assert.equal(missing.body.code, "IBC_CHECKLIST_VINCULO_NOT_FOUND");
+
+    const relinked = await vincular(bruno.id);
+    assert.equal(relinked.status, 201);
+    assert.deepEqual(relinked.body.vinculadoPor, { id: bruno.id, nome: "Bruno Admin" });
+  });
+
+  it("unlinks a checklist deactivated after linking", async () => {
+    const app = createTestApp();
+    const ana = await createUser("ana", "Ana Almox");
+    const ibc = await createIbc("H060");
+    const soda = await createChecklist("Soda");
+    await prisma.ibcChecklistVinculo.create({
+      data: { ibcId: ibc.id, checklistModeloId: soda.id, vinculadoPorId: ana.id },
+    });
+    await prisma.checklistModelo.update({ where: { id: soda.id }, data: { ativo: false } });
+
+    const response = await request(app)
+      .delete(`/api/ibc/${ibc.id}/checklists/${soda.id}`)
+      .set("Authorization", bearer(ana.id, Role.ADMIN));
+    assert.equal(response.status, 204);
+    assert.equal(await prisma.ibcChecklistVinculo.count({ where: { ibcId: ibc.id } }), 0);
+  });
+
+  it("refuses unlinking from a baixado or unknown IBC with 404 IBC_NOT_FOUND", async () => {
+    const app = createTestApp();
+    const ana = await createUser("ana", "Ana Almox");
+    const baixado = await createIbc("H070", new Date("2026-10-05T00:00:00.000Z"));
+    const soda = await createChecklist("Soda");
+    await prisma.ibcChecklistVinculo.create({
+      data: { ibcId: baixado.id, checklistModeloId: soda.id, vinculadoPorId: ana.id },
+    });
+
+    for (const id of [baixado.id, "00000000-0000-0000-0000-000000000000"]) {
+      const response = await request(app)
+        .delete(`/api/ibc/${id}/checklists/${soda.id}`)
+        .set("Authorization", bearer(ana.id, Role.ALMOX));
+      assert.equal(response.status, 404, id);
+      assert.equal(response.body.code, "IBC_NOT_FOUND");
+    }
+    assert.equal(await prisma.ibcChecklistVinculo.count({ where: { ibcId: baixado.id } }), 1);
+  });
 });

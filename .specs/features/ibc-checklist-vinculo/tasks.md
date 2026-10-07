@@ -290,10 +290,10 @@ T9
 
 **Done when**:
 
-- [ ] Integração: vincular → desvincular (204) → GET `[]`; inexistente 404; checklist inativo desvinculável; revincular grava novo autor/data
-- [ ] Integração: aptidão igual antes e depois
-- [ ] Unit de rotas: 403 para papéis sem escrita
-- [ ] Gate check passes: `cd backend && npm test && npm run test:integration`
+- [x] Integração: vincular → desvincular (204) → GET `[]`; inexistente 404; checklist inativo desvinculável; revincular grava novo autor/data
+- [x] Integração: aptidão igual antes e depois
+- [x] Unit de rotas: 403 para papéis sem escrita
+- [x] Gate check passes: `cd backend && npm test && npm run test:integration` (falha pré-existente em `OverviewCustomerSyncPipeline`, sem relação)
 
 **Tests**: integration
 **Gate**: full
