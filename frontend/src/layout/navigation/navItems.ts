@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  ClipboardCheck,
   Contact,
   Container,
   Home,
@@ -69,6 +70,14 @@ export const NAV_ITEMS: readonly NavItem[] = [
     group: "main",
     allowedRoles: ["ALMOX", "ADMIN"],
     showOnMobile: true,
+  },
+  {
+    label: "Checklists de IBC",
+    mobileLabel: "Checklists",
+    to: "/checklists-ibc",
+    icon: ClipboardCheck,
+    group: "main",
+    allowedRoles: ["ALMOX", "ADMIN"],
   },
   {
     label: "Expedição IBC",

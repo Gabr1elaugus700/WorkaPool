@@ -10,6 +10,7 @@ import CargasPage from "../pages/CargasPage";
 import ExpedicaoIbcPage from "../pages/ExpedicaoIbcPage";
 import ExpedicaoIbcPreparacaoPage from "../pages/ExpedicaoIbcPreparacaoPage";
 import CadastroIbcPage from "../pages/CadastroIbcPage";
+import ChecklistsIbcView from "@/features/ibc/views/ChecklistsIbcView";
 import ClientesInativos from "../pages/ClientesInativos";
 import { OrderLossView } from "@/features/orderLoss";
 import Login from "@/auth/Login";
@@ -146,6 +147,14 @@ const AppRoutes = () => {
             element={
               <PrivateRoute>
                 <CadastroIbcPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/checklists-ibc"
+            element={
+              <PrivateRoute allowedRoles={["ALMOX", "ADMIN"]}>
+                <ChecklistsIbcView />
               </PrivateRoute>
             }
           />

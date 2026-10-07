@@ -19,6 +19,7 @@ describe("navItems.utils", () => {
       "Pedidos Perdidos",
       "Cargas",
       "Cadastro IBC",
+      "Checklists de IBC",
       "Expedição IBC",
     ]);
     assert.deepEqual(labels("ADMIN", "admin"), ["Usuários", "Sync do Overview"]);
@@ -28,6 +29,7 @@ describe("navItems.utils", () => {
     assert.deepEqual(labels("ALMOX", "main"), [
       "Cargas",
       "Cadastro IBC",
+      "Checklists de IBC",
       "Expedição IBC",
     ]);
   });
