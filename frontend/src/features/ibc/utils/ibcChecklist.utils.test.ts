@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   buildChecklistPayload,
+  listChecklistsDisponiveisParaVinculo,
   listItensDisponiveis,
   moveItem,
   parseNotaMinima,
@@ -58,6 +59,53 @@ describe("listItensDisponiveis", () => {
     assert.deepEqual(
       listItensDisponiveis(itens, ["3"]).map((item) => item.id),
       ["1"],
+    );
+  });
+});
+
+describe("listChecklistsDisponiveisParaVinculo", () => {
+  const checklist = (id: string, nome: string, ativo = true) => ({
+    id,
+    nome,
+    ativo,
+    notaMinimaCritico: 8,
+    mediaMinima: 7,
+    createdAt: "2026-10-01T00:00:00.000Z",
+    totalItens: 3,
+  });
+  const vinculo = (checklistModeloId: string) => ({
+    checklistModeloId,
+    nome: "Vinculado",
+    ativo: true,
+    vinculadoEm: "2026-10-02T00:00:00.000Z",
+    vinculadoPor: { id: "u1", nome: "Ana" },
+  });
+
+  it("leaves out inactive and already linked checklists", () => {
+    const checklists = [
+      checklist("a", "Soda"),
+      checklist("b", "Estrutural", false),
+      checklist("c", "Ácido"),
+    ];
+    assert.deepEqual(
+      listChecklistsDisponiveisParaVinculo(checklists, [vinculo("c")]).map((c) => c.id),
+      ["a"],
+    );
+  });
+
+  it("sorts by name in pt-BR", () => {
+    const checklists = [checklist("a", "Soda"), checklist("b", "Ácido"), checklist("c", "Estrutural")];
+    assert.deepEqual(
+      listChecklistsDisponiveisParaVinculo(checklists, []).map((c) => c.nome),
+      ["Ácido", "Estrutural", "Soda"],
+    );
+  });
+
+  it("returns an empty list when there is nothing to link", () => {
+    assert.deepEqual(listChecklistsDisponiveisParaVinculo([], [vinculo("a")]), []);
+    assert.deepEqual(
+      listChecklistsDisponiveisParaVinculo([checklist("a", "Soda")], [vinculo("a")]),
+      [],
     );
   });
 });

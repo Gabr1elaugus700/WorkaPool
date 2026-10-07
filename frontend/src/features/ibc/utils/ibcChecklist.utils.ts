@@ -1,6 +1,8 @@
 import type {
   CreateIbcChecklistInput,
   IbcChecklistItemDTO,
+  IbcChecklistSummaryDTO,
+  IbcChecklistVinculoDTO,
 } from "../types/ibcChecklist.types";
 
 export type IbcChecklistForm = {
@@ -32,6 +34,16 @@ export function listItensDisponiveis(
 ): IbcChecklistItemDTO[] {
   const presentes = new Set(idsNoChecklist);
   return itens.filter((item) => item.ativo && !presentes.has(item.id));
+}
+
+export function listChecklistsDisponiveisParaVinculo(
+  checklists: IbcChecklistSummaryDTO[],
+  vinculos: IbcChecklistVinculoDTO[],
+): IbcChecklistSummaryDTO[] {
+  const vinculados = new Set(vinculos.map((vinculo) => vinculo.checklistModeloId));
+  return checklists
+    .filter((checklist) => checklist.ativo && !vinculados.has(checklist.id))
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 }
 
 /** Monta o payload da API; null enquanto o formulário estiver incompleto ou inválido. */
