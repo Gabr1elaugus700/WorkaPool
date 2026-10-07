@@ -1,6 +1,10 @@
 import { ChecklistItem, ChecklistModelo, ChecklistModeloItem, Prisma, PrismaClient } from "@prisma/client";
 import prismaInstance from "../../../config/prisma";
-import { CreateIbcChecklistData, IIbcChecklistRepository } from "./IIbcChecklistRepository";
+import {
+  CreateIbcChecklistData,
+  IIbcChecklistRepository,
+  UpdateIbcChecklistData,
+} from "./IIbcChecklistRepository";
 import { IbcChecklistRecord, IbcChecklistSummary } from "../types/IbcChecklist.types";
 
 const itensInclude = {
@@ -44,6 +48,20 @@ export class IbcChecklistRepository implements IIbcChecklistRepository {
     const row = await this.prisma.checklistModelo.create({
       data: { ...campos, tipo: "IBC", itens: { create: itensCreateData(itensIds) } },
       include: itensInclude,
+    });
+    return toChecklistRecord(row);
+  }
+
+  async updateById(id: string, data: UpdateIbcChecklistData): Promise<IbcChecklistRecord> {
+    const { itensIds, ...campos } = data;
+    const row = await this.prisma.$transaction(async (tx) => {
+      if (itensIds) {
+        await tx.checklistModeloItem.deleteMany({ where: { checklistModeloId: id } });
+        await tx.checklistModeloItem.createMany({
+          data: itensCreateData(itensIds).map((item) => ({ ...item, checklistModeloId: id })),
+        });
+      }
+      return tx.checklistModelo.update({ where: { id }, data: campos, include: itensInclude });
     });
     return toChecklistRecord(row);
   }
