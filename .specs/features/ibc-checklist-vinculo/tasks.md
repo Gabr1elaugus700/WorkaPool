@@ -40,7 +40,7 @@ Regras desta feature:
 | ---------- | ----------- | ------- |
 | Quick | Tasks com testes unitários | `cd backend && npm test` |
 | Full | Tasks com integração HTTP/persistência | `cd backend && npm test && npm run test:integration` |
-| Build | Fim de fase | `cd backend && npm run lint && npx tsc --noEmit && npm test && npm run test:integration` |
+| Build | Fim de fase | `cd backend && npx tsc --noEmit && npm test && npm run test:integration` (backend não tem script de lint) |
 
 ---
 

@@ -349,7 +349,7 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     const anonymous = await request(app).post("/api/ibc/ibc-1/checklists").send({});
     assert.strictEqual(anonymous.status, 401);
 
-    for (const role of ["LOGISTICA", "GERENTE_DPTO", "VENDAS"]) {
+    for (const role of ["LOGISTICA", "GERENTE_DPTO", "VENDAS", "USER"]) {
       const response = await request(app)
         .post("/api/ibc/ibc-1/checklists")
         .set("Authorization", `Bearer ${createToken(role)}`)
@@ -362,7 +362,7 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     const anonymous = await request(app).delete("/api/ibc/ibc-1/checklists/checklist-1");
     assert.strictEqual(anonymous.status, 401);
 
-    for (const role of ["LOGISTICA", "GERENTE_DPTO", "VENDAS"]) {
+    for (const role of ["LOGISTICA", "GERENTE_DPTO", "VENDAS", "USER"]) {
       const response = await request(app)
         .delete("/api/ibc/ibc-1/checklists/checklist-1")
         .set("Authorization", `Bearer ${createToken(role)}`);

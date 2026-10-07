@@ -194,6 +194,7 @@ describe("IBC checklist vínculos HTTP persistence (#277)", () => {
     assert.equal(created.body.ativo, true);
     assert.deepEqual(created.body.vinculadoPor, { id: ana.id, nome: "Ana Almox" });
     assert.ok(Date.parse(created.body.vinculadoEm) >= inicio - 1000);
+    assert.ok(Date.parse(created.body.vinculadoEm) <= Date.now() + 1000);
     assert.deepEqual(await readAptidao(ibc.id), antes);
 
     const listed = await request(app)
@@ -267,7 +268,7 @@ describe("IBC checklist vínculos HTTP persistence (#277)", () => {
     const baixado = await createIbc("H040", new Date("2026-10-05T00:00:00.000Z"));
     const soda = await createChecklist("Soda");
 
-    for (const id of [baixado.id, "00000000-0000-0000-0000-000000000000"]) {
+    for (const id of [baixado.id, "00000000-0000-0000-0000-000000000000", "nao-e-uuid"]) {
       const response = await request(app)
         .post(`/api/ibc/${id}/checklists`)
         .set("Authorization", bearer(ana.id, Role.ALMOX))
@@ -294,7 +295,8 @@ describe("IBC checklist vínculos HTTP persistence (#277)", () => {
         .delete(`/api/ibc/${ibc.id}/checklists/${soda.id}`)
         .set("Authorization", bearer(ana.id, Role.ALMOX));
 
-    assert.equal((await vincular(ana.id)).status, 201);
+    const primeiro = await vincular(ana.id);
+    assert.equal(primeiro.status, 201);
     const removed = await desvincular();
     assert.equal(removed.status, 204);
     assert.deepEqual(await readAptidao(ibc.id), antes);
@@ -311,6 +313,7 @@ describe("IBC checklist vínculos HTTP persistence (#277)", () => {
     const relinked = await vincular(bruno.id);
     assert.equal(relinked.status, 201);
     assert.deepEqual(relinked.body.vinculadoPor, { id: bruno.id, nome: "Bruno Admin" });
+    assert.ok(Date.parse(relinked.body.vinculadoEm) > Date.parse(primeiro.body.vinculadoEm));
   });
 
   it("unlinks a checklist deactivated after linking", async () => {
@@ -339,7 +342,7 @@ describe("IBC checklist vínculos HTTP persistence (#277)", () => {
       data: { ibcId: baixado.id, checklistModeloId: soda.id, vinculadoPorId: ana.id },
     });
 
-    for (const id of [baixado.id, "00000000-0000-0000-0000-000000000000"]) {
+    for (const id of [baixado.id, "00000000-0000-0000-0000-000000000000", "nao-e-uuid"]) {
       const response = await request(app)
         .delete(`/api/ibc/${id}/checklists/${soda.id}`)
         .set("Authorization", bearer(ana.id, Role.ALMOX));

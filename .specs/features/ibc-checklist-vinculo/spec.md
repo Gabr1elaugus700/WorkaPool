@@ -41,6 +41,7 @@ Um IBC pode receber vários checklists de qualidade (ex.: um por produto que vai
 | Respostas | GET 200 `IbcChecklistVinculoDto[]` ordenado por nome do checklist; POST 201 com o DTO; DELETE 204 | Padrão REST do módulo | n |
 | DTO | `{ checklistModeloId, nome, ativo, vinculadoEm (ISO), vinculadoPor: { id, nome } }` | Suficiente para a tela #279 mostrar e desvincular | n |
 | Corpo do POST | Zod `{ checklistModeloId: uuid }`; inválido → 400 `IBC_CHECKLIST_VINCULO_INVALID_BODY` | Padrão `invalidBody` do `IbcChecklistController` | n |
+| Precedência quando várias recusas se aplicam | Papel (403) → corpo (400) → IBC (404) → checklist (404/422) → duplicado (409) | Ordem implementada; barato primeiro, persistência por último | n |
 | Banco local que aplicou a migration do #283 | Rodar `prisma migrate reset` ou dropar a tabela + linha em `_prisma_migrations` antes da nova migration | O revert remove a migration `20261007100000_ibc_checklist_vinculo` | n |
 
 **Open questions:** none — os itens `Confirmed? n` são defaults propostos para você aprovar junto com o plano.
