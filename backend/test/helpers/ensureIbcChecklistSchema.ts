@@ -25,15 +25,6 @@ export async function ensureIbcChecklistSchema(
     `ALTER TABLE "ChecklistModelo" ADD COLUMN IF NOT EXISTS "ativo" BOOLEAN NOT NULL DEFAULT true`,
     `ALTER TABLE "ChecklistModeloItem" ADD COLUMN IF NOT EXISTS "ordem" INTEGER NOT NULL DEFAULT 0`,
     `CREATE INDEX IF NOT EXISTS "ChecklistModelo_tipo_idx" ON "ChecklistModelo"("tipo")`,
-    `CREATE TABLE IF NOT EXISTS "IbcChecklistVinculo" (
-      "id" TEXT NOT NULL PRIMARY KEY,
-      "ibcId" TEXT NOT NULL REFERENCES "Ibc"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
-      "checklistModeloId" TEXT NOT NULL REFERENCES "ChecklistModelo"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
-      "vinculadoPorId" TEXT NOT NULL,
-      "vinculadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`,
-    `CREATE UNIQUE INDEX IF NOT EXISTS "IbcChecklistVinculo_ibcId_checklistModeloId_key" ON "IbcChecklistVinculo"("ibcId", "checklistModeloId")`,
-    `CREATE INDEX IF NOT EXISTS "IbcChecklistVinculo_checklistModeloId_idx" ON "IbcChecklistVinculo"("checklistModeloId")`,
   ];
   for (const sql of statements) {
     await prisma.$executeRawUnsafe(sql);
