@@ -37,6 +37,12 @@
       "skillPath": "skills/engineering/to-tickets/SKILL.md",
       "computedHash": "733df2a51c28078b6b3b8b96ee0c0a70e846163444bf202422d5a1f17bfabea6"
     },
+    "visual-pr": {
+      "source": "humanlayer/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/visual-pr/skills/visual-pr/SKILL.md",
+      "computedHash": "ced256e5440e32a5424bf0e70a3a4493df1744b046d50a53c76b9b159f61f4b0"
+    },
     "writing-great-skills": {
       "source": "mattpocock/skills",
       "sourceType": "github",
