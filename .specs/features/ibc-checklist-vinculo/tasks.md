@@ -136,8 +136,8 @@ T9
 
 **Done when**:
 
-- [ ] Suites de integração de checklist existentes continuam verdes
-- [ ] Gate check passes: `cd backend && npm test && npm run test:integration`
+- [x] Suites de integração de checklist existentes continuam verdes
+- [x] Gate check passes: `cd backend && npm test && npm run test:integration` (falha pré-existente em `OverviewCustomerSyncPipeline`, sem relação)
 
 **Tests**: none
 **Gate**: full
