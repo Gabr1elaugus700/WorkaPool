@@ -5,6 +5,7 @@ import type {
   IbcChecklistDTO,
   IbcChecklistItemDTO,
   IbcChecklistSummaryDTO,
+  IbcChecklistVinculoDTO,
   UpdateIbcChecklistInput,
   UpdateIbcChecklistItemInput,
 } from "../types/ibcChecklist.types";
@@ -34,4 +35,16 @@ export const ibcChecklistService = {
 
   updateChecklist: (id: string, input: UpdateIbcChecklistInput): Promise<IbcChecklistDTO> =>
     apiFetchJson<IbcChecklistDTO>(`/api/ibc/checklists/${id}`, jsonBody("PATCH", input)),
+
+  listVinculos: (ibcId: string): Promise<IbcChecklistVinculoDTO[]> =>
+    apiFetchJson<IbcChecklistVinculoDTO[]>(`/api/ibc/${ibcId}/checklists`),
+
+  vincular: (ibcId: string, checklistModeloId: string): Promise<IbcChecklistVinculoDTO> =>
+    apiFetchJson<IbcChecklistVinculoDTO>(
+      `/api/ibc/${ibcId}/checklists`,
+      jsonBody("POST", { checklistModeloId }),
+    ),
+
+  desvincular: (ibcId: string, checklistModeloId: string): Promise<void> =>
+    apiFetchJson<void>(`/api/ibc/${ibcId}/checklists/${checklistModeloId}`, { method: "DELETE" }),
 };

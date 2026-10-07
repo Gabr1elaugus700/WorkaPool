@@ -4,7 +4,7 @@ import { ibcChecklistService } from "../services/ibcChecklistService";
 import type { UpdateIbcChecklistInput } from "../types/ibcChecklist.types";
 import { toError } from "../utils/toError";
 
-const IBC_CHECKLISTS_KEY = ["ibc", "checklists"] as const;
+export const IBC_CHECKLISTS_KEY = ["ibc", "checklists"] as const;
 
 export function useIbcChecklists(enabled: boolean) {
   const queryClient = useQueryClient();

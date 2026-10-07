@@ -27,6 +27,14 @@ export type IbcChecklistDTO = Omit<IbcChecklistSummaryDTO, "totalItens"> & {
   itens: IbcChecklistItemNoChecklistDTO[];
 };
 
+export type IbcChecklistVinculoDTO = {
+  checklistModeloId: string;
+  nome: string;
+  ativo: boolean;
+  vinculadoEm: string;
+  vinculadoPor: { id: string; nome: string };
+};
+
 export type CreateIbcChecklistItemInput = {
   descricao: string;
   critico: boolean;
