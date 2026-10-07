@@ -91,20 +91,20 @@ export default function CadastroIbcPoolList({
                 </Button>
               ) : null}
               {!substituido ? (
-                <>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    disabled={actionsDisabled}
-                    onClick={() => onMudarProduto(ibc)}
-                  >
-                    Mudar produto
-                  </Button>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => onGerenciarChecklists(ibc)}>
-                    Checklists
-                  </Button>
-                </>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={actionsDisabled}
+                  onClick={() => onMudarProduto(ibc)}
+                >
+                  Mudar produto
+                </Button>
+              ) : null}
+              {!substituido ? (
+                <Button type="button" variant="ghost" size="sm" onClick={() => onGerenciarChecklists(ibc)}>
+                  Checklists
+                </Button>
               ) : null}
               <Button
                 type="button"
