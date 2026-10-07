@@ -1,7 +1,11 @@
 import { apiFetchJson } from "@/lib/apiFetch";
 import type {
+  CreateIbcChecklistInput,
   CreateIbcChecklistItemInput,
+  IbcChecklistDTO,
   IbcChecklistItemDTO,
+  IbcChecklistSummaryDTO,
+  UpdateIbcChecklistInput,
   UpdateIbcChecklistItemInput,
 } from "../types/ibcChecklist.types";
 
@@ -18,4 +22,16 @@ export const ibcChecklistService = {
 
   updateItem: (id: string, input: UpdateIbcChecklistItemInput): Promise<IbcChecklistItemDTO> =>
     apiFetchJson<IbcChecklistItemDTO>(`/api/ibc/checklist-itens/${id}`, jsonBody("PATCH", input)),
+
+  listChecklists: (): Promise<IbcChecklistSummaryDTO[]> =>
+    apiFetchJson<IbcChecklistSummaryDTO[]>("/api/ibc/checklists"),
+
+  getChecklist: (id: string): Promise<IbcChecklistDTO> =>
+    apiFetchJson<IbcChecklistDTO>(`/api/ibc/checklists/${id}`),
+
+  createChecklist: (input: CreateIbcChecklistInput): Promise<IbcChecklistDTO> =>
+    apiFetchJson<IbcChecklistDTO>("/api/ibc/checklists", jsonBody("POST", input)),
+
+  updateChecklist: (id: string, input: UpdateIbcChecklistInput): Promise<IbcChecklistDTO> =>
+    apiFetchJson<IbcChecklistDTO>(`/api/ibc/checklists/${id}`, jsonBody("PATCH", input)),
 };
