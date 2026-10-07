@@ -164,6 +164,7 @@ model Ibc {
   convertedFrom          Ibc[]                  @relation("IbcConversionLink")
   conversionHistoryFrom  IbcConversionHistory[] @relation("IbcConversionFrom")
   conversionHistoryTo    IbcConversionHistory[] @relation("IbcConversionTo")
+  checklistVinculos      IbcChecklistVinculo[]
 
   @@unique([prefixo, sequencial])
   @@index([loteId])
@@ -479,8 +480,22 @@ model ChecklistModelo {
   departamento         Departamento?         @relation(fields: [departamento_id], references: [id])
   itens                ChecklistModeloItem[]
   vistorias            ChecklistVistoria[]
+  ibcVinculos          IbcChecklistVinculo[]
 
   @@index([tipo])
+}
+
+model IbcChecklistVinculo {
+  id                String          @id @default(uuid())
+  ibcId             String
+  checklistModeloId String
+  vinculadoPorId    String
+  vinculadoEm       DateTime        @default(now())
+  ibc               Ibc             @relation(fields: [ibcId], references: [id])
+  checklistModelo   ChecklistModelo @relation(fields: [checklistModeloId], references: [id])
+
+  @@unique([ibcId, checklistModeloId])
+  @@index([checklistModeloId])
 }
 
 model ChecklistModelItem {

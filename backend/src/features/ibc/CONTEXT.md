@@ -69,6 +69,10 @@ A named set of catalog items (e.g. "Checklist Soda", "Estrutural") stored in `Ch
 Managed via `/api/ibc/checklists` (GET/POST) and `/api/ibc/checklists/:checklistId` (GET/PATCH); reads ADMIN/ALMOX/LOGISTICA/GERENTE_DPTO, writes ADMIN/ALMOX. `itensIds` is the full ordered list (array index = `ordem`, no duplicates, at least one); sending it on PATCH replaces all items. An inactive item cannot be added (422 `IBC_CHECKLIST_ITEM_INATIVO`), but one already in the checklist that was deactivated later may stay. Unknown item → 404 `IBC_CHECKLIST_ITEM_NOT_FOUND`; missing or non-IBC checklist → 404 `IBC_CHECKLIST_NOT_FOUND`. Deactivation is `ativo: false` (no delete).
 _Avoid_: separate checklist tables for IBC, showing IBC checklists in Vistoria, adding inactive items, deleting checklists
 
+**Vínculo de checklist no IBC**:
+Link between one IBC and one **Checklist de IBC** (`IbcChecklistVinculo`: author `vinculadoPorId` + `vinculadoEm`; unique per IBC + checklist). An IBC may have several (e.g. one per product it carries). `GET /api/ibc/:id/checklists` (read roles; also for baixados; 404 `IBC_NOT_FOUND`) lists them by checklist name, including deactivated checklists — deactivating a checklist keeps existing links. Linking or unlinking **never changes aptidão**.
+_Avoid_: recalculating aptidão on link, linking VISTORIA checklists, treating the link as an Inspeção
+
 **Aptidão**:
 Whether the IBC may be used in circulation right now: **Apto** or **Inapto**. Inapto must surface as an alert in the IBC module (identifier visible, with reason).
 _Avoid_: “qualidade” alone, hiding inaptidão only inside a detail screen

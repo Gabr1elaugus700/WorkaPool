@@ -95,6 +95,8 @@ router.get(
   IbcController.listHistorico,
 );
 
+router.get("/:id/checklists", readAuth, IbcChecklistController.listVinculos);
+
 router.patch(
   "/:id/converter-nao-homologado",
   authMiddleware,
