@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { Role } from "@prisma/client";
 import { ListIbcChecklistVinculosUseCase } from "../../../../../src/features/ibc/useCases/ListIbcChecklistVinculos.use-case";
 import { VincularIbcChecklistUseCase } from "../../../../../src/features/ibc/useCases/VincularIbcChecklist.use-case";
+import { DesvincularIbcChecklistUseCase } from "../../../../../src/features/ibc/useCases/DesvincularIbcChecklist.use-case";
 import {
   CreateIbcChecklistVinculoData,
   IIbcChecklistVinculoRepository,
@@ -67,13 +68,17 @@ function setup(options: SetupOptions = {}) {
       existentes.push(criado);
       return criado;
     },
-    async delete() {
-      throw new Error("not used");
+    async delete(_ibcId, checklistModeloId) {
+      const index = existentes.findIndex((v) => v.checklistModeloId === checklistModeloId);
+      if (index < 0) return false;
+      existentes.splice(index, 1);
+      return true;
     },
   };
   return {
     listar: new ListIbcChecklistVinculosUseCase(ibcs, vinculos),
     vincular: new VincularIbcChecklistUseCase(ibcs, checklists, vinculos),
+    desvincular: new DesvincularIbcChecklistUseCase(ibcs, vinculos),
     existentes,
     creates,
   };
@@ -173,6 +178,52 @@ describe("VincularIbcChecklistUseCase", () => {
       const { vincular, creates } = setup({ ibc: alvo });
       await assert.rejects(() => vincular.execute(vincularInput), hasCode("IBC_NOT_FOUND", 404));
       assert.equal(creates.length, 0);
+    }
+  });
+});
+
+const desvincularInput = { actorRole: Role.ALMOX, ibcId: "ibc-1", checklistModeloId: "soda" };
+
+describe("DesvincularIbcChecklistUseCase", () => {
+  it("removes the vínculo", async () => {
+    const { desvincular, existentes } = setup({ existentes: ["soda", "estrutural"] });
+    await desvincular.execute(desvincularInput);
+    assert.deepEqual(existentes.map((v) => v.checklistModeloId), ["estrutural"]);
+  });
+
+  it("throws 404 IBC_CHECKLIST_VINCULO_NOT_FOUND when not linked", async () => {
+    const { desvincular } = setup({ existentes: ["estrutural"] });
+    await assert.rejects(
+      () => desvincular.execute(desvincularInput),
+      hasCode("IBC_CHECKLIST_VINCULO_NOT_FOUND", 404),
+    );
+  });
+
+  it("throws 404 IBC_NOT_FOUND for unknown or baixado IBC and keeps the vínculo", async () => {
+    for (const alvo of [null, { ...ibc, baixadoEm: new Date() }]) {
+      const { desvincular, existentes } = setup({ ibc: alvo, existentes: ["soda"] });
+      await assert.rejects(() => desvincular.execute(desvincularInput), hasCode("IBC_NOT_FOUND", 404));
+      assert.equal(existentes.length, 1);
+    }
+  });
+
+  it("unlinks a checklist that became inactive", async () => {
+    const { desvincular, existentes } = setup({
+      existentes: ["soda"],
+      checklist: { tipo: "IBC", ativo: false },
+    });
+    await desvincular.execute(desvincularInput);
+    assert.equal(existentes.length, 0);
+  });
+
+  it("refuses roles other than ADMIN/ALMOX with 403", async () => {
+    for (const actorRole of [Role.LOGISTICA, Role.GERENTE_DPTO, Role.VENDAS]) {
+      const { desvincular, existentes } = setup({ existentes: ["soda"] });
+      await assert.rejects(
+        () => desvincular.execute({ ...desvincularInput, actorRole }),
+        hasCode("IBC_CHECKLIST_FORBIDDEN", 403),
+      );
+      assert.equal(existentes.length, 1);
     }
   });
 });

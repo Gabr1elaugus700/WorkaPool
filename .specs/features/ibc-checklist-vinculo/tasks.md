@@ -265,8 +265,8 @@ T9
 
 **Done when**:
 
-- [ ] Unit 1:1 com ACs 1–4 de "Desvincular"
-- [ ] Gate check passes: `cd backend && npm test`
+- [x] Unit 1:1 com ACs 1–4 de "Desvincular"
+- [x] Gate check passes: `cd backend && npm test`
 
 **Tests**: unit
 **Gate**: quick
