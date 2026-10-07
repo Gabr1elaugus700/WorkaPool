@@ -14,7 +14,7 @@ export function buildCargaPedidoIbcSnapshot(
 
     byNumPed.set(numPed, {
       numPed,
-      codCli: pedido.codCli ?? null,
+      codCli: pedido.codCli != null ? String(pedido.codCli) : null,
       cliente: pedido.cliente,
       quantidadeEsperadaTotal: pedido.quantidadeEsperadaTotal,
       quantidadeEsperadaVenda: pedido.quantidadeEsperadaVenda,
