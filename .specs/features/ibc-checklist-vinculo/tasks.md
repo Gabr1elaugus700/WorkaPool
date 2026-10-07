@@ -161,8 +161,8 @@ T9
 
 **Done when**:
 
-- [ ] Unit: IBC inexistente → 404; IBC baixado → lista; lista vazia → `[]`
-- [ ] Gate check passes: `cd backend && npm test`
+- [x] Unit: IBC inexistente → 404; IBC baixado → lista; lista vazia → `[]`
+- [x] Gate check passes: `cd backend && npm test`
 
 **Tests**: unit
 **Gate**: quick

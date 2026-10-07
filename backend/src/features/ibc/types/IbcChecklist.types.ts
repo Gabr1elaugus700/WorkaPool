@@ -26,3 +26,11 @@ export type IbcChecklistSummary = {
 export type IbcChecklistRecord = Omit<IbcChecklistSummary, "totalItens"> & {
   itens: IbcChecklistItemNoChecklist[];
 };
+
+export type IbcChecklistVinculoDto = {
+  checklistModeloId: string;
+  nome: string;
+  ativo: boolean;
+  vinculadoEm: string;
+  vinculadoPor: { id: string; nome: string };
+};
