@@ -12,6 +12,9 @@ import { ListIbcChecklistsUseCase } from "../../useCases/ListIbcChecklists.use-c
 import { GetIbcChecklistUseCase } from "../../useCases/GetIbcChecklist.use-case";
 import { CreateIbcChecklistUseCase } from "../../useCases/CreateIbcChecklist.use-case";
 import { UpdateIbcChecklistUseCase } from "../../useCases/UpdateIbcChecklist.use-case";
+import { IbcCadastroRepository } from "../../repositories/IbcCadastroRepository";
+import { IbcChecklistVinculoRepository } from "../../repositories/IbcChecklistVinculoRepository";
+import { ListIbcChecklistVinculosUseCase } from "../../useCases/ListIbcChecklistVinculos.use-case";
 
 function actorRole(req: Request): Role {
   if (!req.user) {
@@ -116,6 +119,18 @@ export class IbcChecklistController {
       return res.status(200).json(checklist);
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao editar checklist de IBC");
+    }
+  }
+
+  static async listVinculos(req: Request, res: Response): Promise<Response> {
+    try {
+      const vinculos = await new ListIbcChecklistVinculosUseCase(
+        new IbcCadastroRepository(),
+        new IbcChecklistVinculoRepository(),
+      ).execute(String(req.params.id));
+      return res.status(200).json(vinculos);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao listar checklists do IBC");
     }
   }
 }
