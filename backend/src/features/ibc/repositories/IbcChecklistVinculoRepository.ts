@@ -1,6 +1,9 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import prismaInstance from "../../../config/prisma";
-import { IIbcChecklistVinculoRepository } from "./IIbcChecklistVinculoRepository";
+import {
+  CreateIbcChecklistVinculoData,
+  IIbcChecklistVinculoRepository,
+} from "./IIbcChecklistVinculoRepository";
 import { IbcChecklistVinculoDto } from "../types/IbcChecklist.types";
 
 const vinculoInclude = {
@@ -24,6 +27,21 @@ export class IbcChecklistVinculoRepository implements IIbcChecklistVinculoReposi
       include: vinculoInclude,
     });
     return rows.map(toVinculoDto);
+  }
+
+  async create(data: CreateIbcChecklistVinculoData): Promise<IbcChecklistVinculoDto | null> {
+    try {
+      const row = await this.prisma.ibcChecklistVinculo.create({ data, include: vinculoInclude });
+      return toVinculoDto(row);
+    } catch (err: unknown) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") return null;
+      throw err;
+    }
+  }
+
+  async delete(ibcId: string, checklistModeloId: string): Promise<boolean> {
+    const { count } = await this.prisma.ibcChecklistVinculo.deleteMany({ where: { ibcId, checklistModeloId } });
+    return count > 0;
   }
 }
 

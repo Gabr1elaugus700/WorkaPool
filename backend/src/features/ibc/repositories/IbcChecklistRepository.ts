@@ -5,7 +5,11 @@ import {
   IIbcChecklistRepository,
   UpdateIbcChecklistData,
 } from "./IIbcChecklistRepository";
-import { IbcChecklistRecord, IbcChecklistSummary } from "../types/IbcChecklist.types";
+import {
+  IbcChecklistElegibilidade,
+  IbcChecklistRecord,
+  IbcChecklistSummary,
+} from "../types/IbcChecklist.types";
 
 const itensInclude = {
   itens: { orderBy: { ordem: "asc" }, include: { checklistItem: true } },
@@ -41,6 +45,10 @@ export class IbcChecklistRepository implements IIbcChecklistRepository {
       include: itensInclude,
     });
     return row ? toChecklistRecord(row) : null;
+  }
+
+  async findElegibilidade(id: string): Promise<IbcChecklistElegibilidade | null> {
+    return this.prisma.checklistModelo.findUnique({ where: { id }, select: { tipo: true, ativo: true } });
   }
 
   async create(data: CreateIbcChecklistData): Promise<IbcChecklistRecord> {

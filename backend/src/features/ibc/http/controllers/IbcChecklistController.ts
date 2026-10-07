@@ -15,12 +15,17 @@ import { UpdateIbcChecklistUseCase } from "../../useCases/UpdateIbcChecklist.use
 import { IbcCadastroRepository } from "../../repositories/IbcCadastroRepository";
 import { IbcChecklistVinculoRepository } from "../../repositories/IbcChecklistVinculoRepository";
 import { ListIbcChecklistVinculosUseCase } from "../../useCases/ListIbcChecklistVinculos.use-case";
+import { VincularIbcChecklistUseCase } from "../../useCases/VincularIbcChecklist.use-case";
 
-function actorRole(req: Request): Role {
+function actor(req: Request): { actorRole: Role; actorId: string } {
   if (!req.user) {
     throw new AppError({ message: "Usuário não autenticado", statusCode: 401, code: "IBC_ACTOR_REQUIRED" });
   }
-  return req.user.role;
+  return { actorRole: req.user.role, actorId: req.user.id };
+}
+
+function actorRole(req: Request): Role {
+  return actor(req).actorRole;
 }
 
 function invalidBody(code: string, details: unknown): AppError {
@@ -131,6 +136,22 @@ export class IbcChecklistController {
       return res.status(200).json(vinculos);
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao listar checklists do IBC");
+    }
+  }
+
+  static async vincular(req: Request, res: Response): Promise<Response> {
+    try {
+      const parsed = IbcChecklistHttpSchemas.vincularChecklist.safeParse(req.body);
+      if (!parsed.success) throw invalidBody("IBC_CHECKLIST_VINCULO_INVALID_BODY", parsed.error.format());
+
+      const vinculo = await new VincularIbcChecklistUseCase(
+        new IbcCadastroRepository(),
+        new IbcChecklistRepository(),
+        new IbcChecklistVinculoRepository(),
+      ).execute({ ...actor(req), ibcId: String(req.params.id), ...parsed.data });
+      return res.status(201).json(vinculo);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao vincular checklist ao IBC");
     }
   }
 }

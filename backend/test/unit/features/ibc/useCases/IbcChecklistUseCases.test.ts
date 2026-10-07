@@ -50,6 +50,9 @@ function createRepositories(options: {
     async findById() {
       return options.checklist ?? null;
     },
+    async findElegibilidade() {
+      throw new Error("not used");
+    },
     async create(data) {
       creates.push(data);
       return { ...checklistSoda, ...data, itens: [] };

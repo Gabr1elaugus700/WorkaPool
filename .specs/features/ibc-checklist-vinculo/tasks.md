@@ -238,10 +238,10 @@ T9
 
 **Done when**:
 
-- [ ] Integração: vincular feliz (201 + GET), VISTORIA 422, inativo 422, inexistente 404, duplicado 409, corpo inválido 400, IBC baixado 404
-- [ ] Integração: `aptidao`/`motivoInaptidao`/`primeiraInspecaoEm` iguais antes e depois
-- [ ] Unit de rotas: 403 para LOGISTICA/GERENTE_DPTO/VENDAS
-- [ ] Gate check passes: `cd backend && npm test && npm run test:integration`
+- [x] Integração: vincular feliz (201 + GET), VISTORIA 422, inativo 422, inexistente 404, duplicado 409, corpo inválido 400, IBC baixado 404
+- [x] Integração: `aptidao`/`motivoInaptidao`/`primeiraInspecaoEm` iguais antes e depois
+- [x] Unit de rotas: 403 para LOGISTICA/GERENTE_DPTO/VENDAS
+- [x] Gate check passes: `cd backend && npm test && npm run test:integration`
 
 **Tests**: integration
 **Gate**: full
