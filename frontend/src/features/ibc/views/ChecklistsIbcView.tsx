@@ -4,7 +4,9 @@ import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDenie
 import CadastroIbcSectionError from "../components/CadastroIbcSectionError";
 import CadastroIbcSectionSkeleton from "../components/CadastroIbcSectionSkeleton";
 import IbcChecklistItensSection from "../components/IbcChecklistItensSection";
+import IbcChecklistsSection from "../components/IbcChecklistsSection";
 import { useIbcChecklistItens } from "../hooks/useIbcChecklistItens";
+import { useIbcChecklists } from "../hooks/useIbcChecklists";
 import { canAccessIbcCadastro } from "../utils/canAccessIbcCadastro";
 import { toError } from "../utils/toError";
 
@@ -12,6 +14,7 @@ export default function ChecklistsIbcView() {
   const { user } = useAuth();
   const allowed = canAccessIbcCadastro(user?.role);
   const itens = useIbcChecklistItens(allowed);
+  const checklists = useIbcChecklists(allowed);
 
   if (!allowed) {
     return <ExpedicaoIbcAccessDeniedAlert targetPhrase="os Checklists de IBC" />;
@@ -45,6 +48,29 @@ export default function ChecklistsIbcView() {
               saving={itens.isSaving}
               onCreate={itens.createItem}
               onUpdate={itens.updateItem}
+            />
+          )}
+        </section>
+
+        <section className="rounded-lg border border-border bg-card p-4 shadow-sm sm:p-6">
+          <h2 className="mb-3 text-base font-semibold tracking-tight">Checklists</h2>
+          {checklists.query.isLoading ? (
+            <CadastroIbcSectionSkeleton rows={3} />
+          ) : checklists.query.error ? (
+            <CadastroIbcSectionError
+              message={toError(checklists.query.error).message}
+              onRetry={() => {
+                void checklists.query.refetch();
+              }}
+            />
+          ) : (
+            <IbcChecklistsSection
+              checklists={checklists.query.data ?? []}
+              catalogo={itens.query.data ?? []}
+              saving={checklists.isSaving}
+              onLoad={checklists.loadChecklist}
+              onCreate={checklists.createChecklist}
+              onUpdate={checklists.updateChecklist}
             />
           )}
         </section>
