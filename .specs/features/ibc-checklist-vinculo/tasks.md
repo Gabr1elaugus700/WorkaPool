@@ -317,8 +317,8 @@ T9
 
 **Done when**:
 
-- [ ] Verbete reflete exatamente os códigos/status implementados
-- [ ] Gate check passes: `cd backend && npm test`
+- [x] Verbete reflete exatamente os códigos/status implementados
+- [x] Gate check passes: `cd backend && npm test`
 
 **Tests**: none
 **Gate**: quick

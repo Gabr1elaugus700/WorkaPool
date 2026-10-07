@@ -121,13 +121,13 @@ Um IBC pode receber vários checklists de qualidade (ex.: um por produto que vai
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| IBCVINC-01 | P1: Persistência do vínculo (tabela + unique + autor/data) | Tasks | Pending |
-| IBCVINC-02 | P1: Listar vínculos (GET) | Tasks | Pending |
-| IBCVINC-03 | P1: Vincular (POST) + recusas | Tasks | Pending |
-| IBCVINC-04 | P1: Desvincular (DELETE) | Tasks | Pending |
-| IBCVINC-05 | P1: Aptidão inalterada | Tasks | Pending |
-| IBCVINC-06 | P1: Autorização por papel | Tasks | Pending |
-| IBCVINC-07 | Documentação de domínio (CONTEXT.md) | Tasks | Pending |
+| IBCVINC-01 | P1: Persistência do vínculo (tabela + unique + autor/data) | Execute | Done |
+| IBCVINC-02 | P1: Listar vínculos (GET) | Execute | Done |
+| IBCVINC-03 | P1: Vincular (POST) + recusas | Execute | Done |
+| IBCVINC-04 | P1: Desvincular (DELETE) | Execute | Done |
+| IBCVINC-05 | P1: Aptidão inalterada | Execute | Done |
+| IBCVINC-06 | P1: Autorização por papel | Execute | Done |
+| IBCVINC-07 | Documentação de domínio (CONTEXT.md) | Execute | Done |
 
 **Coverage:** 7 total, 7 mapped to tasks, 0 unmapped
 
