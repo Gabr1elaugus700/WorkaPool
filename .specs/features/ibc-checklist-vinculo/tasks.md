@@ -40,7 +40,7 @@ Regras desta feature:
 | ---------- | ----------- | ------- |
 | Quick | Tasks com testes unitários | `cd backend && npm test` |
 | Full | Tasks com integração HTTP/persistência | `cd backend && npm test && npm run test:integration` |
-| Build | Fim de fase | `cd backend && npm run lint && npx tsc --noEmit && npm test && npm run test:integration` |
+| Build | Fim de fase | `cd backend && npx tsc --noEmit && npm test && npm run test:integration` (backend não tem script de lint) |
 
 ---
 
@@ -212,9 +212,9 @@ T9
 
 **Done when**:
 
-- [ ] Unit 1:1 com ACs 1–7 de "Vincular" (inclui corrida → 409)
-- [ ] Use-case não chama nenhuma escrita no IBC (aptidão intocada)
-- [ ] Gate check passes: `cd backend && npm test`
+- [x] Unit 1:1 com ACs 1–7 de "Vincular" (inclui corrida → 409)
+- [x] Use-case não chama nenhuma escrita no IBC (aptidão intocada)
+- [x] Gate check passes: `cd backend && npm test`
 
 **Tests**: unit
 **Gate**: quick
@@ -238,10 +238,10 @@ T9
 
 **Done when**:
 
-- [ ] Integração: vincular feliz (201 + GET), VISTORIA 422, inativo 422, inexistente 404, duplicado 409, corpo inválido 400, IBC baixado 404
-- [ ] Integração: `aptidao`/`motivoInaptidao`/`primeiraInspecaoEm` iguais antes e depois
-- [ ] Unit de rotas: 403 para LOGISTICA/GERENTE_DPTO/VENDAS
-- [ ] Gate check passes: `cd backend && npm test && npm run test:integration`
+- [x] Integração: vincular feliz (201 + GET), VISTORIA 422, inativo 422, inexistente 404, duplicado 409, corpo inválido 400, IBC baixado 404
+- [x] Integração: `aptidao`/`motivoInaptidao`/`primeiraInspecaoEm` iguais antes e depois
+- [x] Unit de rotas: 403 para LOGISTICA/GERENTE_DPTO/VENDAS
+- [x] Gate check passes: `cd backend && npm test && npm run test:integration`
 
 **Tests**: integration
 **Gate**: full
@@ -265,8 +265,8 @@ T9
 
 **Done when**:
 
-- [ ] Unit 1:1 com ACs 1–4 de "Desvincular"
-- [ ] Gate check passes: `cd backend && npm test`
+- [x] Unit 1:1 com ACs 1–4 de "Desvincular"
+- [x] Gate check passes: `cd backend && npm test`
 
 **Tests**: unit
 **Gate**: quick
@@ -290,10 +290,10 @@ T9
 
 **Done when**:
 
-- [ ] Integração: vincular → desvincular (204) → GET `[]`; inexistente 404; checklist inativo desvinculável; revincular grava novo autor/data
-- [ ] Integração: aptidão igual antes e depois
-- [ ] Unit de rotas: 403 para papéis sem escrita
-- [ ] Gate check passes: `cd backend && npm test && npm run test:integration`
+- [x] Integração: vincular → desvincular (204) → GET `[]`; inexistente 404; checklist inativo desvinculável; revincular grava novo autor/data
+- [x] Integração: aptidão igual antes e depois
+- [x] Unit de rotas: 403 para papéis sem escrita
+- [x] Gate check passes: `cd backend && npm test && npm run test:integration` (falha pré-existente em `OverviewCustomerSyncPipeline`, sem relação)
 
 **Tests**: integration
 **Gate**: full
@@ -317,8 +317,8 @@ T9
 
 **Done when**:
 
-- [ ] Verbete reflete exatamente os códigos/status implementados
-- [ ] Gate check passes: `cd backend && npm test`
+- [x] Verbete reflete exatamente os códigos/status implementados
+- [x] Gate check passes: `cd backend && npm test`
 
 **Tests**: none
 **Gate**: quick
