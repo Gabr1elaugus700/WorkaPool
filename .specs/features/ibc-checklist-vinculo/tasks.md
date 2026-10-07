@@ -110,9 +110,9 @@ T9
 
 **Done when**:
 
-- [ ] Model nos dois schemas e `migration.sql` aditiva (sem tocar tabelas da Vistoria)
-- [ ] `npx prisma validate` ok e client gerado
-- [ ] Gate check passes: `cd backend && npm test`
+- [x] Model nos dois schemas e `migration.sql` aditiva (sem tocar tabelas da Vistoria)
+- [x] `npx prisma validate` ok e client gerado
+- [x] Gate check passes: `cd backend && npm test`
 
 **Tests**: none
 **Gate**: quick

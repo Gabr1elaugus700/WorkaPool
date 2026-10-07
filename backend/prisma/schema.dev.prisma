@@ -55,6 +55,7 @@ model User {
   cargasDespachoFechadasPor   CargaDespacho[] @relation("CargaDespachoFechadoPor")
   alocacoesIbc                AlocacaoIbc[]   @relation("AlocacaoIbcAlocadoPor")
   expedicoesIbcFechadasPor    ExpedicaoIbc[]  @relation("ExpedicaoIbcFechadoPor")
+  ibcChecklistVinculos        IbcChecklistVinculo[] @relation("IbcChecklistVinculoVinculadoPor")
   @@index([role])
 }
 
@@ -175,6 +176,7 @@ model Ibc {
   baixadoEm        DateTime?
   createdAt        DateTime            @default(now())
   alocacao         AlocacaoIbc?
+  checklistVinculos IbcChecklistVinculo[]
 }
 
 model AlocacaoIbc {
@@ -527,8 +529,23 @@ model ChecklistModelo {
   itens                ChecklistModeloItem[]
   vistorias            ChecklistVistoria[]
   checklistInspections ChecklistInspection[]
+  ibcVinculos          IbcChecklistVinculo[]
 
   @@index([tipo])
+}
+
+model IbcChecklistVinculo {
+  id                String          @id @default(uuid())
+  ibcId             String
+  checklistModeloId String
+  vinculadoPorId    String
+  vinculadoEm       DateTime        @default(now())
+  ibc               Ibc             @relation(fields: [ibcId], references: [id])
+  checklistModelo   ChecklistModelo @relation(fields: [checklistModeloId], references: [id])
+  vinculadoPor      User            @relation("IbcChecklistVinculoVinculadoPor", fields: [vinculadoPorId], references: [id], onDelete: Restrict)
+
+  @@unique([ibcId, checklistModeloId])
+  @@index([checklistModeloId])
 }
 
 model ChecklistModelItem {
