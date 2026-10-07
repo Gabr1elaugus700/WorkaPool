@@ -77,6 +77,13 @@ async function createChecklist(
   return checklist.id;
 }
 
+async function aptidaoSnapshot(ibcId: string) {
+  return prisma.ibc.findUniqueOrThrow({
+    where: { id: ibcId },
+    select: { aptidao: true, motivoInaptidao: true, primeiraInspecaoEm: true },
+  });
+}
+
 type VinculoBody = {
   checklistModeloId: string;
   ativo: boolean;
@@ -137,5 +144,72 @@ describe("IBC checklist vínculos HTTP persistence (#277)", () => {
       .set("Authorization", bearer(Role.ALMOX));
     assert.equal(response.status, 404);
     assert.equal(response.body.code, "IBC_NOT_FOUND");
+  });
+
+  it("links and unlinks checklists without changing aptidão", async () => {
+    const app = createTestApp();
+    const ibcId = await createIbc();
+    const soda = await createChecklist("Soda");
+    const estrutural = await createChecklist("Estrutural");
+    const antes = await aptidaoSnapshot(ibcId);
+
+    for (const checklistModeloId of [soda, estrutural]) {
+      const linked = await request(app)
+        .post(`/api/ibc/${ibcId}/checklists`)
+        .set("Authorization", bearer(Role.ALMOX))
+        .send({ checklistModeloId });
+      assert.equal(linked.status, 201);
+      assert.equal(linked.body.checklistModeloId, checklistModeloId);
+      assert.equal(linked.body.vinculadoPorId, ACTOR_ID);
+    }
+    assert.equal(await prisma.ibcChecklistVinculo.count({ where: { ibcId } }), 2);
+    assert.deepEqual(await aptidaoSnapshot(ibcId), antes);
+
+    const unlinked = await request(app)
+      .delete(`/api/ibc/${ibcId}/checklists/${soda}`)
+      .set("Authorization", bearer(Role.ADMIN));
+    assert.equal(unlinked.status, 204);
+
+    const again = await request(app)
+      .delete(`/api/ibc/${ibcId}/checklists/${soda}`)
+      .set("Authorization", bearer(Role.ADMIN));
+    assert.equal(again.status, 404);
+    assert.equal(again.body.code, "IBC_CHECKLIST_VINCULO_NOT_FOUND");
+
+    const remaining = await request(app)
+      .get(`/api/ibc/${ibcId}/checklists`)
+      .set("Authorization", bearer(Role.ALMOX));
+    assert.deepEqual((remaining.body as VinculoBody[]).map((v) => v.checklistModeloId), [estrutural]);
+    assert.deepEqual(await aptidaoSnapshot(ibcId), antes);
+  });
+
+  it("refuses inactive, VISTORIA, duplicate and unknown checklists", async () => {
+    const app = createTestApp();
+    const ibcId = await createIbc();
+    const soda = await createChecklist("Soda");
+    const inativo = await createChecklist("Inativo", { ativo: false });
+    const vistoria = await createChecklist("Vistoria", { tipo: ChecklistTipo.VISTORIA });
+
+    const vincular = (checklistModeloId: string) =>
+      request(app)
+        .post(`/api/ibc/${ibcId}/checklists`)
+        .set("Authorization", bearer(Role.ALMOX))
+        .send({ checklistModeloId });
+
+    assert.equal((await vincular(soda)).status, 201);
+
+    const cases = [
+      { id: inativo, status: 422, code: "IBC_CHECKLIST_INATIVO" },
+      { id: vistoria, status: 422, code: "IBC_CHECKLIST_TIPO_INVALIDO" },
+      { id: soda, status: 409, code: "IBC_CHECKLIST_JA_VINCULADO" },
+      { id: "8d7f903e-f53d-4c62-80b2-48f3c9655d71", status: 404, code: "IBC_CHECKLIST_NOT_FOUND" },
+    ];
+    for (const { id, status, code } of cases) {
+      const response = await vincular(id);
+      assert.equal(response.status, status, code);
+      assert.equal(response.body.code, code);
+    }
+
+    assert.equal(await prisma.ibcChecklistVinculo.count({ where: { ibcId } }), 1);
   });
 });

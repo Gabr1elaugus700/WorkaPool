@@ -70,7 +70,7 @@ Managed via `/api/ibc/checklists` (GET/POST) and `/api/ibc/checklists/:checklist
 _Avoid_: separate checklist tables for IBC, showing IBC checklists in Vistoria, adding inactive items, deleting checklists
 
 **Vínculo de checklist no IBC**:
-Link between one IBC and one **Checklist de IBC** (`IbcChecklistVinculo`: author `vinculadoPorId` + `vinculadoEm`; unique per IBC + checklist). An IBC may have several (e.g. one per product it carries). `GET /api/ibc/:id/checklists` (read roles; also for baixados; 404 `IBC_NOT_FOUND`) lists them by checklist name, including deactivated checklists — deactivating a checklist keeps existing links. Linking or unlinking **never changes aptidão**.
+Link between one IBC and one **Checklist de IBC** (`IbcChecklistVinculo`: author `vinculadoPorId` + `vinculadoEm`; unique per IBC + checklist). An IBC may have several (e.g. one per product it carries). `GET /api/ibc/:id/checklists` (read roles; also for baixados; 404 `IBC_NOT_FOUND`) lists them by checklist name, including deactivated checklists — deactivating a checklist keeps existing links, which can still be unlinked. `POST /api/ibc/:id/checklists` `{ checklistModeloId }` and `DELETE /api/ibc/:id/checklists/:checklistModeloId` (ADMIN/ALMOX) refuse: missing or baixado IBC 404 `IBC_NOT_FOUND`; missing checklist 404 `IBC_CHECKLIST_NOT_FOUND`; `tipo = VISTORIA` 422 `IBC_CHECKLIST_TIPO_INVALIDO`; inactive 422 `IBC_CHECKLIST_INATIVO`; duplicate 409 `IBC_CHECKLIST_JA_VINCULADO`; unlinking a missing link 404 `IBC_CHECKLIST_VINCULO_NOT_FOUND`. Linking or unlinking **never changes aptidão**.
 _Avoid_: recalculating aptidão on link, linking VISTORIA checklists, treating the link as an Inspeção
 
 **Aptidão**:

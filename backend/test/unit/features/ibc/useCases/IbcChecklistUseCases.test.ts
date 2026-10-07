@@ -50,6 +50,9 @@ function createRepositories(options: {
     async findById() {
       return options.checklist ?? null;
     },
+    async findTipoEAtivo() {
+      return null;
+    },
     async create(data) {
       creates.push(data);
       return { ...checklistSoda, ...data, itens: [] };

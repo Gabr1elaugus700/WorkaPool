@@ -96,6 +96,8 @@ router.get(
 );
 
 router.get("/:id/checklists", readAuth, IbcChecklistController.listVinculos);
+router.post("/:id/checklists", writeAuth, IbcChecklistController.vincular);
+router.delete("/:id/checklists/:checklistModeloId", writeAuth, IbcChecklistController.desvincular);
 
 router.patch(
   "/:id/converter-nao-homologado",

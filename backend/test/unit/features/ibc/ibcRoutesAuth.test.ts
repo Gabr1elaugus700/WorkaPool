@@ -343,6 +343,35 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.notStrictEqual(list.status, 403);
   });
 
+  await t.test("POST/DELETE /:id/checklists: 401 sem token e LOGISTICA 403", async () => {
+    const path = "/api/ibc/ibc-1/checklists";
+    const checklistModeloId = "8d7f903e-f53d-4c62-80b2-48f3c9655d71";
+    const token = createToken("LOGISTICA");
+    const anonymousPost = await request(app).post(path).send({ checklistModeloId });
+    const anonymousDelete = await request(app).delete(`${path}/${checklistModeloId}`);
+    const vincular = await request(app)
+      .post(path)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ checklistModeloId });
+    const desvincular = await request(app)
+      .delete(`${path}/${checklistModeloId}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    assert.strictEqual(anonymousPost.status, 401);
+    assert.strictEqual(anonymousDelete.status, 401);
+    assert.strictEqual(vincular.status, 403);
+    assert.strictEqual(desvincular.status, 403);
+  });
+
+  await t.test("POST /:id/checklists com body inválido (ALMOX) retorna 400", async () => {
+    const response = await request(app)
+      .post("/api/ibc/ibc-1/checklists")
+      .set("Authorization", `Bearer ${createToken("ALMOX")}`)
+      .send({ checklistModeloId: "nao-uuid" });
+    assert.strictEqual(response.status, 400);
+    assert.strictEqual(response.body.code, "IBC_CHECKLIST_VINCULO_INVALID_BODY");
+  });
+
   await t.test("LOGISTICA pode ler pool, alerts e produtos", async () => {
     const token = createToken("LOGISTICA");
     const list = await request(app)

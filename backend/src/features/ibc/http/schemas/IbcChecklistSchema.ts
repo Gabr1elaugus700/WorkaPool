@@ -42,4 +42,7 @@ export const IbcChecklistHttpSchemas = {
     .refine((data) => Object.keys(data).length > 0, {
       message: "Informe ao menos um campo",
     }),
+  vincularChecklist: z.object({
+    checklistModeloId: z.string().uuid(),
+  }),
 } as const;
