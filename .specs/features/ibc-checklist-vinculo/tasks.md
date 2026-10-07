@@ -186,9 +186,9 @@ T9
 
 **Done when**:
 
-- [ ] Integração: ACs 1–4 de "Listar" (ordenação por nome, `ativo: false` listado, 404, `[]`)
-- [ ] Unit de rotas: 403 para papel sem leitura
-- [ ] Gate check passes: `cd backend && npm test && npm run test:integration`
+- [x] Integração: ACs 1–4 de "Listar" (ordenação por nome, `ativo: false` listado, 404, `[]`)
+- [x] Unit de rotas: 403 para papel sem leitura
+- [x] Gate check passes: `cd backend && npm test && npm run test:integration`
 
 **Tests**: integration
 **Gate**: full
