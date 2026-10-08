@@ -37,6 +37,23 @@ export type CargaExpedicaoRef = {
   previsaoSaida: Date;
 };
 
+/** Foto de pedidos IBC: um registro por Pedido com sinal 251001, gravado no Fechar Carga. */
+export type CargaPedidoIbcSnapshot = {
+  numPed: string;
+  codCli: string | null;
+  cliente: string;
+  quantidadeEsperadaTotal: number;
+  quantidadeEsperadaVenda: number;
+  quantidadeEsperadaEmprestimo: number;
+  ibcInvalido: boolean;
+};
+
+/** Carga FECHADA com foto de pedidos IBC e sem ExpedicaoIbc, com alocações já carregadas. */
+export type CargaExpedicaoPendente = CargaExpedicaoRef & {
+  pedidosIbc: CargaPedidoIbcSnapshot[];
+  alocacoes: AlocacaoIbcRecord[];
+};
+
 export type CreateAlocacaoIbcData = {
   ibcId: string;
   cargaId: string;

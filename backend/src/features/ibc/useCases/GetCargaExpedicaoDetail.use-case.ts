@@ -3,6 +3,7 @@ import { AlocacaoIbcRecord } from "../types/IbcExpedicao.types";
 import { isPedidoIbcElegivel } from "../services/isPedidoIbcElegivel";
 import { summarizeCargaExpedicao } from "../services/summarizeCargaExpedicao";
 import { AppError } from "../../../utils/AppError";
+import { loadCargaFotoExpedicao } from "./loadCargaFotoExpedicao";
 
 export type GetCargaExpedicaoDetailInput = {
   codCar: number;
@@ -27,7 +28,6 @@ export type CargaExpedicaoDetail = {
   previsaoSaida: Date;
   quantidadeAlocada: number;
   quantidadeEsperadaTotal: number;
-  semIbc: boolean;
   temExpedicao: boolean;
   podeFecharExpedicao: boolean;
   pedidos: PedidoExpedicaoDetail[];
@@ -61,57 +61,41 @@ export class GetCargaExpedicaoDetailUseCase {
       });
     }
 
-    const carga = await this.repository.getCargaByCodCar(Number(codCar));
-    if (!carga) {
-      throw new AppError({
-        message: `Carga ${codCar} não encontrada`,
-        statusCode: 404,
-        code: "IBC_CARGA_NOT_FOUND",
-        details: { codCar },
-      });
-    }
+    const { carga, pedidosIbc } = await loadCargaFotoExpedicao(
+      this.repository,
+      Number(codCar),
+    );
 
-    const [pedidos, alocacoes, expedicao] = await Promise.all([
-      this.repository.getPedidosByCarga(carga.codCar),
+    const [alocacoes, expedicao] = await Promise.all([
       this.repository.listAlocacoesByCargaId(carga.id),
       this.repository.findExpedicaoByCargaId(carga.id),
     ]);
 
     const summary = summarizeCargaExpedicao({
       carga,
-      pedidos,
+      pedidos: pedidosIbc,
       alocacoes,
       expedicao,
     });
 
-    const pedidosDetalhe: PedidoExpedicaoDetail[] = [];
-    for (const pedido of pedidos) {
-      const isElegivel = isPedidoIbcElegivel(pedido);
-      const showInvalidAlert = pedido.ibcInvalido;
-
-      if (!isElegivel && !showInvalidAlert) {
-        continue;
-      }
-
-      const alocacoesPedido = alocacoes.filter(
-        (a) => String(a.numPed) === String(pedido.numPed),
-      );
-
-      pedidosDetalhe.push({
-        numPed: String(pedido.numPed),
-        cliente: pedido.cliente,
-        quantidadeAlocada: alocacoesPedido.length,
-        quantidadeEsperadaTotal: pedido.quantidadeEsperadaTotal,
-        quantidadeEsperadaVenda: pedido.quantidadeEsperadaVenda,
-        quantidadeEsperadaEmprestimo: pedido.quantidadeEsperadaEmprestimo,
-        ibcInvalido: pedido.ibcInvalido,
-        alocacoes: alocacoesPedido,
+    const pedidos = pedidosIbc
+      .filter((pedido) => isPedidoIbcElegivel(pedido) || pedido.ibcInvalido)
+      .map((pedido): PedidoExpedicaoDetail => {
+        const alocacoesPedido = alocacoes.filter(
+          (a) => a.numPed === pedido.numPed,
+        );
+        return {
+          numPed: pedido.numPed,
+          cliente: pedido.cliente,
+          quantidadeAlocada: alocacoesPedido.length,
+          quantidadeEsperadaTotal: pedido.quantidadeEsperadaTotal,
+          quantidadeEsperadaVenda: pedido.quantidadeEsperadaVenda,
+          quantidadeEsperadaEmprestimo: pedido.quantidadeEsperadaEmprestimo,
+          ibcInvalido: pedido.ibcInvalido,
+          alocacoes: alocacoesPedido,
+        };
       });
-    }
 
-    return {
-      ...summary,
-      pedidos: pedidosDetalhe,
-    };
+    return { ...summary, pedidos };
   }
 }

@@ -1,13 +1,16 @@
-import { PedidoCargo } from "../../pedidos/types/PedidoCargo.types";
+/**
+ * Campos da foto `CargaPedidoIbc` usados para decidir elegibilidade. A foto só grava
+ * Pedidos com sinal 251001, então não há `isContainer`.
+ */
+export type PedidoIbcElegibilidade = {
+  ibcInvalido: boolean;
+  quantidadeEsperadaTotal: number;
+};
 
 /**
  * Pedido elegível para AlocacaoIbc / Fechar expedição:
- * container válido (251001) com quantidade esperada > 0 e sem ibcInvalido.
+ * quantidade esperada > 0 e sem ibcInvalido.
  */
-export function isPedidoIbcElegivel(pedido: PedidoCargo): boolean {
-  return (
-    pedido.isContainer &&
-    !pedido.ibcInvalido &&
-    pedido.quantidadeEsperadaTotal > 0
-  );
+export function isPedidoIbcElegivel(pedido: PedidoIbcElegibilidade): boolean {
+  return !pedido.ibcInvalido && pedido.quantidadeEsperadaTotal > 0;
 }

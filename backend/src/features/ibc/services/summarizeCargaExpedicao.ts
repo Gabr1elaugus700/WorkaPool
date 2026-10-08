@@ -1,10 +1,16 @@
-import { PedidoCargo } from "../../pedidos/types/PedidoCargo.types";
 import {
   AlocacaoIbcRecord,
   CargaExpedicaoRef,
   ExpedicaoIbcRecord,
 } from "../types/IbcExpedicao.types";
-import { isPedidoIbcElegivel } from "./isPedidoIbcElegivel";
+import {
+  isPedidoIbcElegivel,
+  PedidoIbcElegibilidade,
+} from "./isPedidoIbcElegivel";
+
+export type PedidoIbcResumo = PedidoIbcElegibilidade & {
+  numPed: string | number;
+};
 
 export type CargaExpedicaoListItem = {
   id: string;
@@ -14,26 +20,18 @@ export type CargaExpedicaoListItem = {
   previsaoSaida: Date;
   quantidadeAlocada: number;
   quantidadeEsperadaTotal: number;
-  semIbc: boolean;
   temExpedicao: boolean;
   podeFecharExpedicao: boolean;
 };
 
-/** Sinal de embalagem 251001 no pedido (válido ou Pedido IBC inválido). */
-function hasSinalContainerIbc(pedido: PedidoCargo): boolean {
-  return pedido.isContainer || pedido.ibcInvalido;
-}
-
 function computePodeFecharExpedicao(params: {
   situacao: string;
-  semIbc: boolean;
   temExpedicao: boolean;
   quantidadeEsperadaTotal: number;
   pedidosElegiveisCompletos: boolean;
 }): boolean {
   return (
     params.situacao === "FECHADA" &&
-    !params.semIbc &&
     !params.temExpedicao &&
     params.quantidadeEsperadaTotal > 0 &&
     params.pedidosElegiveisCompletos
@@ -42,7 +40,7 @@ function computePodeFecharExpedicao(params: {
 
 export function summarizeCargaExpedicao(params: {
   carga: CargaExpedicaoRef;
-  pedidos: PedidoCargo[];
+  pedidos: PedidoIbcResumo[];
   alocacoes: AlocacaoIbcRecord[];
   expedicao: ExpedicaoIbcRecord | null;
 }): CargaExpedicaoListItem {
@@ -62,8 +60,6 @@ export function summarizeCargaExpedicao(params: {
     return sum + (countsByNumPed.get(String(pedido.numPed)) ?? 0);
   }, 0);
 
-  // semIbc = nenhum sinal 251001 (não “sem elegíveis”: só ibcInvalido ainda é acionável).
-  const semIbc = !params.pedidos.some(hasSinalContainerIbc);
   const temExpedicao = params.expedicao != null;
   const pedidosElegiveisCompletos =
     elegiveis.length > 0 &&
@@ -80,11 +76,9 @@ export function summarizeCargaExpedicao(params: {
     previsaoSaida: params.carga.previsaoSaida,
     quantidadeAlocada,
     quantidadeEsperadaTotal,
-    semIbc,
     temExpedicao,
     podeFecharExpedicao: computePodeFecharExpedicao({
       situacao: params.carga.situacao,
-      semIbc,
       temExpedicao,
       quantidadeEsperadaTotal,
       pedidosElegiveisCompletos,

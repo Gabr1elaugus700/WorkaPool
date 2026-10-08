@@ -1,6 +1,3 @@
-/** Situações listáveis na expedição IBC (#61). */
-export type CargaExpedicaoSituacao = "ABERTA" | "FECHADA" | string;
-
 /**
  * Alocação ativa (espelha AlocacaoIbcRecord serializado em JSON).
  */
@@ -15,21 +12,21 @@ export type AlocacaoIbcDTO = {
   identificador: string;
 };
 
-/**
- * Item de lista / resumo compartilhado com o detalhe
- * (espelha CargaExpedicaoListItem do backend).
- */
-export type CargaExpedicaoListItemDTO = {
+/** Resumo compartilhado entre lista e detalhe (espelha CargaExpedicaoListItem do backend). */
+type CargaExpedicaoResumoDTO = {
   id: string;
   codCar: number;
   destino: string;
-  situacao: CargaExpedicaoSituacao;
   previsaoSaida: string;
   quantidadeAlocada: number;
   quantidadeEsperadaTotal: number;
-  semIbc: boolean;
   temExpedicao: boolean;
   podeFecharExpedicao: boolean;
+};
+
+/** Item da lista: só cargas FECHADA com pedidos IBC aguardando expedição. */
+export type CargaExpedicaoListItemDTO = CargaExpedicaoResumoDTO & {
+  situacao: "FECHADA";
 };
 
 /**
@@ -46,8 +43,9 @@ export type PedidoIbcPreparacaoDTO = {
   alocacoes: AlocacaoIbcDTO[];
 };
 
-/** GET /api/ibc/cargas-expedicao/:codCar */
-export type CargaExpedicaoDetalheDTO = CargaExpedicaoListItemDTO & {
+/** GET /api/ibc/cargas-expedicao/:codCar — só carga FECHADA com foto de pedidos IBC. */
+export type CargaExpedicaoDetalheDTO = CargaExpedicaoResumoDTO & {
+  situacao: "FECHADA";
   pedidos: PedidoIbcPreparacaoDTO[];
 };
 

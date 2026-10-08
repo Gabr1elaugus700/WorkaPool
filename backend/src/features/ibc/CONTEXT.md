@@ -90,8 +90,8 @@ Expected return date for an Empréstimo. Starting policy: default **30 days** fr
 _Avoid_: Data limite de uso, leaving Empréstimo open-ended with no expected return
 
 **Preparação de expedição**:
-ALMOX links Apto IBCs to pedidos on a Carga. Allowed while cargo is **ABERTA** (partial progress) or **FECHADA**. Physical placement on the truck does not determine which client gets which numbered IBC — the system tracks counts per pedido for control; driver confirms at unload.
-_Avoid_: item-level linking, assuming patio knows which # goes to which client, Custódia no Cliente
+ALMOX links Apto IBCs to pedidos on a Carga. Allowed only while cargo is **FECHADA** and has a **Foto de pedidos IBC**; the foto is the only source of pedidos and quantidade esperada for the detail, AlocacaoIbc and Fechar expedição (Sapiens is not read). ABERTA → 409 `IBC_CARGA_NAO_FECHADA`; FECHADA without foto → 409 `IBC_CARGA_SEM_FOTO_EXPEDICAO`. Physical placement on the truck does not determine which client gets which numbered IBC — the system tracks counts per pedido for control; driver confirms at unload.
+_Avoid_: item-level linking, assuming patio knows which # goes to which client, Custódia no Cliente, preparing on ABERTA cargo, re-reading pedidos from Sapiens after close
 
 **Em viagem**:
 IBC custody state after **ExpedicaoIbc** is closed and before delivery confirmation or return entry. The asset is on the truck, not in the yard and not yet confirmed at a Cliente.
@@ -116,6 +116,10 @@ _Avoid_: computing in SQL for all pedidos, QUANTIDADE_EMBALAGEM, reading count f
 **Pedido IBC inválido**:
 A Pedido with a 251001 line where VOLUME_EMBALAGEM ≤ 0 or the division is not an integer. Blocked for AlocacaoIbc / Fechar expedição on that Pedido; ALMOX sees an alert; other Pedidos on the Carga proceed.
 _Avoid_: dropping the bad line and summing the rest, failing the whole Carga
+
+**Foto de pedidos IBC (CargaPedidoIbc)**:
+Frozen record, one row per Pedido with the 251001 signal (valid or **Pedido IBC inválido**), written in the **same transaction** as Fechar Carga from the pedidos that close already reads from Sapiens. Stores `numPed`, `codCli`, `cliente`, quantidade esperada (total, venda, empréstimo) and `ibcInvalido` (quantities 0). Unique per Carga + Pedido. Pedidos without 251001 are not recorded; a Carga without IBC has no foto. No backfill for cargas closed before the table existed.
+_Avoid_: re-reading Sapiens after close to decide IBC eligibility (sitped changes on invoicing), blocking Fechar Carga because of a Pedido IBC inválido, one row per item line
 
 **Quantidade realizada de IBC**:
 How many IBCs were actually confirmed at unload for that Pedido (QR scans saved). Compared with Quantidade esperada for gaps and for post-trip Aviso ao Representante.
