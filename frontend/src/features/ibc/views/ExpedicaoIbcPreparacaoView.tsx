@@ -25,7 +25,7 @@ function parseCodCar(raw: string | undefined): number | null {
 }
 
 /**
- * Preparação de expedição: vincular/desvincular IBC e fechar (#59/#60).
+ * Preparação de expedição em carga FECHADA: vincular/desvincular IBC e fechar (#59/#60).
  */
 export default function ExpedicaoIbcPreparacaoView() {
   const { codCar: codCarParam } = useParams<{ codCar: string }>();
@@ -145,12 +145,7 @@ export default function ExpedicaoIbcPreparacaoView() {
             </ExpedicaoIbcPageHeader>
 
             <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border-2 border-border bg-card p-4">
-              <Badge
-                variant={
-                  detalhe.situacao === "ABERTA" ? "default" : "secondary"
-                }
-                className="text-[10px]"
-              >
+              <Badge variant="secondary" className="text-[10px]">
                 {detalhe.situacao}
               </Badge>
               {detalhe.destino ? (

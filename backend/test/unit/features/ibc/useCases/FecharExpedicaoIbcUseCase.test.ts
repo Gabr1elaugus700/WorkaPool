@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { FecharExpedicaoIbcUseCase } from "../../../../../src/features/ibc/useCases/FecharExpedicaoIbc.use-case";
 import { IIbcExpedicaoRepository } from "../../../../../src/features/ibc/repositories/IIbcExpedicaoRepository";
 import { AppError } from "../../../../../src/utils/AppError";
-import { PedidoCargo } from "../../../../../src/features/pedidos/types/PedidoCargo.types";
 import {
   AlocacaoIbcRecord,
   CargaExpedicaoRef,
+  CargaPedidoIbcSnapshot,
   ExpedicaoIbcRecord,
 } from "../../../../../src/features/ibc/types/IbcExpedicao.types";
 
@@ -25,30 +25,19 @@ const buildCarga = (
   ...overrides,
 });
 
-const buildPedido = (
+const buildPedidoIbc = (
   numPed: string,
-  overrides: Partial<{
-    isContainer: boolean;
-    quantidadeEsperadaTotal: number;
-    quantidadeEsperadaVenda: number;
-    quantidadeEsperadaEmprestimo: number;
-    ibcInvalido: boolean;
-  }> = {},
-): PedidoCargo =>
-  new PedidoCargo({
-    numPed,
-    cliente: "Cliente",
-    cidade: "Blumenau",
-    estado: "SC",
-    vendedor: "Vendedor",
-    peso: 100,
-    qtdOri: 1,
-    isContainer: overrides.isContainer ?? true,
-    quantidadeEsperadaTotal: overrides.quantidadeEsperadaTotal ?? 3,
-    quantidadeEsperadaVenda: overrides.quantidadeEsperadaVenda ?? 2,
-    quantidadeEsperadaEmprestimo: overrides.quantidadeEsperadaEmprestimo ?? 1,
-    ibcInvalido: overrides.ibcInvalido ?? false,
-  });
+  overrides: Partial<CargaPedidoIbcSnapshot> = {},
+): CargaPedidoIbcSnapshot => ({
+  numPed,
+  codCli: "C1",
+  cliente: "Cliente",
+  quantidadeEsperadaTotal: 3,
+  quantidadeEsperadaVenda: 2,
+  quantidadeEsperadaEmprestimo: 1,
+  ibcInvalido: false,
+  ...overrides,
+});
 
 const buildAlocacao = (
   overrides: Partial<AlocacaoIbcRecord> = {},
@@ -67,7 +56,7 @@ const buildAlocacao = (
 type RepoMock = Pick<
   IIbcExpedicaoRepository,
   | "getCargaByCodCar"
-  | "getPedidosByCarga"
+  | "listPedidosIbcByCargaId"
   | "listAlocacoesByCargaId"
   | "findExpedicaoByCargaId"
   | "fecharExpedicao"
@@ -88,18 +77,35 @@ const buildHappyRepo = (overrides: Partial<RepoMock> = {}): RepoMock => {
 
   return {
     getCargaByCodCar: mock.fn(async () => buildCarga()),
-    getPedidosByCarga: mock.fn(async () => [
-      buildPedido("1120", {
-        quantidadeEsperadaTotal: 3,
-        quantidadeEsperadaVenda: 2,
-        quantidadeEsperadaEmprestimo: 1,
-      }),
-    ]),
+    listPedidosIbcByCargaId: mock.fn(async () => [buildPedidoIbc("1120")]),
     listAlocacoesByCargaId: mock.fn(async () => alocacoes),
     findExpedicaoByCargaId: mock.fn(async () => null),
     fecharExpedicao: mock.fn(async () => expedicao),
     ...overrides,
   };
+};
+
+const rejectsWithoutClosing = async (
+  overrides: Partial<RepoMock>,
+  assertError: (error: AppError) => void,
+) => {
+  const fecharExpedicao = mock.fn(async () => {
+    throw new Error("não deve fechar");
+  });
+  const repo = buildHappyRepo({ ...overrides, fecharExpedicao });
+  await assert.rejects(
+    () =>
+      new FecharExpedicaoIbcUseCase(repo as IIbcExpedicaoRepository).execute({
+        codCar: COD_CAR,
+        fechadoPorId: FECHADO_POR_ID,
+      }),
+    (error: unknown) => {
+      assert.ok(error instanceof AppError);
+      assertError(error);
+      return true;
+    },
+  );
+  assert.strictEqual(fecharExpedicao.mock.calls.length, 0);
 };
 
 describe("FecharExpedicaoIbcUseCase", () => {
@@ -109,65 +115,56 @@ describe("FecharExpedicaoIbcUseCase", () => {
   });
 
   it("rejeita fechar expedição quando carga não está FECHADA", async () => {
-    const fecharExpedicao = mock.fn(async () => {
-      throw new Error("não deve fechar");
-    });
-    const repo = buildHappyRepo({
-      getCargaByCodCar: mock.fn(async () => buildCarga({ situacao: "ABERTA" })),
-      fecharExpedicao,
-    });
-    const useCase = new FecharExpedicaoIbcUseCase(
-      repo as IIbcExpedicaoRepository,
-    );
-
-    await assert.rejects(
-      async () =>
-        useCase.execute({ codCar: COD_CAR, fechadoPorId: FECHADO_POR_ID }),
-      (error: unknown) => {
-        assert.ok(error instanceof AppError);
-        assert.strictEqual(error.code, "IBC_EXPEDICAO_CARGA_NAO_FECHADA");
+    await rejectsWithoutClosing(
+      { getCargaByCodCar: mock.fn(async () => buildCarga({ situacao: "ABERTA" })) },
+      (error) => {
+        assert.strictEqual(error.code, "IBC_CARGA_NAO_FECHADA");
         assert.strictEqual(error.statusCode, 409);
-        return true;
       },
     );
-    assert.strictEqual(fecharExpedicao.mock.calls.length, 0);
   });
 
-  it("rejeita fechar expedição quando pedido IBC está incompleto e nomeia o numPed", async () => {
-    const fecharExpedicao = mock.fn(async () => {
-      throw new Error("não deve fechar");
-    });
-    const repo = buildHappyRepo({
-      listAlocacoesByCargaId: mock.fn(async () => [
-        buildAlocacao({ id: "aloc-1" }),
-        buildAlocacao({ id: "aloc-2", ibcId: "ibc-2", identificador: "H0046" }),
-      ]),
-      fecharExpedicao,
-    });
-    const useCase = new FecharExpedicaoIbcUseCase(
-      repo as IIbcExpedicaoRepository,
+  it("rejeita fechar expedição quando carga FECHADA não tem foto", async () => {
+    await rejectsWithoutClosing(
+      { listPedidosIbcByCargaId: mock.fn(async () => []) },
+      (error) => {
+        assert.strictEqual(error.code, "IBC_CARGA_SEM_FOTO_EXPEDICAO");
+        assert.strictEqual(error.statusCode, 409);
+      },
     );
+  });
 
-    await assert.rejects(
-      async () =>
-        useCase.execute({ codCar: COD_CAR, fechadoPorId: FECHADO_POR_ID }),
-      (error: unknown) => {
-        assert.ok(error instanceof AppError);
+  it("rejeita fechar expedição quando a foto só tem Pedido IBC inválido", async () => {
+    await rejectsWithoutClosing(
+      {
+        listPedidosIbcByCargaId: mock.fn(async () => [
+          buildPedidoIbc("1121", { ibcInvalido: true, quantidadeEsperadaTotal: 0 }),
+        ]),
+        listAlocacoesByCargaId: mock.fn(async () => []),
+      },
+      (error) => assert.strictEqual(error.code, "IBC_EXPEDICAO_SEM_PEDIDOS"),
+    );
+  });
+
+  it("rejeita fechar expedição quando pedido da foto está incompleto e nomeia o numPed", async () => {
+    await rejectsWithoutClosing(
+      {
+        listAlocacoesByCargaId: mock.fn(async () => [
+          buildAlocacao({ id: "aloc-1" }),
+          buildAlocacao({ id: "aloc-2", ibcId: "ibc-2", identificador: "H0046" }),
+        ]),
+      },
+      (error) => {
         assert.strictEqual(error.code, "IBC_EXPEDICAO_PEDIDO_INSUFICIENTE");
         assert.strictEqual(error.statusCode, 409);
-        assert.ok(
-          String(error.message).includes("1120"),
-          "mensagem deve nomear o pedido",
-        );
+        assert.ok(String(error.message).includes("1120"));
         const details = error.details as { numPed?: string };
         assert.strictEqual(details.numPed, "1120");
-        return true;
       },
     );
-    assert.strictEqual(fecharExpedicao.mock.calls.length, 0);
   });
 
-  it("fecha expedição usando total esperado (não split Venda/Empréstimo)", async () => {
+  it("fecha expedição validando o total esperado da foto", async () => {
     const fecharExpedicao = mock.fn(
       async (data: {
         cargaId: string;
@@ -182,14 +179,10 @@ describe("FecharExpedicaoIbcUseCase", () => {
       }),
     );
     const repo = buildHappyRepo({ fecharExpedicao });
-    const useCase = new FecharExpedicaoIbcUseCase(
-      repo as IIbcExpedicaoRepository,
-    );
 
-    const result = await useCase.execute({
-      codCar: COD_CAR,
-      fechadoPorId: FECHADO_POR_ID,
-    });
+    const result = await new FecharExpedicaoIbcUseCase(
+      repo as IIbcExpedicaoRepository,
+    ).execute({ codCar: COD_CAR, fechadoPorId: FECHADO_POR_ID });
 
     assert.strictEqual(result.expedicao.id, "exp-1");
     assert.strictEqual(result.expedicao.cargaId, CARGA_ID);

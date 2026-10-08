@@ -1,8 +1,5 @@
 import { CargaPedidoIbc, PrismaClient } from "@prisma/client";
 import prismaInstance from "../../../config/prisma";
-import { IPedidosRepository } from "../../pedidos/repositories/IPedidosRepository";
-import { PedidosRepository } from "../../pedidos/repositories/PedidosRepository";
-import { PedidoCargo } from "../../pedidos/types/PedidoCargo.types";
 import { IIbcExpedicaoRepository } from "./IIbcExpedicaoRepository";
 import {
   AlocacaoIbcRecord,
@@ -27,10 +24,7 @@ type AlocacaoRow = {
 };
 
 export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
-  constructor(
-    private readonly pedidosRepository: IPedidosRepository = new PedidosRepository(),
-    private readonly prisma: PrismaClient = prismaInstance,
-  ) {}
+  constructor(private readonly prisma: PrismaClient = prismaInstance) {}
 
   async getCargaByCodCar(codCar: number): Promise<CargaExpedicaoRef | null> {
     const carga = await this.prisma.cargas.findUnique({
@@ -67,8 +61,14 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
     }));
   }
 
-  async getPedidosByCarga(codCar: number): Promise<PedidoCargo[]> {
-    return this.pedidosRepository.getPedidosByCarga(codCar);
+  async listPedidosIbcByCargaId(
+    cargaId: string,
+  ): Promise<CargaPedidoIbcSnapshot[]> {
+    const rows = await this.prisma.cargaPedidoIbc.findMany({
+      where: { cargaId },
+      orderBy: { numPed: "asc" },
+    });
+    return rows.map((row) => this.toPedidoIbcSnapshot(row));
   }
 
   async findIbcByIdentificador(

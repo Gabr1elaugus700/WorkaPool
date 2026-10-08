@@ -126,7 +126,7 @@ describe("IbcExpedicaoRepository.listCargasPendentesExpedicao (#296)", () => {
       data: { cargaId: expedidaId, fechadoPorId: user.id },
     });
 
-    const repository = new IbcExpedicaoRepository(undefined, prisma);
+    const repository = new IbcExpedicaoRepository(prisma);
     const cargas = await repository.listCargasPendentesExpedicao();
     const fixtureCargas = cargas.filter((c) =>
       c.id.startsWith(FIXTURE_PREFIX),
@@ -143,5 +143,31 @@ describe("IbcExpedicaoRepository.listCargasPendentesExpedicao (#296)", () => {
     assert.equal(pendente.pedidosIbc[0].quantidadeEsperadaTotal, 2);
     assert.equal(pendente.alocacoes.length, 1);
     assert.equal(pendente.alocacoes[0].identificador, `${FIXTURE_PREFIX}H0045`);
+  });
+
+  it("listPedidosIbcByCargaId devolve só a foto da carga, ordenada por numPed (#297)", async () => {
+    const cargaId = await createCarga(COD_CAR_PENDENTE, "FECHADA");
+    await createFoto(cargaId, "1121");
+    await createFoto(cargaId, "1120");
+    const outraId = await createCarga(COD_CAR_ABERTA, "FECHADA");
+    await createFoto(outraId, "2220");
+
+    const pedidos = await new IbcExpedicaoRepository(
+      prisma,
+    ).listPedidosIbcByCargaId(cargaId);
+
+    assert.deepEqual(
+      pedidos.map((p) => p.numPed),
+      ["1120", "1121"],
+    );
+    assert.deepEqual(pedidos[0], {
+      numPed: "1120",
+      codCli: "C1",
+      cliente: "Cliente Teste",
+      quantidadeEsperadaTotal: 2,
+      quantidadeEsperadaVenda: 1,
+      quantidadeEsperadaEmprestimo: 1,
+      ibcInvalido: false,
+    });
   });
 });

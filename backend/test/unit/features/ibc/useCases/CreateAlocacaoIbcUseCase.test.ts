@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { CreateAlocacaoIbcUseCase } from "../../../../../src/features/ibc/useCases/CreateAlocacaoIbc.use-case";
 import { IIbcExpedicaoRepository } from "../../../../../src/features/ibc/repositories/IIbcExpedicaoRepository";
 import { AppError } from "../../../../../src/utils/AppError";
-import { PedidoCargo } from "../../../../../src/features/pedidos/types/PedidoCargo.types";
 import {
   AlocacaoIbcRecord,
   CargaExpedicaoRef,
+  CargaPedidoIbcSnapshot,
   IbcRecord,
 } from "../../../../../src/features/ibc/types/IbcExpedicao.types";
 
@@ -20,35 +20,24 @@ const buildCarga = (
   id: CARGA_ID,
   codCar: COD_CAR,
   destino: "Blumenau",
-  situacao: "ABERTA",
+  situacao: "FECHADA",
   previsaoSaida: new Date("2026-08-25T10:00:00.000Z"),
   ...overrides,
 });
 
-const buildPedido = (
+const buildPedidoIbc = (
   numPed: string,
-  overrides: Partial<{
-    isContainer: boolean;
-    quantidadeEsperadaTotal: number;
-    quantidadeEsperadaVenda: number;
-    quantidadeEsperadaEmprestimo: number;
-    ibcInvalido: boolean;
-  }> = {},
-): PedidoCargo =>
-  new PedidoCargo({
-    numPed,
-    cliente: "Cliente Teste",
-    cidade: "Blumenau",
-    estado: "SC",
-    vendedor: "Vendedor",
-    peso: 100,
-    qtdOri: 1,
-    isContainer: overrides.isContainer ?? true,
-    quantidadeEsperadaTotal: overrides.quantidadeEsperadaTotal ?? 3,
-    quantidadeEsperadaVenda: overrides.quantidadeEsperadaVenda ?? 2,
-    quantidadeEsperadaEmprestimo: overrides.quantidadeEsperadaEmprestimo ?? 1,
-    ibcInvalido: overrides.ibcInvalido ?? false,
-  });
+  overrides: Partial<CargaPedidoIbcSnapshot> = {},
+): CargaPedidoIbcSnapshot => ({
+  numPed,
+  codCli: "C1",
+  cliente: "Cliente Teste",
+  quantidadeEsperadaTotal: 3,
+  quantidadeEsperadaVenda: 2,
+  quantidadeEsperadaEmprestimo: 1,
+  ibcInvalido: false,
+  ...overrides,
+});
 
 const buildIbc = (overrides: Partial<IbcRecord> = {}): IbcRecord => ({
   id: "ibc-1",
@@ -77,7 +66,7 @@ const buildAlocacao = (
 type RepoMock = Pick<
   IIbcExpedicaoRepository,
   | "getCargaByCodCar"
-  | "getPedidosByCarga"
+  | "listPedidosIbcByCargaId"
   | "findIbcByIdentificador"
   | "findAlocacaoByIbcId"
   | "countAlocacoesByCargaAndNumPed"
@@ -92,7 +81,7 @@ const buildHappyRepo = (
   const alocacao = buildAlocacao();
   return {
     getCargaByCodCar: mock.fn(async () => buildCarga()),
-    getPedidosByCarga: mock.fn(async () => [buildPedido("1120")]),
+    listPedidosIbcByCargaId: mock.fn(async () => [buildPedidoIbc("1120")]),
     findIbcByIdentificador: mock.fn(async () => ibc),
     findAlocacaoByIbcId: mock.fn(async () => null),
     countAlocacoesByCargaAndNumPed: mock.fn(async () => 0),
@@ -304,8 +293,8 @@ describe("CreateAlocacaoIbcUseCase", () => {
       throw new Error("não deve criar");
     });
     const repo = buildHappyRepo({
-      getPedidosByCarga: mock.fn(async () => [
-        buildPedido("1120", {
+      listPedidosIbcByCargaId: mock.fn(async () => [
+        buildPedidoIbc("1120", {
           quantidadeEsperadaTotal: 3,
           quantidadeEsperadaVenda: 2,
           quantidadeEsperadaEmprestimo: 1,
@@ -341,11 +330,12 @@ describe("CreateAlocacaoIbcUseCase", () => {
       throw new Error("não deve criar");
     });
     const repo = buildHappyRepo({
-      getPedidosByCarga: mock.fn(async () => [
-        buildPedido("1120", {
-          isContainer: false,
+      listPedidosIbcByCargaId: mock.fn(async () => [
+        buildPedidoIbc("1120", {
           ibcInvalido: true,
           quantidadeEsperadaTotal: 0,
+          quantidadeEsperadaVenda: 0,
+          quantidadeEsperadaEmprestimo: 0,
         }),
       ]),
       createAlocacao,
@@ -371,22 +361,53 @@ describe("CreateAlocacaoIbcUseCase", () => {
     assert.strictEqual(createAlocacao.mock.calls.length, 0);
   });
 
-  it("permite alocar em carga FECHADA", async () => {
-    const repo = buildHappyRepo({
-      getCargaByCodCar: mock.fn(async () => buildCarga({ situacao: "FECHADA" })),
+  const rejectsWithoutCreating = async (
+    overrides: Partial<RepoMock>,
+    expected: { code: string; statusCode: number },
+    numPed = "1120",
+  ) => {
+    const createAlocacao = mock.fn(async () => {
+      throw new Error("não deve criar");
     });
-    const useCase = new CreateAlocacaoIbcUseCase(
-      repo as IIbcExpedicaoRepository,
+    const repo = buildHappyRepo({ ...overrides, createAlocacao });
+    await assert.rejects(
+      () =>
+        new CreateAlocacaoIbcUseCase(repo as IIbcExpedicaoRepository).execute({
+          codCar: COD_CAR,
+          numPed,
+          identificador: "H0045",
+          alocadoPorId: ALOCADO_POR_ID,
+        }),
+      (error: unknown) => {
+        assert.ok(error instanceof AppError);
+        assert.strictEqual(error.code, expected.code);
+        assert.strictEqual(error.statusCode, expected.statusCode);
+        return true;
+      },
     );
+    assert.strictEqual(createAlocacao.mock.calls.length, 0);
+  };
 
-    const result = await useCase.execute({
-      codCar: COD_CAR,
-      numPed: "1120",
-      identificador: "H0045",
-      alocadoPorId: ALOCADO_POR_ID,
-    });
+  it("rejeita alocação em carga ABERTA", async () => {
+    await rejectsWithoutCreating(
+      { getCargaByCodCar: mock.fn(async () => buildCarga({ situacao: "ABERTA" })) },
+      { code: "IBC_CARGA_NAO_FECHADA", statusCode: 409 },
+    );
+  });
 
-    assert.strictEqual(result.alocacao.numPed, "1120");
+  it("rejeita alocação em carga FECHADA sem foto", async () => {
+    await rejectsWithoutCreating(
+      { listPedidosIbcByCargaId: mock.fn(async () => []) },
+      { code: "IBC_CARGA_SEM_FOTO_EXPEDICAO", statusCode: 409 },
+    );
+  });
+
+  it("rejeita alocação em pedido fora da foto", async () => {
+    await rejectsWithoutCreating(
+      {},
+      { code: "IBC_PEDIDO_NOT_FOUND", statusCode: 404 },
+      "7777",
+    );
   });
 
   it("allocation gate materializes DATA_LIMITE before rejecting", async () => {

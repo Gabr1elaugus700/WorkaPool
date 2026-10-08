@@ -50,12 +50,8 @@ const buildCargaPendente = (
 });
 
 function buildRepo(cargas: CargaExpedicaoPendente[]) {
-  const repo: Pick<
-    IIbcExpedicaoRepository,
-    "listCargasPendentesExpedicao" | "getPedidosByCarga"
-  > = {
+  const repo: Pick<IIbcExpedicaoRepository, "listCargasPendentesExpedicao"> = {
     listCargasPendentesExpedicao: mock.fn(async () => cargas),
-    getPedidosByCarga: mock.fn(async () => []),
   };
   return repo;
 }
@@ -66,7 +62,7 @@ describe("ListCargasExpedicaoUseCase", () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
   });
 
-  it("monta a lista só a partir da foto, sem consultar o Sapiens", async () => {
+  it("monta a lista só a partir da foto, numa única consulta", async () => {
     const repo = buildRepo([buildCargaPendente()]);
 
     const useCase = new ListCargasExpedicaoUseCase(
@@ -75,10 +71,6 @@ describe("ListCargasExpedicaoUseCase", () => {
     const result = await useCase.execute();
 
     assert.strictEqual(result.cargas.length, 1);
-    assert.strictEqual(
-      (repo.getPedidosByCarga as ReturnType<typeof mock.fn>).mock.callCount(),
-      0,
-    );
     assert.strictEqual(
       (repo.listCargasPendentesExpedicao as ReturnType<typeof mock.fn>).mock
         .callCount(),

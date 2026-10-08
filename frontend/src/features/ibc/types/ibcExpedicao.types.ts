@@ -43,9 +43,9 @@ export type PedidoIbcPreparacaoDTO = {
   alocacoes: AlocacaoIbcDTO[];
 };
 
-/** GET /api/ibc/cargas-expedicao/:codCar */
+/** GET /api/ibc/cargas-expedicao/:codCar — só carga FECHADA com foto de pedidos IBC. */
 export type CargaExpedicaoDetalheDTO = CargaExpedicaoResumoDTO & {
-  situacao: string;
+  situacao: "FECHADA";
   pedidos: PedidoIbcPreparacaoDTO[];
 };
 

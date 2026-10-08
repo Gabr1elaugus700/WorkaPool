@@ -1,10 +1,9 @@
-import { PedidoCargo } from "../../pedidos/types/PedidoCargo.types";
 import { IIbcExpedicaoRepository } from "../repositories/IIbcExpedicaoRepository";
-import {
-  AlocacaoIbcRecord,
-} from "../types/IbcExpedicao.types";
+import { isPedidoIbcElegivel } from "../services/isPedidoIbcElegivel";
+import { AlocacaoIbcRecord } from "../types/IbcExpedicao.types";
 import { AppError } from "../../../utils/AppError";
 import { isDataLimiteDue } from "../utils/ibcDataLimite";
+import { loadCargaFotoExpedicao } from "./loadCargaFotoExpedicao";
 
 export type CreateAlocacaoIbcInput = {
   codCar: number;
@@ -18,8 +17,6 @@ export type CreateAlocacaoIbcResult = {
   quantidadeAlocada: number;
   quantidadeEsperadaTotal: number;
 };
-
-const SITUACOES_PREPARACAO = new Set(["ABERTA", "FECHADA"]);
 
 export class CreateAlocacaoIbcUseCase {
   private readonly repository: IIbcExpedicaoRepository;
@@ -74,24 +71,10 @@ export class CreateAlocacaoIbcUseCase {
       });
     }
 
-    const carga = await this.repository.getCargaByCodCar(codCar);
-    if (!carga) {
-      throw new AppError({
-        message: `Carga ${codCar} não encontrada`,
-        statusCode: 404,
-        code: "IBC_CARGA_NOT_FOUND",
-        details: { codCar },
-      });
-    }
-
-    if (!SITUACOES_PREPARACAO.has(carga.situacao)) {
-      throw new AppError({
-        message: `Carga ${codCar} não está ABERTA nem FECHADA para preparação`,
-        statusCode: 409,
-        code: "IBC_CARGA_SITUACAO_INVALIDA",
-        details: { codCar, situacao: carga.situacao },
-      });
-    }
+    const { carga, pedidosIbc } = await loadCargaFotoExpedicao(
+      this.repository,
+      codCar,
+    );
 
     const ibc = await this.repository.findIbcByIdentificador(identificador.trim());
     if (!ibc) {
@@ -153,8 +136,7 @@ export class CreateAlocacaoIbcUseCase {
       });
     }
 
-    const pedidos = await this.repository.getPedidosByCarga(codCar);
-    const pedido = this.findPedido(pedidos, numPed);
+    const pedido = pedidosIbc.find((p) => p.numPed === numPed.trim());
     if (!pedido) {
       throw new AppError({
         message: `Pedido ${numPed} não encontrado na carga ${codCar}`,
@@ -173,18 +155,18 @@ export class CreateAlocacaoIbcUseCase {
       });
     }
 
-    if (!pedido.isContainer || pedido.quantidadeEsperadaTotal <= 0) {
+    if (!isPedidoIbcElegivel(pedido)) {
       throw new AppError({
         message: `Pedido ${numPed} não é elegível para IBC nesta carga`,
         statusCode: 409,
         code: "IBC_PEDIDO_NAO_CONTAINER",
-        details: { numPed, isContainer: pedido.isContainer },
+        details: { numPed, quantidadeEsperadaTotal: pedido.quantidadeEsperadaTotal },
       });
     }
 
     const quantidadeAtual = await this.repository.countAlocacoesByCargaAndNumPed(
       carga.id,
-      String(pedido.numPed),
+      pedido.numPed,
     );
 
     if (quantidadeAtual >= pedido.quantidadeEsperadaTotal) {
@@ -203,7 +185,7 @@ export class CreateAlocacaoIbcUseCase {
     const alocacao = await this.repository.createAlocacao({
       ibcId: ibc.id,
       cargaId: carga.id,
-      numPed: String(pedido.numPed),
+      numPed: pedido.numPed,
       alocadoPorId,
     });
 
@@ -212,13 +194,5 @@ export class CreateAlocacaoIbcUseCase {
       quantidadeAlocada: quantidadeAtual + 1,
       quantidadeEsperadaTotal: pedido.quantidadeEsperadaTotal,
     };
-  }
-
-  private findPedido(
-    pedidos: PedidoCargo[],
-    numPed: string,
-  ): PedidoCargo | undefined {
-    const target = String(numPed).trim();
-    return pedidos.find((p) => String(p.numPed) === target);
   }
 }
