@@ -1,8 +1,11 @@
-import { PedidoCargo } from "../../pedidos/types/PedidoCargo.types";
 import { IIbcExpedicaoRepository } from "../repositories/IIbcExpedicaoRepository";
 import { isPedidoIbcElegivel } from "../services/isPedidoIbcElegivel";
-import { ExpedicaoIbcRecord } from "../types/IbcExpedicao.types";
+import {
+  CargaPedidoIbcSnapshot,
+  ExpedicaoIbcRecord,
+} from "../types/IbcExpedicao.types";
 import { AppError } from "../../../utils/AppError";
+import { loadCargaFotoExpedicao } from "./loadCargaFotoExpedicao";
 
 export type FecharExpedicaoIbcInput = {
   codCar: number;
@@ -51,24 +54,10 @@ export class FecharExpedicaoIbcUseCase {
       });
     }
 
-    const carga = await this.repository.getCargaByCodCar(codCar);
-    if (!carga) {
-      throw new AppError({
-        message: `Carga ${codCar} não encontrada`,
-        statusCode: 404,
-        code: "IBC_CARGA_NOT_FOUND",
-        details: { codCar },
-      });
-    }
-
-    if (carga.situacao !== "FECHADA") {
-      throw new AppError({
-        message: `Carga ${codCar} precisa estar FECHADA para fechar a expedição`,
-        statusCode: 409,
-        code: "IBC_EXPEDICAO_CARGA_NAO_FECHADA",
-        details: { codCar, situacao: carga.situacao },
-      });
-    }
+    const { carga, pedidosIbc } = await loadCargaFotoExpedicao(
+      this.repository,
+      codCar,
+    );
 
     const expedicaoExistente = await this.repository.findExpedicaoByCargaId(
       carga.id,
@@ -82,8 +71,7 @@ export class FecharExpedicaoIbcUseCase {
       });
     }
 
-    const pedidos = await this.repository.getPedidosByCarga(codCar);
-    const pedidosElegiveis = pedidos.filter(isPedidoIbcElegivel);
+    const pedidosElegiveis = pedidosIbc.filter(isPedidoIbcElegivel);
 
     if (pedidosElegiveis.length === 0) {
       throw new AppError({
@@ -106,13 +94,13 @@ export class FecharExpedicaoIbcUseCase {
       countsByNumPed,
     );
     if (insuficiente) {
-      const alocado = countsByNumPed.get(String(insuficiente.numPed)) ?? 0;
+      const alocado = countsByNumPed.get(insuficiente.numPed) ?? 0;
       throw new AppError({
         message: `Pedido ${insuficiente.numPed} está incompleto (${alocado}/${insuficiente.quantidadeEsperadaTotal} IBCs)`,
         statusCode: 409,
         code: "IBC_EXPEDICAO_PEDIDO_INSUFICIENTE",
         details: {
-          numPed: String(insuficiente.numPed),
+          numPed: insuficiente.numPed,
           quantidadeAlocada: alocado,
           quantidadeEsperadaTotal: insuficiente.quantidadeEsperadaTotal,
         },
@@ -133,11 +121,11 @@ export class FecharExpedicaoIbcUseCase {
   }
 
   private findPedidoInsuficiente(
-    pedidos: PedidoCargo[],
+    pedidos: CargaPedidoIbcSnapshot[],
     countsByNumPed: Map<string, number>,
-  ): PedidoCargo | undefined {
+  ): CargaPedidoIbcSnapshot | undefined {
     return pedidos.find((pedido) => {
-      const alocado = countsByNumPed.get(String(pedido.numPed)) ?? 0;
+      const alocado = countsByNumPed.get(pedido.numPed) ?? 0;
       return alocado < pedido.quantidadeEsperadaTotal;
     });
   }

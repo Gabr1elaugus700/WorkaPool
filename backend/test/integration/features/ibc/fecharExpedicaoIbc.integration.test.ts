@@ -106,7 +106,7 @@ describe("Fechar expedição persists atomically (#63)", () => {
       },
     });
 
-    const repository = new IbcExpedicaoRepository(undefined, prisma);
+    const repository = new IbcExpedicaoRepository(prisma);
     const expedicao = await repository.fecharExpedicao({
       cargaId,
       fechadoPorId: user.id,
