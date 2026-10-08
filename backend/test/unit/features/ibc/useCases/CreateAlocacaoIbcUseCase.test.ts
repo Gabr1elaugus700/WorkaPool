@@ -363,7 +363,7 @@ describe("CreateAlocacaoIbcUseCase", () => {
 
   const rejectsWithoutCreating = async (
     overrides: Partial<RepoMock>,
-    code: string,
+    expected: { code: string; statusCode: number },
     numPed = "1120",
   ) => {
     const createAlocacao = mock.fn(async () => {
@@ -380,8 +380,8 @@ describe("CreateAlocacaoIbcUseCase", () => {
         }),
       (error: unknown) => {
         assert.ok(error instanceof AppError);
-        assert.strictEqual(error.code, code);
-        assert.strictEqual(error.statusCode, code.endsWith("NOT_FOUND") ? 404 : 409);
+        assert.strictEqual(error.code, expected.code);
+        assert.strictEqual(error.statusCode, expected.statusCode);
         return true;
       },
     );
@@ -391,19 +391,23 @@ describe("CreateAlocacaoIbcUseCase", () => {
   it("rejeita alocação em carga ABERTA", async () => {
     await rejectsWithoutCreating(
       { getCargaByCodCar: mock.fn(async () => buildCarga({ situacao: "ABERTA" })) },
-      "IBC_CARGA_NAO_FECHADA",
+      { code: "IBC_CARGA_NAO_FECHADA", statusCode: 409 },
     );
   });
 
   it("rejeita alocação em carga FECHADA sem foto", async () => {
     await rejectsWithoutCreating(
       { listPedidosIbcByCargaId: mock.fn(async () => []) },
-      "IBC_CARGA_SEM_FOTO_EXPEDICAO",
+      { code: "IBC_CARGA_SEM_FOTO_EXPEDICAO", statusCode: 409 },
     );
   });
 
   it("rejeita alocação em pedido fora da foto", async () => {
-    await rejectsWithoutCreating({}, "IBC_PEDIDO_NOT_FOUND", "7777");
+    await rejectsWithoutCreating(
+      {},
+      { code: "IBC_PEDIDO_NOT_FOUND", statusCode: 404 },
+      "7777",
+    );
   });
 
   it("allocation gate materializes DATA_LIMITE before rejecting", async () => {

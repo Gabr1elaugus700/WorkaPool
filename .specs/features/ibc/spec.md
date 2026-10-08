@@ -87,7 +87,7 @@ A empresa opera com containers IBC (empréstimo, venda, troca, transbordo) sem i
 
 1. WHEN LOGISTICA fecha uma Carga THEN o sistema SHALL exigir `CargaDespacho` (motorista + caminhão `Trucks` **ativo**) e SHALL rejeitar sem eles ou com caminhão inativo (ver [Frota](../frota/spec.md))
 2. WHEN ALMOX prepara expedição THEN o sistema SHALL permitir `AlocacaoIbc` por **Pedido** (`numPed`) — qtd esperada = soma no backend de `QUANTIDADE_PEDIDO / VOLUME_EMBALAGEM` onde `CODIGO_EMBALAGEM = 251001`
-3. WHEN a Carga está FECHADA com foto `CargaPedidoIbc` THEN ALMOX MAY vincular/desvincular IBCs (progresso parcial visível); detalhe, alocação e Fechar expedição SHALL ler pedidos e quantidade esperada só da foto e SHALL NOT consultar o Sapiens. WHEN a Carga está ABERTA THEN detalhe, alocação e Fechar expedição SHALL recusar com `IBC_CARGA_NAO_FECHADA`; WHEN FECHADA sem foto THEN SHALL recusar com `IBC_CARGA_SEM_FOTO_EXPEDICAO` (#297)
+3. WHEN a Carga está FECHADA com foto `CargaPedidoIbc` THEN ALMOX MAY vincular IBCs (progresso parcial visível); detalhe, alocação e Fechar expedição SHALL ler pedidos e quantidade esperada só da foto e SHALL NOT consultar o Sapiens. WHEN a Carga está ABERTA THEN detalhe, alocação e Fechar expedição SHALL recusar com `IBC_CARGA_NAO_FECHADA`; WHEN FECHADA sem foto THEN SHALL recusar com `IBC_CARGA_SEM_FOTO_EXPEDICAO` (#297)
 4. WHEN a Carga está FECHADA e todos os pedidos IBC estão supridos THEN ALMOX MAY fechar expedição (`ExpedicaoIbc`)
 5. WHEN expedição fecha THEN IBCs alocados SHALL passar a **Em viagem** e alocações SHALL tornar-se imutáveis
 6. WHEN ALMOX tenta alocar IBC Inapto, Em viagem, já vinculado, ou acima do limite THEN o sistema SHALL recusar com motivo claro
