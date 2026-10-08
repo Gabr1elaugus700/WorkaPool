@@ -48,6 +48,12 @@ export type CargaPedidoIbcSnapshot = {
   ibcInvalido: boolean;
 };
 
+/** Carga FECHADA com foto de pedidos IBC e sem ExpedicaoIbc, com alocações já carregadas. */
+export type CargaExpedicaoPendente = CargaExpedicaoRef & {
+  pedidosIbc: CargaPedidoIbcSnapshot[];
+  alocacoes: AlocacaoIbcRecord[];
+};
+
 export type CreateAlocacaoIbcData = {
   ibcId: string;
   cargaId: string;

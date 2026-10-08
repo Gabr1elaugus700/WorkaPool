@@ -91,8 +91,9 @@ A empresa opera com containers IBC (empréstimo, venda, troca, transbordo) sem i
 4. WHEN a Carga está FECHADA e todos os pedidos IBC estão supridos THEN ALMOX MAY fechar expedição (`ExpedicaoIbc`)
 5. WHEN expedição fecha THEN IBCs alocados SHALL passar a **Em viagem** e alocações SHALL tornar-se imutáveis
 6. WHEN ALMOX tenta alocar IBC Inapto, Em viagem, já vinculado, ou acima do limite THEN o sistema SHALL recusar com motivo claro
-7. WHEN Carga não tem pedidos com `CODIGO_EMBALAGEM = 251001` THEN SHALL aparecer na lista sem ações
+7. WHEN Carga não tem pedidos com `CODIGO_EMBALAGEM = 251001` na foto `CargaPedidoIbc` (sem IBC ou fechada antes da foto existir) THEN SHALL NOT aparecer na lista de expedição
 8. WHEN expedição fecha THEN o sistema SHALL NOT afirmar Custódia no Cliente (motorista confirma na descarga)
+9. WHEN ALMOX abre a lista de expedição IBC THEN o sistema SHALL listar só Cargas `FECHADA` com pelo menos um registro em `CargaPedidoIbc` e sem `ExpedicaoIbc`, lendo esperado e alocado da foto e das alocações numa única consulta ao Postgres, SHALL NOT consultar o Sapiens (#296)
 
 **Independent Test**: Logística fecha carga com motorista/caminhão → ALMOX vincula 3 IBCs ao pedido 1120 → Fechar expedição → status Em viagem; tentar Inapto → erro.
 

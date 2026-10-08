@@ -111,6 +111,7 @@ export class GetCargaExpedicaoDetailUseCase {
 
     return {
       ...summary,
+      semIbc: !pedidos.some((p) => p.isContainer || p.ibcInvalido),
       pedidos: pedidosDetalhe,
     };
   }

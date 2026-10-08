@@ -11,7 +11,7 @@ import { toError } from "../utils/toError";
 import { useIbcRealtime } from "../hooks/useIbcRealtime";
 
 /**
- * Lista de cargas ABERTA/FECHADA para preparação de expedição IBC (#61).
+ * Lista de cargas FECHADA com pedidos IBC aguardando expedição (#61, #296).
  */
 export default function ExpedicaoIbcListView() {
   const { user } = useAuth();
@@ -38,12 +38,12 @@ export default function ExpedicaoIbcListView() {
 
         <div className="rounded-lg bg-card p-4 shadow-md sm:p-6">
           <p className="mb-4 text-sm text-muted-foreground">
-            Cargas ABERTA e FECHADA para preparação de alocação IBC.
+            Cargas fechadas com pedidos IBC aguardando expedição.
           </p>
 
           {(query.data ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Nenhuma carga disponível para expedição IBC.
+              Nenhuma carga fechada com pedidos IBC aguardando expedição.
             </p>
           ) : (
             (query.data ?? []).map((item) => (

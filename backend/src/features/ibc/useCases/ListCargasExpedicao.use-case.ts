@@ -23,26 +23,17 @@ export class ListCargasExpedicaoUseCase {
   }
 
   async execute(): Promise<ListCargasExpedicaoResult> {
-    const cargas = await this.repository.listCargasAbertaOuFechada();
+    const cargas = await this.repository.listCargasPendentesExpedicao();
 
-    const items: CargaExpedicaoListItem[] = [];
-    for (const carga of cargas) {
-      const [pedidos, alocacoes, expedicao] = await Promise.all([
-        this.repository.getPedidosByCarga(carga.codCar),
-        this.repository.listAlocacoesByCargaId(carga.id),
-        this.repository.findExpedicaoByCargaId(carga.id),
-      ]);
-
-      items.push(
+    return {
+      cargas: cargas.map(({ pedidosIbc, alocacoes, ...carga }) =>
         summarizeCargaExpedicao({
           carga,
-          pedidos,
+          pedidos: pedidosIbc,
           alocacoes,
-          expedicao,
+          expedicao: null,
         }),
-      );
-    }
-
-    return { cargas: items };
+      ),
+    };
   }
 }
