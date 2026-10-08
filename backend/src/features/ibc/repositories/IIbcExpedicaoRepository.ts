@@ -1,6 +1,7 @@
 import { PedidoCargo } from "../../pedidos/types/PedidoCargo.types";
 import {
   AlocacaoIbcRecord,
+  CargaExpedicaoPendente,
   CargaExpedicaoRef,
   CreateAlocacaoIbcData,
   ExpedicaoIbcRecord,
@@ -10,7 +11,7 @@ import {
 
 export interface IIbcExpedicaoRepository {
   getCargaByCodCar(codCar: number): Promise<CargaExpedicaoRef | null>;
-  listCargasAbertaOuFechada(): Promise<CargaExpedicaoRef[]>;
+  listCargasPendentesExpedicao(): Promise<CargaExpedicaoPendente[]>;
   getPedidosByCarga(codCar: number): Promise<PedidoCargo[]>;
   findIbcByIdentificador(identificador: string): Promise<IbcRecord | null>;
   markIbcDataLimite(ibcId: string): Promise<IbcRecord>;

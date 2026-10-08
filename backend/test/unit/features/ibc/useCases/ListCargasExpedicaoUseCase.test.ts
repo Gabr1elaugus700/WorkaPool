@@ -2,45 +2,25 @@ import { describe, it, mock, after } from "node:test";
 import assert from "node:assert/strict";
 import { ListCargasExpedicaoUseCase } from "../../../../../src/features/ibc/useCases/ListCargasExpedicao.use-case";
 import { IIbcExpedicaoRepository } from "../../../../../src/features/ibc/repositories/IIbcExpedicaoRepository";
-import { PedidoCargo } from "../../../../../src/features/pedidos/types/PedidoCargo.types";
 import {
   AlocacaoIbcRecord,
-  CargaExpedicaoRef,
+  CargaExpedicaoPendente,
+  CargaPedidoIbcSnapshot,
 } from "../../../../../src/features/ibc/types/IbcExpedicao.types";
 
-const buildCarga = (
-  overrides: Partial<CargaExpedicaoRef> = {},
-): CargaExpedicaoRef => ({
-  id: "carga-1",
-  codCar: 101,
-  destino: "Blumenau",
-  situacao: "ABERTA",
-  previsaoSaida: new Date("2026-08-25T10:00:00.000Z"),
+const buildPedidoIbc = (
+  numPed: string,
+  overrides: Partial<CargaPedidoIbcSnapshot> = {},
+): CargaPedidoIbcSnapshot => ({
+  numPed,
+  codCli: "C1",
+  cliente: "Cliente",
+  quantidadeEsperadaTotal: 3,
+  quantidadeEsperadaVenda: 2,
+  quantidadeEsperadaEmprestimo: 1,
+  ibcInvalido: false,
   ...overrides,
 });
-
-const buildPedido = (
-  numPed: string,
-  overrides: Partial<{
-    isContainer: boolean;
-    quantidadeEsperadaTotal: number;
-    ibcInvalido: boolean;
-  }> = {},
-): PedidoCargo =>
-  new PedidoCargo({
-    numPed,
-    cliente: "Cliente",
-    cidade: "Blumenau",
-    estado: "SC",
-    vendedor: "Vendedor",
-    peso: 100,
-    qtdOri: 1,
-    isContainer: overrides.isContainer ?? true,
-    quantidadeEsperadaTotal: overrides.quantidadeEsperadaTotal ?? 3,
-    quantidadeEsperadaVenda: 2,
-    quantidadeEsperadaEmprestimo: 1,
-    ibcInvalido: overrides.ibcInvalido ?? false,
-  });
 
 const buildAlocacao = (
   overrides: Partial<AlocacaoIbcRecord> = {},
@@ -56,28 +36,38 @@ const buildAlocacao = (
   ...overrides,
 });
 
+const buildCargaPendente = (
+  overrides: Partial<CargaExpedicaoPendente> = {},
+): CargaExpedicaoPendente => ({
+  id: "carga-1",
+  codCar: 101,
+  destino: "Blumenau",
+  situacao: "FECHADA",
+  previsaoSaida: new Date("2026-08-25T10:00:00.000Z"),
+  pedidosIbc: [buildPedidoIbc("1120")],
+  alocacoes: [],
+  ...overrides,
+});
+
+function buildRepo(cargas: CargaExpedicaoPendente[]) {
+  const repo: Pick<
+    IIbcExpedicaoRepository,
+    "listCargasPendentesExpedicao" | "getPedidosByCarga"
+  > = {
+    listCargasPendentesExpedicao: mock.fn(async () => cargas),
+    getPedidosByCarga: mock.fn(async () => []),
+  };
+  return repo;
+}
+
 describe("ListCargasExpedicaoUseCase", () => {
   after(async () => {
     await new Promise((resolve) => setImmediate(resolve));
     await new Promise((resolve) => setTimeout(resolve, 50));
   });
 
-  it("mostra progresso parcial em carga ABERTA e não permite fechar expedição", async () => {
-    const repo: Pick<
-      IIbcExpedicaoRepository,
-      | "listCargasAbertaOuFechada"
-      | "getPedidosByCarga"
-      | "listAlocacoesByCargaId"
-      | "findExpedicaoByCargaId"
-    > = {
-      listCargasAbertaOuFechada: mock.fn(async () => [buildCarga()]),
-      getPedidosByCarga: mock.fn(async () => [buildPedido("1120")]),
-      listAlocacoesByCargaId: mock.fn(async () => [
-        buildAlocacao({ id: "a1", ibcId: "i1", identificador: "H1" }),
-        buildAlocacao({ id: "a2", ibcId: "i2", identificador: "H2" }),
-      ]),
-      findExpedicaoByCargaId: mock.fn(async () => null),
-    };
+  it("monta a lista só a partir da foto, sem consultar o Sapiens", async () => {
+    const repo = buildRepo([buildCargaPendente()]);
 
     const useCase = new ListCargasExpedicaoUseCase(
       repo as IIbcExpedicaoRepository,
@@ -85,105 +75,109 @@ describe("ListCargasExpedicaoUseCase", () => {
     const result = await useCase.execute();
 
     assert.strictEqual(result.cargas.length, 1);
+    assert.strictEqual(
+      (repo.getPedidosByCarga as ReturnType<typeof mock.fn>).mock.callCount(),
+      0,
+    );
+    assert.strictEqual(
+      (repo.listCargasPendentesExpedicao as ReturnType<typeof mock.fn>).mock
+        .callCount(),
+      1,
+    );
+  });
+
+  it("mostra progresso parcial e não permite fechar expedição", async () => {
+    const repo = buildRepo([
+      buildCargaPendente({
+        alocacoes: [
+          buildAlocacao({ id: "a1", ibcId: "i1", identificador: "H1" }),
+          buildAlocacao({ id: "a2", ibcId: "i2", identificador: "H2" }),
+        ],
+      }),
+    ]);
+
+    const result = await new ListCargasExpedicaoUseCase(
+      repo as IIbcExpedicaoRepository,
+    ).execute();
+
     const item = result.cargas[0];
     assert.strictEqual(item.codCar, 101);
+    assert.strictEqual(item.situacao, "FECHADA");
     assert.strictEqual(item.quantidadeAlocada, 2);
     assert.strictEqual(item.quantidadeEsperadaTotal, 3);
-    assert.strictEqual(item.semIbc, false);
-    assert.strictEqual(item.podeFecharExpedicao, false);
     assert.strictEqual(item.temExpedicao, false);
-  });
-
-  it("lista carga sem pedidos IBC com indicador semIbc e sem ações", async () => {
-    const repo: Pick<
-      IIbcExpedicaoRepository,
-      | "listCargasAbertaOuFechada"
-      | "getPedidosByCarga"
-      | "listAlocacoesByCargaId"
-      | "findExpedicaoByCargaId"
-    > = {
-      listCargasAbertaOuFechada: mock.fn(async () => [
-        buildCarga({ id: "carga-2", codCar: 202, situacao: "FECHADA" }),
-      ]),
-      getPedidosByCarga: mock.fn(async () => [
-        buildPedido("9999", {
-          isContainer: false,
-          quantidadeEsperadaTotal: 0,
-        }),
-      ]),
-      listAlocacoesByCargaId: mock.fn(async () => []),
-      findExpedicaoByCargaId: mock.fn(async () => null),
-    };
-
-    const useCase = new ListCargasExpedicaoUseCase(
-      repo as IIbcExpedicaoRepository,
-    );
-    const result = await useCase.execute();
-
-    const item = result.cargas[0];
-    assert.strictEqual(item.semIbc, true);
     assert.strictEqual(item.podeFecharExpedicao, false);
-    assert.strictEqual(item.quantidadeEsperadaTotal, 0);
+    assert.ok(!("semIbc" in item));
   });
 
-  it("não marca semIbc quando só há Pedido IBC inválido (251001) — permanece acionável", async () => {
-    const repo: Pick<
-      IIbcExpedicaoRepository,
-      | "listCargasAbertaOuFechada"
-      | "getPedidosByCarga"
-      | "listAlocacoesByCargaId"
-      | "findExpedicaoByCargaId"
-    > = {
-      listCargasAbertaOuFechada: mock.fn(async () => [
-        buildCarga({ id: "carga-3", codCar: 303, situacao: "ABERTA" }),
-      ]),
-      getPedidosByCarga: mock.fn(async () => [
-        buildPedido("1121", {
-          isContainer: false,
-          quantidadeEsperadaTotal: 0,
-          ibcInvalido: true,
-        }),
-      ]),
-      listAlocacoesByCargaId: mock.fn(async () => []),
-      findExpedicaoByCargaId: mock.fn(async () => null),
-    };
+  it("marca podeFecharExpedicao quando todos os pedidos elegíveis estão supridos", async () => {
+    const repo = buildRepo([
+      buildCargaPendente({
+        alocacoes: [
+          buildAlocacao({ id: "a1", ibcId: "i1" }),
+          buildAlocacao({ id: "a2", ibcId: "i2", identificador: "H2" }),
+          buildAlocacao({ id: "a3", ibcId: "i3", identificador: "H3" }),
+        ],
+      }),
+    ]);
 
-    const useCase = new ListCargasExpedicaoUseCase(
+    const result = await new ListCargasExpedicaoUseCase(
       repo as IIbcExpedicaoRepository,
-    );
-    const result = await useCase.execute();
+    ).execute();
 
-    const item = result.cargas[0];
-    assert.strictEqual(item.semIbc, false);
-    assert.strictEqual(item.quantidadeEsperadaTotal, 0);
-    assert.strictEqual(item.podeFecharExpedicao, false);
-  });
-
-  it("marca podeFecharExpedicao quando FECHADA, completa e sem expedição", async () => {
-    const repo: Pick<
-      IIbcExpedicaoRepository,
-      | "listCargasAbertaOuFechada"
-      | "getPedidosByCarga"
-      | "listAlocacoesByCargaId"
-      | "findExpedicaoByCargaId"
-    > = {
-      listCargasAbertaOuFechada: mock.fn(async () => [
-        buildCarga({ situacao: "FECHADA" }),
-      ]),
-      getPedidosByCarga: mock.fn(async () => [buildPedido("1120")]),
-      listAlocacoesByCargaId: mock.fn(async () => [
-        buildAlocacao({ id: "a1", ibcId: "i1" }),
-        buildAlocacao({ id: "a2", ibcId: "i2", identificador: "H2" }),
-        buildAlocacao({ id: "a3", ibcId: "i3", identificador: "H3" }),
-      ]),
-      findExpedicaoByCargaId: mock.fn(async () => null),
-    };
-
-    const useCase = new ListCargasExpedicaoUseCase(
-      repo as IIbcExpedicaoRepository,
-    );
-    const result = await useCase.execute();
-
+    assert.strictEqual(result.cargas[0].quantidadeAlocada, 3);
     assert.strictEqual(result.cargas[0].podeFecharExpedicao, true);
+  });
+
+  it("não conta Pedido IBC inválido no esperado e não permite fechar só com ele", async () => {
+    const repo = buildRepo([
+      buildCargaPendente({
+        pedidosIbc: [
+          buildPedidoIbc("1121", {
+            ibcInvalido: true,
+            quantidadeEsperadaTotal: 0,
+            quantidadeEsperadaVenda: 0,
+            quantidadeEsperadaEmprestimo: 0,
+          }),
+        ],
+      }),
+    ]);
+
+    const result = await new ListCargasExpedicaoUseCase(
+      repo as IIbcExpedicaoRepository,
+    ).execute();
+
+    const item = result.cargas[0];
+    assert.strictEqual(item.quantidadeEsperadaTotal, 0);
+    assert.strictEqual(item.podeFecharExpedicao, false);
+  });
+
+  it("soma esperado e alocado só dos pedidos elegíveis da foto", async () => {
+    const repo = buildRepo([
+      buildCargaPendente({
+        pedidosIbc: [
+          buildPedidoIbc("1120", { quantidadeEsperadaTotal: 2 }),
+          buildPedidoIbc("1121", { quantidadeEsperadaTotal: 1 }),
+          buildPedidoIbc("1122", {
+            ibcInvalido: true,
+            quantidadeEsperadaTotal: 0,
+          }),
+        ],
+        alocacoes: [
+          buildAlocacao({ id: "a1", ibcId: "i1", numPed: "1120" }),
+          buildAlocacao({ id: "a2", ibcId: "i2", numPed: "1120" }),
+          buildAlocacao({ id: "a3", ibcId: "i3", numPed: "1121" }),
+        ],
+      }),
+    ]);
+
+    const result = await new ListCargasExpedicaoUseCase(
+      repo as IIbcExpedicaoRepository,
+    ).execute();
+
+    const item = result.cargas[0];
+    assert.strictEqual(item.quantidadeEsperadaTotal, 3);
+    assert.strictEqual(item.quantidadeAlocada, 3);
+    assert.strictEqual(item.podeFecharExpedicao, true);
   });
 });
