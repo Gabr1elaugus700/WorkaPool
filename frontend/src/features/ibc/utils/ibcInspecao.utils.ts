@@ -1,8 +1,7 @@
 import type { IbcChecklistDTO, IbcChecklistItemNoChecklistDTO } from "../types/ibcChecklist.types";
 import type { RegistrarIbcInspecaoInput } from "../types/ibcInspecao.types";
+import { formatNumber } from "@/utils/formatNumber";
 import { IBC_OBSERVACAO_MAX } from "./ibcMudanca.utils";
-
-const notaFormatter = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 });
 
 export function listItensInspecao(checklist: IbcChecklistDTO): IbcChecklistItemNoChecklistDTO[] {
   return checklist.itens.filter((item) => item.ativo).sort((a, b) => a.ordem - b.ordem);
@@ -38,5 +37,5 @@ export function buildInspecaoPayload(
 }
 
 export function formatNotaInspecao(nota: number | null): string {
-  return nota === null ? "—" : notaFormatter.format(nota);
+  return nota === null ? "—" : formatNumber(nota);
 }

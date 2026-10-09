@@ -7,7 +7,7 @@ import { formatNotaInspecao } from "../utils/ibcInspecao.utils";
 import { toError } from "../utils/toError";
 import { IBC_CHECKLISTS_KEY } from "./useIbcChecklists";
 
-export function useIbcInspecaoChecklist(checklistId: string | null) {
+export function useIbcChecklistDetalhe(checklistId: string | null) {
   return useQuery({
     queryKey: [...IBC_CHECKLISTS_KEY, checklistId],
     queryFn: () => ibcChecklistService.getChecklist(checklistId ?? ""),
@@ -15,7 +15,7 @@ export function useIbcInspecaoChecklist(checklistId: string | null) {
   });
 }
 
-export function useIbcInspecao() {
+export function useRegistrarIbcInspecao() {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({

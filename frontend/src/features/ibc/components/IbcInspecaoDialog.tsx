@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIbcChecklistVinculos } from "../hooks/useIbcChecklistVinculos";
-import { useIbcInspecao, useIbcInspecaoChecklist } from "../hooks/useIbcInspecao";
+import { useIbcChecklistDetalhe, useRegistrarIbcInspecao } from "../hooks/useIbcInspecao";
 import type { IbcCadastroDTO } from "../types/ibcCadastro.types";
 import { buildInspecaoPayload, formatNotaInspecao, listItensInspecao } from "../utils/ibcInspecao.utils";
 import { IBC_OBSERVACAO_MAX } from "../utils/ibcMudanca.utils";
@@ -24,8 +24,8 @@ export default function IbcInspecaoDialog({ ibc, onClose }: Props) {
   const [checklistId, setChecklistId] = useState<string | null>(null);
   const [notas, setNotas] = useState<Record<string, string>>({});
   const [observacao, setObservacao] = useState("");
-  const checklistQuery = useIbcInspecaoChecklist(checklistId);
-  const inspecao = useIbcInspecao();
+  const checklistQuery = useIbcChecklistDetalhe(checklistId);
+  const inspecao = useRegistrarIbcInspecao();
 
   const ativos = vinculosState.vinculos.filter((vinculo) => vinculo.ativo);
   const checklist = checklistQuery.data;

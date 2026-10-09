@@ -9,7 +9,6 @@ export type RegistrarIbcInspecaoInput = {
 };
 
 export type IbcInspecaoDTO = {
-  id: string;
   resultado: IbcInspecaoResultado;
   mediaObtida: number | null;
 };
