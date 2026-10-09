@@ -320,4 +320,146 @@ describe("IBC inspeções HTTP (#304)", () => {
     assert.equal(await prisma.ibcInspecao.count({ where: { ibcId: { in: [ibc.id, emViagem.id] } } }), 0);
     assert.deepEqual(await readAptidao(ibc.id), { aptidao: "APTO", motivoInaptidao: null, primeiraInspecaoEm: null });
   });
+
+  function get(path: string, role: Role = Role.ALMOX) {
+    return request(app).get(`/api/ibc${path}`).set("Authorization", bearer(anaId, role));
+  }
+
+  it("lists inspeções newest first, keeping the snapshot after the item and the checklist change", async () => {
+    await seed();
+    const ibc = await createIbc("H050");
+    const soda = await createChecklist("Soda");
+    await vincular(ibc.id, soda.checklist.id);
+    const primeira = await post(ibc.id, { ...reprovada(soda), observacao: "válvula pingando" });
+    await prisma.ibcInspecao.update({
+      where: { id: primeira.body.inspecao.id },
+      data: { inspecionadoEm: new Date(Date.now() - 60_000) },
+    });
+    const segunda = await post(ibc.id, aprovada(soda));
+    await prisma.checklistItem.update({
+      where: { id: soda.valvula.id },
+      data: { critico: false, descricao: `${FIXTURE_PREFIX}Válvula renomeada` },
+    });
+    await prisma.checklistModelo.update({
+      where: { id: soda.checklist.id },
+      data: { notaMinimaCritico: 3, mediaMinima: 2 },
+    });
+
+    const response = await get(`/${ibc.id}/inspecoes`, Role.LOGISTICA);
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(
+      response.body.map((i: { id: string }) => i.id),
+      [segunda.body.inspecao.id, primeira.body.inspecao.id],
+    );
+    assert.deepEqual(response.body[1], {
+      id: primeira.body.inspecao.id,
+      checklistModeloId: soda.checklist.id,
+      checklistNome: soda.checklist.nome,
+      resultado: "REPROVADA",
+      mediaObtida: 9,
+      notaMinimaCritico: 7,
+      mediaMinima: 6,
+      inspetor: { id: anaId, nome: "Ana Almox" },
+      inspecionadoEm: response.body[1].inspecionadoEm,
+      observacao: "válvula pingando",
+      respostas: [
+        { checklistItemId: soda.valvula.id, descricao: soda.valvula.descricao, critico: true, nota: 5 },
+        { checklistItemId: soda.tampa.id, descricao: soda.tampa.descricao, critico: false, nota: 9 },
+      ],
+    });
+  });
+
+  it("lists inspeções of a baixado IBC and refuses unknown IBCs and roles without read access", async () => {
+    await seed();
+    const ibc = await createIbc("H060");
+    const soda = await createChecklist("Soda");
+    await vincular(ibc.id, soda.checklist.id);
+    assert.equal((await post(ibc.id, aprovada(soda))).status, 201);
+    await prisma.ibc.update({ where: { id: ibc.id }, data: { baixadoEm: new Date() } });
+
+    const baixado = await get(`/${ibc.id}/inspecoes`, Role.GERENTE_DPTO);
+    assert.equal(baixado.status, 200);
+    assert.equal(baixado.body.length, 1);
+
+    const inexistente = await get("/00000000-0000-0000-0000-000000000000/inspecoes");
+    assert.equal(inexistente.status, 404);
+    assert.equal(inexistente.body.code, "IBC_NOT_FOUND");
+
+    for (const role of [Role.VENDAS, Role.USER]) {
+      assert.equal((await get(`/${ibc.id}/inspecoes`, role)).status, 403, role);
+    }
+  });
+
+  it("alerts INSPECAO_REPROVADA with checklist, items below the minimum and alocação until a reinspeção approves", async () => {
+    await seed();
+    const ibc = await createIbc("H070");
+    const soda = await createChecklist("Soda");
+    await vincular(ibc.id, soda.checklist.id);
+    const cargaId = `${FIXTURE_PREFIX}${COD_CAR}`;
+    await prisma.cargas.create({
+      data: {
+        id: cargaId,
+        codCar: COD_CAR,
+        destino: "Blumenau",
+        pesoMax: 10000,
+        custoMin: 0,
+        situacao: "FECHADA",
+        previsaoSaida: new Date("2026-10-10T10:00:00.000Z"),
+      },
+    });
+    await prisma.alocacaoIbc.create({
+      data: { ibcId: ibc.id, cargaId, numPed: "1120", alocadoPorId: anaId },
+    });
+    assert.equal((await post(ibc.id, reprovada(soda))).status, 201);
+
+    const alertsDoIbc = async () =>
+      (await get("/alerts", Role.LOGISTICA)).body.filter(
+        (a: { identificador: string }) => a.identificador === ibc.identificador,
+      );
+
+    assert.deepEqual(await alertsDoIbc(), [
+      {
+        identificador: ibc.identificador,
+        motivo: "INSPECAO_REPROVADA",
+        detalhes: {
+          checklists: [
+            {
+              checklistModeloId: soda.checklist.id,
+              nome: soda.checklist.nome,
+              mediaObtida: 9,
+              mediaMinima: 6,
+              itensAbaixoDoMinimo: [{ descricao: soda.valvula.descricao, nota: 5, notaMinima: 7 }],
+            },
+          ],
+          alocacao: { codCar: COD_CAR, numPed: "1120" },
+        },
+      },
+      { identificador: ibc.identificador, motivo: "SEM_INSPECAO" },
+    ]);
+
+    const estrutural = await createChecklist("Estrutural");
+    await vincular(ibc.id, estrutural.checklist.id);
+    assert.equal((await post(ibc.id, { checklistModeloId: estrutural.checklist.id, respostas: respostas(estrutural, 8, 2) })).status, 201);
+    assert.equal((await post(ibc.id, aprovada(soda))).status, 201);
+
+    const restantes = await alertsDoIbc();
+    assert.deepEqual(
+      restantes.map((a: { motivo: string }) => a.motivo),
+      ["INSPECAO_REPROVADA"],
+    );
+    assert.deepEqual(restantes[0].detalhes.checklists, [
+      {
+        checklistModeloId: estrutural.checklist.id,
+        nome: estrutural.checklist.nome,
+        mediaObtida: 2,
+        mediaMinima: 6,
+        itensAbaixoDoMinimo: [{ descricao: estrutural.tampa.descricao, nota: 2, notaMinima: 6 }],
+      },
+    ]);
+
+    assert.equal((await post(ibc.id, aprovada(estrutural))).status, 201);
+
+    assert.deepEqual(await alertsDoIbc(), []);
+  });
 });

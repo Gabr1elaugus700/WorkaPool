@@ -32,6 +32,31 @@ export type IbcInspecaoDto = {
   respostas: IbcInspecaoRespostaDto[];
 };
 
+export type IbcInspecaoHistoricoDto = {
+  id: string;
+  checklistModeloId: string;
+  checklistNome: string;
+  resultado: IbcInspecaoResultado;
+  mediaObtida: number | null;
+  notaMinimaCritico: number;
+  mediaMinima: number;
+  inspetor: { id: string; nome: string };
+  inspecionadoEm: string;
+  observacao: string | null;
+  respostas: IbcInspecaoRespostaDto[];
+};
+
+/** Última inspeção, reprovada, de um checklist ainda vinculado ao IBC (limites e respostas do snapshot). */
+export type IbcInspecaoReprovadaVigente = {
+  ibcId: string;
+  checklistModeloId: string;
+  checklistNome: string;
+  mediaObtida: number | null;
+  notaMinimaCritico: number;
+  mediaMinima: number;
+  respostas: IbcInspecaoRespostaDto[];
+};
+
 export type IbcAptidaoSnapshot = IbcAptidao & { primeiraInspecaoEm: string | null };
 
 export type IbcAlocacaoAberta = { codCar: number; numPed: string };

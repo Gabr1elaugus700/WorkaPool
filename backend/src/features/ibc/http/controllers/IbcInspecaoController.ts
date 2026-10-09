@@ -4,9 +4,22 @@ import { actor, invalidBody } from "./ibcControllerHelpers";
 import { IbcInspecaoHttpSchemas } from "../schemas/IbcInspecaoSchema";
 import { IbcCadastroRepository } from "../../repositories/IbcCadastroRepository";
 import { IbcInspecaoRepository } from "../../repositories/IbcInspecaoRepository";
+import { ListIbcInspecoesUseCase } from "../../useCases/ListIbcInspecoes.use-case";
 import { RegistrarIbcInspecaoUseCase } from "../../useCases/RegistrarIbcInspecao.use-case";
 
 export class IbcInspecaoController {
+  static async listar(req: Request, res: Response): Promise<Response> {
+    try {
+      const inspecoes = await new ListIbcInspecoesUseCase(
+        new IbcCadastroRepository(),
+        new IbcInspecaoRepository(),
+      ).execute(String(req.params.id));
+      return res.status(200).json(inspecoes);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao listar inspeções do IBC");
+    }
+  }
+
   static async registrar(req: Request, res: Response): Promise<Response> {
     try {
       const parsed = IbcInspecaoHttpSchemas.registrar.safeParse(req.body);

@@ -18,6 +18,7 @@ import { ListIbcAlertsUseCase } from "../../useCases/ListIbcAlerts.use-case";
 import { PatchIbcDataLimiteUseCase } from "../../useCases/PatchIbcDataLimite.use-case";
 import { SoftDeleteIbcUseCase } from "../../useCases/SoftDeleteIbc.use-case";
 import { IbcCadastroRepository } from "../../repositories/IbcCadastroRepository";
+import { IbcInspecaoRepository } from "../../repositories/IbcInspecaoRepository";
 import { IbcProdutoRepository } from "../../repositories/IbcProdutoRepository";
 import { createSapiensSaldoIbcErpPort } from "../../adapters/createSapiensSaldoIbcErpPort";
 import { ibcSseGateway } from "../../realtime/ibcSseGateway";
@@ -134,7 +135,7 @@ export class IbcController {
 
   static async listAlerts(_req: Request, res: Response): Promise<Response> {
     try {
-      const useCase = new ListIbcAlertsUseCase(cadastroRepository());
+      const useCase = new ListIbcAlertsUseCase(cadastroRepository(), new IbcInspecaoRepository());
       const alerts = await useCase.execute();
       return res.status(200).json(alerts);
     } catch (err: unknown) {
