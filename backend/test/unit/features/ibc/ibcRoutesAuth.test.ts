@@ -370,6 +370,31 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     }
   });
 
+  await t.test("POST /:id/inspecoes: 401 sem token, 403 para LOGISTICA/GERENTE_DPTO/VENDAS", async () => {
+    const anonymous = await request(app).post("/api/ibc/ibc-1/inspecoes").send({});
+    assert.strictEqual(anonymous.status, 401);
+
+    for (const role of ["LOGISTICA", "GERENTE_DPTO", "VENDAS", "USER"]) {
+      const response = await request(app)
+        .post("/api/ibc/ibc-1/inspecoes")
+        .set("Authorization", `Bearer ${createToken(role)}`)
+        .send({
+          checklistModeloId: "00000000-0000-0000-0000-000000000000",
+          respostas: [{ checklistItemId: "00000000-0000-0000-0000-000000000001", nota: 8 }],
+        });
+      assert.strictEqual(response.status, 403, role);
+    }
+  });
+
+  await t.test("POST /:id/inspecoes com body inválido (ALMOX) retorna 400 antes de tocar o banco", async () => {
+    const response = await request(app)
+      .post("/api/ibc/ibc-1/inspecoes")
+      .set("Authorization", `Bearer ${createToken("ALMOX")}`)
+      .send({ checklistModeloId: "nao-e-uuid", respostas: [] });
+    assert.strictEqual(response.status, 400);
+    assert.strictEqual(response.body.code, "IBC_INSPECAO_INVALID_BODY");
+  });
+
   await t.test("LOGISTICA pode ler pool, alerts e produtos", async () => {
     const token = createToken("LOGISTICA");
     const list = await request(app)

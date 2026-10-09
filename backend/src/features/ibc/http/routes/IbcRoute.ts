@@ -6,6 +6,7 @@ import {
 } from "../../../../middlewares/authMiddleware";
 import { IbcController } from "../controllers/IbcController";
 import { IbcChecklistController } from "../controllers/IbcChecklistController";
+import { IbcInspecaoController } from "../controllers/IbcInspecaoController";
 
 const router = Router();
 
@@ -98,6 +99,8 @@ router.get(
 router.get("/:id/checklists", readAuth, IbcChecklistController.listVinculos);
 router.post("/:id/checklists", writeAuth, IbcChecklistController.vincular);
 router.delete("/:id/checklists/:checklistModeloId", writeAuth, IbcChecklistController.desvincular);
+
+router.post("/:id/inspecoes", writeAuth, IbcInspecaoController.registrar);
 
 router.patch(
   "/:id/converter-nao-homologado",
