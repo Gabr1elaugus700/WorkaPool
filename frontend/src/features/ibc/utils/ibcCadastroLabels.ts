@@ -15,11 +15,13 @@ export const ibcCadastroLabels = {
   motivoInaptidao: {
     AGUARDANDO_INSPECAO: "Aguardando inspeção",
     DATA_LIMITE: "Data limite",
+    INSPECAO_REPROVADA: "Inspeção reprovada",
   } satisfies Record<NonNullable<IbcCadastroDTO["motivoInaptidao"]>, string>,
   alertaMotivo: {
     SEM_INSPECAO: "Sem inspeção",
     DATA_LIMITE: "Data limite",
     AGUARDANDO_INSPECAO: "Aguardando inspeção",
+    INSPECAO_REPROVADA: "Inspeção reprovada",
   } satisfies Record<IbcAlertDTO["motivo"], string>,
   mudanca: {
     conversion: "Conversão para não homologado",

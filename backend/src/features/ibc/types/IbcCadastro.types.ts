@@ -2,7 +2,8 @@ export type IbcTipoCadastro = "NOVO" | "TROCA";
 
 export type IbcMotivoInaptidao =
   | "AGUARDANDO_INSPECAO"
-  | "DATA_LIMITE";
+  | "DATA_LIMITE"
+  | "INSPECAO_REPROVADA";
 
 export type IbcAlertMotivo = IbcMotivoInaptidao | "SEM_INSPECAO";
 

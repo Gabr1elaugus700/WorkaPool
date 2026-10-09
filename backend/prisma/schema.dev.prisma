@@ -56,6 +56,7 @@ model User {
   alocacoesIbc                AlocacaoIbc[]   @relation("AlocacaoIbcAlocadoPor")
   expedicoesIbcFechadasPor    ExpedicaoIbc[]  @relation("ExpedicaoIbcFechadoPor")
   ibcChecklistVinculos        IbcChecklistVinculo[] @relation("IbcChecklistVinculoVinculadoPor")
+  ibcInspecoes                IbcInspecao[]         @relation("IbcInspecaoInspetor")
   @@index([role])
 }
 
@@ -162,6 +163,12 @@ enum IbcAquisicao {
 enum IbcMotivoInaptidao {
   AGUARDANDO_INSPECAO
   DATA_LIMITE
+  INSPECAO_REPROVADA
+}
+
+enum IbcInspecaoResultado {
+  APROVADA
+  REPROVADA
 }
 
 model Ibc {
@@ -178,6 +185,7 @@ model Ibc {
   createdAt        DateTime            @default(now())
   alocacao         AlocacaoIbc?
   checklistVinculos IbcChecklistVinculo[]
+  inspecoes         IbcInspecao[]
 }
 
 model AlocacaoIbc {
@@ -518,6 +526,7 @@ model ChecklistItem {
   ChecklistVistoria    ChecklistVistoria[]
   checklistModelItems  ChecklistModelItem[]
   checklistInspections ChecklistInspection[]
+  ibcInspecaoRespostas IbcInspecaoResposta[]
 }
 
 model ChecklistModel {
@@ -549,6 +558,7 @@ model ChecklistModelo {
   vistorias            ChecklistVistoria[]
   checklistInspections ChecklistInspection[]
   ibcVinculos          IbcChecklistVinculo[]
+  ibcInspecoes         IbcInspecao[]
 
   @@index([tipo])
 }
@@ -565,6 +575,41 @@ model IbcChecklistVinculo {
 
   @@unique([ibcId, checklistModeloId])
   @@index([checklistModeloId])
+}
+
+model IbcInspecao {
+  id                String                @id @default(uuid())
+  ibcId             String
+  checklistModeloId String
+  resultado         IbcInspecaoResultado
+  mediaObtida       Float?
+  notaMinimaCritico Float
+  mediaMinima       Float
+  inspetorId        String
+  inspecionadoEm    DateTime              @default(now())
+  observacao        String?
+  ibc               Ibc                   @relation(fields: [ibcId], references: [id])
+  checklistModelo   ChecklistModelo       @relation(fields: [checklistModeloId], references: [id])
+  inspetor          User                  @relation("IbcInspecaoInspetor", fields: [inspetorId], references: [id], onDelete: Restrict)
+  respostas         IbcInspecaoResposta[]
+
+  @@index([ibcId, checklistModeloId, inspecionadoEm])
+  @@index([checklistModeloId])
+  @@index([inspetorId])
+}
+
+model IbcInspecaoResposta {
+  id              String        @id @default(uuid())
+  inspecaoId      String
+  checklistItemId String
+  nota            Int
+  critico         Boolean
+  descricao       String
+  inspecao        IbcInspecao   @relation(fields: [inspecaoId], references: [id], onDelete: Cascade)
+  checklistItem   ChecklistItem @relation(fields: [checklistItemId], references: [id])
+
+  @@unique([inspecaoId, checklistItemId])
+  @@index([checklistItemId])
 }
 
 model ChecklistModelItem {
