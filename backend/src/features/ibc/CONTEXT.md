@@ -59,7 +59,8 @@ _Avoid_: Empréstimo, calling a returnable IBC a “venda” inside this module
 **Inspeção de IBC**:
 A recorded quality check of an IBC. The operator scores every **active** checklist item from the quality POP catalog; each score is stored linked to that item. Yields aptidão and condition history.
 Registered via `POST /api/ibc/:id/inspecoes` `{ checklistModeloId, respostas: [{ checklistItemId, nota }], observacao? }` (ADMIN/ALMOX, 201 `{ inspecao, ibc: { aptidao, motivoInaptidao, primeiraInspecaoEm }, aviso? }`). The inspeção is saved and aptidão recalculated in one transaction with the `Ibc` row locked. Refusals, in precedence order: role 403; invalid body / nota outside 0–10 or not integer 400 `IBC_INSPECAO_INVALID_BODY`; missing or baixado IBC 404 `IBC_NOT_FOUND`; Em viagem 409 `IBC_EM_VIAGEM`; checklist not linked 422 `IBC_CHECKLIST_NAO_VINCULADO`; inactive checklist 422 `IBC_CHECKLIST_INATIVO`; missing active item or unknown/duplicate item 422 `IBC_INSPECAO_RESPOSTAS_INCOMPLETAS`. A reprovada inspeção on an IBC with an open alocação still returns 201, keeps the alocação and adds `aviso: { code: "IBC_ALOCADO_INAPTO", codCar, numPed }`.
-_Avoid_: treating “qualidade” as a single vague field with no checklist, hardcoding factors only in UI without a catalog table
+Each inspeção is immutable and snapshots `notaMinimaCritico`, `mediaMinima`, `mediaObtida` and, per resposta, the item's `critico` and `descricao`; later edits to the item or checklist never rewrite history. `GET /api/ibc/:id/inspecoes` (ADMIN/ALMOX/LOGISTICA/GERENTE_DPTO; also for baixados) lists them newest first as `{ id, checklistModeloId, checklistNome, resultado, mediaObtida, notaMinimaCritico, mediaMinima, inspetor: { id, nome }, inspecionadoEm, observacao, respostas: [{ checklistItemId, descricao, critico, nota }] }` (respostas: críticos first, then by descrição); missing IBC 404 `IBC_NOT_FOUND`; never inspected → `[]`.
+_Avoid_: treating “qualidade” as a single vague field with no checklist, hardcoding factors only in UI without a catalog table, editing or deleting a recorded inspeção
 
 **Item de checklist**:
 A cadastrable quality POP factor/question in the single shared catalog (`ChecklistItem`, also used by Vistoria). `critico` is a property of the item and holds in every checklist it appears in. An inactive item cannot be added to checklists but stays in history. Managed via `/api/ibc/checklist-itens` (ADMIN/ALMOX).
@@ -75,11 +76,16 @@ Link between one IBC and one **Checklist de IBC** (`IbcChecklistVinculo`: author
 _Avoid_: recalculating aptidão on link, linking VISTORIA checklists, treating the link as an Inspeção
 
 **Aptidão**:
-Whether the IBC may be used in circulation right now: **Apto** or **Inapto**. Inapto must surface as an alert in the IBC module (identifier visible, with reason).
-_Avoid_: “qualidade” alone, hiding inaptidão only inside a detail screen
+Whether the IBC may be used in circulation right now: **Apto** or **Inapto**. Inapto must surface as an alert in the IBC module (identifier visible, with reason). Reasons (`motivoInaptidao`): `DATA_LIMITE`, `INSPECAO_REPROVADA`, `AGUARDANDO_INSPECAO`. Recalculated on every Inspeção, in the same transaction:
+- `DATA_LIMITE` prevails (already marked or due now): the inspeção is recorded and the IBC stays Inapto/`DATA_LIMITE`.
+- Otherwise, if the latest inspeção of any **linked checklist that has been inspected** is reprovada → Inapto/`INSPECAO_REPROVADA` (blocks AlocacaoIbc with 409 `IBC_INAPTO`; an existing open alocação is kept).
+- Otherwise → Apto, clearing `INSPECAO_REPROVADA` and `AGUARDANDO_INSPECAO`. A linked checklist never inspected does not block.
+
+`GET /api/ibc/alerts` lists `{ identificador, motivo, detalhes? }`. `INSPECAO_REPROVADA` is derived from the latest reprovada inspeção per linked checklist (read in batch), so it can appear alongside `DATA_LIMITE`, and carries `detalhes: { checklists: [{ checklistModeloId, nome, mediaObtida, mediaMinima, itensAbaixoDoMinimo: [{ descricao, nota, notaMinima }] }], alocacao?: { codCar, numPed } }`. `itensAbaixoDoMinimo` uses the inspeção snapshot: a critical item below `notaMinimaCritico` (`notaMinima` = `notaMinimaCritico`) or a non-critical item below `mediaMinima` (`notaMinima` = `mediaMinima`). It disappears once that checklist's latest inspeção is aprovada. An IBC still marked `INSPECAO_REPROVADA` with no reprovada linked checklist (e.g. unlinked later) gets the alert without `detalhes`.
+_Avoid_: “qualidade” alone, hiding inaptidão only inside a detail screen, letting an approved inspeção clear `DATA_LIMITE`
 
 **Score do fator**:
-Numeric score given to one **Item de checklist** in an Inspeção de IBC (stored as IbcInspecaoResposta). Integer 0–10 per active item (decided in #272). Critical items (`critico`) must score ≥ the checklist's `notaMinimaCritico`; the average of non-critical items must be ≥ `mediaMinima` (no non-critical items → only the critical rule applies; the exact limit passes). Evaluated by `avaliarInspecaoIbc` → `APROVADA`/`REPROVADA` + `mediaObtida` (null without non-critical items).
+Numeric score given to one **Item de checklist** in an Inspeção de IBC (stored as IbcInspecaoResposta). Closed scale: integer 0–10, one per active item of the checklist (no decimals, no stars). Critical items (`critico`) must score ≥ the checklist's `notaMinimaCritico`; the average of non-critical items must be ≥ `mediaMinima` (no non-critical items → only the critical rule applies; the exact limit passes). Evaluated by `avaliarInspecaoIbc` → `APROVADA`/`REPROVADA` + `mediaObtida` (null without non-critical items).
 _Avoid_: binary aprovado/reprovado as the primary checklist result, a single score with no per-item breakdown, scores without FK to the catalog
 
 **Inapto por data limite**:
@@ -174,7 +180,7 @@ Aptidão state in which the IBC is **Inapto** until an operator completes Inspe�
 _Avoid_: putting a just-returned IBC Em viagem, treating Troca inbound as Apto by default, skipping verification on “known good” returns, blocking cadastro on missing checklist/inspeção
 
 **Sem inspeção**:
-Non-blocking alert (`SEM_INSPECAO`) for an IBC that was never inspected (`primeiraInspecaoEm` null). Every cadastro (unitário and lote) starts this way; the IBC is Apto and can be allocated. The alert clears on the first approved Inspeção. Independent of aptidão: an expired IBC can show both `DATA_LIMITE` and `SEM_INSPECAO`. Conversão and Mudança de produto inherit it from the source.
+Non-blocking alert (`SEM_INSPECAO`) for an IBC that was never inspected (`primeiraInspecaoEm` null). Every cadastro (unitário and lote) starts this way; the IBC is Apto and can be allocated. The alert clears only on the first **aprovada** Inspeção (`primeiraInspecaoEm` is set then; a reprovada one does not set it). Independent of aptidão: an expired IBC can show both `DATA_LIMITE` and `SEM_INSPECAO`. Conversão and Mudança de produto inherit it from the source.
 _Avoid_: treating it as Inapto, blocking AlocacaoIbc because of it, deriving it from `motivoInaptidao`
 
 **Aviso ao Representante**:
