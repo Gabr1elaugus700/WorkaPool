@@ -1,8 +1,15 @@
 import type {
   IbcAlertDTO,
   IbcCadastroDTO,
+  IbcMotivoInaptidao,
   IbcMudancaTipo,
 } from "../types/ibcCadastro.types";
+
+const motivoInaptidao = {
+  AGUARDANDO_INSPECAO: "Aguardando inspeção",
+  DATA_LIMITE: "Data limite",
+  INSPECAO_REPROVADA: "Inspeção reprovada",
+} as const satisfies Record<IbcMotivoInaptidao, string>;
 
 /**
  * Rótulos PT-BR para aptidão, motivo de inaptidão e alertas do cadastro IBC.
@@ -12,16 +19,10 @@ export const ibcCadastroLabels = {
     APTO: "Apto",
     INAPTO: "Inapto",
   } satisfies Record<IbcCadastroDTO["aptidao"], string>,
-  motivoInaptidao: {
-    AGUARDANDO_INSPECAO: "Aguardando inspeção",
-    DATA_LIMITE: "Data limite",
-    INSPECAO_REPROVADA: "Inspeção reprovada",
-  } satisfies Record<NonNullable<IbcCadastroDTO["motivoInaptidao"]>, string>,
+  motivoInaptidao,
   alertaMotivo: {
+    ...motivoInaptidao,
     SEM_INSPECAO: "Sem inspeção",
-    DATA_LIMITE: "Data limite",
-    AGUARDANDO_INSPECAO: "Aguardando inspeção",
-    INSPECAO_REPROVADA: "Inspeção reprovada",
   } satisfies Record<IbcAlertDTO["motivo"], string>,
   mudanca: {
     conversion: "Conversão para não homologado",

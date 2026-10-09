@@ -87,6 +87,7 @@ Os checklists de IBC já são cadastráveis e vinculáveis a cada container (#35
 12. WHILE o IBC tem `DATA_LIMITE` marcado ou vencendo agora THEN o sistema SHALL gravar a inspeção e manter `INAPTO`/`DATA_LIMITE`.
 13. WHEN a inspeção é a primeira aprovada do IBC THEN o sistema SHALL gravar `primeiraInspecaoEm`; inspeção reprovada SHALL NOT gravá-lo.
 14. WHEN o IBC reprovado tem `AlocacaoIbc` aberta THEN o sistema SHALL manter a alocação e responder com `aviso: { code: "IBC_ALOCADO_INAPTO", codCar, numPed }`.
+15. WHEN duas inspeções do mesmo IBC são registradas ao mesmo tempo THEN o sistema SHALL gravar cada inspeção e recalcular a aptidão na mesma transação, com `SELECT ... FOR UPDATE` na linha do `Ibc`, de modo que a aptidão final reflita as duas.
 
 **Independent Test**: Unit de `resolverAptidaoIbc` e do use-case; integração HTTP do POST.
 
@@ -103,8 +104,9 @@ Os checklists de IBC já são cadastráveis e vinculáveis a cada container (#35
 1. WHEN `GET /api/ibc/:id/inspecoes` é chamado THEN o sistema SHALL responder 200 com as inspeções, mais recente primeiro, com limites, média, inspetor, observação e respostas com `descricao`, `critico` e `nota` do momento da inspeção.
 2. IF o IBC não existe THEN o sistema SHALL responder 404 `IBC_NOT_FOUND`; IBC baixado SHALL ser listado normalmente.
 3. IF o papel não tem leitura do módulo THEN o sistema SHALL responder 403.
-4. WHEN a última inspeção de algum checklist vinculado está reprovada THEN `ListIbcAlerts` SHALL listar `INSPECAO_REPROVADA` com identificador, checklist, média e itens abaixo do mínimo, e `alocacao` quando houver.
+4. WHEN a última inspeção de algum checklist vinculado está reprovada THEN `ListIbcAlerts` SHALL listar `INSPECAO_REPROVADA` com identificador e `detalhes: { checklists: [{ checklistModeloId, nome, mediaObtida, mediaMinima, itensAbaixoDoMinimo: [{ descricao, nota, notaMinima }] }], alocacao?: { codCar, numPed } }`, em consulta em lote (sem N+1).
 5. WHEN o checklist é reinspecionado e aprovado THEN o alerta `INSPECAO_REPROVADA` daquele checklist SHALL deixar de aparecer.
+6. WHEN o IBC também está Inapto por `DATA_LIMITE` THEN `ListIbcAlerts` SHALL listar os dois alertas (`DATA_LIMITE` e `INSPECAO_REPROVADA`).
 
 **Independent Test**: Unit de `ListIbcAlerts`/`ListIbcInspecoes`; integração do GET com snapshot preservado após alterar item e limites.
 
@@ -162,7 +164,7 @@ Os checklists de IBC já são cadastráveis e vinculáveis a cada container (#35
 | IBCINSP-05 | P1: `POST /api/ibc/:id/inspecoes` transacional | Execute (#304) | Pending |
 | IBCINSP-06 | P1: `GET /api/ibc/:id/inspecoes` com snapshots | Execute (#305) | Pending |
 | IBCINSP-07 | P1: Alerta `INSPECAO_REPROVADA` | Execute (#305) | Pending |
-| IBCINSP-08 | Documentação de domínio (`CONTEXT.md`) | Execute (#305) | Pending |
+| IBCINSP-08 | Documentação de domínio (`CONTEXT.md`; escala 0–10 já em #302) | Execute (#305) | Pending |
 | IBCINSP-09 | P2: Tela de inspeção no Controle do ativo | Execute (#306) | Pending |
 | IBCINSP-10 | P2: Histórico e alertas na UI | Execute (#307) | Pending |
 

@@ -1,7 +1,15 @@
-import type {
-  AvaliacaoInspecaoIbc,
-  AvaliarInspecaoIbcInput,
-} from "../types/IbcInspecao.types";
+import type { IbcInspecaoResultado } from "../types/IbcInspecao.types";
+
+export type AvaliarInspecaoIbcInput = {
+  respostas: ReadonlyArray<{ nota: number; critico: boolean }>;
+  notaMinimaCritico: number;
+  mediaMinima: number;
+};
+
+export type AvaliacaoInspecaoIbc = {
+  resultado: IbcInspecaoResultado;
+  mediaObtida: number | null;
+};
 
 export function avaliarInspecaoIbc({
   respostas,
