@@ -58,6 +58,7 @@ _Avoid_: Empréstimo, calling a returnable IBC a “venda” inside this module
 
 **Inspeção de IBC**:
 A recorded quality check of an IBC. The operator scores every **active** checklist item from the quality POP catalog; each score is stored linked to that item. Yields aptidão and condition history.
+Registered via `POST /api/ibc/:id/inspecoes` `{ checklistModeloId, respostas: [{ checklistItemId, nota }], observacao? }` (ADMIN/ALMOX, 201 `{ inspecao, ibc: { aptidao, motivoInaptidao, primeiraInspecaoEm }, aviso? }`). The inspeção is saved and aptidão recalculated in one transaction with the `Ibc` row locked. Refusals, in precedence order: role 403; invalid body / nota outside 0–10 or not integer 400 `IBC_INSPECAO_INVALID_BODY`; missing or baixado IBC 404 `IBC_NOT_FOUND`; Em viagem 409 `IBC_EM_VIAGEM`; checklist not linked 422 `IBC_CHECKLIST_NAO_VINCULADO`; inactive checklist 422 `IBC_CHECKLIST_INATIVO`; missing active item or unknown/duplicate item 422 `IBC_INSPECAO_RESPOSTAS_INCOMPLETAS`. A reprovada inspeção on an IBC with an open alocação still returns 201, keeps the alocação and adds `aviso: { code: "IBC_ALOCADO_INAPTO", codCar, numPed }`.
 _Avoid_: treating “qualidade” as a single vague field with no checklist, hardcoding factors only in UI without a catalog table
 
 **Item de checklist**:
