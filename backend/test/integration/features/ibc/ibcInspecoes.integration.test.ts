@@ -438,7 +438,27 @@ describe("IBC inspeções HTTP (#304)", () => {
       { identificador: ibc.identificador, motivo: "SEM_INSPECAO" },
     ]);
 
+    const estrutural = await createChecklist("Estrutural");
+    await vincular(ibc.id, estrutural.checklist.id);
+    assert.equal((await post(ibc.id, { checklistModeloId: estrutural.checklist.id, respostas: respostas(estrutural, 8, 2) })).status, 201);
     assert.equal((await post(ibc.id, aprovada(soda))).status, 201);
+
+    const restantes = await alertsDoIbc();
+    assert.deepEqual(
+      restantes.map((a: { motivo: string }) => a.motivo),
+      ["INSPECAO_REPROVADA"],
+    );
+    assert.deepEqual(restantes[0].detalhes.checklists, [
+      {
+        checklistModeloId: estrutural.checklist.id,
+        nome: estrutural.checklist.nome,
+        mediaObtida: 2,
+        mediaMinima: 6,
+        itensAbaixoDoMinimo: [{ descricao: estrutural.tampa.descricao, nota: 2, notaMinima: 6 }],
+      },
+    ]);
+
+    assert.equal((await post(ibc.id, aprovada(estrutural))).status, 201);
 
     assert.deepEqual(await alertsDoIbc(), []);
   });

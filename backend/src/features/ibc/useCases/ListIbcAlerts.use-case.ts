@@ -27,7 +27,7 @@ export type IbcAlert = {
   detalhes?: IbcAlertDetalhes;
 };
 
-type InspecoesLeitura = Pick<IIbcInspecaoLeituraRepository, "listUltimasReprovadas" | "listAlocacoesAbertas">;
+type InspecoesLeitura = Pick<IIbcInspecaoLeituraRepository, "listUltimasReprovadasVinculadas" | "listAlocacoesAbertas">;
 
 export class ListIbcAlertsUseCase {
   private readonly repository: IIbcCadastroRepository;
@@ -52,7 +52,7 @@ export class ListIbcAlertsUseCase {
 
   private async loadReprovacoes(ibcIds: string[]): Promise<Map<string, IbcAlertDetalhes>> {
     const porIbc = new Map<string, IbcAlertChecklistReprovado[]>();
-    for (const reprovada of await this.inspecoes.listUltimasReprovadas(ibcIds)) {
+    for (const reprovada of await this.inspecoes.listUltimasReprovadasVinculadas(ibcIds)) {
       porIbc.set(reprovada.ibcId, [...(porIbc.get(reprovada.ibcId) ?? []), toChecklistReprovado(reprovada)]);
     }
     if (porIbc.size === 0) return new Map();

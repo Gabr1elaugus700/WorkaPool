@@ -58,16 +58,16 @@ type InspecoesMock = {
 };
 
 function buildUseCase(repo: RepoMock, inspecoesMock: InspecoesMock = {}) {
-  const listUltimasReprovadas = mock.fn(async (_ibcIds: string[]) => inspecoesMock.reprovadas ?? []);
+  const listUltimasReprovadasVinculadas = mock.fn(async (_ibcIds: string[]) => inspecoesMock.reprovadas ?? []);
   const listAlocacoesAbertas = mock.fn(
     async (_ibcIds: string[]) => new Map(Object.entries(inspecoesMock.alocacoes ?? {})),
   );
-  const inspecoes: Pick<IIbcInspecaoLeituraRepository, "listUltimasReprovadas" | "listAlocacoesAbertas"> = {
-    listUltimasReprovadas,
+  const inspecoes: Pick<IIbcInspecaoLeituraRepository, "listUltimasReprovadasVinculadas" | "listAlocacoesAbertas"> = {
+    listUltimasReprovadasVinculadas,
     listAlocacoesAbertas,
   };
   const useCase = new ListIbcAlertsUseCase(repo as IIbcCadastroRepository, inspecoes);
-  return Object.assign(useCase, { listUltimasReprovadas, listAlocacoesAbertas });
+  return Object.assign(useCase, { listUltimasReprovadasVinculadas, listAlocacoesAbertas });
 }
 
 function repoWith(...ibcs: IbcCadastroRecord[]): RepoMock {
@@ -171,8 +171,8 @@ describe("ListIbcAlertsUseCase", () => {
       { identificador: "HMS00007", motivo: "INSPECAO_REPROVADA", detalhes: { checklists: [detalhesSoda] } },
       { identificador: "HMS00007", motivo: "SEM_INSPECAO" },
     ]);
-    assert.equal(useCase.listUltimasReprovadas.mock.callCount(), 1);
-    assert.deepEqual(useCase.listUltimasReprovadas.mock.calls[0].arguments, [["ibc-r", "ibc-a"]]);
+    assert.equal(useCase.listUltimasReprovadasVinculadas.mock.callCount(), 1);
+    assert.deepEqual(useCase.listUltimasReprovadasVinculadas.mock.calls[0].arguments, [["ibc-r", "ibc-a"]]);
     assert.deepEqual(useCase.listAlocacoesAbertas.mock.calls[0].arguments, [["ibc-r"]]);
   });
 

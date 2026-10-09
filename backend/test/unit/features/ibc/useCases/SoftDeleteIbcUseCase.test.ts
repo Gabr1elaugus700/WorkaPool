@@ -51,7 +51,7 @@ describe("SoftDeleteIbcUseCase", () => {
       incluirBaixados: true,
     });
     const alerts = await new ListIbcAlertsUseCase(repo, {
-      listUltimasReprovadas: async () => [],
+      listUltimasReprovadasVinculadas: async () => [],
       listAlocacoesAbertas: async () => new Map(),
     }).execute();
 

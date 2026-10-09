@@ -28,7 +28,14 @@ const respostasSnapshot = {
 
 const ultimaPrimeiro = [{ inspecionadoEm: "desc" }, { id: "desc" }] satisfies Prisma.IbcInspecaoOrderByWithRelationInput[];
 
+const historicoInclude = {
+  checklistModelo: { select: { nome: true } },
+  inspetor: { select: { id: true, name: true } },
+  respostas: respostasSnapshot,
+} satisfies Prisma.IbcInspecaoInclude;
+
 type InspecaoRow = Prisma.IbcInspecaoGetPayload<object>;
+type HistoricoRow = Prisma.IbcInspecaoGetPayload<{ include: typeof historicoInclude }>;
 type AptidaoRow = Prisma.IbcGetPayload<{ select: typeof aptidaoSelect }>;
 
 export class IbcInspecaoRepository implements IIbcInspecaoRepository, IIbcInspecaoLeituraRepository {
@@ -96,7 +103,7 @@ export class IbcInspecaoRepository implements IIbcInspecaoRepository, IIbcInspec
       });
       const ultimas = await tx.ibcInspecao.findMany({
         where: { ibcId: data.ibcId, checklistModelo: { ibcVinculos: { some: { ibcId: data.ibcId } } } },
-        orderBy: [{ inspecionadoEm: "desc" }, { id: "desc" }],
+        orderBy: ultimaPrimeiro,
         distinct: ["checklistModeloId"],
         select: { resultado: true },
       });
@@ -114,28 +121,12 @@ export class IbcInspecaoRepository implements IIbcInspecaoRepository, IIbcInspec
     const rows = await this.prisma.ibcInspecao.findMany({
       where: { ibcId },
       orderBy: ultimaPrimeiro,
-      include: {
-        checklistModelo: { select: { nome: true } },
-        inspetor: { select: { id: true, name: true } },
-        respostas: respostasSnapshot,
-      },
+      include: historicoInclude,
     });
-    return rows.map((row) => ({
-      id: row.id,
-      checklistModeloId: row.checklistModeloId,
-      checklistNome: row.checklistModelo.nome,
-      resultado: row.resultado,
-      mediaObtida: row.mediaObtida,
-      notaMinimaCritico: row.notaMinimaCritico,
-      mediaMinima: row.mediaMinima,
-      inspetor: { id: row.inspetor.id, nome: row.inspetor.name },
-      inspecionadoEm: row.inspecionadoEm.toISOString(),
-      observacao: row.observacao,
-      respostas: row.respostas,
-    }));
+    return rows.map(toHistoricoDto);
   }
 
-  async listUltimasReprovadas(ibcIds: string[]): Promise<IbcInspecaoReprovadaVigente[]> {
+  async listUltimasReprovadasVinculadas(ibcIds: string[]): Promise<IbcInspecaoReprovadaVigente[]> {
     if (ibcIds.length === 0) return [];
     const [vinculos, ultimas] = await Promise.all([
       this.prisma.ibcChecklistVinculo.findMany({
@@ -146,21 +137,29 @@ export class IbcInspecaoRepository implements IIbcInspecaoRepository, IIbcInspec
         where: { ibcId: { in: ibcIds } },
         orderBy: ultimaPrimeiro,
         distinct: ["ibcId", "checklistModeloId"],
-        include: { checklistModelo: { select: { nome: true } }, respostas: respostasSnapshot },
+        select: { id: true, ibcId: true, checklistModeloId: true, resultado: true },
       }),
     ]);
     const vinculados = new Set(vinculos.map((v) => `${v.ibcId}:${v.checklistModeloId}`));
-    return ultimas
-      .filter((row) => row.resultado === "REPROVADA" && vinculados.has(`${row.ibcId}:${row.checklistModeloId}`))
-      .map((row) => ({
-        ibcId: row.ibcId,
-        checklistModeloId: row.checklistModeloId,
-        checklistNome: row.checklistModelo.nome,
-        mediaObtida: row.mediaObtida,
-        notaMinimaCritico: row.notaMinimaCritico,
-        mediaMinima: row.mediaMinima,
-        respostas: row.respostas,
-      }));
+    const reprovadasIds = ultimas
+      .filter((u) => u.resultado === "REPROVADA" && vinculados.has(`${u.ibcId}:${u.checklistModeloId}`))
+      .map((u) => u.id);
+    if (reprovadasIds.length === 0) return [];
+
+    const reprovadas = await this.prisma.ibcInspecao.findMany({
+      where: { id: { in: reprovadasIds } },
+      orderBy: [{ ibcId: "asc" }, { inspecionadoEm: "desc" }],
+      include: { checklistModelo: { select: { nome: true } }, respostas: respostasSnapshot },
+    });
+    return reprovadas.map((row) => ({
+      ibcId: row.ibcId,
+      checklistModeloId: row.checklistModeloId,
+      checklistNome: row.checklistModelo.nome,
+      mediaObtida: row.mediaObtida,
+      notaMinimaCritico: row.notaMinimaCritico,
+      mediaMinima: row.mediaMinima,
+      respostas: row.respostas,
+    }));
   }
 
   async listAlocacoesAbertas(ibcIds: string[]): Promise<Map<string, IbcAlocacaoAberta>> {
@@ -186,6 +185,22 @@ function toInspecaoDto(row: InspecaoRow, data: CreateIbcInspecaoData): IbcInspec
     inspecionadoEm: row.inspecionadoEm.toISOString(),
     observacao: row.observacao,
     respostas: data.respostas,
+  };
+}
+
+function toHistoricoDto(row: HistoricoRow): IbcInspecaoHistoricoDto {
+  return {
+    id: row.id,
+    checklistModeloId: row.checklistModeloId,
+    checklistNome: row.checklistModelo.nome,
+    resultado: row.resultado,
+    mediaObtida: row.mediaObtida,
+    notaMinimaCritico: row.notaMinimaCritico,
+    mediaMinima: row.mediaMinima,
+    inspetor: { id: row.inspetor.id, nome: row.inspetor.name },
+    inspecionadoEm: row.inspecionadoEm.toISOString(),
+    observacao: row.observacao,
+    respostas: row.respostas,
   };
 }
 
