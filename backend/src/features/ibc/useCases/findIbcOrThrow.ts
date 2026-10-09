@@ -19,7 +19,8 @@ export async function findIbcOrThrow(ibcs: IbcLookup, id: string): Promise<IbcCa
   return ibc;
 }
 
-export async function assertIbcAtivo(ibcs: IbcLookup, id: string): Promise<void> {
+export async function assertIbcAtivo(ibcs: IbcLookup, id: string): Promise<IbcCadastroRecord> {
   const ibc = await findIbcOrThrow(ibcs, id);
   if (ibc.baixadoEm != null) throw ibcNotFound(id);
+  return ibc;
 }

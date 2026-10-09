@@ -159,8 +159,8 @@ Os checklists de IBC já são cadastráveis e vinculáveis a cada container (#35
 | -------------- | ----- | ----- | ------ |
 | IBCINSP-01 | P1: Modelo persistente (tabelas, enum, migration aditiva) | Execute (#302) | Implementing |
 | IBCINSP-02 | P1: Regra de avaliação `avaliarInspecaoIbc` | Execute (#302) | Implementing |
-| IBCINSP-03 | P1: Resolução de aptidão `resolverAptidaoIbc` | Execute (#303) | Pending |
-| IBCINSP-04 | P1: Use-case `RegistrarIbcInspecao` + recusas | Execute (#303) | Pending |
+| IBCINSP-03 | P1: Resolução de aptidão `resolverAptidaoIbc` | Execute (#303) | Implementing |
+| IBCINSP-04 | P1: Use-case `RegistrarIbcInspecao` + recusas | Execute (#303) | Implementing |
 | IBCINSP-05 | P1: `POST /api/ibc/:id/inspecoes` transacional | Execute (#304) | Pending |
 | IBCINSP-06 | P1: `GET /api/ibc/:id/inspecoes` com snapshots | Execute (#305) | Pending |
 | IBCINSP-07 | P1: Alerta `INSPECAO_REPROVADA` | Execute (#305) | Pending |
