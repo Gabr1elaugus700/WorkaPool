@@ -1,9 +1,14 @@
+export type IbcMotivoInaptidao =
+  | "AGUARDANDO_INSPECAO"
+  | "DATA_LIMITE"
+  | "INSPECAO_REPROVADA";
+
 export type IbcCadastroDTO = {
   id: string;
   identificador: string;
   tipoCadastro: "NOVO" | "TROCA";
   aptidao: "APTO" | "INAPTO";
-  motivoInaptidao: "AGUARDANDO_INSPECAO" | "DATA_LIMITE" | null;
+  motivoInaptidao: IbcMotivoInaptidao | null;
   custodia: "PATIO" | "EM_VIAGEM";
   dataLimite: string | null;
   primeiraInspecaoEm: string | null;
@@ -40,7 +45,7 @@ export type ChangeIbcProdutoInput = IbcMudancaConfirmacaoInput & {
 
 export type IbcAlertDTO = {
   identificador: string;
-  motivo: "AGUARDANDO_INSPECAO" | "DATA_LIMITE" | "SEM_INSPECAO";
+  motivo: IbcMotivoInaptidao | "SEM_INSPECAO";
 };
 
 export type CreateNovoIbcInput = {

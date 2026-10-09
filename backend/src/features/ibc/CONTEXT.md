@@ -78,7 +78,7 @@ Whether the IBC may be used in circulation right now: **Apto** or **Inapto**. In
 _Avoid_: “qualidade” alone, hiding inaptidão only inside a detail screen
 
 **Score do fator**:
-Numeric score given to one **Item de checklist** in an Inspeção de IBC (stored as IbcInspecaoResposta). Critical items (`critico`) have a hard minimum; others feed an overall average. Scale TBD (0–5 stars discussed; locked context still has 0–10 until camada 1 grill closes).
+Numeric score given to one **Item de checklist** in an Inspeção de IBC (stored as IbcInspecaoResposta). Integer 0–10 per active item (decided in #272). Critical items (`critico`) must score ≥ the checklist's `notaMinimaCritico`; the average of non-critical items must be ≥ `mediaMinima` (no non-critical items → only the critical rule applies; the exact limit passes). Evaluated by `avaliarInspecaoIbc` → `APROVADA`/`REPROVADA` + `mediaObtida` (null without non-critical items).
 _Avoid_: binary aprovado/reprovado as the primary checklist result, a single score with no per-item breakdown, scores without FK to the catalog
 
 **Inapto por data limite**:
