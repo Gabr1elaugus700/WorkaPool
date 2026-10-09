@@ -50,7 +50,10 @@ describe("SoftDeleteIbcUseCase", () => {
     const poolAudit = await new ListIbcPoolUseCase(repo).execute({
       incluirBaixados: true,
     });
-    const alerts = await new ListIbcAlertsUseCase(repo).execute();
+    const alerts = await new ListIbcAlertsUseCase(repo, {
+      listUltimasReprovadas: async () => [],
+      listAlocacoesAbertas: async () => new Map(),
+    }).execute();
 
     assert.deepEqual(poolDefault, []);
     assert.equal(poolAudit.length, 1);

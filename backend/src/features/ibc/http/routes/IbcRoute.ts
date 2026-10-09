@@ -100,6 +100,7 @@ router.get("/:id/checklists", readAuth, IbcChecklistController.listVinculos);
 router.post("/:id/checklists", writeAuth, IbcChecklistController.vincular);
 router.delete("/:id/checklists/:checklistModeloId", writeAuth, IbcChecklistController.desvincular);
 
+router.get("/:id/inspecoes", readAuth, IbcInspecaoController.listar);
 router.post("/:id/inspecoes", writeAuth, IbcInspecaoController.registrar);
 
 router.patch(

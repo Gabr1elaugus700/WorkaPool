@@ -5,11 +5,14 @@ import {
   IIbcInspecaoRepository,
   RecalcularAptidaoIbc,
 } from "./IIbcInspecaoRepository";
+import { IIbcInspecaoLeituraRepository } from "./IIbcInspecaoLeituraRepository";
 import {
   IbcAlocacaoAberta,
   IbcAptidaoSnapshot,
   IbcChecklistParaInspecao,
   IbcInspecaoDto,
+  IbcInspecaoHistoricoDto,
+  IbcInspecaoReprovadaVigente,
 } from "../types/IbcInspecao.types";
 
 const aptidaoSelect = {
@@ -18,10 +21,17 @@ const aptidaoSelect = {
   primeiraInspecaoEm: true,
 } satisfies Prisma.IbcSelect;
 
+const respostasSnapshot = {
+  select: { checklistItemId: true, descricao: true, critico: true, nota: true },
+  orderBy: [{ critico: "desc" }, { descricao: "asc" }],
+} satisfies Prisma.IbcInspecao$respostasArgs;
+
+const ultimaPrimeiro = [{ inspecionadoEm: "desc" }, { id: "desc" }] satisfies Prisma.IbcInspecaoOrderByWithRelationInput[];
+
 type InspecaoRow = Prisma.IbcInspecaoGetPayload<object>;
 type AptidaoRow = Prisma.IbcGetPayload<{ select: typeof aptidaoSelect }>;
 
-export class IbcInspecaoRepository implements IIbcInspecaoRepository {
+export class IbcInspecaoRepository implements IIbcInspecaoRepository, IIbcInspecaoLeituraRepository {
   private readonly prisma: PrismaClient;
 
   constructor(prismaClient: PrismaClient = prismaInstance) {
@@ -98,6 +108,68 @@ export class IbcInspecaoRepository implements IIbcInspecaoRepository {
       const ibc = await tx.ibc.update({ where: { id: data.ibcId }, data: atualizacao, select: aptidaoSelect });
       return { inspecao: toInspecaoDto(inspecao, data), ibc: toAptidaoSnapshot(ibc) };
     });
+  }
+
+  async listByIbc(ibcId: string): Promise<IbcInspecaoHistoricoDto[]> {
+    const rows = await this.prisma.ibcInspecao.findMany({
+      where: { ibcId },
+      orderBy: ultimaPrimeiro,
+      include: {
+        checklistModelo: { select: { nome: true } },
+        inspetor: { select: { id: true, name: true } },
+        respostas: respostasSnapshot,
+      },
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      checklistModeloId: row.checklistModeloId,
+      checklistNome: row.checklistModelo.nome,
+      resultado: row.resultado,
+      mediaObtida: row.mediaObtida,
+      notaMinimaCritico: row.notaMinimaCritico,
+      mediaMinima: row.mediaMinima,
+      inspetor: { id: row.inspetor.id, nome: row.inspetor.name },
+      inspecionadoEm: row.inspecionadoEm.toISOString(),
+      observacao: row.observacao,
+      respostas: row.respostas,
+    }));
+  }
+
+  async listUltimasReprovadas(ibcIds: string[]): Promise<IbcInspecaoReprovadaVigente[]> {
+    if (ibcIds.length === 0) return [];
+    const [vinculos, ultimas] = await Promise.all([
+      this.prisma.ibcChecklistVinculo.findMany({
+        where: { ibcId: { in: ibcIds } },
+        select: { ibcId: true, checklistModeloId: true },
+      }),
+      this.prisma.ibcInspecao.findMany({
+        where: { ibcId: { in: ibcIds } },
+        orderBy: ultimaPrimeiro,
+        distinct: ["ibcId", "checklistModeloId"],
+        include: { checklistModelo: { select: { nome: true } }, respostas: respostasSnapshot },
+      }),
+    ]);
+    const vinculados = new Set(vinculos.map((v) => `${v.ibcId}:${v.checklistModeloId}`));
+    return ultimas
+      .filter((row) => row.resultado === "REPROVADA" && vinculados.has(`${row.ibcId}:${row.checklistModeloId}`))
+      .map((row) => ({
+        ibcId: row.ibcId,
+        checklistModeloId: row.checklistModeloId,
+        checklistNome: row.checklistModelo.nome,
+        mediaObtida: row.mediaObtida,
+        notaMinimaCritico: row.notaMinimaCritico,
+        mediaMinima: row.mediaMinima,
+        respostas: row.respostas,
+      }));
+  }
+
+  async listAlocacoesAbertas(ibcIds: string[]): Promise<Map<string, IbcAlocacaoAberta>> {
+    if (ibcIds.length === 0) return new Map();
+    const alocacoes = await this.prisma.alocacaoIbc.findMany({
+      where: { ibcId: { in: ibcIds }, expedicaoIbcId: null },
+      select: { ibcId: true, numPed: true, carga: { select: { codCar: true } } },
+    });
+    return new Map(alocacoes.map((a) => [a.ibcId, { codCar: a.carga.codCar, numPed: a.numPed }]));
   }
 }
 
