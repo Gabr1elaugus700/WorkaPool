@@ -187,6 +187,19 @@ describe("RegistrarIbcInspecaoUseCase — recusas", () => {
     );
   });
 
+  it("aplica a precedência: permissão antes de IBC inexistente", async () => {
+    const { useCase } = setup({ ibc: null });
+    await assert.rejects(
+      () => useCase.execute(input({ actorRole: Role.VENDAS })),
+      hasCode("IBC_CHECKLIST_FORBIDDEN", 403),
+    );
+  });
+
+  it("aplica a precedência: IBC baixado antes de Em viagem", async () => {
+    const { useCase } = setup({ ibc: { ...ibcBase, baixadoEm: NOW, custodia: "EM_VIAGEM" } });
+    await assert.rejects(() => useCase.execute(input()), hasCode("IBC_NOT_FOUND", 404));
+  });
+
   it("aplica a precedência: Em viagem antes de checklist não vinculado e respostas incompletas", async () => {
     const { useCase } = setup({ ibc: { ...ibcBase, custodia: "EM_VIAGEM" } });
     await assert.rejects(
@@ -284,6 +297,26 @@ describe("RegistrarIbcInspecaoUseCase — registro e aptidão", () => {
     assert.equal(result.inspecao.resultado, "APROVADA");
     assert.equal(result.ibc.aptidao, "INAPTO");
     assert.equal(result.ibc.motivoInaptidao, "DATA_LIMITE");
+  });
+
+  it("mantém INAPTO por DATA_LIMITE já marcado, mesmo aprovada", async () => {
+    const { useCase } = setup({
+      ibc: { ...ibcBase, aptidao: "INAPTO", motivoInaptidao: "DATA_LIMITE" },
+    });
+    const result = await useCase.execute(input());
+
+    assert.equal(result.ibc.aptidao, "INAPTO");
+    assert.equal(result.ibc.motivoInaptidao, "DATA_LIMITE");
+  });
+
+  it("aprovada limpa AGUARDANDO_INSPECAO", async () => {
+    const { useCase } = setup({
+      ibc: { ...ibcBase, aptidao: "INAPTO", motivoInaptidao: "AGUARDANDO_INSPECAO" },
+    });
+    const result = await useCase.execute(input());
+
+    assert.equal(result.ibc.aptidao, "APTO");
+    assert.equal(result.ibc.motivoInaptidao, null);
   });
 
   it("avisa IBC_ALOCADO_INAPTO quando reprova IBC com alocação aberta", async () => {
