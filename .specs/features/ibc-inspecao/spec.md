@@ -165,8 +165,8 @@ Os checklists de IBC já são cadastráveis e vinculáveis a cada container (#35
 | IBCINSP-06 | P1: `GET /api/ibc/:id/inspecoes` com snapshots | Execute (#305) | Implementing |
 | IBCINSP-07 | P1: Alerta `INSPECAO_REPROVADA` | Execute (#305) | Implementing |
 | IBCINSP-08 | Documentação de domínio (`CONTEXT.md`; escala 0–10 já em #302) | Execute (#305) | Implementing |
-| IBCINSP-09 | P2: Tela de inspeção no Controle do ativo | Execute (#306) | Pending |
-| IBCINSP-10 | P2: Histórico e alertas na UI | Execute (#307) | Pending |
+| IBCINSP-09 | P2: Tela de inspeção no Controle do ativo | Execute (#306, botão em #307) | Implementing |
+| IBCINSP-10 | P2: Histórico e alertas na UI | Execute (#307) | Implementing |
 
 **Coverage:** 10 total, 10 mapped to slices, 0 unmapped
 

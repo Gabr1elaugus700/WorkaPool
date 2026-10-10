@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { IbcAlertDTO } from "../types/ibcCadastro.types";
 import { ibcCadastroLabels } from "../utils/ibcCadastroLabels";
+import IbcAlertaReprovacaoDetalhes from "./IbcAlertaReprovacaoDetalhes";
 
 type Props = {
   alerts: IbcAlertDTO[];
@@ -16,13 +17,13 @@ export default function CadastroIbcAlertsPanel({ alerts }: Props) {
   return (
     <ul className="space-y-2">
       {alerts.map((alert) => {
-        const isDataLimite = alert.motivo === "DATA_LIMITE";
+        const isDestrutivo = alert.motivo === "DATA_LIMITE" || alert.motivo === "INSPECAO_REPROVADA";
         return (
           <li
             key={`${alert.identificador}-${alert.motivo}`}
             className={cn(
               "rounded-md border px-3 py-2 text-sm",
-              isDataLimite
+              isDestrutivo
                 ? "border-destructive/40 bg-destructive/5"
                 : "border-border bg-background"
             )}
@@ -32,6 +33,7 @@ export default function CadastroIbcAlertsPanel({ alerts }: Props) {
               {" — "}
               {ibcCadastroLabels.alertaMotivo[alert.motivo]}
             </span>
+            {alert.detalhes ? <IbcAlertaReprovacaoDetalhes detalhes={alert.detalhes} /> : null}
           </li>
         );
       })}

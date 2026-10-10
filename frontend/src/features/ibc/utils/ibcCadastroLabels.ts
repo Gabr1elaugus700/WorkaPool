@@ -4,6 +4,7 @@ import type {
   IbcMotivoInaptidao,
   IbcMudancaTipo,
 } from "../types/ibcCadastro.types";
+import type { IbcInspecaoResultado } from "../types/ibcInspecao.types";
 
 const motivoInaptidao = {
   AGUARDANDO_INSPECAO: "Aguardando inspeção",
@@ -24,6 +25,10 @@ export const ibcCadastroLabels = {
     ...motivoInaptidao,
     SEM_INSPECAO: "Sem inspeção",
   } satisfies Record<IbcAlertDTO["motivo"], string>,
+  inspecaoResultado: {
+    APROVADA: "Aprovada",
+    REPROVADA: "Reprovada",
+  } satisfies Record<IbcInspecaoResultado, string>,
   mudanca: {
     conversion: "Conversão para não homologado",
     product_change: "Mudança de produto",

@@ -14,6 +14,8 @@ type Props = {
   onMudarProduto: (ibc: IbcCadastroDTO) => void;
   onVerHistorico: (ibc: IbcCadastroDTO) => void;
   onGerenciarChecklists: (ibc: IbcCadastroDTO) => void;
+  onInspecionar: (ibc: IbcCadastroDTO) => void;
+  onVerInspecoes: (ibc: IbcCadastroDTO) => void;
 };
 
 function formatDataLimite(value: string | null): string {
@@ -28,6 +30,8 @@ export default function CadastroIbcPoolList({
   onMudarProduto,
   onVerHistorico,
   onGerenciarChecklists,
+  onInspecionar,
+  onVerInspecoes,
 }: Props) {
   if (items.length === 0) {
     return (
@@ -79,6 +83,11 @@ export default function CadastroIbcPoolList({
               </div>
             </div>
             <div className="flex flex-wrap gap-1">
+              {!substituido && ibc.custodia !== "EM_VIAGEM" ? (
+                <Button type="button" variant="ghost" size="sm" onClick={() => onInspecionar(ibc)}>
+                  Inspecionar
+                </Button>
+              ) : null}
               {!substituido && !isIbcNaoHomologado(ibc) ? (
                 <Button
                   type="button"
@@ -106,6 +115,9 @@ export default function CadastroIbcPoolList({
                   Checklists
                 </Button>
               ) : null}
+              <Button type="button" variant="ghost" size="sm" onClick={() => onVerInspecoes(ibc)}>
+                Inspeções
+              </Button>
               <Button
                 type="button"
                 variant="ghost"

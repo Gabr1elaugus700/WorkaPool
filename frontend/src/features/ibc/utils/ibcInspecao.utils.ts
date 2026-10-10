@@ -1,5 +1,10 @@
 import type { IbcChecklistDTO, IbcChecklistItemNoChecklistDTO } from "../types/ibcChecklist.types";
-import type { RegistrarIbcInspecaoInput } from "../types/ibcInspecao.types";
+import type { IbcAlocacaoAbertaDTO, IbcItemAbaixoDoMinimoDTO } from "../types/ibcCadastro.types";
+import type {
+  IbcInspecaoLimitesDTO,
+  IbcInspecaoRespostaDTO,
+  RegistrarIbcInspecaoInput,
+} from "../types/ibcInspecao.types";
 import { formatNumber } from "@/utils/formatNumber";
 import { IBC_OBSERVACAO_MAX } from "./ibcMudanca.utils";
 
@@ -38,4 +43,31 @@ export function buildInspecaoPayload(
 
 export function formatNotaInspecao(nota: number | null): string {
   return nota === null ? "—" : formatNumber(nota);
+}
+
+/** Crítico comparado com `notaMinimaCritico`; não crítico com `mediaMinima` (mesma regra do alerta na API). */
+export function notaMinimaDoItem(item: Pick<IbcInspecaoRespostaDTO, "critico">, limites: IbcInspecaoLimitesDTO): number {
+  return item.critico ? limites.notaMinimaCritico : limites.mediaMinima;
+}
+
+export function isNotaAbaixoDoMinimo(
+  item: Pick<IbcInspecaoRespostaDTO, "critico" | "nota">,
+  limites: IbcInspecaoLimitesDTO,
+): boolean {
+  return item.nota < notaMinimaDoItem(item, limites);
+}
+
+export function formatMediaVsMinima(mediaObtida: number | null, mediaMinima: number): string {
+  const media = mediaObtida === null ? "sem média (só críticos)" : `média ${formatNumber(mediaObtida)}`;
+  return `${media} · mín. ${formatNumber(mediaMinima)}`;
+}
+
+export function formatItensAbaixoDoMinimo(itens: IbcItemAbaixoDoMinimoDTO[]): string {
+  return itens
+    .map(({ descricao, nota, notaMinima }) => `${descricao}: ${formatNumber(nota)} (mín. ${formatNumber(notaMinima)})`)
+    .join(" · ");
+}
+
+export function formatAlocacaoAlerta({ codCar, numPed }: IbcAlocacaoAbertaDTO): string {
+  return `Alocado na carga ${codCar} · pedido ${numPed}`;
 }
