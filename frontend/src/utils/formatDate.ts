@@ -1,12 +1,6 @@
+import { formatNumber } from "./formatNumber";
+
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-const numberFormatter = new Intl.NumberFormat("pt-BR", {
-  maximumFractionDigits: 2,
-});
-
-function formatNumber(value: number): string {
-  return numberFormatter.format(value);
-}
 
 export function formatDaysSinceLastPurchase(value: number | null): string {
   if (value == null) {
