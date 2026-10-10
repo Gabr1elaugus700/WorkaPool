@@ -43,9 +43,29 @@ export type ChangeIbcProdutoInput = IbcMudancaConfirmacaoInput & {
   produtoId: string;
 };
 
+export type IbcItemAbaixoDoMinimoDTO = {
+  descricao: string;
+  nota: number;
+  notaMinima: number;
+};
+
+export type IbcAlocacaoAbertaDTO = { codCar: number; numPed: string };
+
+export type IbcAlertDetalhesDTO = {
+  checklists: Array<{
+    checklistModeloId: string;
+    nome: string;
+    mediaObtida: number | null;
+    mediaMinima: number;
+    itensAbaixoDoMinimo: IbcItemAbaixoDoMinimoDTO[];
+  }>;
+  alocacao?: IbcAlocacaoAbertaDTO;
+};
+
 export type IbcAlertDTO = {
   identificador: string;
   motivo: IbcMotivoInaptidao | "SEM_INSPECAO";
+  detalhes?: IbcAlertDetalhesDTO;
 };
 
 export type CreateNovoIbcInput = {

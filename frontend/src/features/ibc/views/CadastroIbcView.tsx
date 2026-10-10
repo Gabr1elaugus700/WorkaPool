@@ -21,6 +21,8 @@ import ConfirmarMudancaIbcModal, {
 } from "../components/ConfirmarMudancaIbcModal";
 import IbcHistoricoDrawer from "../components/IbcHistoricoDrawer";
 import IbcChecklistsVinculoDialog from "../components/IbcChecklistsVinculoDialog";
+import IbcInspecaoDialog from "../components/IbcInspecaoDialog";
+import IbcInspecoesDrawer from "../components/IbcInspecoesDrawer";
 import { useIbcConversao, useIbcHistorico } from "../hooks/useIbcConversao";
 import { useIbcChecklistVinculos } from "../hooks/useIbcChecklistVinculos";
 import { ibcCadastroService } from "../services/ibcCadastroService";
@@ -49,6 +51,8 @@ export default function CadastroIbcView() {
   const historicoQuery = useIbcHistorico(historicoIbc?.id ?? null);
   const [checklistsIbc, setChecklistsIbc] = useState<IbcCadastroDTO | null>(null);
   const vinculos = useIbcChecklistVinculos(checklistsIbc?.id ?? null);
+  const [inspecaoIbc, setInspecaoIbc] = useState<IbcCadastroDTO | null>(null);
+  const [inspecoesIbc, setInspecoesIbc] = useState<IbcCadastroDTO | null>(null);
 
   const poolQuery = useQuery({
     queryKey: POOL_KEY,
@@ -274,6 +278,8 @@ export default function CadastroIbcView() {
               onMudarProduto={(ibc) => setMudanca({ ibc, modo: "product_change" })}
               onVerHistorico={setHistoricoIbc}
               onGerenciarChecklists={setChecklistsIbc}
+              onInspecionar={setInspecaoIbc}
+              onVerInspecoes={setInspecoesIbc}
             />
           )}
         </section>
@@ -319,6 +325,12 @@ export default function CadastroIbcView() {
           state={vinculos}
           onClose={() => setChecklistsIbc(null)}
         />
+      ) : null}
+      {inspecaoIbc ? (
+        <IbcInspecaoDialog key={inspecaoIbc.id} ibc={inspecaoIbc} onClose={() => setInspecaoIbc(null)} />
+      ) : null}
+      {inspecoesIbc ? (
+        <IbcInspecoesDrawer ibc={inspecoesIbc} onClose={() => setInspecoesIbc(null)} />
       ) : null}
     </DefaultLayout>
   );

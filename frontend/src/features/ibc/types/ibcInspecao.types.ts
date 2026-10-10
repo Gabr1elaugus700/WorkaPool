@@ -19,6 +19,30 @@ export type IbcInspecaoAvisoDTO = {
   numPed: string;
 };
 
+export type IbcInspecaoRespostaDTO = {
+  checklistItemId: string;
+  descricao: string;
+  critico: boolean;
+  nota: number;
+};
+
+export type IbcInspecaoLimitesDTO = {
+  notaMinimaCritico: number;
+  mediaMinima: number;
+};
+
+export type IbcInspecaoHistoricoDTO = IbcInspecaoLimitesDTO & {
+  id: string;
+  checklistModeloId: string;
+  checklistNome: string;
+  resultado: IbcInspecaoResultado;
+  mediaObtida: number | null;
+  inspetor: { id: string; nome: string };
+  inspecionadoEm: string;
+  observacao: string | null;
+  respostas: IbcInspecaoRespostaDTO[];
+};
+
 export type RegistrarIbcInspecaoResultDTO = {
   inspecao: IbcInspecaoDTO;
   ibc: Pick<IbcCadastroDTO, "aptidao" | "motivoInaptidao" | "primeiraInspecaoEm">;

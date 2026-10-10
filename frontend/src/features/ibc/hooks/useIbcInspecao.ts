@@ -15,6 +15,16 @@ export function useIbcChecklistDetalhe(checklistId: string | null) {
   });
 }
 
+const IBC_INSPECOES_KEY = ["ibc", "inspecoes"] as const;
+
+export function useIbcInspecoes(ibcId: string | null) {
+  return useQuery({
+    queryKey: [...IBC_INSPECOES_KEY, ibcId],
+    queryFn: () => ibcInspecaoService.listar(ibcId ?? ""),
+    enabled: ibcId != null,
+  });
+}
+
 export function useRegistrarIbcInspecao() {
   const queryClient = useQueryClient();
 
@@ -37,6 +47,7 @@ export function useRegistrarIbcInspecao() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["ibc", "pool"] }),
         queryClient.invalidateQueries({ queryKey: ["ibc", "alerts"] }),
+        queryClient.invalidateQueries({ queryKey: IBC_INSPECOES_KEY }),
       ]);
     },
     onError: (err) => {
