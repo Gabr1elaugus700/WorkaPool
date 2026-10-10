@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { IbcCadastroDTO } from "../types/ibcCadastro.types";
 import { ibcCadastroLabels } from "../utils/ibcCadastroLabels";
+import { podeInspecionarIbc } from "../utils/ibcInspecao.utils";
 import {
   isIbcNaoHomologado,
   isIbcSubstituido,
@@ -83,7 +84,7 @@ export default function CadastroIbcPoolList({
               </div>
             </div>
             <div className="flex flex-wrap gap-1">
-              {!substituido && ibc.custodia !== "EM_VIAGEM" ? (
+              {podeInspecionarIbc(ibc) ? (
                 <Button type="button" variant="ghost" size="sm" onClick={() => onInspecionar(ibc)}>
                   Inspecionar
                 </Button>

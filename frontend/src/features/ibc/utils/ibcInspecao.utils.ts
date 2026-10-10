@@ -1,12 +1,17 @@
 import type { IbcChecklistDTO, IbcChecklistItemNoChecklistDTO } from "../types/ibcChecklist.types";
-import type { IbcAlocacaoAbertaDTO, IbcItemAbaixoDoMinimoDTO } from "../types/ibcCadastro.types";
+import type { IbcAlocacaoAbertaDTO, IbcCadastroDTO, IbcItemAbaixoDoMinimoDTO } from "../types/ibcCadastro.types";
 import type {
   IbcInspecaoLimitesDTO,
   IbcInspecaoRespostaDTO,
   RegistrarIbcInspecaoInput,
 } from "../types/ibcInspecao.types";
 import { formatNumber } from "@/utils/formatNumber";
-import { IBC_OBSERVACAO_MAX } from "./ibcMudanca.utils";
+import { IBC_OBSERVACAO_MAX, isIbcSubstituido } from "./ibcMudanca.utils";
+
+/** A API recusa inspeção de IBC Em viagem; substituído não é mais o ativo vigente. */
+export function podeInspecionarIbc(ibc: Pick<IbcCadastroDTO, "custodia" | "convertedToContainerId">): boolean {
+  return ibc.custodia !== "EM_VIAGEM" && !isIbcSubstituido(ibc);
+}
 
 export function listItensInspecao(checklist: IbcChecklistDTO): IbcChecklistItemNoChecklistDTO[] {
   return checklist.itens.filter((item) => item.ativo).sort((a, b) => a.ordem - b.ordem);

@@ -12,6 +12,12 @@ const motivoInaptidao = {
   INSPECAO_REPROVADA: "Inspeção reprovada",
 } as const satisfies Record<IbcMotivoInaptidao, string>;
 
+/** Motivos de alerta que bloqueiam o IBC e ganham destaque destrutivo. */
+export const IBC_ALERTA_MOTIVOS_DESTRUTIVOS: ReadonlySet<IbcAlertDTO["motivo"]> = new Set([
+  "DATA_LIMITE",
+  "INSPECAO_REPROVADA",
+]);
+
 /**
  * Rótulos PT-BR para aptidão, motivo de inaptidão e alertas do cadastro IBC.
  */

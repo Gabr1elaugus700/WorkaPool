@@ -11,6 +11,7 @@ import {
   listItensInspecao,
   notaMinimaDoItem,
   parseNotaInspecao,
+  podeInspecionarIbc,
 } from "./ibcInspecao.utils";
 
 function item(itemId: string, ordem: number, ativo = true): IbcChecklistItemNoChecklistDTO {
@@ -142,6 +143,17 @@ describe("formatItensAbaixoDoMinimo", () => {
 
   it("returns an empty string when nothing is below the minimum", () => {
     assert.equal(formatItensAbaixoDoMinimo([]), "");
+  });
+});
+
+describe("podeInspecionarIbc", () => {
+  it("allows an IBC in the yard that was not replaced", () => {
+    assert.equal(podeInspecionarIbc({ custodia: "PATIO", convertedToContainerId: null }), true);
+  });
+
+  it("blocks an IBC in transit or already replaced", () => {
+    assert.equal(podeInspecionarIbc({ custodia: "EM_VIAGEM", convertedToContainerId: null }), false);
+    assert.equal(podeInspecionarIbc({ custodia: "PATIO", convertedToContainerId: "ibc-novo" }), false);
   });
 });
 
