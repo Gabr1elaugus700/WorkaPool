@@ -8,9 +8,9 @@ Os checklists de IBC já são cadastráveis e vinculáveis a cada container (#35
 
 ## Goals
 
-- [ ] ALMOX/ADMIN registram inspeção de um checklist vinculado, com nota inteira 0–10 por item ativo, e obtêm APROVADA/REPROVADA pela regra híbrida do checklist.
-- [ ] Inspeção reprovada torna o IBC Inapto (`INSPECAO_REPROVADA`) e bloqueia alocação; aprovação em todos os checklists inspecionados devolve Apto.
-- [ ] Histórico de inspeções consultável com snapshot dos limites e dos itens; alerta `INSPECAO_REPROVADA` detalhado.
+- [x] ALMOX/ADMIN registram inspeção de um checklist vinculado, com nota inteira 0–10 por item ativo, e obtêm APROVADA/REPROVADA pela regra híbrida do checklist.
+- [x] Inspeção reprovada torna o IBC Inapto (`INSPECAO_REPROVADA`) e bloqueia alocação; aprovação em todos os checklists inspecionados devolve Apto.
+- [x] Histórico de inspeções consultável com snapshot dos limites e dos itens; alerta `INSPECAO_REPROVADA` detalhado.
 - [ ] Fluxo demoável na UI: inspecionar com "Checklist Soda", reprovar, ver alerta, reinspecionar, voltar a Apto.
 
 ## Out of Scope
@@ -157,14 +157,14 @@ Os checklists de IBC já são cadastráveis e vinculáveis a cada container (#35
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| IBCINSP-01 | P1: Modelo persistente (tabelas, enum, migration aditiva) | Execute (#302) | Implementing |
-| IBCINSP-02 | P1: Regra de avaliação `avaliarInspecaoIbc` | Execute (#302) | Implementing |
-| IBCINSP-03 | P1: Resolução de aptidão `resolverAptidaoIbc` | Execute (#303) | Implementing |
-| IBCINSP-04 | P1: Use-case `RegistrarIbcInspecao` + recusas | Execute (#303) | Implementing |
-| IBCINSP-05 | P1: `POST /api/ibc/:id/inspecoes` transacional | Execute (#304) | Pending |
-| IBCINSP-06 | P1: `GET /api/ibc/:id/inspecoes` com snapshots | Execute (#305) | Implementing |
-| IBCINSP-07 | P1: Alerta `INSPECAO_REPROVADA` | Execute (#305) | Implementing |
-| IBCINSP-08 | Documentação de domínio (`CONTEXT.md`; escala 0–10 já em #302) | Execute (#305) | Implementing |
+| IBCINSP-01 | P1: Modelo persistente (tabelas, enum, migration aditiva) | Execute (#302, PR #308) | Done |
+| IBCINSP-02 | P1: Regra de avaliação `avaliarInspecaoIbc` | Execute (#302, PR #308) | Done |
+| IBCINSP-03 | P1: Resolução de aptidão `resolverAptidaoIbc` | Execute (#303, PR #309) | Done |
+| IBCINSP-04 | P1: Use-case `RegistrarIbcInspecao` + recusas | Execute (#303, PR #309) | Done |
+| IBCINSP-05 | P1: `POST /api/ibc/:id/inspecoes` transacional | Execute (#304, PR #310) | Done |
+| IBCINSP-06 | P1: `GET /api/ibc/:id/inspecoes` com snapshots | Execute (#305, PR #311) | Done |
+| IBCINSP-07 | P1: Alerta `INSPECAO_REPROVADA` | Execute (#305, PR #311) | Done |
+| IBCINSP-08 | Documentação de domínio (`CONTEXT.md`; escala 0–10 já em #302) | Execute (#305, PR #311) | Done |
 | IBCINSP-09 | P2: Tela de inspeção no Controle do ativo | Execute (#306, botão em #307) | Verified |
 | IBCINSP-10 | P2: Histórico e alertas na UI | Execute (#307) | Verified |
 
@@ -175,4 +175,4 @@ Os checklists de IBC já são cadastráveis e vinculáveis a cada container (#35
 ## Success Criteria
 
 - [ ] Fluxo demoável: inspecionar IBC com "Checklist Soda" → reprovar → ver alerta → reinspecionar → Apto.
-- [ ] `npm test` e `npm run test:integration` verdes no backend; lint, testes e typecheck do frontend verdes.
+- [x] `npm test` e `npm run test:integration` verdes no backend; lint, testes e typecheck do frontend verdes. (2026-10-10, ponta `ddacec9`: backend 581/581 unit, integração verde exceto `OverviewCustomerSyncPipeline` pré-existente; frontend 278/278, lint sem erros, tsc ok.)
