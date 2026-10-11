@@ -1,6 +1,6 @@
 import type { UserRole } from "@/features/users/types/user.types";
 
-/** Espelha `ibcReadRoles` do backend: veem pool, alertas, histórico e inspeções (#313). */
+/** Espelha `ibcReadRoles` do backend: veem pool, alertas, histórico e inspeções. */
 export const IBC_CADASTRO_VIEW_ROLES: readonly UserRole[] = [
   "ADMIN",
   "ALMOX",

@@ -330,6 +330,24 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(update.status, 403);
   });
 
+  await t.test("GERENTE_DPTO não muta checklist-itens nem checklists", async () => {
+    const token = createToken("GERENTE_DPTO");
+    const mutations = [
+      { method: "post", path: "/checklist-itens", body: { descricao: "Tampa" } },
+      { method: "patch", path: "/checklist-itens/item-1", body: { ativo: false } },
+      { method: "post", path: "/checklists", body: { nome: "Checklist Soda" } },
+      { method: "patch", path: "/checklists/checklist-1", body: { ativo: false } },
+    ] as const;
+
+    for (const { method, path, body } of mutations) {
+      const response = await request(app)
+        [method](`/api/ibc${path}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send(body);
+      assert.strictEqual(response.status, 403, `${method.toUpperCase()} ${path}`);
+    }
+  });
+
   await t.test("GET /:id/checklists: 401 sem token, LOGISTICA e GERENTE_DPTO leem, VENDAS 403", async () => {
     const anonymous = await request(app).get("/api/ibc/ibc-1/checklists");
     const vendas = await request(app)
