@@ -1,9 +1,14 @@
+export type IbcMotivoInaptidao =
+  | "AGUARDANDO_INSPECAO"
+  | "DATA_LIMITE"
+  | "INSPECAO_REPROVADA";
+
 export type IbcCadastroDTO = {
   id: string;
   identificador: string;
   tipoCadastro: "NOVO" | "TROCA";
   aptidao: "APTO" | "INAPTO";
-  motivoInaptidao: "AGUARDANDO_INSPECAO" | "DATA_LIMITE" | null;
+  motivoInaptidao: IbcMotivoInaptidao | null;
   custodia: "PATIO" | "EM_VIAGEM";
   dataLimite: string | null;
   primeiraInspecaoEm: string | null;
@@ -38,9 +43,29 @@ export type ChangeIbcProdutoInput = IbcMudancaConfirmacaoInput & {
   produtoId: string;
 };
 
+export type IbcItemAbaixoDoMinimoDTO = {
+  descricao: string;
+  nota: number;
+  notaMinima: number;
+};
+
+export type IbcAlocacaoAbertaDTO = { codCar: number; numPed: string };
+
+export type IbcAlertDetalhesDTO = {
+  checklists: Array<{
+    checklistModeloId: string;
+    nome: string;
+    mediaObtida: number | null;
+    mediaMinima: number;
+    itensAbaixoDoMinimo: IbcItemAbaixoDoMinimoDTO[];
+  }>;
+  alocacao?: IbcAlocacaoAbertaDTO;
+};
+
 export type IbcAlertDTO = {
   identificador: string;
-  motivo: "AGUARDANDO_INSPECAO" | "DATA_LIMITE" | "SEM_INSPECAO";
+  motivo: IbcMotivoInaptidao | "SEM_INSPECAO";
+  detalhes?: IbcAlertDetalhesDTO;
 };
 
 export type CreateNovoIbcInput = {

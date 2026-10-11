@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Role } from "@prisma/client";
-import { AppError } from "../../../../utils/AppError";
 import { respondAppError } from "./IbcController";
+import { actor, invalidBody } from "./ibcControllerHelpers";
 import { IbcChecklistHttpSchemas } from "../schemas/IbcChecklistSchema";
 import { IbcChecklistItemRepository } from "../../repositories/IbcChecklistItemRepository";
 import { ListIbcChecklistItensUseCase } from "../../useCases/ListIbcChecklistItens.use-case";
@@ -18,19 +18,8 @@ import { ListIbcChecklistVinculosUseCase } from "../../useCases/ListIbcChecklist
 import { VincularIbcChecklistUseCase } from "../../useCases/VincularIbcChecklist.use-case";
 import { DesvincularIbcChecklistUseCase } from "../../useCases/DesvincularIbcChecklist.use-case";
 
-function actor(req: Request): { actorRole: Role; actorId: string } {
-  if (!req.user) {
-    throw new AppError({ message: "Usuário não autenticado", statusCode: 401, code: "IBC_ACTOR_REQUIRED" });
-  }
-  return { actorRole: req.user.role, actorId: req.user.id };
-}
-
 function actorRole(req: Request): Role {
   return actor(req).actorRole;
-}
-
-function invalidBody(code: string, details: unknown): AppError {
-  return new AppError({ message: "Dados inválidos", statusCode: 400, code, details });
 }
 
 export class IbcChecklistController {

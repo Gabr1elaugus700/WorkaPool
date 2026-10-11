@@ -10,6 +10,7 @@ import {
   IbcCadastroRecord,
   IbcConversionHistoryRecord,
   IbcLoteRecord,
+  IbcMotivoInaptidao,
   IbcStructuralChangeType,
 } from "../types/IbcCadastro.types";
 import {
@@ -24,7 +25,7 @@ type IbcRow = {
   sequencial?: number | null;
   tipoCadastro: "NOVO" | "TROCA";
   aptidao: "APTO" | "INAPTO";
-  motivoInaptidao: "AGUARDANDO_INSPECAO" | "DATA_LIMITE" | null;
+  motivoInaptidao: IbcMotivoInaptidao | null;
   custodia: "PATIO" | "EM_VIAGEM";
   dataLimite: Date | null;
   primeiraInspecaoEm: Date | null;
