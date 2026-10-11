@@ -125,7 +125,7 @@ A Pedido with a 251001 line where VOLUME_EMBALAGEM ≤ 0 or the division is not 
 _Avoid_: dropping the bad line and summing the rest, failing the whole Carga
 
 **Foto de pedidos IBC (CargaPedidoIbc)**:
-Frozen record, one row per Pedido with the 251001 signal (valid or **Pedido IBC inválido**), written in the **same transaction** as Fechar Carga from the pedidos that close already reads from Sapiens. Stores `numPed`, `codCli`, `cliente`, quantidade esperada (total, venda, empréstimo) and `ibcInvalido` (quantities 0). Unique per Carga + Pedido. Pedidos without 251001 are not recorded; a Carga without IBC has no foto. No backfill for cargas closed before the table existed.
+Frozen record, one row per Pedido with the 251001 signal (valid or **Pedido IBC inválido**), written in the **same transaction** as Fechar Carga from the pedidos that close already reads from Sapiens. Stores `numPed`, `codCli`, `cliente`, quantidade esperada (total, venda, empréstimo), `ibcInvalido` (quantities 0) and `posCar` (delivery order of the Pedido in the Carga, from Sapiens `usu_poscar`; null when Sapiens has none and in fotos recorded before the column existed — used by the Relatório de Viagem to order clients). Unique per Carga + Pedido. Pedidos without 251001 are not recorded; a Carga without IBC has no foto. No backfill for cargas closed before the table existed.
 _Avoid_: re-reading Sapiens after close to decide IBC eligibility (sitped changes on invoicing), blocking Fechar Carga because of a Pedido IBC inválido, one row per item line
 
 **Quantidade realizada de IBC**:

@@ -20,6 +20,7 @@ export function buildCargaPedidoIbcSnapshot(
       quantidadeEsperadaVenda: pedido.quantidadeEsperadaVenda,
       quantidadeEsperadaEmprestimo: pedido.quantidadeEsperadaEmprestimo,
       ibcInvalido: pedido.ibcInvalido,
+      posCar: pedido.poscar ?? null,
     });
   }
 

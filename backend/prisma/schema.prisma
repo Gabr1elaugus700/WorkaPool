@@ -245,6 +245,7 @@ model CargaPedidoIbc {
   quantidadeEsperadaVenda      Int
   quantidadeEsperadaEmprestimo Int
   ibcInvalido                  Boolean  @default(false)
+  posCar                       Int?
   createdAt                    DateTime @default(now())
 
   carga Cargas @relation(fields: [cargaId], references: [id])

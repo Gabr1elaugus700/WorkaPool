@@ -31,6 +31,7 @@ const buildPedidoIbc = (
   quantidadeEsperadaVenda: 2,
   quantidadeEsperadaEmprestimo: 1,
   ibcInvalido: false,
+  posCar: null,
   ...overrides,
 });
 
