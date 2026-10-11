@@ -186,49 +186,51 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(changeProduto.status, 401);
   });
 
-  await t.test("LOGISTICA não pode mutar cadastro", async () => {
-    const token = createToken("LOGISTICA");
-    const create = await request(app)
-      .post("/api/ibc")
-      .set("Authorization", `Bearer ${token}`)
-      .send({ dataLimite: "2099-12-31" });
-    const createLote = await request(app)
-      .post("/api/ibc/lote")
-      .set("Authorization", `Bearer ${token}`)
-      .send({ quantidade: 2, dataLimite: "2099-12-31" });
-    const patch = await request(app)
-      .patch("/api/ibc/ibc-1")
-      .set("Authorization", `Bearer ${token}`)
-      .send({ dataLimite: "2099-12-31" });
-    const softDelete = await request(app)
-      .delete("/api/ibc/ibc-1")
-      .set("Authorization", `Bearer ${token}`);
-    const createProduto = await request(app)
-      .post("/api/ibc/produtos")
-      .set("Authorization", `Bearer ${token}`)
-      .send({ nome: "Soda", abreviacao: "S" });
-    const updateProduto = await request(app)
-      .patch("/api/ibc/produtos/prod-1")
-      .set("Authorization", `Bearer ${token}`)
-      .send({ nome: "Soda A", abreviacao: "SA" });
-    const convertStatus = await request(app)
-      .patch("/api/ibc/ibc-1/converter-nao-homologado")
-      .set("Authorization", `Bearer ${token}`)
-      .send({ confirmado: true });
-    const changeProduto = await request(app)
-      .patch("/api/ibc/ibc-1/produto")
-      .set("Authorization", `Bearer ${token}`)
-      .send({ produtoId: "8d7f903e-f53d-4c62-80b2-48f3c9655d71", confirmado: true });
+  for (const role of ["LOGISTICA", "GERENTE_DPTO"] as const) {
+    await t.test(`${role} não pode mutar cadastro`, async () => {
+      const token = createToken(role);
+      const create = await request(app)
+        .post("/api/ibc")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ dataLimite: "2099-12-31" });
+      const createLote = await request(app)
+        .post("/api/ibc/lote")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ quantidade: 2, dataLimite: "2099-12-31" });
+      const patch = await request(app)
+        .patch("/api/ibc/ibc-1")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ dataLimite: "2099-12-31" });
+      const softDelete = await request(app)
+        .delete("/api/ibc/ibc-1")
+        .set("Authorization", `Bearer ${token}`);
+      const createProduto = await request(app)
+        .post("/api/ibc/produtos")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ nome: "Soda", abreviacao: "S" });
+      const updateProduto = await request(app)
+        .patch("/api/ibc/produtos/prod-1")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ nome: "Soda A", abreviacao: "SA" });
+      const convertStatus = await request(app)
+        .patch("/api/ibc/ibc-1/converter-nao-homologado")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ confirmado: true });
+      const changeProduto = await request(app)
+        .patch("/api/ibc/ibc-1/produto")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ produtoId: "8d7f903e-f53d-4c62-80b2-48f3c9655d71", confirmado: true });
 
-    assert.strictEqual(create.status, 403);
-    assert.strictEqual(createLote.status, 403);
-    assert.strictEqual(patch.status, 403);
-    assert.strictEqual(softDelete.status, 403);
-    assert.strictEqual(createProduto.status, 403);
-    assert.strictEqual(updateProduto.status, 403);
-    assert.strictEqual(convertStatus.status, 403);
-    assert.strictEqual(changeProduto.status, 403);
-  });
+      assert.strictEqual(create.status, 403);
+      assert.strictEqual(createLote.status, 403);
+      assert.strictEqual(patch.status, 403);
+      assert.strictEqual(softDelete.status, 403);
+      assert.strictEqual(createProduto.status, 403);
+      assert.strictEqual(updateProduto.status, 403);
+      assert.strictEqual(convertStatus.status, 403);
+      assert.strictEqual(changeProduto.status, 403);
+    });
+  }
 
   await t.test("GET /:id/historico sem token retorna 401 e VENDAS retorna 403", async () => {
     const anonymous = await request(app).get("/api/ibc/ibc-1/historico");
@@ -328,6 +330,24 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(update.status, 403);
   });
 
+  await t.test("GERENTE_DPTO não muta checklist-itens nem checklists", async () => {
+    const token = createToken("GERENTE_DPTO");
+    const mutations = [
+      { method: "post", path: "/checklist-itens", body: { descricao: "Tampa" } },
+      { method: "patch", path: "/checklist-itens/item-1", body: { ativo: false } },
+      { method: "post", path: "/checklists", body: { nome: "Checklist Soda" } },
+      { method: "patch", path: "/checklists/checklist-1", body: { ativo: false } },
+    ] as const;
+
+    for (const { method, path, body } of mutations) {
+      const response = await request(app)
+        [method](`/api/ibc${path}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send(body);
+      assert.strictEqual(response.status, 403, `${method.toUpperCase()} ${path}`);
+    }
+  });
+
   await t.test("GET /:id/checklists: 401 sem token, LOGISTICA e GERENTE_DPTO leem, VENDAS 403", async () => {
     const anonymous = await request(app).get("/api/ibc/ibc-1/checklists");
     const vendas = await request(app)
@@ -395,23 +415,16 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     assert.strictEqual(response.body.code, "IBC_INSPECAO_INVALID_BODY");
   });
 
-  await t.test("LOGISTICA pode ler pool, alerts e produtos", async () => {
-    const token = createToken("LOGISTICA");
-    const list = await request(app)
-      .get("/api/ibc")
-      .set("Authorization", `Bearer ${token}`);
-    const alerts = await request(app)
-      .get("/api/ibc/alerts")
-      .set("Authorization", `Bearer ${token}`);
-    const produtos = await request(app)
-      .get("/api/ibc/produtos")
-      .set("Authorization", `Bearer ${token}`);
-
-    assert.notStrictEqual(list.status, 401);
-    assert.notStrictEqual(list.status, 403);
-    assert.notStrictEqual(alerts.status, 401);
-    assert.notStrictEqual(alerts.status, 403);
-    assert.notStrictEqual(produtos.status, 401);
-    assert.notStrictEqual(produtos.status, 403);
-  });
+  for (const role of ["LOGISTICA", "GERENTE_DPTO"] as const) {
+    await t.test(`${role} pode ler pool, alerts, produtos, histórico e inspeções`, async () => {
+      const token = createToken(role);
+      for (const path of ["", "/alerts", "/produtos", "/ibc-1/historico", "/ibc-1/inspecoes"]) {
+        const response = await request(app)
+          .get(`/api/ibc${path}`)
+          .set("Authorization", `Bearer ${token}`);
+        assert.notStrictEqual(response.status, 401, path);
+        assert.notStrictEqual(response.status, 403, path);
+      }
+    });
+  }
 });

@@ -140,8 +140,9 @@ Os checklists de IBC já são cadastráveis e vinculáveis a cada container (#35
 
 1. WHEN o usuário abre "Inspeções" de um IBC THEN a UI SHALL listar as inspeções (mais recente primeiro) com checklist, resultado, média vs mínima, nota mínima do crítico, notas por item com crítico e abaixo do mínimo sinalizados, inspetor, data e observação.
 2. WHEN há alerta `INSPECAO_REPROVADA` THEN o painel de alertas SHALL mostrar identificador, checklist, itens abaixo do mínimo e a alocação (carga/pedido) quando houver.
+3. WHEN LOGISTICA ou GERENTE_DPTO abre o Cadastro IBC THEN a tela SHALL abrir em modo leitura (#313): alertas, pool, "Inspeções" e "Histórico" visíveis; sem "Novo IBC", produtos, Inspecionar, Converter, Mudar produto e Checklists. A escrita continua recusada no backend (403).
 
-**Independent Test**: Unit dos utils de apresentação; demo manual.
+**Independent Test**: Unit dos utils de apresentação e da permissão ver × escrever (`ibcCadastroPermissions`); demo manual.
 
 ---
 
@@ -166,7 +167,7 @@ Os checklists de IBC já são cadastráveis e vinculáveis a cada container (#35
 | IBCINSP-07 | P1: Alerta `INSPECAO_REPROVADA` | Execute (#305, PR #311) | Done |
 | IBCINSP-08 | Documentação de domínio (`CONTEXT.md`; escala 0–10 já em #302) | Execute (#305, PR #311) | Done |
 | IBCINSP-09 | P2: Tela de inspeção no Controle do ativo | Execute (#306, botão em #307) | Verified |
-| IBCINSP-10 | P2: Histórico e alertas na UI | Execute (#307) | Verified |
+| IBCINSP-10 | P2: Histórico e alertas na UI | Execute (#307; modo leitura LOGISTICA/GERENTE_DPTO em #313) | Verified |
 
 **Coverage:** 10 total, 10 mapped to slices, 0 unmapped
 

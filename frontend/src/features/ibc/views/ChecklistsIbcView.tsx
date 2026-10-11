@@ -7,12 +7,12 @@ import IbcChecklistItensSection from "../components/IbcChecklistItensSection";
 import IbcChecklistsSection from "../components/IbcChecklistsSection";
 import { useIbcChecklistItens } from "../hooks/useIbcChecklistItens";
 import { useIbcChecklists } from "../hooks/useIbcChecklists";
-import { canAccessIbcCadastro } from "../utils/canAccessIbcCadastro";
+import { canWriteIbcCadastro } from "../utils/ibcCadastroPermissions";
 import { toError } from "../utils/toError";
 
 export default function ChecklistsIbcView() {
   const { user } = useAuth();
-  const allowed = canAccessIbcCadastro(user?.role);
+  const allowed = canWriteIbcCadastro(user?.role);
   const itens = useIbcChecklistItens(allowed);
   const checklists = useIbcChecklists(allowed);
 

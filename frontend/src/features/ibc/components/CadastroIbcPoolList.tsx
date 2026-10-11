@@ -10,6 +10,7 @@ import {
 
 type Props = {
   items: IbcCadastroDTO[];
+  canWrite: boolean;
   actionsDisabled?: boolean;
   onConverter: (ibc: IbcCadastroDTO) => void;
   onMudarProduto: (ibc: IbcCadastroDTO) => void;
@@ -26,6 +27,7 @@ function formatDataLimite(value: string | null): string {
 
 export default function CadastroIbcPoolList({
   items,
+  canWrite,
   actionsDisabled = false,
   onConverter,
   onMudarProduto,
@@ -84,12 +86,12 @@ export default function CadastroIbcPoolList({
               </div>
             </div>
             <div className="flex flex-wrap gap-1">
-              {podeInspecionarIbc(ibc) ? (
+              {canWrite && podeInspecionarIbc(ibc) ? (
                 <Button type="button" variant="ghost" size="sm" onClick={() => onInspecionar(ibc)}>
                   Inspecionar
                 </Button>
               ) : null}
-              {!substituido && !isIbcNaoHomologado(ibc) ? (
+              {canWrite && !substituido && !isIbcNaoHomologado(ibc) ? (
                 <Button
                   type="button"
                   variant="ghost"
@@ -100,7 +102,7 @@ export default function CadastroIbcPoolList({
                   Converter p/ não homologado
                 </Button>
               ) : null}
-              {!substituido ? (
+              {canWrite && !substituido ? (
                 <Button
                   type="button"
                   variant="ghost"
@@ -111,7 +113,7 @@ export default function CadastroIbcPoolList({
                   Mudar produto
                 </Button>
               ) : null}
-              {!substituido ? (
+              {canWrite && !substituido ? (
                 <Button type="button" variant="ghost" size="sm" onClick={() => onGerenciarChecklists(ibc)}>
                   Checklists
                 </Button>

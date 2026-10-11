@@ -34,8 +34,17 @@ describe("navItems.utils", () => {
     ]);
   });
 
-  it("hides CRM from LOGISTICA", () => {
-    assert.deepEqual(labels("LOGISTICA", "main"), ["Cargas"]);
+  it("shows Cadastro IBC read-only to LOGISTICA, without CRM or IBC write items", () => {
+    assert.deepEqual(labels("LOGISTICA", "main"), ["Cargas", "Cadastro IBC"]);
+  });
+
+  it("shows Cadastro IBC read-only to GERENTE_DPTO, without IBC write items", () => {
+    assert.deepEqual(labels("GERENTE_DPTO", "main"), [
+      "CRM",
+      "Pedidos Perdidos",
+      "Cargas",
+      "Cadastro IBC",
+    ]);
   });
 
   it("hides role-restricted items when there is no role", () => {
