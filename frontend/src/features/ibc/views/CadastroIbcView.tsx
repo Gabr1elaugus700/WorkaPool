@@ -30,7 +30,10 @@ import type {
   CreateLoteIbcResultDTO,
   IbcCadastroDTO,
 } from "../types/ibcCadastro.types";
-import { canAccessIbcCadastro } from "../utils/canAccessIbcCadastro";
+import {
+  canViewIbcCadastro,
+  canWriteIbcCadastro,
+} from "../utils/ibcCadastroPermissions";
 import { toError } from "../utils/toError";
 
 const POOL_KEY = ["ibc", "pool"] as const;
@@ -39,7 +42,8 @@ const PRODUTOS_KEY = ["ibc", "produtos"] as const;
 
 export default function CadastroIbcView() {
   const { user } = useAuth();
-  const allowed = canAccessIbcCadastro(user?.role);
+  const allowed = canViewIbcCadastro(user?.role);
+  const canWrite = canWriteIbcCadastro(user?.role);
   const queryClient = useQueryClient();
   const [mode, setMode] = useState<CadastroIbcMode>("unitario");
   const [mudanca, setMudanca] = useState<{
@@ -67,7 +71,7 @@ export default function CadastroIbcView() {
   const produtosQuery = useQuery({
     queryKey: PRODUTOS_KEY,
     queryFn: ibcCadastroService.listProdutos,
-    enabled: allowed,
+    enabled: canWrite,
   });
 
   const invalidateLists = async () => {
@@ -143,99 +147,101 @@ export default function CadastroIbcView() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Cadastro IBC</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Novo IBC nasce Apto, com alerta Sem inspeção até a primeira
-            inspeção, e identificador HM + letra do produto. Lote de compra gera N unidades com a mesma data
-            limite. Conversão e mudança de produto criam um novo registro.
+            {canWrite
+              ? "Novo IBC nasce Apto, com alerta Sem inspeção até a primeira inspeção, e identificador HM + letra do produto. Lote de compra gera N unidades com a mesma data limite. Conversão e mudança de produto criam um novo registro."
+              : "Consulta do pool, dos alertas e do histórico de inspeções de IBC."}
           </p>
         </div>
 
-        <section className="rounded-lg border border-border bg-card p-4 shadow-sm sm:p-6">
-          <h2 className="mb-3 text-base font-semibold tracking-tight">
-            Novo IBC
-          </h2>
-          <div className="mb-3">
-            <CadastroProdutoModal
-              produtos={produtos}
-              disabled={submitting}
-              onCreate={async (input) => {
-                await createProdutoMutation.mutateAsync(input);
-              }}
-              onUpdate={async (id, input) => {
-                await updateProdutoMutation.mutateAsync({ id, ...input });
-              }}
-            />
-          </div>
-          <CadastroIbcModeSelector
-            mode={mode}
-            disabled={submitting}
-            onChange={setMode}
-          />
-          {!produtosQuery.isLoading && produtos.length === 0 ? (
-            <p className="mb-3 text-sm text-muted-foreground">
-              Cadastre ao menos um produto para liberar o cadastro de IBC.
-            </p>
-          ) : null}
-          {mode === "unitario" ? (
-            <CadastroIbcForm
-              submitting={createMutation.isPending}
-              produtos={produtos}
-              onSubmit={async ({ dataLimite, produtoId }) => {
-                await createMutation.mutateAsync({ dataLimite, produtoId });
-              }}
-            />
-          ) : (
-            <CadastroIbcLoteForm
-              submitting={createLoteMutation.isPending}
-              produtos={produtos}
-              onSubmit={async (input) => {
-                await createLoteMutation.mutateAsync(input);
-              }}
-            />
-          )}
-          {mode === "unitario" &&
-          createMutation.isSuccess &&
-          createMutation.data ? (
-            <div
-              role="status"
-              className="mt-4 flex items-start gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm"
-            >
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <p>
-                IBC cadastrado:{" "}
-                <span className="font-semibold text-foreground">
-                  {createMutation.data.identificador}
-                </span>
-              </p>
+        {canWrite ? (
+          <section className="rounded-lg border border-border bg-card p-4 shadow-sm sm:p-6">
+            <h2 className="mb-3 text-base font-semibold tracking-tight">
+              Novo IBC
+            </h2>
+            <div className="mb-3">
+              <CadastroProdutoModal
+                produtos={produtos}
+                disabled={submitting}
+                onCreate={async (input) => {
+                  await createProdutoMutation.mutateAsync(input);
+                }}
+                onUpdate={async (id, input) => {
+                  await updateProdutoMutation.mutateAsync({ id, ...input });
+                }}
+              />
             </div>
-          ) : null}
-          {mode === "lote" && createLoteMutation.isSuccess && loteResult ? (
-            <>
+            <CadastroIbcModeSelector
+              mode={mode}
+              disabled={submitting}
+              onChange={setMode}
+            />
+            {!produtosQuery.isLoading && produtos.length === 0 ? (
+              <p className="mb-3 text-sm text-muted-foreground">
+                Cadastre ao menos um produto para liberar o cadastro de IBC.
+              </p>
+            ) : null}
+            {mode === "unitario" ? (
+              <CadastroIbcForm
+                submitting={createMutation.isPending}
+                produtos={produtos}
+                onSubmit={async ({ dataLimite, produtoId }) => {
+                  await createMutation.mutateAsync({ dataLimite, produtoId });
+                }}
+              />
+            ) : (
+              <CadastroIbcLoteForm
+                submitting={createLoteMutation.isPending}
+                produtos={produtos}
+                onSubmit={async (input) => {
+                  await createLoteMutation.mutateAsync(input);
+                }}
+              />
+            )}
+            {mode === "unitario" &&
+            createMutation.isSuccess &&
+            createMutation.data ? (
               <div
                 role="status"
                 className="mt-4 flex items-start gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm"
               >
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <div>
-                  <p>
-                    Lote cadastrado:{" "}
-                    <span className="font-semibold text-foreground">
-                      {loteResult.items.length} IBCs
-                    </span>
-                    {loteResult.lote.numeroNf
-                      ? ` · NF ${loteResult.lote.numeroNf}`
-                      : null}
-                  </p>
-                  <p className="mt-1 text-muted-foreground">
-                    {loteResult.items.map((item) => item.identificador).join(", ")}
-                  </p>
-                </div>
+                <p>
+                  IBC cadastrado:{" "}
+                  <span className="font-semibold text-foreground">
+                    {createMutation.data.identificador}
+                  </span>
+                </p>
               </div>
-              {loteResult.warning ? (
-                <CadastroIbcLoteWarningBanner warning={loteResult.warning} />
-              ) : null}
-            </>
-          ) : null}
-        </section>
+            ) : null}
+            {mode === "lote" && createLoteMutation.isSuccess && loteResult ? (
+              <>
+                <div
+                  role="status"
+                  className="mt-4 flex items-start gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm"
+                >
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <div>
+                    <p>
+                      Lote cadastrado:{" "}
+                      <span className="font-semibold text-foreground">
+                        {loteResult.items.length} IBCs
+                      </span>
+                      {loteResult.lote.numeroNf
+                        ? ` · NF ${loteResult.lote.numeroNf}`
+                        : null}
+                    </p>
+                    <p className="mt-1 text-muted-foreground">
+                      {loteResult.items.map((item) => item.identificador).join(", ")}
+                    </p>
+                  </div>
+                </div>
+                {loteResult.warning ? (
+                  <CadastroIbcLoteWarningBanner warning={loteResult.warning} />
+                ) : null}
+              </>
+            ) : null}
+          </section>
+        ) : null}
 
         <section className="rounded-lg border border-border bg-muted/20 p-4 shadow-sm sm:p-6">
           <h2 className="mb-3 text-sm font-medium text-muted-foreground">
@@ -273,6 +279,7 @@ export default function CadastroIbcView() {
           ) : (
             <CadastroIbcPoolList
               items={poolQuery.data ?? []}
+              canWrite={canWrite}
               actionsDisabled={conversao.isPending}
               onConverter={(ibc) => setMudanca({ ibc, modo: "conversion" })}
               onMudarProduto={(ibc) => setMudanca({ ibc, modo: "product_change" })}
@@ -284,7 +291,7 @@ export default function CadastroIbcView() {
           )}
         </section>
       </div>
-      {mudanca ? (
+      {canWrite && mudanca ? (
         <ConfirmarMudancaIbcModal
           key={`${mudanca.ibc.id}-${mudanca.modo}`}
           ibc={mudanca.ibc}
@@ -319,14 +326,14 @@ export default function CadastroIbcView() {
           onClose={() => setHistoricoIbc(null)}
         />
       ) : null}
-      {checklistsIbc ? (
+      {canWrite && checklistsIbc ? (
         <IbcChecklistsVinculoDialog
           identificador={checklistsIbc.identificador}
           state={vinculos}
           onClose={() => setChecklistsIbc(null)}
         />
       ) : null}
-      {inspecaoIbc ? (
+      {canWrite && inspecaoIbc ? (
         <IbcInspecaoDialog key={inspecaoIbc.id} ibc={inspecaoIbc} onClose={() => setInspecaoIbc(null)} />
       ) : null}
       {inspecoesIbc ? (

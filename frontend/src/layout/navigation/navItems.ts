@@ -15,6 +15,10 @@ import {
   CRM_ACCESS_ROLES,
   CRM_PORTFOLIO_PATH,
 } from "@/features/overviewCustomer/utils/overviewCustomerRoutes.utils";
+import {
+  IBC_CADASTRO_VIEW_ROLES,
+  IBC_CADASTRO_WRITE_ROLES,
+} from "@/features/ibc/utils/ibcCadastroPermissions";
 
 export type NavItemGroup = "main" | "admin";
 
@@ -68,7 +72,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     to: "/cadastro-ibc",
     icon: Container,
     group: "main",
-    allowedRoles: ["ALMOX", "ADMIN"],
+    allowedRoles: IBC_CADASTRO_VIEW_ROLES,
     showOnMobile: true,
   },
   {
@@ -77,7 +81,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     to: "/checklists-ibc",
     icon: ClipboardCheck,
     group: "main",
-    allowedRoles: ["ALMOX", "ADMIN"],
+    allowedRoles: IBC_CADASTRO_WRITE_ROLES,
   },
   {
     label: "Expedição IBC",
