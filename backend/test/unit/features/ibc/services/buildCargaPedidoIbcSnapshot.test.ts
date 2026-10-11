@@ -128,4 +128,16 @@ describe("buildCargaPedidoIbcSnapshot (#295)", () => {
 
     assert.equal(snapshot[0]?.posCar, null);
   });
+
+  it("records posCar 0 from Sapiens as null (no delivery position) (#318)", () => {
+    const snapshot = buildCargaPedidoIbcSnapshot([
+      buildPedido("1010", {
+        isContainer: true,
+        quantidadeEsperadaTotal: 1,
+        poscar: 0,
+      }),
+    ]);
+
+    assert.equal(snapshot[0]?.posCar, null);
+  });
 });
