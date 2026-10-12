@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
+import ExportarRelatorioViagemButton from "../components/ExportarRelatorioViagemButton";
 import ExpedicaoIbcAsyncState from "../components/ExpedicaoIbcAsyncState";
 import ExpedicaoIbcPageHeader from "../components/ExpedicaoIbcPageHeader";
 import FecharExpedicaoButton from "../components/FecharExpedicaoButton";
@@ -147,6 +148,16 @@ export default function ExpedicaoIbcPreparacaoView() {
                     Voltar
                   </Link>
                 </Button>
+                {fromEmViagem || detalhe.temExpedicao ? (
+                  <ExportarRelatorioViagemButton
+                    codCar={detalhe.codCar}
+                    rotulo={
+                      fromEmViagem
+                        ? "Reimprimir relatório de viagem"
+                        : "Exportar viagem"
+                    }
+                  />
+                ) : null}
                 {fromEmViagem ? null : (
                   <FecharExpedicaoButton
                     podeFechar={detalhe.podeFecharExpedicao}

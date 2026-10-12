@@ -10,6 +10,7 @@ import type {
   FecharExpedicaoIbcResultDTO,
   ListCargasEmViagemResponseDTO,
   ListCargasExpedicaoResponseDTO,
+  RelatorioViagemDTO,
 } from "../types/ibcExpedicao.types";
 
 function normalizeListResponse(
@@ -56,6 +57,12 @@ export const ibcExpedicaoService = {
     await apiFetchJson(`/api/ibc/alocacoes/${encodeURIComponent(id)}`, {
       method: "DELETE",
     });
+  },
+
+  getRelatorioViagem: async (codCar: number): Promise<RelatorioViagemDTO> => {
+    return apiFetchJson<RelatorioViagemDTO>(
+      `/api/ibc/expedicoes/${encodeURIComponent(String(codCar))}/relatorio-viagem`,
+    );
   },
 
   fecharExpedicao: async (
