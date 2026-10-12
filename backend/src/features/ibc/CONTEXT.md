@@ -104,6 +104,10 @@ _Avoid_: item-level linking, assuming patio knows which # goes to which client, 
 IBC custody state after **ExpedicaoIbc** is closed and before delivery confirmation or return entry. The asset is on the truck, not in the yard and not yet confirmed at a Cliente. A carga is listed by `GET /api/ibc/expedicoes/em-viagem` (ALMOX/ADMIN) while it has `ExpedicaoIbc` and at least one allocated IBC still `custodia = EM_VIAGEM`, ordered by `fechadoEm` desc. Interim until Fechar Viagem (#38) replaces this with its own marker.
 _Avoid_: No Cliente, Em estoque / no pátio, Situação da Carga
 
+**Relatório de Viagem**:
+Paper the driver marks by hand after **ExpedicaoIbc**. `GET /api/ibc/expedicoes/:codCar/relatorio-viagem` (ADMIN/ALMOX) returns JSON only — the PDF is built in the browser and is not stored. Header: `codCar`, `fechadoEm`, `destino`, `placa` from `CargaDespacho`/`Trucks` when present, `totalIbcs`, `totalClientes`. One block per cliente, ordered by `comparePedidosOrdemEntrega` (lowest `posCar`; null `posCar` falls back to lowest `numPed`). Pedidos inside the client are by `numPed`, with quantidade and modalidade only (`Embalagem Inclusa (Venda)` / `Empréstimo`) — no products. Every client repeats the full IBC checklist of the carga, ordered by `identificador`. Missing carga → 404 `IBC_CARGA_NOT_FOUND`. No `ExpedicaoIbc` → 409 `IBC_EXPEDICAO_AUSENTE`. There is no MOTORISTA custody confirmation.
+_Avoid_: filtering the checklist by the client's pedidos, generating or storing the PDF on the server, a MOTORISTA screen to confirm custody
+
 **Custódia no Cliente**:
 Confirmed at unload per **Pedido**, not only per Cliente. Driver opens the Cliente stop, sees only Pedidos com IBC on that Carga (`CODIGO_EMBALAGEM = 251001`), and for each Pedido scans/registers the IBCs that remain there, then saves (e.g. 3 IBCs for Pedido 1120, then 2 for Pedido 1121). Non-IBC Pedidos for the same Cliente are hidden. Records IBC + date + Cliente + Pedido.
 _Avoid_: AlocacaoIbc, Em viagem, dumping all of a Cliente’s IBCs without Pedido split when multiple IBC Pedidos exist

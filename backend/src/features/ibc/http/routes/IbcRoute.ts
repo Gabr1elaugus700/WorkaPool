@@ -167,6 +167,13 @@ router.get(
   IbcController.listCargasEmViagem,
 );
 
+router.get(
+  "/expedicoes/:codCar/relatorio-viagem",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcController.getRelatorioViagem,
+);
+
 router.post(
   "/expedicoes",
   authMiddleware,

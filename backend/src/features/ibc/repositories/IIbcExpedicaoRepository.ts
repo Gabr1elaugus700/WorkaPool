@@ -25,6 +25,7 @@ export interface IIbcExpedicaoRepository {
   ): Promise<number>;
   listAlocacoesByCargaId(cargaId: string): Promise<AlocacaoIbcRecord[]>;
   findExpedicaoByCargaId(cargaId: string): Promise<ExpedicaoIbcRecord | null>;
+  findPlacaByCargaId(cargaId: string): Promise<string | null>;
   createAlocacao(data: CreateAlocacaoIbcData): Promise<AlocacaoIbcRecord>;
   deleteAlocacao(id: string): Promise<void>;
   fecharExpedicao(data: FecharExpedicaoIbcData): Promise<ExpedicaoIbcRecord>;
