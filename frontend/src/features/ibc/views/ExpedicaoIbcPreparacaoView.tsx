@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
@@ -26,9 +26,12 @@ function parseCodCar(raw: string | undefined): number | null {
 
 /**
  * Preparação de expedição em carga FECHADA: vincular/desvincular IBC e fechar (#59/#60).
+ * Vinda de /expedicao-ibc/em-viagem, a mesma tela fica só leitura (#320).
  */
 export default function ExpedicaoIbcPreparacaoView() {
   const { codCar: codCarParam } = useParams<{ codCar: string }>();
+  const [searchParams] = useSearchParams();
+  const fromEmViagem = searchParams.get("origem") === "em-viagem";
   const codCar = parseCodCar(codCarParam);
   const { user } = useAuth();
   const allowed = canAccessExpedicaoIbc(user?.role);
@@ -125,22 +128,34 @@ export default function ExpedicaoIbcPreparacaoView() {
         {detalhe ? (
           <>
             <ExpedicaoIbcPageHeader
-              title={`Preparação · Carga ${detalhe.codCar}`}
+              title={
+                fromEmViagem
+                  ? `Carga ${detalhe.codCar}`
+                  : `Preparação · Carga ${detalhe.codCar}`
+              }
             >
               <div className="flex flex-wrap items-center gap-2">
                 <Button asChild variant="outline" size="sm">
-                  <Link to="/expedicao-ibc">
+                  <Link
+                    to={
+                      fromEmViagem
+                        ? "/expedicao-ibc/em-viagem"
+                        : "/expedicao-ibc"
+                    }
+                  >
                     <ArrowLeft className="h-4 w-4" />
                     Voltar
                   </Link>
                 </Button>
-                <FecharExpedicaoButton
-                  podeFechar={detalhe.podeFecharExpedicao}
-                  loading={fechando}
-                  onFechar={() => {
-                    void handleFechar();
-                  }}
-                />
+                {fromEmViagem ? null : (
+                  <FecharExpedicaoButton
+                    podeFechar={detalhe.podeFecharExpedicao}
+                    loading={fechando}
+                    onFechar={() => {
+                      void handleFechar();
+                    }}
+                  />
+                )}
               </div>
             </ExpedicaoIbcPageHeader>
 
@@ -160,7 +175,11 @@ export default function ExpedicaoIbcPreparacaoView() {
                   esperado={detalhe.quantidadeEsperadaTotal}
                 />
               </div>
-              {detalhe.temExpedicao ? (
+              {fromEmViagem ? (
+                <Badge variant="secondary" className="text-[10px]">
+                  Em viagem
+                </Badge>
+              ) : detalhe.temExpedicao ? (
                 <Badge variant="outline" className="text-[10px]">
                   Expedição fechada
                 </Badge>
@@ -177,7 +196,7 @@ export default function ExpedicaoIbcPreparacaoView() {
                   <PedidoIbcPreparacaoCard
                     key={pedido.numPed}
                     pedido={pedido}
-                    mutationsLocked={detalhe.temExpedicao}
+                    mutationsLocked={detalhe.temExpedicao || fromEmViagem}
                     allocating={allocatingNumPed === pedido.numPed}
                     deallocatingId={deallocatingId}
                     onAllocate={(identificador) =>
