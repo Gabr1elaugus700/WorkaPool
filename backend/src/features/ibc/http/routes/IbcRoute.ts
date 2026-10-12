@@ -160,6 +160,13 @@ router.delete(
   IbcController.removeAlocacao,
 );
 
+router.get(
+  "/expedicoes/em-viagem",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcController.listCargasEmViagem,
+);
+
 router.post(
   "/expedicoes",
   authMiddleware,
