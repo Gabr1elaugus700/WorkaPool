@@ -16,11 +16,13 @@ const COD_CAR_VALIDOS = 295001;
 const COD_CAR_INVALIDO = 295002;
 const COD_CAR_SEM_IBC = 295003;
 const COD_CAR_ROLLBACK = 295004;
+const COD_CAR_POSCAR = 295005;
 const FIXTURE_COD_CARS = [
   COD_CAR_VALIDOS,
   COD_CAR_INVALIDO,
   COD_CAR_SEM_IBC,
   COD_CAR_ROLLBACK,
+  COD_CAR_POSCAR,
 ];
 
 const prisma = new PrismaClient();
@@ -244,6 +246,30 @@ describe("Fechar Carga grava a foto de pedidos IBC (#295)", () => {
     assert.equal(item.quantidadeEsperadaTotal, 0);
     assert.equal(item.quantidadeEsperadaVenda, 0);
     assert.equal(item.quantidadeEsperadaEmprestimo, 0);
+  });
+
+  it("records the Sapiens posCar of each pedido IBC, null when absent (#318)", async () => {
+    const fixture = await createOpenCargaFixture(COD_CAR_POSCAR, [
+      buildRow(COD_CAR_POSCAR, "29500501", {
+        ...ibcLine(1000, 1000, "N"),
+        POSCAR: 4,
+      }),
+      buildRow(COD_CAR_POSCAR, "29500502", {
+        ...ibcLine(1000, 1000, "N"),
+        POSCAR: null,
+      }),
+    ]);
+
+    await closeFixture(fixture);
+
+    const foto = await listFoto(fixture.cargaId);
+    assert.deepEqual(
+      foto.map((item) => ({ numPed: item.numPed, posCar: item.posCar })),
+      [
+        { numPed: "29500501", posCar: 4 },
+        { numPed: "29500502", posCar: null },
+      ],
+    );
   });
 
   it("closes a carga without IBC and records no foto", async () => {

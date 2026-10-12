@@ -142,10 +142,15 @@ export async function ensureIbcExpedicaoSchema(
       "quantidadeEsperadaVenda" INTEGER NOT NULL,
       "quantidadeEsperadaEmprestimo" INTEGER NOT NULL,
       "ibcInvalido" BOOLEAN NOT NULL DEFAULT false,
+      "posCar" INTEGER,
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       CONSTRAINT "CargaPedidoIbc_pkey" PRIMARY KEY ("id")
     )
   `);
+
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "CargaPedidoIbc" ADD COLUMN IF NOT EXISTS "posCar" INTEGER`,
+  );
 
   await prisma.$executeRawUnsafe(
     `CREATE INDEX IF NOT EXISTS "CargaPedidoIbc_cargaId_idx" ON "CargaPedidoIbc"("cargaId")`,

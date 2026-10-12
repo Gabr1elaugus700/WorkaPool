@@ -46,6 +46,8 @@ export type CargaPedidoIbcSnapshot = {
   quantidadeEsperadaVenda: number;
   quantidadeEsperadaEmprestimo: number;
   ibcInvalido: boolean;
+  /** Ordem de entrega na Carga (Sapiens `usu_poscar`); null quando o Sapiens não tem posição (nulo ou 0) e em fotos gravadas antes da coluna existir. */
+  posCar: number | null;
 };
 
 /** Carga FECHADA com foto de pedidos IBC e sem ExpedicaoIbc, com alocações já carregadas. */

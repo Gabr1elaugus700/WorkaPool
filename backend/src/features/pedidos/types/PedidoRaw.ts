@@ -20,7 +20,7 @@ export type PedidoRaw = {
   DERIVACAO: string;
   QUANTIDADE: number;
   CODCAR: number;
-  POSCAR: number;
+  POSCAR: number | null;
   SITCAR: string;
   QTD_ORI_PED: number;
   /** der.usu_codemb — 251001 = linha container IBC */

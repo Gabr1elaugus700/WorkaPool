@@ -88,7 +88,7 @@ export const QUERY_GET_PEDIDOS_BY_CARGA = `
       ,der.usu_qtdmve      AS [VOLUME_EMBALAGEM]
       ,ipd.usu_embinc      AS [INCLUSO]
       ,ped.usu_codcar      AS [CODCAR]
-      ,ped.usu_poscar      AS [POSCAR]
+      ,CAST(ped.usu_poscar AS INT) AS [POSCAR]
       ,ped.usu_sitcar      AS [SITCAR]
       ,ped.qtdori AS [QTD_ORI_PED]
   FROM e120ped ped

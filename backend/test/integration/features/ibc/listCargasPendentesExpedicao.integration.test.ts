@@ -57,7 +57,11 @@ async function createCarga(
   return id;
 }
 
-async function createFoto(cargaId: string, numPed: string): Promise<void> {
+async function createFoto(
+  cargaId: string,
+  numPed: string,
+  posCar?: number,
+): Promise<void> {
   await prisma.cargaPedidoIbc.create({
     data: {
       cargaId,
@@ -67,6 +71,7 @@ async function createFoto(cargaId: string, numPed: string): Promise<void> {
       quantidadeEsperadaTotal: 2,
       quantidadeEsperadaVenda: 1,
       quantidadeEsperadaEmprestimo: 1,
+      posCar,
     },
   });
 }
@@ -148,7 +153,7 @@ describe("IbcExpedicaoRepository.listCargasPendentesExpedicao (#296)", () => {
   it("listPedidosIbcByCargaId devolve só a foto da carga, ordenada por numPed (#297)", async () => {
     const cargaId = await createCarga(COD_CAR_PENDENTE, "FECHADA");
     await createFoto(cargaId, "1121");
-    await createFoto(cargaId, "1120");
+    await createFoto(cargaId, "1120", 2);
     const outraId = await createCarga(COD_CAR_ABERTA, "FECHADA");
     await createFoto(outraId, "2220");
 
@@ -168,6 +173,8 @@ describe("IbcExpedicaoRepository.listCargasPendentesExpedicao (#296)", () => {
       quantidadeEsperadaVenda: 1,
       quantidadeEsperadaEmprestimo: 1,
       ibcInvalido: false,
+      posCar: 2,
     });
+    assert.equal(pedidos[1].posCar, null);
   });
 });

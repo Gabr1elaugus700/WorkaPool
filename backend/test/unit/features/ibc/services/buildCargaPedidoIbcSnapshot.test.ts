@@ -42,6 +42,7 @@ describe("buildCargaPedidoIbcSnapshot (#295)", () => {
         quantidadeEsperadaVenda: 3,
         quantidadeEsperadaEmprestimo: 2,
         ibcInvalido: false,
+        posCar: null,
       },
     ]);
   });
@@ -60,6 +61,7 @@ describe("buildCargaPedidoIbcSnapshot (#295)", () => {
         quantidadeEsperadaVenda: 0,
         quantidadeEsperadaEmprestimo: 0,
         ibcInvalido: true,
+        posCar: null,
       },
     ]);
   });
@@ -101,5 +103,41 @@ describe("buildCargaPedidoIbcSnapshot (#295)", () => {
     ]);
 
     assert.equal(snapshot[0]?.codCli, null);
+  });
+
+  it("records posCar from the Sapiens delivery order (#318)", () => {
+    const snapshot = buildCargaPedidoIbcSnapshot([
+      buildPedido("1008", {
+        isContainer: true,
+        quantidadeEsperadaTotal: 1,
+        poscar: 3,
+      }),
+    ]);
+
+    assert.equal(snapshot[0]?.posCar, 3);
+  });
+
+  it("keeps posCar null when Sapiens does not provide it (#318)", () => {
+    const snapshot = buildCargaPedidoIbcSnapshot([
+      buildPedido("1009", {
+        isContainer: true,
+        quantidadeEsperadaTotal: 1,
+        poscar: null,
+      }),
+    ]);
+
+    assert.equal(snapshot[0]?.posCar, null);
+  });
+
+  it("records posCar 0 from Sapiens as null (no delivery position) (#318)", () => {
+    const snapshot = buildCargaPedidoIbcSnapshot([
+      buildPedido("1010", {
+        isContainer: true,
+        quantidadeEsperadaTotal: 1,
+        poscar: 0,
+      }),
+    ]);
+
+    assert.equal(snapshot[0]?.posCar, null);
   });
 });

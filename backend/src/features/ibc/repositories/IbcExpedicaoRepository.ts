@@ -247,6 +247,7 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
       quantidadeEsperadaVenda: row.quantidadeEsperadaVenda,
       quantidadeEsperadaEmprestimo: row.quantidadeEsperadaEmprestimo,
       ibcInvalido: row.ibcInvalido,
+      posCar: row.posCar,
     };
   }
 
