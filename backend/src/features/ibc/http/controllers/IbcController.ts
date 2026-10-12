@@ -10,6 +10,7 @@ import { CreateAlocacaoIbcUseCase } from "../../useCases/CreateAlocacaoIbc.use-c
 import { RemoveAlocacaoIbcUseCase } from "../../useCases/RemoveAlocacaoIbc.use-case";
 import { FecharExpedicaoIbcUseCase } from "../../useCases/FecharExpedicaoIbc.use-case";
 import { ListCargasExpedicaoUseCase } from "../../useCases/ListCargasExpedicao.use-case";
+import { ListCargasEmViagemUseCase } from "../../useCases/ListCargasEmViagem.use-case";
 import { GetCargaExpedicaoDetailUseCase } from "../../useCases/GetCargaExpedicaoDetail.use-case";
 import { CreateNovoIbcUseCase } from "../../useCases/CreateNovoIbc.use-case";
 import { CreateLoteIbcUseCase } from "../../useCases/CreateLoteIbc.use-case";
@@ -215,6 +216,19 @@ export class IbcController {
       return res.status(200).json(result);
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao listar cargas de expedição IBC");
+    }
+  }
+
+  static async listCargasEmViagem(
+    _req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const useCase = new ListCargasEmViagemUseCase();
+      const result = await useCase.execute();
+      return res.status(200).json(result);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao listar cargas IBC em viagem");
     }
   }
 

@@ -72,6 +72,41 @@ test("IBC Routes - autenticação e autorização", async (t) => {
   );
 
   await t.test(
+    "GET /expedicoes/em-viagem sem token deve retornar 401",
+    async () => {
+      const response = await request(app).get("/api/ibc/expedicoes/em-viagem");
+      assert.strictEqual(response.status, 401);
+    },
+  );
+
+  for (const role of ["USER", "VENDAS", "LOGISTICA", "GERENTE_DPTO"] as const) {
+    await t.test(
+      `GET /expedicoes/em-viagem com role ${role} deve retornar 403`,
+      async () => {
+        const token = createToken(role);
+        const response = await request(app)
+          .get("/api/ibc/expedicoes/em-viagem")
+          .set("Authorization", `Bearer ${token}`);
+        assert.strictEqual(response.status, 403);
+      },
+    );
+  }
+
+  for (const role of ["ALMOX", "ADMIN"] as const) {
+    await t.test(
+      `GET /expedicoes/em-viagem com role ${role} passa requireRoles (não 403)`,
+      async () => {
+        const token = createToken(role);
+        const response = await request(app)
+          .get("/api/ibc/expedicoes/em-viagem")
+          .set("Authorization", `Bearer ${token}`);
+        assert.notStrictEqual(response.status, 401);
+        assert.notStrictEqual(response.status, 403);
+      },
+    );
+  }
+
+  await t.test(
     "POST /expedicoes sem token deve retornar 401",
     async () => {
       const response = await request(app)

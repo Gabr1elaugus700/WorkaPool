@@ -101,7 +101,7 @@ ALMOX links Apto IBCs to pedidos on a Carga. Allowed only while cargo is **FECHA
 _Avoid_: item-level linking, assuming patio knows which # goes to which client, Custódia no Cliente, preparing on ABERTA cargo, re-reading pedidos from Sapiens after close
 
 **Em viagem**:
-IBC custody state after **ExpedicaoIbc** is closed and before delivery confirmation or return entry. The asset is on the truck, not in the yard and not yet confirmed at a Cliente.
+IBC custody state after **ExpedicaoIbc** is closed and before delivery confirmation or return entry. The asset is on the truck, not in the yard and not yet confirmed at a Cliente. A carga is listed by `GET /api/ibc/expedicoes/em-viagem` (ALMOX/ADMIN) while it has `ExpedicaoIbc` and at least one allocated IBC still `custodia = EM_VIAGEM`, ordered by `fechadoEm` desc. Interim until Fechar Viagem (#38) replaces this with its own marker.
 _Avoid_: No Cliente, Em estoque / no pátio, Situação da Carga
 
 **Custódia no Cliente**:
