@@ -2,13 +2,16 @@ import { CargaPedidoIbc, PrismaClient } from "@prisma/client";
 import prismaInstance from "../../../config/prisma";
 import { IIbcExpedicaoRepository } from "./IIbcExpedicaoRepository";
 import {
+  AlocacaoIbcEmViagemRecord,
   AlocacaoIbcRecord,
+  CargaEmViagem,
   CargaExpedicaoPendente,
   CargaExpedicaoRef,
   CargaPedidoIbcSnapshot,
   CreateAlocacaoIbcData,
   ExpedicaoIbcRecord,
   FecharExpedicaoIbcData,
+  IbcCustodiaValue,
   IbcRecord,
 } from "../types/IbcExpedicao.types";
 
@@ -59,6 +62,45 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
       ),
       alocacoes: carga.alocacoesIbc.map((row) => this.toAlocacaoRecord(row)),
     }));
+  }
+
+  async listCargasEmViagem(): Promise<CargaEmViagem[]> {
+    const cargas = await this.prisma.cargas.findMany({
+      where: {
+        expedicaoIbc: { isNot: null },
+        alocacoesIbc: { some: { ibc: { custodia: "EM_VIAGEM" } } },
+      },
+      include: {
+        expedicaoIbc: true,
+        pedidosIbc: true,
+        alocacoesIbc: {
+          include: { ibc: { select: { identificador: true, custodia: true } } },
+        },
+      },
+      orderBy: { expedicaoIbc: { fechadoEm: "desc" } },
+    });
+
+    return cargas.flatMap((carga) => {
+      const expedicao = carga.expedicaoIbc;
+      if (!expedicao) return [];
+      return [
+        {
+          ...this.toCargaRef(carga),
+          pedidosIbc: carga.pedidosIbc.map((pedido) =>
+            this.toPedidoIbcSnapshot(pedido),
+          ),
+          alocacoes: carga.alocacoesIbc.map((row) =>
+            this.toAlocacaoEmViagem(row),
+          ),
+          expedicao: {
+            id: expedicao.id,
+            cargaId: expedicao.cargaId,
+            fechadoPorId: expedicao.fechadoPorId,
+            fechadoEm: expedicao.fechadoEm,
+          },
+        },
+      ];
+    });
   }
 
   async listPedidosIbcByCargaId(
@@ -248,6 +290,15 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
       quantidadeEsperadaEmprestimo: row.quantidadeEsperadaEmprestimo,
       ibcInvalido: row.ibcInvalido,
       posCar: row.posCar,
+    };
+  }
+
+  private toAlocacaoEmViagem(row: AlocacaoRow & {
+    ibc: { identificador: string; custodia: IbcCustodiaValue };
+  }): AlocacaoIbcEmViagemRecord {
+    return {
+      ...this.toAlocacaoRecord(row),
+      custodia: row.ibc.custodia,
     };
   }
 

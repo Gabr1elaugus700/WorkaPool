@@ -69,3 +69,14 @@ export type FecharExpedicaoIbcData = {
   alocacaoIds: string[];
   ibcIds: string[];
 };
+
+export type AlocacaoIbcEmViagemRecord = AlocacaoIbcRecord & {
+  custodia: IbcCustodiaValue;
+};
+
+/** Carga com ExpedicaoIbc e ao menos um IBC ainda em EM_VIAGEM. */
+export type CargaEmViagem = CargaExpedicaoRef & {
+  pedidosIbc: CargaPedidoIbcSnapshot[];
+  alocacoes: AlocacaoIbcEmViagemRecord[];
+  expedicao: ExpedicaoIbcRecord;
+};
