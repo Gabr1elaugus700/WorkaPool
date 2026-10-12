@@ -2,6 +2,12 @@ import type { QueryClient } from "@tanstack/react-query";
 import type { IbcRealtimeNotification } from "../types/ibcExpedicao.types";
 
 export const IBC_CARGAS_EXPEDICAO_QUERY_KEY = ["ibc", "cargas-expedicao"] as const;
+export const IBC_CARGAS_EM_VIAGEM_QUERY_KEY = ["ibc", "cargas-em-viagem"] as const;
+
+const IBC_EXPEDICAO_LIST_QUERY_KEYS = [
+  IBC_CARGAS_EXPEDICAO_QUERY_KEY,
+  IBC_CARGAS_EM_VIAGEM_QUERY_KEY,
+] as const;
 const DEFAULT_DEBOUNCE_MS = 250;
 const DEFAULT_RECONNECT_DELAY_MS = 1000;
 
@@ -148,14 +154,14 @@ export function createIbcCargasQueryRefresher(queryClient: QueryClient): {
 } {
   return {
     invalidate: () => {
-      void queryClient.invalidateQueries({
-        queryKey: IBC_CARGAS_EXPEDICAO_QUERY_KEY,
-      });
+      for (const queryKey of IBC_EXPEDICAO_LIST_QUERY_KEYS) {
+        void queryClient.invalidateQueries({ queryKey });
+      }
     },
     refetch: () => {
-      void queryClient.refetchQueries({
-        queryKey: IBC_CARGAS_EXPEDICAO_QUERY_KEY,
-      });
+      for (const queryKey of IBC_EXPEDICAO_LIST_QUERY_KEYS) {
+        void queryClient.refetchQueries({ queryKey });
+      }
     },
   };
 }

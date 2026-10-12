@@ -78,6 +78,28 @@ export type FecharExpedicaoIbcResultDTO = {
   ibcsEmViagem?: number;
 };
 
+export type CargaEmViagemClienteDTO = {
+  cliente: string;
+  codCli: string | null;
+};
+
+/** GET /api/ibc/expedicoes/em-viagem */
+export type CargaEmViagemListItemDTO = {
+  codCar: number;
+  destino: string;
+  situacao: string;
+  previsaoSaida: string;
+  fechadoEm: string;
+  quantidadePedidos: number;
+  quantidadeIbcs: number;
+  quantidadeIbcsEmViagem: number;
+  clientes: CargaEmViagemClienteDTO[];
+};
+
+export type ListCargasEmViagemResponseDTO = {
+  cargas: CargaEmViagemListItemDTO[];
+};
+
 export type IbcRealtimeNotification = {
   event: "CARGA_FECHADA";
   cargaId: string;

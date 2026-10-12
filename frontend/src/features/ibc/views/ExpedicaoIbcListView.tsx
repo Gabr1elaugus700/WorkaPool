@@ -34,7 +34,7 @@ export default function ExpedicaoIbcListView() {
       loadingLabel="Carregando cargas de expedição…"
     >
       <DefaultLayout>
-        <ExpedicaoIbcPageHeader />
+        <ExpedicaoIbcPageHeader activeSection="aguardando" />
 
         <div className="rounded-lg bg-card p-4 shadow-md sm:p-6">
           <p className="mb-4 text-sm text-muted-foreground">

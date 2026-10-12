@@ -6,6 +6,7 @@ import {
   formatEstimatedDaysUntilNextPurchase,
   formatIsoDateLabel,
   formatIsoDateTimeLabel,
+  formatIsoDayMonthTimeLabel,
   formatPurchaseFrequencyDays,
 } from "./formatDate";
 
@@ -48,5 +49,13 @@ describe("formatDate", () => {
     );
     assert.equal(formatIsoDateTimeLabel(null), "Não informado");
     assert.equal(formatIsoDateTimeLabel("not-a-date"), "not-a-date");
+  });
+
+  it("formats iso timestamps as day, month and time", () => {
+    assert.equal(
+      formatIsoDayMonthTimeLabel("2026-10-03T15:00:00.000Z", "America/Sao_Paulo"),
+      "03/10 12:00",
+    );
+    assert.equal(formatIsoDayMonthTimeLabel(null), "Não informado");
   });
 });

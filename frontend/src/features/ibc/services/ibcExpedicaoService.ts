@@ -1,12 +1,14 @@
 import { getBaseUrl } from "@/lib/apiBase";
 import { apiFetchJson } from "@/lib/apiFetch";
 import type {
+  CargaEmViagemListItemDTO,
   CargaExpedicaoDetalheDTO,
   CargaExpedicaoListItemDTO,
   CreateAlocacaoIbcInput,
   CreateAlocacaoIbcResultDTO,
   FecharExpedicaoIbcInput,
   FecharExpedicaoIbcResultDTO,
+  ListCargasEmViagemResponseDTO,
   ListCargasExpedicaoResponseDTO,
 } from "../types/ibcExpedicao.types";
 
@@ -23,6 +25,14 @@ export const ibcExpedicaoService = {
       CargaExpedicaoListItemDTO[] | ListCargasExpedicaoResponseDTO
     >("/api/ibc/cargas-expedicao");
     return normalizeListResponse(data);
+  },
+
+  listCargasEmViagem: async (): Promise<CargaEmViagemListItemDTO[]> => {
+    const data = await apiFetchJson<
+      CargaEmViagemListItemDTO[] | ListCargasEmViagemResponseDTO
+    >("/api/ibc/expedicoes/em-viagem");
+    if (Array.isArray(data)) return data;
+    return data.cargas ?? [];
   },
 
   getCargaExpedicao: async (
