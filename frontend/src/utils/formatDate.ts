@@ -116,3 +116,25 @@ export function formatIsoDateTimeLabel(value: string | null, timeZone?: string):
     timeZone,
   }).format(new Date(parsed));
 }
+
+/** Data e hora curtas: dd/MM HH:mm. */
+export function formatIsoDayMonthTimeLabel(value: string | null, timeZone?: string): string {
+  if (!value) {
+    return "Não informado";
+  }
+
+  const parsed = Date.parse(value);
+  if (Number.isNaN(parsed)) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone,
+  })
+    .format(new Date(parsed))
+    .replace(",", "");
+}

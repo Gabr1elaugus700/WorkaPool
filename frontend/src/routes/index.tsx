@@ -8,6 +8,7 @@ import Clientes from "../pages/Clientes";
 import Pedidos from "../pages/Pedidos";
 import CargasPage from "../pages/CargasPage";
 import ExpedicaoIbcPage from "../pages/ExpedicaoIbcPage";
+import ExpedicaoIbcEmViagemPage from "../pages/ExpedicaoIbcEmViagemPage";
 import ExpedicaoIbcPreparacaoPage from "../pages/ExpedicaoIbcPreparacaoPage";
 import CadastroIbcPage from "../pages/CadastroIbcPage";
 import ChecklistsIbcView from "@/features/ibc/views/ChecklistsIbcView";
@@ -132,6 +133,14 @@ const AppRoutes = () => {
             element={
               <PrivateRoute>
                 <ExpedicaoIbcPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/expedicao-ibc/em-viagem"
+            element={
+              <PrivateRoute>
+                <ExpedicaoIbcEmViagemPage />
               </PrivateRoute>
             }
           />
