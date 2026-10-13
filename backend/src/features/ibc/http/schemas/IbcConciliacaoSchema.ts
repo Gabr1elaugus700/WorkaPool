@@ -4,6 +4,11 @@ const destino = z.enum(["FICOU", "RETORNOU", "TROCA"]);
 const modalidade = z.enum(["VENDA", "EMPRESTIMO"]);
 
 export const IbcConciliacaoHttpSchemas = {
+  troca: z.object({
+    alocacaoIbcId: z.string().uuid(),
+    produtoId: z.string().uuid(),
+    dataLimite: z.coerce.date(),
+  }),
   salvar: z.object({
     itens: z
       .array(z.object({

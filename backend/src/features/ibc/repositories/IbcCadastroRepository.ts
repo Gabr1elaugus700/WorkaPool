@@ -103,7 +103,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
               prefixo: data.prefixo,
               sequencial,
               tipoCadastro: data.tipoCadastro,
-              aquisicao: "COMPRA" as const,
+              aquisicao: data.aquisicao ?? "COMPRA",
               aptidao: data.aptidao,
               motivoInaptidao: data.motivoInaptidao,
               custodia: data.custodia,

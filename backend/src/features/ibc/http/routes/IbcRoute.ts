@@ -196,6 +196,13 @@ router.put(
 );
 
 router.post(
+  "/expedicoes/:codCar/conciliacao/trocas",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcConciliacaoController.registrarTroca,
+);
+
+router.post(
   "/expedicoes",
   authMiddleware,
   requireRoles(ibcWriteRoles),

@@ -41,9 +41,10 @@ export type CreateIbcLoteData = {
 
 export type CreateNovoIbcData = {
   prefixo: string;
-  tipoCadastro: "NOVO";
-  aptidao: "APTO";
-  motivoInaptidao: null;
+  tipoCadastro: "NOVO" | "TROCA";
+  aquisicao?: "COMPRA" | "TROCA";
+  aptidao: "APTO" | "INAPTO";
+  motivoInaptidao: IbcMotivoInaptidao | null;
   custodia: "PATIO";
   dataLimite: Date;
   primeiraInspecaoEm: null;
