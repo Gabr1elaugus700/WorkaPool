@@ -273,6 +273,7 @@ model ExpedicaoIbc {
   alocacoes        AlocacaoIbc[]
   conciliacoes     ConciliacaoViagemIbc[]
   retornosSemId    ConciliacaoRetornoSemId[]
+  avisosRepresentante AvisoRepresentanteIbc[]
 }
 
 /// Marca do checklist por IBC outbound, salva antes do Fechar Viagem.
@@ -306,6 +307,24 @@ model ConciliacaoRetornoSemId {
   lancadoPor           User         @relation("ConciliacaoRetornoSemIdLancadoPor", fields: [lancadoPorId], references: [id])
 
   @@unique([expedicaoIbcId, chaveCliente])
+}
+
+model AvisoRepresentanteIbc {
+  id             String    @id @default(uuid())
+  expedicaoIbcId String
+  codCar         Int
+  numPed         String
+  codCli         String?
+  cliente        String
+  codRep         Int
+  itens          Json
+  lidoEm         DateTime?
+  createdAt      DateTime  @default(now())
+
+  expedicao ExpedicaoIbc @relation(fields: [expedicaoIbcId], references: [id])
+
+  @@unique([expedicaoIbcId, numPed])
+  @@index([codRep, createdAt])
 }
 
 model CargaPedidoIbc {
