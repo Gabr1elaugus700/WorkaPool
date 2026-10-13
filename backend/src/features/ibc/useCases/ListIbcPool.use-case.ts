@@ -15,9 +15,10 @@ export class ListIbcPoolUseCase {
 
   async execute(input: ListIbcPoolInput = {}): Promise<IbcCadastroRecord[]> {
     const incluirBaixados = input.incluirBaixados === true;
-    const ibcs = incluirBaixados
+    const listed = incluirBaixados
       ? await this.repository.listIbcs({ incluirBaixados: true })
       : await this.repository.listActiveIbcs();
+    const ibcs = listed.filter((ibc) => ibc.custodia !== "ENTRADA");
 
     const now = new Date();
     const result: IbcCadastroRecord[] = [];
