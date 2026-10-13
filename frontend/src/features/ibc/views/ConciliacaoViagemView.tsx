@@ -7,6 +7,8 @@ import { useAuth } from "@/auth/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import ConciliacaoIbcLinha from "../components/ConciliacaoIbcLinha";
+import ConciliacaoRetornosPainel from "../components/ConciliacaoRetornosPainel";
+import ConciliacaoTrocaDialog from "../components/ConciliacaoTrocaDialog";
 import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
 import ExpedicaoIbcAsyncState from "../components/ExpedicaoIbcAsyncState";
 import ExpedicaoIbcPageHeader from "../components/ExpedicaoIbcPageHeader";
@@ -29,6 +31,7 @@ export default function ConciliacaoViagemView() {
   const [error, setError] = useState<Error | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [trocaId, setTrocaId] = useState<string | null>(null);
   const carregar = useCallback(async () => {
     if (codCar == null) {
       setError(new Error("Código de carga inválido."));
@@ -56,6 +59,8 @@ export default function ConciliacaoViagemView() {
   const fechada = viagem?.viagemFechadaEm != null;
   const marcados = viagem?.itens.filter((item) => item.destino != null).length ?? 0;
   const total = viagem?.itens.length ?? 0;
+  const papelCompleto = viagem?.clientes.every((cliente) => cliente.quantidadePapel != null) ?? false;
+  const trocaAberta = viagem?.itens.find((item) => item.alocacaoIbcId === trocaId) ?? null;
   const atualizar = (
     alocacaoIbcId: string,
     patch: (item: ConciliacaoViagemDTO["itens"][number]) => ConciliacaoViagemDTO["itens"][number],
@@ -77,6 +82,11 @@ export default function ConciliacaoViagemView() {
         alocacaoIbcId: item.alocacaoIbcId,
         destino: item.destino,
         modalidade: item.modalidade,
+      }]),
+      retornosSemId: viagem.clientes.flatMap((cliente) => cliente.quantidadePapel == null ? [] : [{
+        chaveCliente: cliente.chaveCliente,
+        quantidadePapel: cliente.quantidadePapel,
+        confirmouDivergencia: cliente.confirmouDivergencia,
       }]),
     });
     setViagem(salva);
@@ -139,15 +149,35 @@ export default function ConciliacaoViagemView() {
                     ...atual,
                     modalidade,
                   }))}
+                  onTroca={() => setTrocaId(item.alocacaoIbcId)}
                 />
               ))}
             </div>
+            <ConciliacaoRetornosPainel
+              clientes={viagem.clientes}
+              itens={viagem.itens}
+              disabled={fechada || salvando}
+              onChange={(chaveCliente, patch) => setViagem((atual) => atual && ({
+                ...atual,
+                clientes: atual.clientes.map((cliente) => cliente.chaveCliente === chaveCliente ? { ...cliente, ...patch } : cliente),
+              }))}
+            />
+            {trocaAberta && codCar != null ? (
+              <ConciliacaoTrocaDialog
+                codCar={codCar}
+                alocacaoIbcId={trocaAberta.alocacaoIbcId}
+                identificador={trocaAberta.identificador}
+                open
+                onOpenChange={(open) => { if (!open) setTrocaId(null); }}
+                onRegistrada={(ibcEntradaId) => atualizar(trocaAberta.alocacaoIbcId, (atual) => ({ ...atual, ibcEntradaId }))}
+              />
+            ) : null}
             {fechada ? null : (
               <div className="mt-6 flex flex-wrap gap-2">
                 <Button type="button" variant="outline" disabled={salvando} onClick={() => void executar(false)}>
                   Salvar andamento
                 </Button>
-                <Button type="button" disabled={salvando || marcados !== total || total === 0} onClick={() => void executar(true)}>
+                <Button type="button" disabled={salvando || marcados !== total || total === 0 || !papelCompleto} onClick={() => void executar(true)}>
                   Fechar viagem
                 </Button>
               </div>

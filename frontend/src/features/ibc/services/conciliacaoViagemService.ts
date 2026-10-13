@@ -1,6 +1,7 @@
 import { apiFetchJson } from "@/lib/apiFetch";
 import type {
   ConciliacaoViagemDTO,
+  RegistrarTrocaInput,
   SalvarConciliacaoInput,
 } from "../types/conciliacaoViagem.types";
 
@@ -16,4 +17,10 @@ export const conciliacaoViagemService = {
 
   fechar: (codCar: number): Promise<{ codCar: number; expedicaoIbcId: string; viagemFechadaEm: string }> =>
     apiFetchJson(`/api/ibc/expedicoes/${encodeURIComponent(String(codCar))}/fechar-viagem`, { method: "POST" }),
+
+  registrarTroca: (
+    codCar: number,
+    input: RegistrarTrocaInput,
+  ): Promise<{ alocacaoIbcId: string; ibcEntradaId: string; identificador: string }> =>
+    apiFetchJson(path(codCar, "/trocas"), { method: "POST", body: JSON.stringify(input) }),
 };
