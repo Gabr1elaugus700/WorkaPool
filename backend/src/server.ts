@@ -5,6 +5,7 @@ import { createOverviewCustomerSyncRuntime } from "./features/overviewCustomer/s
 import { createGrpproSyncRuntime } from "./features/grppro/sync/createGrpproSyncRuntime";
 import { OverviewCustomerSyncScheduler } from "./schedulers/overviewCustomerSync/OverviewCustomerSyncScheduler";
 import { GrpproSyncScheduler } from "./schedulers/grpproSync/GrpproSyncScheduler";
+import { AvisoRepresentanteConsumer } from "./features/ibc/realtime/AvisoRepresentanteConsumer";
 import { IbcEventConsumer } from "./features/ibc/realtime/IbcEventConsumer";
 
 console.log("🧪 DATABASE_URL carregado:", process.env.DATABASE_URL);
@@ -37,6 +38,13 @@ app.listen(PORT, "0.0.0.0", () => {
     void consumer.start().catch((error: unknown) => {
       console.error(
         "IBC event consumer indisponível:",
+        error instanceof Error ? error.message : error,
+      );
+    });
+    const avisoConsumer = new AvisoRepresentanteConsumer();
+    void avisoConsumer.start().catch((error: unknown) => {
+      console.error(
+        "Consumer de aviso ao representante indisponível:",
         error instanceof Error ? error.message : error,
       );
     });

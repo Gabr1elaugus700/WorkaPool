@@ -23,8 +23,36 @@ export type FiltroAvisosRepresentante =
 
 type Db = PrismaClient | Prisma.TransactionClient;
 
+export type ContextoAvisoRepresentante = {
+  pedidos: unknown;
+  vencimentoPorIbcId: ReadonlyMap<string, string | null>;
+};
+
+export type TransacaoAvisoRepresentante = {
+  carregarContexto(
+    expedicaoIbcId: string,
+    ibcIdsEmprestimo: readonly string[],
+  ): Promise<ContextoAvisoRepresentante | null>;
+  inserirAvisos(avisos: readonly NovoAvisoRepresentante[]): Promise<number>;
+  marcarProcessado(consumerName: string, eventId: string): Promise<void>;
+};
+
 export class AvisoRepresentanteRepository {
   constructor(private readonly prisma: PrismaClient = prismaInstance) {}
+
+  async executarEmTransacao<T>(
+    trabalho: (tx: TransacaoAvisoRepresentante) => Promise<T>,
+  ): Promise<T> {
+    return this.prisma.$transaction((db) =>
+      trabalho({
+        carregarContexto: (expedicaoIbcId, ibcIdsEmprestimo) =>
+          carregarContexto(db, expedicaoIbcId, ibcIdsEmprestimo),
+        inserirAvisos: (avisos) => this.inserirIdempotente(avisos, db),
+        marcarProcessado: (consumerName, eventId) =>
+          marcarAvisoProcessado(db, consumerName, eventId),
+      }),
+    );
+  }
 
   async inserirIdempotente(
     avisos: readonly NovoAvisoRepresentante[],
@@ -96,6 +124,49 @@ function parseItens(value: Prisma.JsonValue): ItemAvisoRepresentante[] {
       emprestimoVenceEm: item.emprestimoVenceEm,
     };
   });
+}
+
+async function carregarContexto(
+  db: Db,
+  expedicaoIbcId: string,
+  ibcIdsEmprestimo: readonly string[],
+): Promise<ContextoAvisoRepresentante | null> {
+  const expedicao = await db.expedicaoIbc.findUnique({
+    where: { id: expedicaoIbcId },
+    select: { cargaId: true },
+  });
+  if (!expedicao) return null;
+
+  const fechada = await db.cargasFechadas.findFirst({
+    where: { cargaId: expedicao.cargaId },
+    orderBy: { createdAt: "desc" },
+    select: { pedidos: true },
+  });
+
+  const vencimentoPorIbcId = new Map<string, string | null>();
+  if (ibcIdsEmprestimo.length > 0) {
+    const alocacoes = await db.alocacaoIbc.findMany({
+      where: { expedicaoIbcId, ibcId: { in: [...ibcIdsEmprestimo] } },
+      select: { ibcId: true, emprestimoVenceEm: true },
+    });
+    for (const alocacao of alocacoes) {
+      const iso = alocacao.emprestimoVenceEm?.toISOString() ?? null;
+      const atual = vencimentoPorIbcId.get(alocacao.ibcId);
+      if (atual === undefined || (atual === null && iso !== null)) {
+        vencimentoPorIbcId.set(alocacao.ibcId, iso);
+      }
+    }
+  }
+
+  return { pedidos: fechada?.pedidos ?? [], vencimentoPorIbcId };
+}
+
+async function marcarAvisoProcessado(
+  db: Db,
+  consumerName: string,
+  eventId: string,
+): Promise<void> {
+  await db.processedEvent.create({ data: { consumerName, eventId } });
 }
 
 function isItem(value: Prisma.JsonValue): value is Prisma.JsonObject & ItemAvisoRepresentante {
