@@ -15,7 +15,7 @@ export type IbcCadastroRecord = {
   tipoCadastro: IbcTipoCadastro;
   aptidao: "APTO" | "INAPTO";
   motivoInaptidao: IbcMotivoInaptidao | null;
-  custodia: "PATIO" | "EM_VIAGEM";
+  custodia: "PATIO" | "EM_VIAGEM" | "ENTRADA";
   dataLimite: Date | null;
   primeiraInspecaoEm: Date | null;
   baixadoEm: Date | null;
