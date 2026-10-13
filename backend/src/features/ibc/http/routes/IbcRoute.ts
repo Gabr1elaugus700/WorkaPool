@@ -188,6 +188,13 @@ router.get(
   IbcConciliacaoController.consultar,
 );
 
+router.put(
+  "/expedicoes/:codCar/conciliacao",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcConciliacaoController.salvar,
+);
+
 router.post(
   "/expedicoes",
   authMiddleware,
