@@ -8,6 +8,7 @@ import { IbcController } from "../controllers/IbcController";
 import { IbcChecklistController } from "../controllers/IbcChecklistController";
 import { IbcInspecaoController } from "../controllers/IbcInspecaoController";
 import { IbcEntradaPatioController } from "../controllers/IbcEntradaPatioController";
+import { IbcConciliacaoController } from "../controllers/IbcConciliacaoController";
 
 const router = Router();
 
@@ -178,6 +179,13 @@ router.get(
   authMiddleware,
   requireRoles(ibcWriteRoles),
   IbcController.getRelatorioViagem,
+);
+
+router.get(
+  "/expedicoes/:codCar/conciliacao",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcConciliacaoController.consultar,
 );
 
 router.post(
