@@ -1,7 +1,10 @@
 import type { Prisma } from "@prisma/client";
 import type {
   DecidirAberturaEntrada,
+  DecidirConclusaoEntrada,
   EntradaPatioAberta,
+  EntradaPatioConcluida,
+  EntradaPatioFilaItem,
 } from "../types/IbcEntradaPatio.types";
 
 export interface IIbcEntradaPatioRepository {
@@ -14,4 +17,13 @@ export interface IIbcEntradaPatioRepository {
     decidir: DecidirAberturaEntrada,
     db?: Prisma.TransactionClient,
   ): Promise<EntradaPatioAberta>;
+
+  listPendentes(): Promise<EntradaPatioFilaItem[]>;
+
+  /** Trava o IBC e conclui a entrada pendente. `db` participa da transação do chamador. */
+  concluir(
+    ibcId: string,
+    decidir: DecidirConclusaoEntrada,
+    db?: Prisma.TransactionClient,
+  ): Promise<EntradaPatioConcluida>;
 }
