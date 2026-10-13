@@ -122,14 +122,7 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
     if (!ibc) {
       return null;
     }
-    return {
-      id: ibc.id,
-      identificador: ibc.identificador,
-      aptidao: ibc.aptidao,
-      custodia: ibc.custodia,
-      dataLimite: ibc.dataLimite,
-      createdAt: ibc.createdAt,
-    };
+    return this.toIbcRecord(ibc);
   }
 
   async markIbcDataLimite(ibcId: string): Promise<IbcRecord> {
@@ -140,14 +133,7 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
         motivoInaptidao: "DATA_LIMITE",
       },
     });
-    return {
-      id: updated.id,
-      identificador: updated.identificador,
-      aptidao: updated.aptidao,
-      custodia: updated.custodia,
-      dataLimite: updated.dataLimite,
-      createdAt: updated.createdAt,
-    };
+    return this.toIbcRecord(updated);
   }
 
   async findAlocacaoByIbcId(
@@ -286,6 +272,26 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
       destino: carga.destino,
       situacao: carga.situacao,
       previsaoSaida: carga.previsaoSaida,
+    };
+  }
+
+  private toIbcRecord(ibc: {
+    id: string;
+    identificador: string;
+    aptidao: IbcRecord["aptidao"];
+    custodia: IbcRecord["custodia"];
+    dataLimite: Date | null;
+    createdAt: Date;
+    convertedToContainerId: string | null;
+  }): IbcRecord {
+    return {
+      id: ibc.id,
+      identificador: ibc.identificador,
+      aptidao: ibc.aptidao,
+      custodia: ibc.custodia,
+      dataLimite: ibc.dataLimite,
+      createdAt: ibc.createdAt,
+      convertedToContainerId: ibc.convertedToContainerId,
     };
   }
 

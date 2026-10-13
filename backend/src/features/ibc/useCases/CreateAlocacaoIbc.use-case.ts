@@ -1,4 +1,5 @@
 import { IIbcExpedicaoRepository } from "../repositories/IIbcExpedicaoRepository";
+import { assertIbcNotReplaced } from "../services/assertIbcNotReplaced";
 import { isPedidoIbcElegivel } from "../services/isPedidoIbcElegivel";
 import { AlocacaoIbcRecord } from "../types/IbcExpedicao.types";
 import { AppError } from "../../../utils/AppError";
@@ -85,6 +86,8 @@ export class CreateAlocacaoIbcUseCase {
         details: { identificador },
       });
     }
+
+    assertIbcNotReplaced(ibc, "IBC_SUBSTITUIDO");
 
     if (ibc.custodia === "EM_VIAGEM") {
       throw new AppError({

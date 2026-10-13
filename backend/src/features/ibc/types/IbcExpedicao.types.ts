@@ -9,6 +9,8 @@ export type IbcRecord = {
   custodia: IbcCustodiaValue;
   dataLimite: Date | null;
   createdAt: Date;
+  /** Preenchido quando este IBC já foi origem de conversão ou mudança de produto. */
+  convertedToContainerId: string | null;
 };
 
 export type AlocacaoIbcRecord = {

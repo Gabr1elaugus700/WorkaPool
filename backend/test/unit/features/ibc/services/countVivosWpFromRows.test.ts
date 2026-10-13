@@ -14,4 +14,18 @@ describe("countVivosWpFromRows (#117 vivos definition)", () => {
 
     assert.equal(count, 3);
   });
+
+  it("excludes a replaced IBC even when it was not given baixa", () => {
+    const count = countVivosWpFromRows([
+      { baixadoEm: null, custodia: "PATIO" },
+      { baixadoEm: null, custodia: "PATIO", convertedToContainerId: null },
+      {
+        baixadoEm: null,
+        custodia: "PATIO",
+        convertedToContainerId: "ibc-destino",
+      },
+    ]);
+
+    assert.equal(count, 2);
+  });
 });

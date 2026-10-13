@@ -32,8 +32,9 @@ export interface IIbcCadastroRepository {
   listActiveIbcs(): Promise<IbcCadastroRecord[]>;
   listIbcs(options: ListIbcsOptions): Promise<IbcCadastroRecord[]>;
   /**
-   * Vivos WP: baixadoEm IS NULL (pátio + em viagem + empréstimo/cliente).
-   * Fora: baixados / venda já baixada no pool.
+   * Vivos WP: `baixadoEm` nulo e `convertedToContainerId` nulo
+   * (pátio + em viagem + empréstimo/cliente, sem IBC substituído).
+   * Fora: baixados e origem de conversão ou mudança de produto.
    */
   countVivosWp(): Promise<number>;
   markDataLimite(ibcId: string): Promise<IbcCadastroRecord>;

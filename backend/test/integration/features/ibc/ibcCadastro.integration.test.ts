@@ -5,9 +5,12 @@ import express, { Express } from "express";
 import jwt from "jsonwebtoken";
 import { PrismaClient, Role } from "@prisma/client";
 import ibcRoutes from "../../../../src/features/ibc/http/routes/IbcRoute";
+import { IbcCadastroRepository } from "../../../../src/features/ibc/repositories/IbcCadastroRepository";
 import { ensureIbcCadastroSchema } from "../../../helpers/ensureIbcCadastroSchema";
 
 const FIXTURE_PREFIX = "test-ibc-91-";
+const REPLACED_CARGA_ID = "test-ibc-245-carga";
+const REPLACED_COD_CAR = 24501;
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 const FUTURE_DATA_LIMITE = "2099-12-31";
 
@@ -54,6 +57,7 @@ async function cleanupFixtures(): Promise<void> {
       SELECT i.id FROM "Ibc" i
       LEFT JOIN "IbcProduto" p ON p.id = i."produtoId"
       WHERE i."identificador" LIKE '${FIXTURE_PREFIX}%'
+         OR i."identificador" LIKE 'TCA%'
          OR p.nome LIKE '${FIXTURE_PREFIX}%'
     )
   `).catch(() => undefined);
@@ -76,6 +80,12 @@ async function cleanupFixtures(): Promise<void> {
       ],
     },
   });
+  await prisma.cargaPedidoIbc.deleteMany({
+    where: { cargaId: REPLACED_CARGA_ID },
+  }).catch(() => undefined);
+  await prisma.cargas.deleteMany({
+    where: { id: REPLACED_CARGA_ID },
+  }).catch(() => undefined);
   await prisma.ibcProduto.deleteMany({
     where: {
       OR: [
@@ -716,5 +726,105 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     );
     assert.ok(baixado);
     assert.ok(baixado.baixadoEm != null);
+  });
+
+  it("replaced IBC leaves active lists and allocation, and stays in history", async () => {
+    const app = createIbcTestApp();
+    const token = createToken(Role.ALMOX);
+    const target = await prisma.ibc.create({
+      data: {
+        identificador: "TCA0402",
+        aptidao: "APTO",
+        custodia: "PATIO",
+        tipoCadastro: "NOVO",
+        dataLimite: new Date("2099-12-31T00:00:00.000Z"),
+      },
+    });
+    const source = await prisma.ibc.create({
+      data: {
+        identificador: "TCA0401",
+        aptidao: "APTO",
+        custodia: "PATIO",
+        tipoCadastro: "NOVO",
+        dataLimite: new Date("2099-12-31T00:00:00.000Z"),
+      },
+    });
+    await prisma.ibc.update({
+      where: { id: source.id },
+      data: { convertedToContainerId: target.id },
+    });
+    await prisma.cargas.create({
+      data: {
+        id: REPLACED_CARGA_ID,
+        codCar: REPLACED_COD_CAR,
+        destino: "Blumenau",
+        pesoMax: 10000,
+        custoMin: 0,
+        situacao: "FECHADA",
+        previsaoSaida: new Date("2026-10-13T10:00:00.000Z"),
+      },
+    });
+    await prisma.cargaPedidoIbc.create({
+      data: {
+        cargaId: REPLACED_CARGA_ID,
+        numPed: "1120",
+        codCli: "C1",
+        cliente: "Cliente Teste",
+        quantidadeEsperadaTotal: 1,
+        quantidadeEsperadaVenda: 1,
+        quantidadeEsperadaEmprestimo: 0,
+      },
+    });
+
+    const pool = await request(app)
+      .get("/api/ibc")
+      .set("Authorization", `Bearer ${token}`);
+    assert.equal(pool.status, 200);
+    const poolIds = pool.body.map((row: { identificador: string }) => row.identificador);
+    assert.equal(poolIds.includes("TCA0401"), false);
+    assert.equal(poolIds.includes("TCA0402"), true);
+
+    const alerts = await request(app)
+      .get("/api/ibc/alerts")
+      .set("Authorization", `Bearer ${token}`);
+    assert.equal(alerts.status, 200);
+    assert.equal(
+      alerts.body.some((row: { identificador: string }) => row.identificador === "TCA0401"),
+      false,
+    );
+
+    const audit = await request(app)
+      .get("/api/ibc?incluirBaixados=true")
+      .set("Authorization", `Bearer ${token}`);
+    const listed = audit.body.find(
+      (row: { identificador: string }) => row.identificador === "TCA0401",
+    );
+    assert.equal(listed?.convertedToContainerId, target.id);
+    assert.equal(listed?.baixadoEm ?? null, null);
+
+    const notBaixado = await prisma.ibc.count({ where: { baixadoEm: null } });
+    const replaced = await prisma.ibc.count({
+      where: { baixadoEm: null, NOT: { convertedToContainerId: null } },
+    });
+    const vivos = await new IbcCadastroRepository(prisma).countVivosWp();
+    assert.equal(vivos, notBaixado - replaced);
+
+    const historico = await request(app)
+      .get(`/api/ibc/${source.id}/historico`)
+      .set("Authorization", `Bearer ${token}`);
+    assert.equal(historico.status, 200);
+    assert.ok(Array.isArray(historico.body));
+
+    const alocacao = await request(app)
+      .post("/api/ibc/alocacoes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        codCar: REPLACED_COD_CAR,
+        numPed: "1120",
+        identificador: "TCA0401",
+      });
+    assert.equal(alocacao.status, 409);
+    assert.equal(alocacao.body.code, "IBC_SUBSTITUIDO");
+    assert.equal(await prisma.alocacaoIbc.count({ where: { ibcId: source.id } }), 0);
   });
 });

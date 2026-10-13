@@ -42,6 +42,12 @@ const STRUCTURAL_CHANGE_TYPES: readonly IbcStructuralChangeType[] = [
   "status_change",
 ];
 
+/** Pool ativo: sem baixa e sem IBC substituído (origem de conversão/mudança). */
+const ACTIVE_IBC_WHERE = {
+  baixadoEm: null,
+  convertedToContainerId: null,
+} as const;
+
 function toStructuralChangeType(value: string): IbcStructuralChangeType {
   const match = STRUCTURAL_CHANGE_TYPES.find((type) => type === value);
   if (!match) {
@@ -214,16 +220,12 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
   }
 
   async listActiveIbcs(): Promise<IbcCadastroRecord[]> {
-    const rows = await this.prisma.ibc.findMany({
-      where: { baixadoEm: null },
-      orderBy: { identificador: "asc" },
-    });
-    return rows.map((row) => this.toRecord(row));
+    return this.listIbcs({ incluirBaixados: false });
   }
 
   async listIbcs(options: ListIbcsOptions): Promise<IbcCadastroRecord[]> {
     const rows = await this.prisma.ibc.findMany({
-      where: options.incluirBaixados ? undefined : { baixadoEm: null },
+      where: options.incluirBaixados ? undefined : ACTIVE_IBC_WHERE,
       orderBy: { identificador: "asc" },
     });
     return rows.map((row) => this.toRecord(row));
@@ -231,7 +233,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
 
   async countVivosWp(): Promise<number> {
     return this.prisma.ibc.count({
-      where: { baixadoEm: null },
+      where: ACTIVE_IBC_WHERE,
     });
   }
 

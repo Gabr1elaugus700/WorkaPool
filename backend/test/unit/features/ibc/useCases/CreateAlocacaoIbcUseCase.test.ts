@@ -47,6 +47,7 @@ const buildIbc = (overrides: Partial<IbcRecord> = {}): IbcRecord => ({
   custodia: "PATIO",
   dataLimite: new Date("2099-12-31T00:00:00.000Z"),
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
+  convertedToContainerId: null,
   ...overrides,
 });
 
@@ -409,6 +410,48 @@ describe("CreateAlocacaoIbcUseCase", () => {
       { code: "IBC_PEDIDO_NOT_FOUND", statusCode: 404 },
       "7777",
     );
+  });
+
+  it("rejeita alocação de IBC substituído com 409 IBC_SUBSTITUIDO", async () => {
+    const createAlocacao = mock.fn(async () => {
+      throw new Error("não deve criar");
+    });
+    const markIbcDataLimite = mock.fn(async () => buildIbc());
+    const repo = buildHappyRepo({
+      findIbcByIdentificador: mock.fn(async () =>
+        buildIbc({
+          identificador: "HMS00007",
+          convertedToContainerId: "ibc-destino",
+          custodia: "EM_VIAGEM",
+          dataLimite: new Date("2020-01-01T00:00:00.000Z"),
+        }),
+      ),
+      createAlocacao,
+      markIbcDataLimite,
+    });
+    const useCase = new CreateAlocacaoIbcUseCase(
+      repo as IIbcExpedicaoRepository,
+    );
+
+    await assert.rejects(
+      async () =>
+        useCase.execute({
+          codCar: COD_CAR,
+          numPed: "1120",
+          identificador: "HMS00007",
+          alocadoPorId: ALOCADO_POR_ID,
+        }),
+      (error: unknown) => {
+        assert.ok(error instanceof AppError);
+        assert.strictEqual(error.code, "IBC_SUBSTITUIDO");
+        assert.strictEqual(error.statusCode, 409);
+        const details = error.details as { convertedToContainerId?: string };
+        assert.strictEqual(details.convertedToContainerId, "ibc-destino");
+        return true;
+      },
+    );
+    assert.strictEqual(createAlocacao.mock.calls.length, 0);
+    assert.strictEqual(markIbcDataLimite.mock.calls.length, 0);
   });
 
   it("allocation gate materializes DATA_LIMITE before rejecting", async () => {
