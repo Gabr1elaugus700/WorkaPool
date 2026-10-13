@@ -155,6 +155,7 @@ export function buildOpenApiDocument(contracts: RouteContract[]) {
     tags: [
       { name: "Users", description: "Operações de usuários" },
       { name: "OverviewCustomer", description: "Overview de clientes (read model)" },
+      { name: "IBC", description: "Containers IBC e avisos ao representante" },
     ],
     components,
     paths,
