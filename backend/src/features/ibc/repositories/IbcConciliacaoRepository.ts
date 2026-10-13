@@ -44,6 +44,7 @@ export interface IIbcConciliacaoRepository {
   listMarcas(expedicaoIbcId: string): Promise<MarcaConciliacaoSalva[]>;
   listRetornos(expedicaoIbcId: string): Promise<RetornoSemIdSalvo[]>;
   save(data: SalvarConciliacaoData): Promise<void>;
+  vincularEntradaTroca(alocacaoIbcId: string, ibcEntradaId: string): Promise<boolean>;
 }
 
 export class IbcConciliacaoRepository implements IIbcConciliacaoRepository {
@@ -76,6 +77,14 @@ export class IbcConciliacaoRepository implements IIbcConciliacaoRepository {
       quantidadePapel: row.quantidadePapel,
       confirmouDivergencia: row.confirmouDivergencia,
     }));
+  }
+
+  async vincularEntradaTroca(alocacaoIbcId: string, ibcEntradaId: string): Promise<boolean> {
+    const updated = await this.prisma.conciliacaoViagemIbc.updateMany({
+      where: { alocacaoIbcId, destino: "TROCA", ibcEntradaId: null },
+      data: { ibcEntradaId },
+    });
+    return updated.count === 1;
   }
 
   async save(data: SalvarConciliacaoData): Promise<void> {
