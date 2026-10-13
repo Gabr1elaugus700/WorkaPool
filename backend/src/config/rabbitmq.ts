@@ -7,6 +7,7 @@ export type RabbitMqConfig = {
   exchange: string;
   deadLetterExchange: string;
   ibcQueue: string;
+  ibcAvisoQueue: string;
   ibcDeadLetterQueue: string;
   maxConsumerRetries: number;
 };
@@ -53,6 +54,8 @@ export function getRabbitMqConfig(
       "workapool.domain.events.dlx",
     ibcQueue:
       environment.RABBITMQ_IBC_QUEUE ?? "workapool.ibc.carga-fechada",
+    ibcAvisoQueue:
+      environment.RABBITMQ_IBC_AVISO_QUEUE ?? "workapool.ibc.viagem-fechada",
     ibcDeadLetterQueue:
       environment.RABBITMQ_IBC_DLQ ?? "workapool.ibc.dead-letter",
     maxConsumerRetries,
