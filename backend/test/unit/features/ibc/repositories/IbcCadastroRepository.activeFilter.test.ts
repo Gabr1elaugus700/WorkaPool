@@ -6,6 +6,7 @@ import { IbcCadastroRepository } from "../../../../../src/features/ibc/repositor
 const ACTIVE_IBC_WHERE = {
   baixadoEm: null,
   convertedToContainerId: null,
+  motivoBaixa: null,
 };
 
 type IbcQueryArgs = { where?: unknown };

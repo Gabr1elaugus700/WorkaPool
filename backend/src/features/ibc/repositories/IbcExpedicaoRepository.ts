@@ -67,7 +67,7 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
   async listCargasEmViagem(): Promise<CargaEmViagem[]> {
     const cargas = await this.prisma.cargas.findMany({
       where: {
-        expedicaoIbc: { isNot: null },
+        expedicaoIbc: { is: { viagemFechadaEm: null } },
         alocacoesIbc: { some: { ibc: { custodia: "EM_VIAGEM" } } },
       },
       include: {
@@ -139,8 +139,8 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
   async findAlocacaoByIbcId(
     ibcId: string,
   ): Promise<AlocacaoIbcRecord | null> {
-    const alocacao = await this.prisma.alocacaoIbc.findUnique({
-      where: { ibcId },
+    const alocacao = await this.prisma.alocacaoIbc.findFirst({
+      where: { ibcId, encerradaEm: null },
       include: { ibc: { select: { identificador: true } } },
     });
     if (!alocacao) {

@@ -15,7 +15,9 @@ export type IbcCadastroRecord = {
   tipoCadastro: IbcTipoCadastro;
   aptidao: "APTO" | "INAPTO";
   motivoInaptidao: IbcMotivoInaptidao | null;
-  custodia: "PATIO" | "EM_VIAGEM" | "ENTRADA";
+  custodia: "PATIO" | "EM_VIAGEM" | "ENTRADA" | "CLIENTE";
+  /** Saída do pool no Fechar Viagem. Distinto de `baixadoEm`. */
+  motivoBaixa?: "VENDA" | "TROCA" | null;
   dataLimite: Date | null;
   primeiraInspecaoEm: Date | null;
   baixadoEm: Date | null;

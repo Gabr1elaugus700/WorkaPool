@@ -15,6 +15,15 @@ describe("countVivosWpFromRows (#117 vivos definition)", () => {
     assert.equal(count, 3);
   });
 
+  it("exclui baixa de venda ou troca sem confundir com soft delete", () => {
+    const count = countVivosWpFromRows([
+      { baixadoEm: null, custodia: "CLIENTE", motivoBaixa: null },
+      { baixadoEm: null, custodia: "CLIENTE", motivoBaixa: "VENDA" },
+      { baixadoEm: null, custodia: "CLIENTE", motivoBaixa: "TROCA" },
+    ]);
+    assert.equal(count, 1);
+  });
+
   it("excludes a replaced IBC even when it was not given baixa", () => {
     const count = countVivosWpFromRows([
       { baixadoEm: null, custodia: "PATIO" },

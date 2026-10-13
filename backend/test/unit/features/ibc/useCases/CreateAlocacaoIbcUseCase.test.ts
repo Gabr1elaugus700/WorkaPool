@@ -208,6 +208,35 @@ describe("CreateAlocacaoIbcUseCase", () => {
     assert.strictEqual(createAlocacao.mock.calls.length, 0);
   });
 
+  it("rejeita IBC em custódia no cliente", async () => {
+    const createAlocacao = mock.fn(async () => {
+      throw new Error("não deve criar");
+    });
+    const repo = buildHappyRepo({
+      findIbcByIdentificador: mock.fn(async () =>
+        buildIbc({ identificador: "H0103", custodia: "CLIENTE" }),
+      ),
+      createAlocacao,
+    });
+    const useCase = new CreateAlocacaoIbcUseCase(repo as IIbcExpedicaoRepository);
+
+    await assert.rejects(
+      () =>
+        useCase.execute({
+          codCar: COD_CAR,
+          numPed: "1120",
+          identificador: "H0103",
+          alocadoPorId: ALOCADO_POR_ID,
+        }),
+      (error: unknown) => {
+        assert.ok(error instanceof AppError);
+        assert.strictEqual(error.code, "IBC_NO_CLIENTE");
+        return true;
+      },
+    );
+    assert.strictEqual(createAlocacao.mock.calls.length, 0);
+  });
+
   it("rejeita IBC em entrada no pátio mesmo se a aptidão já foi para Apto", async () => {
     const createAlocacao = mock.fn(async () => {
       throw new Error("não deve criar");

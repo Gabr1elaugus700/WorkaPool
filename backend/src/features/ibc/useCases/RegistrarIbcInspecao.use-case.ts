@@ -84,6 +84,14 @@ export class RegistrarIbcInspecaoUseCase {
         details: { id: ibcId, custodia: ibc.custodia },
       });
     }
+    if (ibc.custodia === "CLIENTE") {
+      throw new AppError({
+        message: `IBC ${ibc.identificador} está no cliente e não pode ser inspecionado`,
+        statusCode: 409,
+        code: "IBC_NO_CLIENTE",
+        details: { id: ibcId, custodia: ibc.custodia },
+      });
+    }
   }
 
   private async findChecklistAtivo(ibcId: string, checklistModeloId: string): Promise<IbcChecklistParaInspecao> {
