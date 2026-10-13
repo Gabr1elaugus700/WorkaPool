@@ -8,8 +8,8 @@ function labels(role: string | undefined, group: "main" | "admin"): string[] {
 }
 
 describe("navItems.utils", () => {
-  it("shows CRM and Cargas to VENDAS, without admin items", () => {
-    assert.deepEqual(labels("VENDAS", "main"), ["CRM", "Cargas"]);
+  it("shows CRM, Cargas and Avisos IBC to VENDAS, without admin items", () => {
+    assert.deepEqual(labels("VENDAS", "main"), ["CRM", "Cargas", "Avisos IBC"]);
     assert.deepEqual(labels("VENDAS", "admin"), []);
   });
 
@@ -18,6 +18,7 @@ describe("navItems.utils", () => {
       "CRM",
       "Pedidos Perdidos",
       "Cargas",
+      "Avisos IBC",
       "Cadastro IBC",
       "Checklists de IBC",
       "Expedição IBC",
