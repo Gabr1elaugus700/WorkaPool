@@ -1,5 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { randomUUID } from "node:crypto";
+import { Prisma, PrismaClient } from "@prisma/client";
 import prismaInstance from "../../../config/prisma";
+import { AppError } from "../../../utils/AppError";
+import { EfeitoFechamentoIbc, FicouNaViagem } from "../services/planejarFechamentoViagem";
 import {
   DestinoConciliacaoIbc,
   ModalidadeConciliacaoIbc,
@@ -45,7 +48,20 @@ export interface IIbcConciliacaoRepository {
   listRetornos(expedicaoIbcId: string): Promise<RetornoSemIdSalvo[]>;
   save(data: SalvarConciliacaoData): Promise<void>;
   vincularEntradaTroca(alocacaoIbcId: string, ibcEntradaId: string): Promise<boolean>;
+  fecharViagem(
+    cmd: FecharViagemComando,
+    abrirEntradas: (tx: Prisma.TransactionClient) => Promise<void>,
+  ): Promise<void>;
 }
+
+export type FecharViagemComando = {
+  expedicaoId: string;
+  actorId: string;
+  now: Date;
+  codCar: number;
+  efeitos: EfeitoFechamentoIbc[];
+  ficaram: FicouNaViagem[];
+};
 
 export class IbcConciliacaoRepository implements IIbcConciliacaoRepository {
   constructor(private readonly prisma: PrismaClient = prismaInstance) {}
@@ -126,5 +142,57 @@ export class IbcConciliacaoRepository implements IIbcConciliacaoRepository {
         }),
       ),
     ]);
+  }
+
+  async fecharViagem(
+    cmd: FecharViagemComando,
+    abrirEntradas: (tx: Prisma.TransactionClient) => Promise<void>,
+  ): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const locked = await tx.expedicaoIbc.updateMany({
+        where: { id: cmd.expedicaoId, viagemFechadaEm: null },
+        data: { viagemFechadaPorId: cmd.actorId, viagemFechadaEm: cmd.now },
+      });
+      if (locked.count !== 1) {
+        throw new AppError({ message: "A viagem já foi fechada", statusCode: 409, code: "IBC_VIAGEM_JA_FECHADA", details: { expedicaoId: cmd.expedicaoId } });
+      }
+      await abrirEntradas(tx);
+      for (const efeito of cmd.efeitos) {
+        if (efeito.custodia || efeito.motivoBaixa || efeito.trocaEntradaId) {
+          await tx.ibc.update({
+            where: { id: efeito.ibcId },
+            data: {
+              ...(efeito.custodia ? { custodia: efeito.custodia } : {}),
+              ...(efeito.motivoBaixa ? { motivoBaixa: efeito.motivoBaixa, baixaViagemEm: cmd.now } : {}),
+              ...(efeito.trocaEntradaId ? { trocaEntradaId: efeito.trocaEntradaId } : {}),
+            },
+          });
+        }
+        if (efeito.encerrarAlocacao || efeito.emprestimoIniciadoEm) {
+          await tx.alocacaoIbc.update({
+            where: { id: efeito.alocacaoIbcId },
+            data: efeito.encerrarAlocacao
+              ? { encerradaEm: cmd.now }
+              : { emprestimoIniciadoEm: efeito.emprestimoIniciadoEm, emprestimoVenceEm: efeito.emprestimoVenceEm },
+          });
+        }
+      }
+      await tx.outboxEvent.create({
+        data: {
+          id: randomUUID(),
+          eventType: "ViagemIbcFechada",
+          aggregateType: "ExpedicaoIbc",
+          aggregateId: cmd.expedicaoId,
+          occurredAt: cmd.now,
+          payload: {
+            expedicaoIbcId: cmd.expedicaoId,
+            codCar: cmd.codCar,
+            fechadaPorId: cmd.actorId,
+            fechadaEm: cmd.now.toISOString(),
+            ficaram: cmd.ficaram,
+          },
+        },
+      });
+    });
   }
 }

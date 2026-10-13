@@ -6,6 +6,9 @@ import { IbcConciliacaoRepository } from "../../repositories/IbcConciliacaoRepos
 import { GetConciliacaoViagemUseCase } from "../../useCases/GetConciliacaoViagem.use-case";
 import { SaveConciliacaoViagemUseCase } from "../../useCases/SaveConciliacaoViagem.use-case";
 import { RegistrarTrocaIbcUseCase } from "../../useCases/RegistrarTrocaIbc.use-case";
+import { FecharViagemIbcUseCase } from "../../useCases/FecharViagemIbc.use-case";
+import { AbrirEntradaPatioUseCase } from "../../useCases/AbrirEntradaPatio.use-case";
+import { IbcEntradaPatioRepository } from "../../repositories/IbcEntradaPatioRepository";
 import { IbcConciliacaoHttpSchemas } from "../schemas/IbcConciliacaoSchema";
 import { IbcCadastroRepository } from "../../repositories/IbcCadastroRepository";
 import { IbcProdutoRepository } from "../../repositories/IbcProdutoRepository";
@@ -69,6 +72,24 @@ export class IbcConciliacaoController {
       return res.status(201).json(troca);
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao registrar a troca");
+    }
+  }
+
+  static async fecharViagem(req: Request, res: Response): Promise<Response> {
+    try {
+      const codCar = Number(req.params.codCar);
+      if (!Number.isFinite(codCar)) {
+        return res.status(400).json({ error: "Código da carga inválido.", code: "IBC_COD_CAR_INVALID" });
+      }
+      const { actorRole, actorId } = actor(req);
+      const fechamento = await new FecharViagemIbcUseCase(
+        new IbcExpedicaoRepository(),
+        new IbcConciliacaoRepository(),
+        new AbrirEntradaPatioUseCase(new IbcEntradaPatioRepository()),
+      ).execute({ codCar, actorRole, actorId });
+      return res.status(200).json(fechamento);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao fechar a viagem");
     }
   }
 }

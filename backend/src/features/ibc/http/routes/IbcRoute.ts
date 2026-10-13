@@ -203,6 +203,13 @@ router.post(
 );
 
 router.post(
+  "/expedicoes/:codCar/fechar-viagem",
+  authMiddleware,
+  requireRoles(ibcWriteRoles),
+  IbcConciliacaoController.fecharViagem,
+);
+
+router.post(
   "/expedicoes",
   authMiddleware,
   requireRoles(ibcWriteRoles),
