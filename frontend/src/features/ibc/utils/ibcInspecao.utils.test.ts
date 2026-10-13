@@ -153,6 +153,7 @@ describe("podeInspecionarIbc", () => {
 
   it("blocks an IBC in transit or already replaced", () => {
     assert.equal(podeInspecionarIbc({ custodia: "EM_VIAGEM", convertedToContainerId: null }), false);
+    assert.equal(podeInspecionarIbc({ custodia: "CLIENTE", convertedToContainerId: null }), false);
     assert.equal(podeInspecionarIbc({ custodia: "PATIO", convertedToContainerId: "ibc-novo" }), false);
   });
 });

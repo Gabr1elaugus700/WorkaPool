@@ -11,6 +11,7 @@ import ExpedicaoIbcPage from "../pages/ExpedicaoIbcPage";
 import ExpedicaoIbcEmViagemPage from "../pages/ExpedicaoIbcEmViagemPage";
 import EntradaPatioIbcPage from "../pages/EntradaPatioIbcPage";
 import ExpedicaoIbcPreparacaoPage from "../pages/ExpedicaoIbcPreparacaoPage";
+import ConciliacaoViagemView from "@/features/ibc/views/ConciliacaoViagemView";
 import CadastroIbcPage from "../pages/CadastroIbcPage";
 import ChecklistsIbcView from "@/features/ibc/views/ChecklistsIbcView";
 import { IBC_CADASTRO_WRITE_ROLES } from "@/features/ibc/utils/ibcCadastroPermissions";
@@ -150,6 +151,14 @@ const AppRoutes = () => {
             element={
               <PrivateRoute>
                 <EntradaPatioIbcPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/expedicao-ibc/:codCar/conciliacao"
+            element={
+              <PrivateRoute>
+                <ConciliacaoViagemView />
               </PrivateRoute>
             }
           />

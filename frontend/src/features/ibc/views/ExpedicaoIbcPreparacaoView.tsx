@@ -175,6 +175,13 @@ export default function ExpedicaoIbcPreparacaoView() {
                     Voltar
                   </Link>
                 </Button>
+                {fromEmViagem ? (
+                  <Button asChild size="sm">
+                    <Link to={`/expedicao-ibc/${detalhe.codCar}/conciliacao`}>
+                      Fechar viagem
+                    </Link>
+                  </Button>
+                ) : null}
                 {fromEmViagem || detalhe.temExpedicao ? (
                   <ExportarRelatorioViagemButton
                     codCar={detalhe.codCar}

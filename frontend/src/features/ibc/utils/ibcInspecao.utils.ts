@@ -8,9 +8,9 @@ import type {
 import { formatNumber } from "@/utils/formatNumber";
 import { IBC_OBSERVACAO_MAX, isIbcSubstituido } from "./ibcMudanca.utils";
 
-/** A API recusa inspeção de IBC Em viagem; substituído não é mais o ativo vigente. */
+/** A API recusa inspeção de IBC em viagem ou no cliente; substituído não é mais o ativo vigente. */
 export function podeInspecionarIbc(ibc: Pick<IbcCadastroDTO, "custodia" | "convertedToContainerId">): boolean {
-  return ibc.custodia !== "EM_VIAGEM" && !isIbcSubstituido(ibc);
+  return ibc.custodia !== "EM_VIAGEM" && ibc.custodia !== "CLIENTE" && !isIbcSubstituido(ibc);
 }
 
 export function listItensInspecao(checklist: IbcChecklistDTO): IbcChecklistItemNoChecklistDTO[] {

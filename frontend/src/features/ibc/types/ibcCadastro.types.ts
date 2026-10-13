@@ -9,7 +9,7 @@ export type IbcCadastroDTO = {
   tipoCadastro: "NOVO" | "TROCA";
   aptidao: "APTO" | "INAPTO";
   motivoInaptidao: IbcMotivoInaptidao | null;
-  custodia: "PATIO" | "EM_VIAGEM" | "ENTRADA";
+  custodia: "PATIO" | "EM_VIAGEM" | "ENTRADA" | "CLIENTE";
   dataLimite: string | null;
   primeiraInspecaoEm: string | null;
   baixadoEm: string | null;
