@@ -3,6 +3,7 @@ import { ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatIsoDayMonthTimeLabel } from "@/utils/formatDate";
+import ExportarRelatorioViagemButton from "./ExportarRelatorioViagemButton";
 import type { CargaEmViagemListItemDTO } from "../types/ibcExpedicao.types";
 
 const VISIBLE_CLIENTES = 3;
@@ -56,12 +57,18 @@ export default function CargaEmViagemListRow({ item }: Props) {
         ) : null}
       </div>
 
-      <Button asChild variant="outline" size="sm">
-        <Link to={`/expedicao-ibc/${item.codCar}?origem=em-viagem`}>
-          Ver detalhe
-          <ChevronRight className="h-4 w-4" />
-        </Link>
-      </Button>
+      <div className="flex flex-wrap items-center gap-2">
+        <ExportarRelatorioViagemButton
+          codCar={item.codCar}
+          rotulo="Reimprimir relatório de viagem"
+        />
+        <Button asChild variant="outline" size="sm">
+          <Link to={`/expedicao-ibc/${item.codCar}?origem=em-viagem`}>
+            Ver detalhe
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+        </Button>
+      </div>
     </div>
   );
 }
