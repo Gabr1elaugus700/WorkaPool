@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Bell,
   ClipboardCheck,
   Contact,
   Container,
@@ -64,6 +65,15 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: Truck,
     group: "main",
     allowedRoles: ["VENDAS", "LOGISTICA", "ADMIN", "ALMOX", "GERENTE_DPTO"],
+    showOnMobile: true,
+  },
+  {
+    label: "Avisos IBC",
+    mobileLabel: "Avisos",
+    to: "/avisos-ibc",
+    icon: Bell,
+    group: "main",
+    allowedRoles: ["VENDAS", "ADMIN"],
     showOnMobile: true,
   },
   {
