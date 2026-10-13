@@ -34,7 +34,7 @@ _Avoid_: Caminhao (deprecated freight table), closing cargo without truck, requi
 
 **AlocacaoIbc**:
 Link between an IBC and a **Pedido** (`numPed`) within a Carga during yard preparation. Not item-level — if a pedido has multiple IBC lines, only the **total** container count matters at this stage. Mutable until `ExpedicaoIbc`; immutable after.
-_Avoid_: item-level allocation, treating allocation as confirmed customer custody, linking Inapto or in-transit IBCs
+_Avoid_: item-level allocation, treating allocation as confirmed customer custody, linking Inapto, in-transit, or substituído IBCs
 
 **ExpedicaoIbc**:
 The act of **closing expedition** after preparation: all IBC-eligible pedidos on a FECHADA cargo have met expected quantities. Creates audit record; moves allocated IBCs to **Em viagem**; locks `AlocacaoIbc` records.
@@ -97,7 +97,7 @@ Expected return date for an Empréstimo. Starting policy: default **30 days** fr
 _Avoid_: Data limite de uso, leaving Empréstimo open-ended with no expected return
 
 **Preparação de expedição**:
-ALMOX links Apto IBCs to pedidos on a Carga. Allowed only while cargo is **FECHADA** and has a **Foto de pedidos IBC**; the foto is the only source of pedidos and quantidade esperada for the detail, AlocacaoIbc and Fechar expedição (Sapiens is not read). ABERTA → 409 `IBC_CARGA_NAO_FECHADA`; FECHADA without foto → 409 `IBC_CARGA_SEM_FOTO_EXPEDICAO`. Physical placement on the truck does not determine which client gets which numbered IBC — the system tracks counts per pedido for control; driver confirms at unload.
+ALMOX links Apto IBCs to pedidos on a Carga. Allowed only while cargo is **FECHADA** and has a **Foto de pedidos IBC**; the foto is the only source of pedidos and quantidade esperada for the detail, AlocacaoIbc and Fechar expedição (Sapiens is not read). ABERTA → 409 `IBC_CARGA_NAO_FECHADA`; FECHADA without foto → 409 `IBC_CARGA_SEM_FOTO_EXPEDICAO`. An **IBC substituído** → 409 `IBC_SUBSTITUIDO` (there is no scan endpoint yet; the same guard is the allocation gate). Physical placement on the truck does not determine which client gets which numbered IBC — the system tracks counts per pedido for control; driver confirms at unload.
 _Avoid_: item-level linking, assuming patio knows which # goes to which client, Custódia no Cliente, preparing on ABERTA cargo, re-reading pedidos from Sapiens after close
 
 **Em viagem**:
@@ -167,12 +167,16 @@ _Avoid_: patching `produtoId` on the existing IBC
 
 A source with `convertedToContainerId` already set cannot be converted nor have its product changed again (409 `IBC_JA_SUBSTITUIDO`); further changes start from the replacement IBC. The link is set only while the source is still free, so concurrent requests produce a single replacement.
 
+**IBC substituído**:
+Source IBC of a Conversão or Mudança de produto: `convertedToContainerId` is set and `baixadoEm` stays null. The row is not edited and is not given baixa — substituição is not baixa. It drops out of the active pool (`listActiveIbcs`, `listIbcs` without baixados, alertas, pool padrão) and out of vivos WP (`countVivosWp`). `GET /api/ibc?incluirBaixados=true` still returns it so the audit list can mark it Substituído. `GET /api/ibc/:id/historico` stays available from the source. Allocating it returns 409 `IBC_SUBSTITUIDO`. The product-abbreviation freeze still counts it (`IbcProduto` usage), because baixa is what does not free a sequencial and the stored prefixo is never recalculated.
+_Avoid_: automatic baixa on conversion, treating substituição as baixa, keeping the source on active lists or in vivos WP
+
 **Histórico de conversões**:
 Audit trail of structural changes (`from` → `to`, tipo, observação, actor, date), queryable from either end via `GET /api/ibc/:id/historico`.
 _Avoid_: mixing with inspeção or custódia history
 
 **Cadastro em lote**:
-Purchase batch: operator provides N, one shared `dataLimite`, optional NF trace and the Produto; system creates N Novo IBCs (COMPRA / PATIO / Apto + Sem inspeção) with consecutive sequenciais of the product prefixo in one transaction. Soft-warns when vivos+N > ERP saldo for codpro 251001; never hard-blocks.
+Purchase batch: operator provides N, one shared `dataLimite`, optional NF trace and the Produto; system creates N Novo IBCs (COMPRA / PATIO / Apto + Sem inspeção) with consecutive sequenciais of the product prefixo in one transaction. Soft-warns when vivos+N > ERP saldo for codpro 251001; never hard-blocks. Vivos excludes baixados and IBCs substituídos.
 _Avoid_: troca/return batch, hard cap vs ERP, ERP stock write-back
 
 **Saldo ERP IBC (codpro 251001)**:
