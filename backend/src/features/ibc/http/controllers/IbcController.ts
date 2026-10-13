@@ -11,6 +11,7 @@ import { RemoveAlocacaoIbcUseCase } from "../../useCases/RemoveAlocacaoIbc.use-c
 import { FecharExpedicaoIbcUseCase } from "../../useCases/FecharExpedicaoIbc.use-case";
 import { ListCargasExpedicaoUseCase } from "../../useCases/ListCargasExpedicao.use-case";
 import { ListCargasEmViagemUseCase } from "../../useCases/ListCargasEmViagem.use-case";
+import { GetRelatorioViagemUseCase } from "../../useCases/GetRelatorioViagem.use-case";
 import { GetCargaExpedicaoDetailUseCase } from "../../useCases/GetCargaExpedicaoDetail.use-case";
 import { CreateNovoIbcUseCase } from "../../useCases/CreateNovoIbc.use-case";
 import { CreateLoteIbcUseCase } from "../../useCases/CreateLoteIbc.use-case";
@@ -229,6 +230,27 @@ export class IbcController {
       return res.status(200).json(result);
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao listar cargas IBC em viagem");
+    }
+  }
+
+  static async getRelatorioViagem(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const codCar = Number(req.params.codCar);
+      if (!Number.isFinite(codCar)) {
+        return res.status(400).json({
+          error: "Código da carga inválido.",
+          code: "IBC_COD_CAR_INVALID",
+        });
+      }
+
+      const useCase = new GetRelatorioViagemUseCase();
+      const relatorio = await useCase.execute({ codCar });
+      return res.status(200).json(relatorio);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao montar relatório de viagem");
     }
   }
 

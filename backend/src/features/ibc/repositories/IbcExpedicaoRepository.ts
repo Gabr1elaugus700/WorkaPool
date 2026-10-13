@@ -211,6 +211,15 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
     };
   }
 
+  async findPlacaByCargaId(cargaId: string): Promise<string | null> {
+    const despacho = await this.prisma.cargaDespacho.findUnique({
+      where: { cargaId },
+      select: { caminhao: { select: { plate: true } } },
+    });
+    const placa = despacho?.caminhao.plate.trim() ?? "";
+    return placa.length > 0 ? placa : null;
+  }
+
   async createAlocacao(
     data: CreateAlocacaoIbcData,
   ): Promise<AlocacaoIbcRecord> {
