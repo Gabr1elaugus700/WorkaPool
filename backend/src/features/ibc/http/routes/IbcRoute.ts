@@ -7,6 +7,7 @@ import {
 import { IbcController } from "../controllers/IbcController";
 import { IbcChecklistController } from "../controllers/IbcChecklistController";
 import { IbcInspecaoController } from "../controllers/IbcInspecaoController";
+import { IbcEntradaPatioController } from "../controllers/IbcEntradaPatioController";
 
 const router = Router();
 
@@ -82,6 +83,8 @@ router.get(
   IbcController.listAlerts,
 );
 
+router.get("/entradas-patio", writeAuth, IbcEntradaPatioController.listar);
+
 router.patch(
   "/:id",
   authMiddleware,
@@ -102,6 +105,9 @@ router.delete("/:id/checklists/:checklistModeloId", writeAuth, IbcChecklistContr
 
 router.get("/:id/inspecoes", readAuth, IbcInspecaoController.listar);
 router.post("/:id/inspecoes", writeAuth, IbcInspecaoController.registrar);
+
+router.post("/:id/entrada-patio", writeAuth, IbcEntradaPatioController.abrir);
+router.post("/:id/entrada-patio/concluir", writeAuth, IbcEntradaPatioController.concluir);
 
 router.patch(
   "/:id/converter-nao-homologado",

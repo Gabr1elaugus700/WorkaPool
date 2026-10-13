@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 const SECTIONS = [
   { id: "aguardando", to: "/expedicao-ibc", label: "Aguardando expedição" },
   { id: "em-viagem", to: "/expedicao-ibc/em-viagem", label: "Em viagem" },
+  { id: "entrada", to: "/expedicao-ibc/entrada", label: "Entrada no pátio" },
 ] as const;
 
 export type ExpedicaoIbcSection = (typeof SECTIONS)[number]["id"];

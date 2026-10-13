@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { ibcChecklistService } from "../services/ibcChecklistService";
 import { ibcInspecaoService } from "../services/ibcInspecaoService";
 import type { RegistrarIbcInspecaoInput } from "../types/ibcInspecao.types";
+import { IBC_ENTRADAS_PATIO_QUERY_KEY } from "../services/ibcEntradaPatioService";
 import { formatNotaInspecao } from "../utils/ibcInspecao.utils";
 import { toError } from "../utils/toError";
 import { IBC_CHECKLISTS_KEY } from "./useIbcChecklists";
@@ -48,6 +49,7 @@ export function useRegistrarIbcInspecao() {
         queryClient.invalidateQueries({ queryKey: ["ibc", "pool"] }),
         queryClient.invalidateQueries({ queryKey: ["ibc", "alerts"] }),
         queryClient.invalidateQueries({ queryKey: IBC_INSPECOES_KEY }),
+        queryClient.invalidateQueries({ queryKey: IBC_ENTRADAS_PATIO_QUERY_KEY }),
       ]);
     },
     onError: (err) => {
