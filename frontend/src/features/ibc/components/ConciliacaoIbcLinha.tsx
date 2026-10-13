@@ -14,8 +14,9 @@ type Props = {
   disabled: boolean;
   onDestino: (destino: DestinoConciliacao) => void;
   onModalidade: (modalidade: ModalidadeConciliacao) => void;
+  onTroca?: () => void;
 };
-export default function ConciliacaoIbcLinha({ item, disabled, onDestino, onModalidade }: Props) {
+export default function ConciliacaoIbcLinha({ item, disabled, onDestino, onModalidade, onTroca }: Props) {
   const sugestao = item.destino === "FICOU" && item.modalidade == null ? item.modalidadeSugerida : null;
   return (
     <article className="rounded-lg border border-border bg-card p-4 shadow-sm">
@@ -68,6 +69,15 @@ export default function ConciliacaoIbcLinha({ item, disabled, onDestino, onModal
             </p>
           ) : null}
         </fieldset>
+      ) : null}
+      {item.destino === "TROCA" ? (
+        item.ibcEntradaId ? (
+          <p className="mt-3 text-sm text-muted-foreground">Entrada da troca vinculada.</p>
+        ) : (
+          <Button type="button" size="sm" className="mt-3" variant="outline" disabled={disabled || !onTroca} onClick={onTroca}>
+            Registrar o IBC que entrou
+          </Button>
+        )
       ) : null}
     </article>
   );

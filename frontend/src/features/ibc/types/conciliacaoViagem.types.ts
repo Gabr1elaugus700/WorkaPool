@@ -12,11 +12,19 @@ export type ConciliacaoViagemItemDTO = {
   modalidadeSugerida: ModalidadeConciliacao | null;
   ibcEntradaId: string | null;
 };
+export type ConciliacaoViagemClienteDTO = {
+  chaveCliente: string;
+  codCli: string | null;
+  cliente: string;
+  quantidadePapel: number | null;
+  confirmouDivergencia: boolean;
+};
 export type ConciliacaoViagemDTO = {
   codCar: number;
   expedicaoIbcId: string;
   viagemFechadaEm: string | null;
   itens: ConciliacaoViagemItemDTO[];
+  clientes: ConciliacaoViagemClienteDTO[];
 };
 export type SalvarConciliacaoInput = {
   itens: Array<{
@@ -24,4 +32,14 @@ export type SalvarConciliacaoInput = {
     destino: DestinoConciliacao;
     modalidade?: ModalidadeConciliacao | null;
   }>;
+  retornosSemId?: Array<{
+    chaveCliente: string;
+    quantidadePapel: number;
+    confirmouDivergencia?: boolean;
+  }>;
+};
+export type RegistrarTrocaInput = {
+  alocacaoIbcId: string;
+  produtoId: string;
+  dataLimite: string;
 };
