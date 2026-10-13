@@ -57,6 +57,8 @@ model User {
   expedicoesIbcFechadasPor    ExpedicaoIbc[]  @relation("ExpedicaoIbcFechadoPor")
   ibcChecklistVinculos        IbcChecklistVinculo[] @relation("IbcChecklistVinculoVinculadoPor")
   ibcInspecoes                IbcInspecao[]         @relation("IbcInspecaoInspetor")
+  entradasPatioAbertas        EntradaPatioIbc[]     @relation("EntradaPatioAbertaPor")
+  entradasPatioConcluidas     EntradaPatioIbc[]     @relation("EntradaPatioConcluidaPor")
   @@index([role])
 }
 
@@ -148,6 +150,7 @@ enum IbcAptidao {
 enum IbcCustodia {
   PATIO
   EM_VIAGEM
+  ENTRADA
 }
 
 enum IbcTipoCadastro {
@@ -186,6 +189,7 @@ model Ibc {
   alocacao         AlocacaoIbc?
   checklistVinculos IbcChecklistVinculo[]
   inspecoes         IbcInspecao[]
+  entradasPatio     EntradaPatioIbc[]
 }
 
 model AlocacaoIbc {
@@ -592,9 +596,12 @@ model IbcInspecao {
   ibc               Ibc                   @relation(fields: [ibcId], references: [id])
   checklistModelo   ChecklistModelo       @relation(fields: [checklistModeloId], references: [id])
   inspetor          User                  @relation("IbcInspecaoInspetor", fields: [inspetorId], references: [id], onDelete: Restrict)
+  entradaPatioId    String?
+  entradaPatio      EntradaPatioIbc?      @relation(fields: [entradaPatioId], references: [id], onDelete: Restrict)
   respostas         IbcInspecaoResposta[]
 
   @@index([ibcId, checklistModeloId, inspecionadoEm])
+  @@index([entradaPatioId])
   @@index([checklistModeloId])
   @@index([inspetorId])
 }
@@ -611,6 +618,35 @@ model IbcInspecaoResposta {
 
   @@unique([inspecaoId, checklistItemId])
   @@index([checklistItemId])
+}
+
+/// Entrada no pátio pendente até a inspeção obrigatória. Um IBC só tem uma PENDENTE (índice parcial na migration).
+model EntradaPatioIbc {
+  id             String             @id @default(uuid())
+  ibcId          String
+  origem         EntradaPatioOrigem
+  status         EntradaPatioStatus @default(PENDENTE)
+  abertoPorId    String
+  abertoEm       DateTime           @default(now())
+  concluidoPorId String?
+  concluidoEm    DateTime?
+  ibc            Ibc                @relation(fields: [ibcId], references: [id])
+  abertoPor      User               @relation("EntradaPatioAbertaPor", fields: [abertoPorId], references: [id])
+  concluidoPor   User?              @relation("EntradaPatioConcluidaPor", fields: [concluidoPorId], references: [id])
+  inspecoes      IbcInspecao[]
+
+  @@index([ibcId, status])
+  @@index([status, abertoEm])
+}
+
+enum EntradaPatioOrigem {
+  RETORNO
+  TROCA
+}
+
+enum EntradaPatioStatus {
+  PENDENTE
+  CONCLUIDA
 }
 
 model ChecklistModelItem {

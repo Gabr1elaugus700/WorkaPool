@@ -113,8 +113,8 @@ Confirmed at unload per **Pedido**, not only per Cliente. Driver opens the Clien
 _Avoid_: AlocacaoIbc, Em viagem, dumping all of a Cliente’s IBCs without Pedido split when multiple IBC Pedidos exist
 
 **Entrada no pátio**:
-Return processing after the trip: the operator gives entry to what came back. Known QR → back to yard custody (Transbordo or Empréstimo devolvido). Unknown unit → cadastro + vínculo 1:1 de Troca de IBC to the outbound identifier (e.g. #H030 → #H067). Every entry puts the IBC in Aguardando inspeção.
-_Avoid_: Custódia no Cliente, assuming all returns are the same modality
+Etapa própria antes do IBC voltar ao estoque do pátio. `AbrirEntradaPatio` abre um `EntradaPatioIbc` pendente (`origem` `RETORNO` ou `TROCA`) e aceita a transação do chamador — a #38 usa o mesmo use case, dentro da transação dela, para IBCs com destino RETORNOU e para o `#in` da Troca. `RETORNO` exige custódia `EM_VIAGEM`. `TROCA` exige `aquisicao` ou `tipoCadastro` `TROCA` e custódia `PATIO` (recém-cadastrado). A abertura muda a custódia para `ENTRADA`: o IBC sai da lista do pool e a alocação recusa com 409 `IBC_ENTRADA_PENDENTE`. Aptidão fica Inapto `AGUARDANDO_INSPECAO`, salvo `DATA_LIMITE` já vigente. Inspeções feitas com a entrada aberta ligam-se a ela (`IbcInspecao.entradaPatioId`). Concluir exige ≥1 checklist ativo vinculado e uma inspeção dessa entrada para cada um; a custódia volta a `PATIO` — todas aprovadas → Apto; alguma reprovada → Inapto `INSPECAO_REPROVADA`; `DATA_LIMITE` prevalece. Papel ADMIN/ALMOX no use case. Recusas da abertura: papel 403 `IBC_ENTRADA_FORBIDDEN`; ausente ou baixado 404 `IBC_NOT_FOUND`; já pendente 409 `IBC_ENTRADA_JA_ABERTA`; retorno fora de Em viagem 409 `IBC_NAO_EM_VIAGEM`; ativo que não é Troca 422 `IBC_ENTRADA_NAO_E_TROCA`; Troca fora do pátio 409 `IBC_ENTRADA_CUSTODIA_INVALIDA`.
+_Avoid_: Custódia no Cliente, devolver ao pátio sem inspeção, tratar o `#in` da Troca como Apto, implementar o Fechar Viagem aqui
 
 **Pedido com IBC**:
 A Pedido with at least one valid container line (`CODIGO_EMBALAGEM = 251001` and valid count calculation). Only these appear on the driver’s unload screen and on ALMOX expedition preparation.
@@ -180,8 +180,8 @@ Read-only Sapiens stock of product-container via `e210est.qtdest` (`SUM` for com
 _Avoid_: treating packaging expected count as fiscal saldo, writing stock to ERP
 
 **Aguardando inspeção**:
-Aptidão state in which the IBC is **Inapto** until an operator completes Inspeção (checklist + score) on the aptidão screen. Applies on **every Entrada no pátio** (Transbordo, Empréstimo devolvido, Troca) — no reuse / Preparação de expedição until Apto. Does **not** apply on cadastro: a new IBC is born Apto with the **Sem inspeção** alert (#271). The fate of the `AGUARDANDO_INSPECAO` enum value is decided with Entrada no pátio. Outbound IBC replaced in a Troca de IBC leaves the company pool.
-_Avoid_: putting a just-returned IBC Em viagem, treating Troca inbound as Apto by default, skipping verification on “known good” returns, blocking cadastro on missing checklist/inspeção
+Aptidão Inapto (`motivoInaptidao = AGUARDANDO_INSPECAO`) enquanto a Entrada no pátio está pendente. É o uso do valor do enum: o cadastro não o grava (#271). Não libera Preparação de expedição. Sai na conclusão da entrada (Apto, ou substituído por `INSPECAO_REPROVADA` / `DATA_LIMITE`). Uma inspeção gravada no meio da entrada pode recalcular a aptidão (#272); a custódia `ENTRADA` é o que mantém o IBC fora do pool e da alocação até concluir. O outbound substituído numa Troca deixa o pool da empresa.
+_Avoid_: usar no cadastro, tratar retorno “conhecido bom” como Apto, manter o IBC Em viagem depois de abrir a entrada
 
 **Sem inspeção**:
 Non-blocking alert (`SEM_INSPECAO`) for an IBC that was never inspected (`primeiraInspecaoEm` null). Every cadastro (unitário and lote) starts this way; the IBC is Apto and can be allocated. The alert clears only on the first **aprovada** Inspeção (`primeiraInspecaoEm` is set then; a reprovada one does not set it). Independent of aptidão: an expired IBC can show both `DATA_LIMITE` and `SEM_INSPECAO`. Conversão and Mudança de produto inherit it from the source.

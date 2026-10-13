@@ -1,6 +1,6 @@
 export type IbcAptidaoValue = "APTO" | "INAPTO";
 
-export type IbcCustodiaValue = "PATIO" | "EM_VIAGEM";
+export type IbcCustodiaValue = "PATIO" | "EM_VIAGEM" | "ENTRADA";
 
 export type IbcRecord = {
   id: string;
