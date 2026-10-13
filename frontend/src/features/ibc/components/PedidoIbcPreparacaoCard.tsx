@@ -5,12 +5,18 @@ import AllocateIbcForm from "./AllocateIbcForm";
 import DeallocateIbcButton from "./DeallocateIbcButton";
 import PedidoIbcProgress from "./PedidoIbcProgress";
 
+type AllocationNotice = {
+  title: string;
+  message: string;
+};
+
 type Props = {
   pedido: PedidoIbcPreparacaoDTO;
   mutationsLocked?: boolean;
   allocating?: boolean;
   deallocatingId?: string | null;
-  onAllocate: (identificador: string) => Promise<void>;
+  allocationNotice?: AllocationNotice | null;
+  onAllocate: (identificador: string) => Promise<boolean | void>;
   onDeallocate: (alocacaoId: string) => Promise<void>;
 };
 
@@ -22,6 +28,7 @@ export default function PedidoIbcPreparacaoCard({
   mutationsLocked = false,
   allocating = false,
   deallocatingId = null,
+  allocationNotice = null,
   onAllocate,
   onDeallocate,
 }: Props) {
@@ -29,6 +36,7 @@ export default function PedidoIbcPreparacaoCard({
     pedido.quantidadeEsperadaTotal > 0 &&
     pedido.quantidadeAlocada >= pedido.quantidadeEsperadaTotal;
   const formDisabled = mutationsLocked || pedido.ibcInvalido || atLimit;
+  const noticeId = `ibc-alocacao-aviso-${pedido.numPed}`;
 
   return (
     <div className="rounded-xl border-2 border-border bg-card p-4 space-y-3">
@@ -88,8 +96,18 @@ export default function PedidoIbcPreparacaoCard({
           inputId={`ibc-identificador-${pedido.numPed}`}
           disabled={formDisabled}
           submitting={allocating}
+          invalid={allocationNotice != null}
+          describedBy={allocationNotice ? noticeId : undefined}
           onSubmit={onAllocate}
         />
+      ) : null}
+
+      {allocationNotice ? (
+        <Alert variant="destructive" id={noticeId}>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>{allocationNotice.title}</AlertTitle>
+          <AlertDescription>{allocationNotice.message}</AlertDescription>
+        </Alert>
       ) : null}
     </div>
   );

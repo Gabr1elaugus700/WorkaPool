@@ -1,5 +1,6 @@
 import { getBaseUrl } from "@/lib/apiBase";
-import { apiFetchJson } from "@/lib/apiFetch";
+import { apiFetch, apiFetchJson } from "@/lib/apiFetch";
+import { IbcAlocacaoRequestError } from "../utils/ibcAlocacaoError";
 import type {
   CargaEmViagemListItemDTO,
   CargaExpedicaoDetalheDTO,
@@ -47,10 +48,14 @@ export const ibcExpedicaoService = {
   createAlocacao: async (
     input: CreateAlocacaoIbcInput,
   ): Promise<CreateAlocacaoIbcResultDTO> => {
-    return apiFetchJson<CreateAlocacaoIbcResultDTO>("/api/ibc/alocacoes", {
+    const res = await apiFetch("/api/ibc/alocacoes", {
       method: "POST",
       body: JSON.stringify(input),
     });
+    if (!res.ok) {
+      throw await IbcAlocacaoRequestError.fromResponse(res);
+    }
+    return res.json() as Promise<CreateAlocacaoIbcResultDTO>;
   },
 
   removeAlocacao: async (id: string): Promise<void> => {

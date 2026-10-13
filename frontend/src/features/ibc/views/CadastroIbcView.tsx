@@ -4,6 +4,8 @@ import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
 import CadastroIbcForm from "../components/CadastroIbcForm";
 import CadastroIbcLoteForm from "../components/CadastroIbcLoteForm";
@@ -57,10 +59,11 @@ export default function CadastroIbcView() {
   const vinculos = useIbcChecklistVinculos(checklistsIbc?.id ?? null);
   const [inspecaoIbc, setInspecaoIbc] = useState<IbcCadastroDTO | null>(null);
   const [inspecoesIbc, setInspecoesIbc] = useState<IbcCadastroDTO | null>(null);
+  const [incluirHistorico, setIncluirHistorico] = useState(false);
 
   const poolQuery = useQuery({
-    queryKey: POOL_KEY,
-    queryFn: () => ibcCadastroService.listPool(),
+    queryKey: [...POOL_KEY, incluirHistorico],
+    queryFn: () => ibcCadastroService.listPool(incluirHistorico),
     enabled: allowed,
   });
   const alertsQuery = useQuery({
@@ -263,10 +266,22 @@ export default function CadastroIbcView() {
         </section>
 
         <section className="rounded-lg border border-border bg-muted/20 p-4 shadow-sm sm:p-6">
-          <h2 className="mb-3 text-sm font-medium text-muted-foreground">
-            Pool ativo
-            {typeof poolCount === "number" ? ` (${poolCount})` : null}
-          </h2>
+          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-sm font-medium text-muted-foreground">
+              {incluirHistorico ? "Pool" : "Pool ativo"}
+              {typeof poolCount === "number" ? ` (${poolCount})` : null}
+            </h2>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="ibc-incluir-historico"
+                checked={incluirHistorico}
+                onCheckedChange={(value) => setIncluirHistorico(value === true)}
+              />
+              <Label htmlFor="ibc-incluir-historico" className="text-sm font-normal">
+                Incluir baixados e substituídos
+              </Label>
+            </div>
+          </div>
           {poolQuery.isLoading ? (
             <CadastroIbcSectionSkeleton />
           ) : poolQuery.error ? (
@@ -280,6 +295,11 @@ export default function CadastroIbcView() {
             <CadastroIbcPoolList
               items={poolQuery.data ?? []}
               canWrite={canWrite}
+              emptyMessage={
+                incluirHistorico
+                  ? "Nenhum IBC no histórico."
+                  : "Nenhum IBC ativo no pool."
+              }
               actionsDisabled={conversao.isPending}
               onConverter={(ibc) => setMudanca({ ibc, modo: "conversion" })}
               onMudarProduto={(ibc) => setMudanca({ ibc, modo: "product_change" })}

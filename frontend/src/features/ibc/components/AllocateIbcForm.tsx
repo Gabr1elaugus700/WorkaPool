@@ -7,7 +7,9 @@ type Props = {
   inputId?: string;
   disabled?: boolean;
   submitting?: boolean;
-  onSubmit: (identificador: string) => Promise<void> | void;
+  invalid?: boolean;
+  describedBy?: string;
+  onSubmit: (identificador: string) => Promise<boolean | void> | boolean | void;
 };
 
 /**
@@ -17,6 +19,8 @@ export default function AllocateIbcForm({
   inputId = "ibc-identificador",
   disabled = false,
   submitting = false,
+  invalid = false,
+  describedBy,
   onSubmit,
 }: Props) {
   const [identificador, setIdentificador] = useState("");
@@ -25,7 +29,8 @@ export default function AllocateIbcForm({
     event.preventDefault();
     const trimmed = identificador.trim();
     if (!trimmed || disabled || submitting) return;
-    await onSubmit(trimmed);
+    const accepted = await onSubmit(trimmed);
+    if (accepted === false) return;
     setIdentificador("");
   };
 
@@ -46,6 +51,13 @@ export default function AllocateIbcForm({
           placeholder="Ex.: H0045"
           disabled={disabled || submitting}
           autoComplete="off"
+          aria-invalid={invalid || undefined}
+          aria-describedby={describedBy}
+          className={
+            invalid
+              ? "border-destructive focus-visible:ring-destructive"
+              : undefined
+          }
         />
       </div>
       <Button
