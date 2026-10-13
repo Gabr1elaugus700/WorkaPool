@@ -208,6 +208,36 @@ describe("CreateAlocacaoIbcUseCase", () => {
     assert.strictEqual(createAlocacao.mock.calls.length, 0);
   });
 
+  it("rejeita IBC em entrada no pátio mesmo se a aptidão já foi para Apto", async () => {
+    const createAlocacao = mock.fn(async () => {
+      throw new Error("não deve criar");
+    });
+    const repo = buildHappyRepo({
+      findIbcByIdentificador: mock.fn(async () =>
+        buildIbc({ identificador: "H0102", custodia: "ENTRADA", aptidao: "APTO" }),
+      ),
+      createAlocacao,
+    });
+    const useCase = new CreateAlocacaoIbcUseCase(repo as IIbcExpedicaoRepository);
+
+    await assert.rejects(
+      () =>
+        useCase.execute({
+          codCar: COD_CAR,
+          numPed: "1120",
+          identificador: "H0102",
+          alocadoPorId: ALOCADO_POR_ID,
+        }),
+      (error: unknown) => {
+        assert.ok(error instanceof AppError);
+        assert.equal(error.code, "IBC_ENTRADA_PENDENTE");
+        assert.equal(error.statusCode, 409);
+        return true;
+      },
+    );
+    assert.equal(createAlocacao.mock.calls.length, 0);
+  });
+
   it("rejeita alocação quando IBC já está vinculado a outra carga", async () => {
     const createAlocacao = mock.fn(async () => {
       throw new Error("não deve criar");

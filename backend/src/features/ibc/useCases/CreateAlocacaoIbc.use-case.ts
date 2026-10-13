@@ -89,6 +89,15 @@ export class CreateAlocacaoIbcUseCase {
 
     assertIbcNotReplaced(ibc, "IBC_SUBSTITUIDO");
 
+    if (ibc.custodia === "ENTRADA") {
+      throw new AppError({
+        message: `IBC ${identificador} está em entrada no pátio e não pode ser alocado`,
+        statusCode: 409,
+        code: "IBC_ENTRADA_PENDENTE",
+        details: { identificador, custodia: ibc.custodia },
+      });
+    }
+
     if (ibc.custodia === "EM_VIAGEM") {
       throw new AppError({
         message: `IBC ${identificador} já está Em viagem`,
