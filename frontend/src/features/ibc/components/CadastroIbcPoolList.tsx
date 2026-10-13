@@ -11,6 +11,7 @@ import {
 type Props = {
   items: IbcCadastroDTO[];
   canWrite: boolean;
+  emptyMessage?: string;
   actionsDisabled?: boolean;
   onConverter: (ibc: IbcCadastroDTO) => void;
   onMudarProduto: (ibc: IbcCadastroDTO) => void;
@@ -28,6 +29,7 @@ function formatDataLimite(value: string | null): string {
 export default function CadastroIbcPoolList({
   items,
   canWrite,
+  emptyMessage = "Nenhum IBC ativo no pool.",
   actionsDisabled = false,
   onConverter,
   onMudarProduto,
@@ -39,7 +41,7 @@ export default function CadastroIbcPoolList({
   if (items.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Nenhum IBC ativo no pool.
+        {emptyMessage}
       </p>
     );
   }
@@ -77,8 +79,13 @@ export default function CadastroIbcPoolList({
                     Não homologado
                   </Badge>
                 ) : null}
-                {substituido ? (
+                {ibc.baixadoEm ? (
                   <Badge variant="outline" className="text-[10px]">
+                    Baixado
+                  </Badge>
+                ) : null}
+                {substituido ? (
+                  <Badge variant="secondary" className="text-[10px]">
                     Substituído
                   </Badge>
                 ) : null}

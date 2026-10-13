@@ -16,6 +16,7 @@ import PedidoIbcProgress from "../components/PedidoIbcProgress";
 import { ibcExpedicaoService } from "../services/ibcExpedicaoService";
 import type { CargaExpedicaoDetalheDTO } from "../types/ibcExpedicao.types";
 import { canAccessExpedicaoIbc } from "../utils/canAccessExpedicaoIbc";
+import { IbcAlocacaoRequestError } from "../utils/ibcAlocacaoError";
 import { toError } from "../utils/toError";
 
 function parseCodCar(raw: string | undefined): number | null {
@@ -41,6 +42,11 @@ export default function ExpedicaoIbcPreparacaoView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [allocatingNumPed, setAllocatingNumPed] = useState<string | null>(null);
+  const [substituidoNotice, setSubstituidoNotice] = useState<{
+    numPed: string;
+    title: string;
+    message: string;
+  } | null>(null);
   const [deallocatingId, setDeallocatingId] = useState<string | null>(null);
   const [fechando, setFechando] = useState(false);
 
@@ -70,19 +76,40 @@ export default function ExpedicaoIbcPreparacaoView() {
     void carregar();
   }, [allowed, carregar]);
 
-  const handleAllocate = async (numPed: string, identificador: string) => {
-    if (codCar == null) return;
+  const handleAllocate = async (
+    numPed: string,
+    identificador: string,
+  ): Promise<boolean> => {
+    if (codCar == null) return false;
     setAllocatingNumPed(numPed);
+    setSubstituidoNotice((current) =>
+      current?.numPed === numPed ? null : current,
+    );
     try {
       await ibcExpedicaoService.createAlocacao({
         codCar,
         numPed,
         identificador,
       });
+      setSubstituidoNotice(null);
       toast.success(`IBC ${identificador} vinculado ao pedido ${numPed}`);
       await carregar();
+      return true;
     } catch (err) {
+      if (
+        err instanceof IbcAlocacaoRequestError &&
+        err.substituido &&
+        err.title
+      ) {
+        setSubstituidoNotice({
+          numPed,
+          title: err.title,
+          message: err.message,
+        });
+        return false;
+      }
       toast.error(toError(err).message);
+      return true;
     } finally {
       setAllocatingNumPed(null);
     }
@@ -210,6 +237,11 @@ export default function ExpedicaoIbcPreparacaoView() {
                     mutationsLocked={detalhe.temExpedicao || fromEmViagem}
                     allocating={allocatingNumPed === pedido.numPed}
                     deallocatingId={deallocatingId}
+                    allocationNotice={
+                      substituidoNotice?.numPed === pedido.numPed
+                        ? substituidoNotice
+                        : null
+                    }
                     onAllocate={(identificador) =>
                       handleAllocate(pedido.numPed, identificador)
                     }
