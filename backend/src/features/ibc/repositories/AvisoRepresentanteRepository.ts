@@ -74,6 +74,11 @@ export class AvisoRepresentanteRepository {
     return rows.map(toRecord);
   }
 
+  async buscarPorId(id: string): Promise<AvisoRepresentanteRecord | null> {
+    const row = await this.prisma.avisoRepresentanteIbc.findUnique({ where: { id } });
+    return row ? toRecord(row) : null;
+  }
+
   async marcarLido(id: string, lidoEm: Date): Promise<AvisoRepresentanteRecord | null> {
     await this.prisma.avisoRepresentanteIbc.updateMany({
       where: { id, lidoEm: null },
@@ -83,6 +88,8 @@ export class AvisoRepresentanteRepository {
     return row ? toRecord(row) : null;
   }
 }
+
+export type AvisoLeituraPort = Pick<AvisoRepresentanteRepository, "listar" | "buscarPorId" | "marcarLido">;
 
 function toCreateInput(aviso: NovoAvisoRepresentante): Prisma.AvisoRepresentanteIbcCreateManyInput {
   return {

@@ -9,6 +9,7 @@ import { IbcChecklistController } from "../controllers/IbcChecklistController";
 import { IbcInspecaoController } from "../controllers/IbcInspecaoController";
 import { IbcEntradaPatioController } from "../controllers/IbcEntradaPatioController";
 import { IbcConciliacaoController } from "../controllers/IbcConciliacaoController";
+import { createIbcAvisoRoutes } from "./IbcAvisoRoute";
 
 const router = Router();
 
@@ -83,6 +84,8 @@ router.get(
   requireRoles(ibcReadRoles),
   IbcController.listAlerts,
 );
+
+router.use("/avisos", createIbcAvisoRoutes());
 
 router.get("/entradas-patio", writeAuth, IbcEntradaPatioController.listar);
 
