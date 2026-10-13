@@ -24,10 +24,26 @@ export type ExpedicaoParaConciliar = {
   viagemFechadaPorId: string | null;
 };
 
+export type SalvarConciliacaoData = {
+  expedicaoIbcId: string;
+  lancadoPorId: string;
+  marcas: Array<{
+    alocacaoIbcId: string;
+    destino: DestinoConciliacaoIbc;
+    modalidade: ModalidadeConciliacaoIbc | null;
+  }>;
+  retornos: Array<{
+    chaveCliente: string;
+    quantidadePapel: number;
+    confirmouDivergencia: boolean;
+  }>;
+};
+
 export interface IIbcConciliacaoRepository {
   findPorCarga(cargaId: string): Promise<ExpedicaoParaConciliar | null>;
   listMarcas(expedicaoIbcId: string): Promise<MarcaConciliacaoSalva[]>;
   listRetornos(expedicaoIbcId: string): Promise<RetornoSemIdSalvo[]>;
+  save(data: SalvarConciliacaoData): Promise<void>;
 }
 
 export class IbcConciliacaoRepository implements IIbcConciliacaoRepository {
@@ -60,5 +76,46 @@ export class IbcConciliacaoRepository implements IIbcConciliacaoRepository {
       quantidadePapel: row.quantidadePapel,
       confirmouDivergencia: row.confirmouDivergencia,
     }));
+  }
+
+  async save(data: SalvarConciliacaoData): Promise<void> {
+    if (data.marcas.length === 0 && data.retornos.length === 0) return;
+    await this.prisma.$transaction([
+      ...data.marcas.map((marca) =>
+        this.prisma.conciliacaoViagemIbc.upsert({
+          where: { alocacaoIbcId: marca.alocacaoIbcId },
+          create: {
+            expedicaoIbcId: data.expedicaoIbcId,
+            alocacaoIbcId: marca.alocacaoIbcId,
+            destino: marca.destino,
+            modalidade: marca.modalidade,
+            lancadoPorId: data.lancadoPorId,
+          },
+          update: { destino: marca.destino, modalidade: marca.modalidade, lancadoPorId: data.lancadoPorId },
+        }),
+      ),
+      ...data.retornos.map((retorno) =>
+        this.prisma.conciliacaoRetornoSemId.upsert({
+          where: {
+            expedicaoIbcId_chaveCliente: {
+              expedicaoIbcId: data.expedicaoIbcId,
+              chaveCliente: retorno.chaveCliente,
+            },
+          },
+          create: {
+            expedicaoIbcId: data.expedicaoIbcId,
+            chaveCliente: retorno.chaveCliente,
+            quantidadePapel: retorno.quantidadePapel,
+            confirmouDivergencia: retorno.confirmouDivergencia,
+            lancadoPorId: data.lancadoPorId,
+          },
+          update: {
+            quantidadePapel: retorno.quantidadePapel,
+            confirmouDivergencia: retorno.confirmouDivergencia,
+            lancadoPorId: data.lancadoPorId,
+          },
+        }),
+      ),
+    ]);
   }
 }
