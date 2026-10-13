@@ -24,12 +24,12 @@ export class SoftDeleteIbcUseCase {
       });
     }
 
-    if (existing.custodia === "EM_VIAGEM") {
+    if (existing.custodia === "EM_VIAGEM" || existing.custodia === "CLIENTE" || existing.motivoBaixa != null) {
       throw new AppError({
-        message: "IBC em viagem não pode ser baixado",
+        message: "IBC em viagem, no cliente ou já baixado na viagem não pode ser excluído",
         statusCode: 409,
         code: "IBC_BAIXA_BLOQUEADA",
-        details: { id: input.id, custodia: existing.custodia },
+        details: { id: input.id, custodia: existing.custodia, motivoBaixa: existing.motivoBaixa ?? null },
       });
     }
 

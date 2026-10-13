@@ -107,6 +107,15 @@ export class CreateAlocacaoIbcUseCase {
       });
     }
 
+    if (ibc.custodia === "CLIENTE") {
+      throw new AppError({
+        message: `IBC ${identificador} está no cliente e não pode ser alocado`,
+        statusCode: 409,
+        code: "IBC_NO_CLIENTE",
+        details: { identificador, custodia: ibc.custodia },
+      });
+    }
+
     if (ibc.dataLimite != null && isDataLimiteDue(ibc.dataLimite, new Date())) {
       await this.repository.markIbcDataLimite(ibc.id);
       throw new AppError({

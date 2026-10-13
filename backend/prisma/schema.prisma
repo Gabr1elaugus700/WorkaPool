@@ -37,6 +37,9 @@ model User {
   ibcInspecoes                IbcInspecao[]         @relation("IbcInspecaoInspetor")
   entradasPatioAbertas        EntradaPatioIbc[]     @relation("EntradaPatioAbertaPor")
   entradasPatioConcluidas     EntradaPatioIbc[]     @relation("EntradaPatioConcluidaPor")
+  viagensIbcFechadasPor       ExpedicaoIbc[]        @relation("ExpedicaoIbcViagemFechadaPor")
+  conciliacoesViagemIbc       ConciliacaoViagemIbc[] @relation("ConciliacaoViagemLancadaPor")
+  retornosSemIdIbc            ConciliacaoRetornoSemId[] @relation("ConciliacaoRetornoSemIdLancadoPor")
   @@index([role])
 }
 
@@ -120,6 +123,23 @@ enum IbcCustodia {
   PATIO
   EM_VIAGEM
   ENTRADA
+  CLIENTE
+}
+
+enum IbcMotivoBaixa {
+  VENDA
+  TROCA
+}
+
+enum ConciliacaoDestinoIbc {
+  FICOU
+  RETORNOU
+  TROCA
+}
+
+enum ConciliacaoModalidadeIbc {
+  VENDA
+  EMPRESTIMO
 }
 
 enum IbcTipoCadastro {
@@ -164,12 +184,18 @@ model Ibc {
   dataLimite       DateTime?
   primeiraInspecaoEm DateTime?
   baixadoEm        DateTime?
+  motivoBaixa      IbcMotivoBaixa?
+  baixaViagemEm    DateTime?
+  trocaEntradaId   String?             @unique
   createdAt        DateTime            @default(now())
   loteId           String?
   produtoId        String?
   lote             IbcLote?            @relation(fields: [loteId], references: [id])
   produto          IbcProduto?         @relation(fields: [produtoId], references: [id])
-  alocacao         AlocacaoIbc?
+  alocacoes        AlocacaoIbc[]
+  trocaEntrada     Ibc?                @relation("TrocaIbcVinculo", fields: [trocaEntradaId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  trocaSaida       Ibc?                @relation("TrocaIbcVinculo")
+  conciliacaoEntrada ConciliacaoViagemIbc? @relation("ConciliacaoIbcEntrada")
 
   convertedToContainerId String?
   convertedToContainer   Ibc?                   @relation("IbcConversionLink", fields: [convertedToContainerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
@@ -212,31 +238,74 @@ model IbcConversionHistory {
 }
 
 model AlocacaoIbc {
-  id             String    @id @default(uuid())
-  ibcId          String    @unique
-  cargaId        String
-  numPed         String
-  alocadoPorId   String
-  alocadoEm      DateTime  @default(now())
-  expedicaoIbcId String?
+  id                    String    @id @default(uuid())
+  ibcId                 String
+  cargaId               String
+  numPed                String
+  alocadoPorId          String
+  alocadoEm             DateTime  @default(now())
+  expedicaoIbcId        String?
+  encerradaEm           DateTime?
+  emprestimoIniciadoEm  DateTime?
+  emprestimoVenceEm     DateTime?
 
   ibc          Ibc           @relation(fields: [ibcId], references: [id])
   carga        Cargas        @relation(fields: [cargaId], references: [id])
   alocadoPor   User          @relation("AlocacaoIbcAlocadoPor", fields: [alocadoPorId], references: [id])
   expedicaoIbc ExpedicaoIbc? @relation(fields: [expedicaoIbcId], references: [id])
+  conciliacao  ConciliacaoViagemIbc?
 
   @@index([cargaId, numPed])
+  @@index([ibcId])
 }
 
 model ExpedicaoIbc {
-  id           String   @id @default(uuid())
-  cargaId      String   @unique
-  fechadoPorId String
-  fechadoEm    DateTime @default(now())
+  id                 String    @id @default(uuid())
+  cargaId            String    @unique
+  fechadoPorId       String
+  fechadoEm          DateTime  @default(now())
+  viagemFechadaPorId String?
+  viagemFechadaEm    DateTime?
 
-  carga      Cargas        @relation(fields: [cargaId], references: [id])
-  fechadoPor User          @relation("ExpedicaoIbcFechadoPor", fields: [fechadoPorId], references: [id])
-  alocacoes  AlocacaoIbc[]
+  carga            Cargas        @relation(fields: [cargaId], references: [id])
+  fechadoPor       User          @relation("ExpedicaoIbcFechadoPor", fields: [fechadoPorId], references: [id])
+  viagemFechadaPor User?         @relation("ExpedicaoIbcViagemFechadaPor", fields: [viagemFechadaPorId], references: [id])
+  alocacoes        AlocacaoIbc[]
+  conciliacoes     ConciliacaoViagemIbc[]
+  retornosSemId    ConciliacaoRetornoSemId[]
+}
+
+/// Marca do checklist por IBC outbound, salva antes do Fechar Viagem.
+model ConciliacaoViagemIbc {
+  id             String                    @id @default(uuid())
+  expedicaoIbcId String
+  alocacaoIbcId  String                    @unique
+  destino        ConciliacaoDestinoIbc
+  modalidade     ConciliacaoModalidadeIbc?
+  ibcEntradaId   String?                   @unique
+  lancadoPorId   String
+  atualizadoEm   DateTime                  @updatedAt
+  expedicao      ExpedicaoIbc              @relation(fields: [expedicaoIbcId], references: [id])
+  alocacao       AlocacaoIbc               @relation(fields: [alocacaoIbcId], references: [id])
+  ibcEntrada     Ibc?                      @relation("ConciliacaoIbcEntrada", fields: [ibcEntradaId], references: [id])
+  lancadoPor     User                      @relation("ConciliacaoViagemLancadaPor", fields: [lancadoPorId], references: [id])
+
+  @@index([expedicaoIbcId])
+}
+
+/// Quantidade de "Retornos sem identificação" lida no papel, por cliente da viagem.
+model ConciliacaoRetornoSemId {
+  id                   String       @id @default(uuid())
+  expedicaoIbcId       String
+  chaveCliente         String
+  quantidadePapel      Int
+  confirmouDivergencia Boolean      @default(false)
+  lancadoPorId         String
+  atualizadoEm         DateTime     @updatedAt
+  expedicao            ExpedicaoIbc @relation(fields: [expedicaoIbcId], references: [id])
+  lancadoPor           User         @relation("ConciliacaoRetornoSemIdLancadoPor", fields: [lancadoPorId], references: [id])
+
+  @@unique([expedicaoIbcId, chaveCliente])
 }
 
 model CargaPedidoIbc {

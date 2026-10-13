@@ -26,7 +26,8 @@ type IbcRow = {
   tipoCadastro: "NOVO" | "TROCA";
   aptidao: "APTO" | "INAPTO";
   motivoInaptidao: IbcMotivoInaptidao | null;
-  custodia: "PATIO" | "EM_VIAGEM" | "ENTRADA";
+  custodia: "PATIO" | "EM_VIAGEM" | "ENTRADA" | "CLIENTE";
+  motivoBaixa?: "VENDA" | "TROCA" | null;
   dataLimite: Date | null;
   primeiraInspecaoEm: Date | null;
   baixadoEm: Date | null;
@@ -42,10 +43,11 @@ const STRUCTURAL_CHANGE_TYPES: readonly IbcStructuralChangeType[] = [
   "status_change",
 ];
 
-/** Pool ativo: sem baixa e sem IBC substituído (origem de conversão/mudança). */
+/** Pool ativo: sem soft delete, sem baixa de viagem e sem IBC substituído. */
 const ACTIVE_IBC_WHERE = {
   baixadoEm: null,
   convertedToContainerId: null,
+  motivoBaixa: null,
 } as const;
 
 function toStructuralChangeType(value: string): IbcStructuralChangeType {
@@ -265,8 +267,8 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
   }
 
   async hasOpenAlocacao(ibcId: string): Promise<boolean> {
-    const alocacao = await this.prisma.alocacaoIbc.findUnique({
-      where: { ibcId },
+    const alocacao = await this.prisma.alocacaoIbc.findFirst({
+      where: { ibcId, encerradaEm: null },
       select: { id: true },
     });
     return alocacao != null;
@@ -328,6 +330,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
       dataLimite: row.dataLimite,
       primeiraInspecaoEm: row.primeiraInspecaoEm,
       baixadoEm: row.baixadoEm,
+      motivoBaixa: row.motivoBaixa ?? null,
       createdAt: row.createdAt,
       loteId: row.loteId ?? null,
       produtoId: row.produtoId ?? null,

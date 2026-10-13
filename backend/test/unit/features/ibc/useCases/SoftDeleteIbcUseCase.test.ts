@@ -84,6 +84,30 @@ describe("SoftDeleteIbcUseCase", () => {
     assert.equal(ibc.baixadoEm, null);
   });
 
+  it("soft delete is blocked when IBC is at the client or already baixado on the trip", async () => {
+    for (const ibc of [
+      buildIbc({ custodia: "CLIENTE" }),
+      buildIbc({ motivoBaixa: "VENDA" }),
+    ]) {
+      const softDelete = mock.fn(async () => ibc);
+      const repo = {
+        findById: mock.fn(async () => ibc),
+        hasOpenAlocacao: mock.fn(async () => false),
+        softDelete,
+      } as unknown as IIbcCadastroRepository;
+
+      await assert.rejects(
+        () => new SoftDeleteIbcUseCase(repo).execute({ id: "ibc-1" }),
+        (error: unknown) => {
+          assert.ok(error instanceof AppError);
+          assert.equal(error.code, "IBC_BAIXA_BLOQUEADA");
+          return true;
+        },
+      );
+      assert.equal(softDelete.mock.callCount(), 0);
+    }
+  });
+
   it("soft delete is blocked when IBC is allocated", async () => {
     const ibc = buildIbc();
     const softDelete = mock.fn(async () => ibc);

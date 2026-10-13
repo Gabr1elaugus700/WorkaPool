@@ -148,6 +148,11 @@ describe("RegistrarIbcInspecaoUseCase — recusas", () => {
     await assert.rejects(() => useCase.execute(input()), hasCode("IBC_EM_VIAGEM", 409));
   });
 
+  it("recusa IBC no cliente com 409 IBC_NO_CLIENTE", async () => {
+    const { useCase } = setup({ ibc: { ...ibcBase, custodia: "CLIENTE" } });
+    await assert.rejects(() => useCase.execute(input()), hasCode("IBC_NO_CLIENTE", 409));
+  });
+
   it("recusa checklist não vinculado com 422 IBC_CHECKLIST_NAO_VINCULADO", async () => {
     const { useCase } = setup();
     await assert.rejects(
