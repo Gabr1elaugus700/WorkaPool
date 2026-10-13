@@ -93,8 +93,12 @@ export class IbcInspecaoRepository implements IIbcInspecaoRepository, IIbcInspec
     const { respostas, ...inspecaoData } = data;
     return this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT "id" FROM "Ibc" WHERE "id" = ${data.ibcId} FOR UPDATE`;
+      const pendente = await tx.entradaPatioIbc.findFirst({
+        where: { ibcId: data.ibcId, status: "PENDENTE" },
+        select: { id: true },
+      });
       const inspecao = await tx.ibcInspecao.create({
-        data: { ...inspecaoData, respostas: { create: respostas } },
+        data: { ...inspecaoData, entradaPatioId: pendente?.id ?? null, respostas: { create: respostas } },
       });
 
       const estado = await tx.ibc.findUniqueOrThrow({
