@@ -15,7 +15,7 @@ import CadastroIbcSectionError from "./CadastroIbcSectionError";
 import CadastroIbcSectionSkeleton from "./CadastroIbcSectionSkeleton";
 
 type Props = {
-  ibc: IbcCadastroDTO;
+  ibc: Pick<IbcCadastroDTO, "id" | "identificador">;
   onClose: () => void;
 };
 
