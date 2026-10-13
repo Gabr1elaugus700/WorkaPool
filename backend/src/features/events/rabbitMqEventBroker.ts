@@ -2,8 +2,15 @@ import amqp from "amqplib";
 import type { ChannelModel, ConfirmChannel, ConsumeMessage } from "amqplib";
 import { getRabbitMqConfig } from "../../config/rabbitmq";
 import type { RabbitMqConfig } from "../../config/rabbitmq";
-import type { DomainEvent } from "./domainEvents";
+import { domainEvents, type DomainEvent } from "./domainEvents";
 import type { EventBroker, EventHandler } from "./eventBroker";
+
+const CARGA_FECHADA_ROUTING_KEY = domainEvents.getRoutingKey(
+  domainEvents.EVENT_TYPES.CARGA_FECHADA,
+);
+const VIAGEM_IBC_FECHADA_ROUTING_KEY = domainEvents.getRoutingKey(
+  domainEvents.EVENT_TYPES.VIAGEM_IBC_FECHADA,
+);
 
 export class RabbitMqEventBroker implements EventBroker {
   private readonly config: RabbitMqConfig;
@@ -17,11 +24,23 @@ export class RabbitMqEventBroker implements EventBroker {
   async connect(): Promise<void> {
     const channel = await this.getChannel();
     await this.assertTopology(channel);
+    await this.assertTopology(
+      channel,
+      this.config.ibcAvisoQueue,
+      VIAGEM_IBC_FECHADA_ROUTING_KEY,
+    );
   }
 
   async publish(event: DomainEvent, routingKey: string): Promise<void> {
     const channel = await this.getChannel();
     await this.assertTopology(channel);
+    // Exchange topic confirma sem fila vinculada. A fila da viagem nasce aqui,
+    // antes do confirm, para o outbox não marcar publishedAt com a mensagem perdida.
+    await this.assertTopology(
+      channel,
+      this.config.ibcAvisoQueue,
+      VIAGEM_IBC_FECHADA_ROUTING_KEY,
+    );
 
     channel.publish(
       this.config.exchange,
@@ -36,9 +55,13 @@ export class RabbitMqEventBroker implements EventBroker {
     await channel.waitForConfirms();
   }
 
-  async consume(queue: string, handler: EventHandler): Promise<void> {
+  async consume(
+    queue: string,
+    handler: EventHandler,
+    routingKey = CARGA_FECHADA_ROUTING_KEY,
+  ): Promise<void> {
     const channel = await this.getChannel();
-    await this.assertTopology(channel, queue);
+    await this.assertTopology(channel, queue, routingKey);
 
     await channel.consume(queue, async (message) => {
       if (!message) return;
@@ -93,6 +116,7 @@ export class RabbitMqEventBroker implements EventBroker {
   private async assertTopology(
     channel: ConfirmChannel,
     queue = this.config.ibcQueue,
+    routingKey = CARGA_FECHADA_ROUTING_KEY,
   ): Promise<void> {
     await channel.assertExchange(this.config.exchange, "topic", {
       durable: true,
@@ -106,20 +130,16 @@ export class RabbitMqEventBroker implements EventBroker {
     await channel.bindQueue(
       this.config.ibcDeadLetterQueue,
       this.config.deadLetterExchange,
-      "carga.fechada",
+      routingKey,
     );
     await channel.assertQueue(queue, {
       durable: true,
       arguments: {
         "x-dead-letter-exchange": this.config.deadLetterExchange,
-        "x-dead-letter-routing-key": "carga.fechada",
+        "x-dead-letter-routing-key": routingKey,
       },
     });
-    await channel.bindQueue(
-      queue,
-      this.config.exchange,
-      "carga.fechada",
-    );
+    await channel.bindQueue(queue, this.config.exchange, routingKey);
   }
 
   private getRetryCount(message: ConsumeMessage): number {
@@ -139,7 +159,9 @@ export class RabbitMqEventBroker implements EventBroker {
       nextRetryCount > this.config.maxConsumerRetries
         ? this.config.deadLetterExchange
         : this.config.exchange;
-    const targetKey = "carga.fechada";
+    const messageKey = message.fields.routingKey;
+    const targetKey =
+      messageKey.length > 0 ? messageKey : CARGA_FECHADA_ROUTING_KEY;
 
     try {
       channel.publish(targetExchange, targetKey, message.content, {

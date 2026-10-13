@@ -53,16 +53,22 @@ export class OutboxPublisher {
   }
 
   private toDomainEvent(event: OutboxEventRecord): DomainEvent {
-    if (event.eventType !== domainEvents.EVENT_TYPES.CARGA_FECHADA) {
-      throw new Error(`Tipo de evento não suportado: ${event.eventType}`);
-    }
-
-    return domainEvents.cargoClosedEventSchema.parse({
+    const envelope = {
       eventId: event.id,
       eventType: event.eventType,
       occurredAt: event.occurredAt.toISOString(),
       payload: event.payload,
-    });
+    };
+
+    if (event.eventType === domainEvents.EVENT_TYPES.CARGA_FECHADA) {
+      return domainEvents.cargoClosedEventSchema.parse(envelope);
+    }
+
+    if (event.eventType === domainEvents.EVENT_TYPES.VIAGEM_IBC_FECHADA) {
+      return domainEvents.viagemIbcFechadaEventSchema.parse(envelope);
+    }
+
+    throw new Error(`Tipo de evento não suportado: ${event.eventType}`);
   }
 
   private async sleep(durationMs: number): Promise<void> {

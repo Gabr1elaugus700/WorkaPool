@@ -42,12 +42,21 @@ export async function openRabbitMqTestChannel(): Promise<RabbitMqTestChannel> {
   return {
     config,
     async purgeIbcQueues(): Promise<void> {
-      for (const queue of [config.ibcQueue, config.ibcDeadLetterQueue]) {
-        const exists = await channel
-          .checkQueue(queue)
-          .then(() => true)
-          .catch(() => false);
-        if (exists) await channel.purgeQueue(queue);
+      for (const queue of [
+        config.ibcQueue,
+        config.ibcAvisoQueue,
+        config.ibcDeadLetterQueue,
+      ]) {
+        const probe = await connection.createChannel();
+        probe.on("error", () => undefined);
+        try {
+          await probe.checkQueue(queue);
+          await probe.purgeQueue(queue);
+        } catch {
+          // Fila ainda não declarada neste vhost.
+        } finally {
+          await probe.close().catch(() => undefined);
+        }
       }
     },
     async getMessage(queue: string): Promise<GetMessage | null> {
