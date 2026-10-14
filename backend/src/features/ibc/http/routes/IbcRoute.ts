@@ -10,6 +10,7 @@ import { IbcInspecaoController } from "../controllers/IbcInspecaoController";
 import { IbcEntradaPatioController } from "../controllers/IbcEntradaPatioController";
 import { IbcConciliacaoController } from "../controllers/IbcConciliacaoController";
 import { createIbcAvisoRoutes } from "./IbcAvisoRoute";
+import { createIbcConciliacaoErpRoutes } from "./IbcConciliacaoErpRoute";
 
 const router = Router();
 
@@ -88,6 +89,8 @@ router.get(
 router.use("/avisos", createIbcAvisoRoutes());
 
 router.get("/entradas-patio", writeAuth, IbcEntradaPatioController.listar);
+
+router.use("/conciliacao-erp", createIbcConciliacaoErpRoutes());
 
 router.patch(
   "/:id",
