@@ -8,6 +8,7 @@ import {
   Package,
   PackageX,
   RefreshCw,
+  Scale,
   Truck,
   UserCog,
 } from "lucide-react";
@@ -81,6 +82,15 @@ export const NAV_ITEMS: readonly NavItem[] = [
     mobileLabel: "Cad. IBC",
     to: "/cadastro-ibc",
     icon: Container,
+    group: "main",
+    allowedRoles: IBC_CADASTRO_VIEW_ROLES,
+    showOnMobile: true,
+  },
+  {
+    label: "Conciliação IBC",
+    mobileLabel: "Conciliação",
+    to: "/conciliacao-ibc",
+    icon: Scale,
     group: "main",
     allowedRoles: IBC_CADASTRO_VIEW_ROLES,
     showOnMobile: true,
