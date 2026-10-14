@@ -9,7 +9,7 @@ function labels(role: string | undefined, group: "main" | "admin"): string[] {
 
 describe("navItems.utils", () => {
   it("shows CRM, Cargas and Avisos IBC to VENDAS, without admin items", () => {
-    assert.deepEqual(labels("VENDAS", "main"), ["CRM", "Cargas", "Avisos IBC"]);
+    assert.deepEqual(labels("VENDAS", "main"), ["CRM", "Cargas", "Avisos IBC", "Empréstimos IBC"]);
     assert.deepEqual(labels("VENDAS", "admin"), []);
   });
 
@@ -19,6 +19,7 @@ describe("navItems.utils", () => {
       "Pedidos Perdidos",
       "Cargas",
       "Avisos IBC",
+      "Empréstimos IBC",
       "Cadastro IBC",
       "Conciliação IBC",
       "Checklists de IBC",
@@ -38,7 +39,12 @@ describe("navItems.utils", () => {
   });
 
   it("shows Cadastro IBC read-only to LOGISTICA, without CRM or IBC write items", () => {
-    assert.deepEqual(labels("LOGISTICA", "main"), ["Cargas", "Cadastro IBC", "Conciliação IBC"]);
+    assert.deepEqual(labels("LOGISTICA", "main"), [
+      "Cargas",
+      "Empréstimos IBC",
+      "Cadastro IBC",
+      "Conciliação IBC",
+    ]);
   });
 
   it("shows Cadastro IBC read-only to GERENTE_DPTO, without IBC write items", () => {
@@ -46,9 +52,19 @@ describe("navItems.utils", () => {
       "CRM",
       "Pedidos Perdidos",
       "Cargas",
+      "Empréstimos IBC",
       "Cadastro IBC",
       "Conciliação IBC",
     ]);
+  });
+
+  it("shows Empréstimos IBC only to ADMIN, LOGISTICA, GERENTE_DPTO and VENDAS", () => {
+    for (const role of ["ADMIN", "LOGISTICA", "GERENTE_DPTO", "VENDAS"]) {
+      assert.equal(labels(role, "main").includes("Empréstimos IBC"), true, role);
+    }
+    for (const role of ["ALMOX", "USER", "MOTORISTA", undefined]) {
+      assert.equal(labels(role, "main").includes("Empréstimos IBC"), false, String(role));
+    }
   });
 
   it("hides role-restricted items when there is no role", () => {

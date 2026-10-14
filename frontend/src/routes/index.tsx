@@ -15,8 +15,10 @@ import ExpedicaoIbcPreparacaoPage from "../pages/ExpedicaoIbcPreparacaoPage";
 import ConciliacaoViagemView from "@/features/ibc/views/ConciliacaoViagemView";
 import CadastroIbcPage from "../pages/CadastroIbcPage";
 import ConciliacaoErpPage from "../pages/ConciliacaoErpPage";
+import EmprestimosAtrasadosPage from "../pages/EmprestimosAtrasadosPage";
 import ChecklistsIbcView from "@/features/ibc/views/ChecklistsIbcView";
 import { IBC_CADASTRO_VIEW_ROLES, IBC_CADASTRO_WRITE_ROLES } from "@/features/ibc/utils/ibcCadastroPermissions";
+import { ibcEmprestimoAtrasadoPermissions } from "@/features/ibc/utils/ibcEmprestimoAtrasadoPermissions";
 import ClientesInativos from "../pages/ClientesInativos";
 import { OrderLossView } from "@/features/orderLoss";
 import Login from "@/auth/Login";
@@ -137,6 +139,14 @@ const AppRoutes = () => {
             element={
               <PrivateRoute allowedRoles={["VENDAS", "ADMIN"]}>
                 <AvisosRepresentantePage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/emprestimos-ibc"
+            element={
+              <PrivateRoute allowedRoles={ibcEmprestimoAtrasadoPermissions.roles}>
+                <EmprestimosAtrasadosPage />
               </PrivateRoute>
             }
           />
