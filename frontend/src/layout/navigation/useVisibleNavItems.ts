@@ -4,7 +4,8 @@ import { useAuth } from "@/auth/AuthContext";
 import { HOME_NAV_ITEM, NAV_ITEMS, type NavItem } from "./navItems";
 import { filterNavItems, isNavPathActive } from "./navItems.utils";
 
-const MOBILE_NAV_LIMIT = 4;
+/** Início mais os atalhos. 6 mantém Atraso no celular e Conciliação para logística. */
+const MOBILE_NAV_LIMIT = 6;
 
 export function useVisibleNavItems() {
   const { user } = useAuth();

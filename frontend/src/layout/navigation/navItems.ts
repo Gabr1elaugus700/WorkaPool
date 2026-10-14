@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Bell,
   ClipboardCheck,
+  Clock,
   Contact,
   Container,
   Home,
@@ -21,6 +22,7 @@ import {
   IBC_CADASTRO_VIEW_ROLES,
   IBC_CADASTRO_WRITE_ROLES,
 } from "@/features/ibc/utils/ibcCadastroPermissions";
+import { ibcEmprestimoAtrasadoPermissions } from "@/features/ibc/utils/ibcEmprestimoAtrasadoPermissions";
 
 export type NavItemGroup = "main" | "admin";
 
@@ -75,6 +77,15 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: Bell,
     group: "main",
     allowedRoles: ["VENDAS", "ADMIN"],
+    showOnMobile: true,
+  },
+  {
+    label: "Empréstimos IBC",
+    mobileLabel: "Atraso",
+    to: "/emprestimos-ibc",
+    icon: Clock,
+    group: "main",
+    allowedRoles: ibcEmprestimoAtrasadoPermissions.roles,
     showOnMobile: true,
   },
   {
