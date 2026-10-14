@@ -20,6 +20,7 @@ describe("navItems.utils", () => {
       "Cargas",
       "Avisos IBC",
       "Cadastro IBC",
+      "Conciliação IBC",
       "Checklists de IBC",
       "Expedição IBC",
     ]);
@@ -30,13 +31,14 @@ describe("navItems.utils", () => {
     assert.deepEqual(labels("ALMOX", "main"), [
       "Cargas",
       "Cadastro IBC",
+      "Conciliação IBC",
       "Checklists de IBC",
       "Expedição IBC",
     ]);
   });
 
   it("shows Cadastro IBC read-only to LOGISTICA, without CRM or IBC write items", () => {
-    assert.deepEqual(labels("LOGISTICA", "main"), ["Cargas", "Cadastro IBC"]);
+    assert.deepEqual(labels("LOGISTICA", "main"), ["Cargas", "Cadastro IBC", "Conciliação IBC"]);
   });
 
   it("shows Cadastro IBC read-only to GERENTE_DPTO, without IBC write items", () => {
@@ -45,6 +47,7 @@ describe("navItems.utils", () => {
       "Pedidos Perdidos",
       "Cargas",
       "Cadastro IBC",
+      "Conciliação IBC",
     ]);
   });
 

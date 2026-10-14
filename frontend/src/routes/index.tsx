@@ -14,8 +14,9 @@ import EntradaPatioIbcPage from "../pages/EntradaPatioIbcPage";
 import ExpedicaoIbcPreparacaoPage from "../pages/ExpedicaoIbcPreparacaoPage";
 import ConciliacaoViagemView from "@/features/ibc/views/ConciliacaoViagemView";
 import CadastroIbcPage from "../pages/CadastroIbcPage";
+import ConciliacaoErpPage from "../pages/ConciliacaoErpPage";
 import ChecklistsIbcView from "@/features/ibc/views/ChecklistsIbcView";
-import { IBC_CADASTRO_WRITE_ROLES } from "@/features/ibc/utils/ibcCadastroPermissions";
+import { IBC_CADASTRO_VIEW_ROLES, IBC_CADASTRO_WRITE_ROLES } from "@/features/ibc/utils/ibcCadastroPermissions";
 import ClientesInativos from "../pages/ClientesInativos";
 import { OrderLossView } from "@/features/orderLoss";
 import Login from "@/auth/Login";
@@ -184,6 +185,14 @@ const AppRoutes = () => {
             element={
               <PrivateRoute>
                 <CadastroIbcPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/conciliacao-ibc"
+            element={
+              <PrivateRoute allowedRoles={IBC_CADASTRO_VIEW_ROLES}>
+                <ConciliacaoErpPage />
               </PrivateRoute>
             }
           />
