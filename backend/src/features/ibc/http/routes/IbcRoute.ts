@@ -11,6 +11,7 @@ import { IbcEntradaPatioController } from "../controllers/IbcEntradaPatioControl
 import { IbcConciliacaoController } from "../controllers/IbcConciliacaoController";
 import { createIbcAvisoRoutes } from "./IbcAvisoRoute";
 import { createIbcConciliacaoErpRoutes } from "./IbcConciliacaoErpRoute";
+import { createIbcEmprestimoAtrasadoRoutes } from "./IbcEmprestimoAtrasadoRoute";
 
 const router = Router();
 
@@ -91,6 +92,8 @@ router.use("/avisos", createIbcAvisoRoutes());
 router.get("/entradas-patio", writeAuth, IbcEntradaPatioController.listar);
 
 router.use("/conciliacao-erp", createIbcConciliacaoErpRoutes());
+
+router.use("/emprestimos-atrasados", createIbcEmprestimoAtrasadoRoutes());
 
 router.patch(
   "/:id",
