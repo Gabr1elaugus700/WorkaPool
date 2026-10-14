@@ -86,3 +86,30 @@ export type AgregadoConciliacaoErp = {
   serialSemNf: SerialSemNfConciliacaoErp;
   nfSemSerializar: NfSemSerializarConciliacaoErp;
 };
+
+/** Bucket de ciclo de vida ou o recorte ortogonal da listagem. */
+export type BucketConciliacaoErp = BucketCicloConciliacaoErp | "SERIAL_SEM_NF";
+
+/**
+ * Item da listagem. `emprestimoVenceEm` é a data gravada no empréstimo;
+ * o relatório não deriva atraso.
+ */
+export type ItemConciliacaoErp = {
+  id: string;
+  identificador: string;
+  bucket: BucketCicloConciliacaoErp;
+  custodia: IbcCustodiaConciliacaoErp;
+  motivoBaixa: IbcMotivoBaixaConciliacaoErp | null;
+  aquisicao: IbcAquisicaoConciliacaoErp;
+  cliente: string | null;
+  codCli: string | null;
+  numPed: string | null;
+  emprestimoVenceEm: Date | null;
+  parIdentificador: string | null;
+  numeroNf: string | null;
+  baixadoEm: Date | null;
+};
+
+export type RelatorioConciliacaoErp = AgregadoConciliacaoErp & {
+  itens: ItemConciliacaoErp[];
+};
