@@ -21,7 +21,12 @@ export class FecharViagemIbcUseCase {
     private readonly now: () => Date = () => new Date(),
   ) {}
 
-  async execute(input: { codCar: number; actorRole: Role; actorId: string }): Promise<FecharViagemIbcResult> {
+  async execute(input: {
+    codCar: number;
+    actorRole: Role;
+    actorId: string;
+    confirmacoes?: readonly string[];
+  }): Promise<FecharViagemIbcResult> {
     assertCanFecharViagemIbc(input.actorRole);
     const { carga, pedidosIbc } = await loadCargaFotoExpedicao(this.expedicoes, input.codCar);
     const expedicao = await this.conciliacoes.findPorCarga(carga.id);
@@ -31,13 +36,18 @@ export class FecharViagemIbcUseCase {
     if (expedicao.viagemFechadaEm) {
       throw new AppError({ message: "A viagem já foi fechada", statusCode: 409, code: "IBC_VIAGEM_JA_FECHADA", details: { codCar: input.codCar } });
     }
-    const [alocacoes, marcas, retornos] = await Promise.all([
+    const [alocacoes, marcas] = await Promise.all([
       this.expedicoes.listAlocacoesByCargaId(carga.id),
       this.conciliacoes.listMarcas(expedicao.id),
-      this.conciliacoes.listRetornos(expedicao.id),
     ]);
     const now = this.now();
-    const plano = planejarFechamentoViagem({ now, alocacoes, pedidos: pedidosIbc, marcas, retornos });
+    const plano = planejarFechamentoViagem({
+      now,
+      alocacoes,
+      pedidos: pedidosIbc,
+      marcas,
+      confirmacoes: input.confirmacoes,
+    });
     await this.conciliacoes.fecharViagem(
       {
         expedicaoId: expedicao.id,
