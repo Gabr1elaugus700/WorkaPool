@@ -17,7 +17,7 @@ import CadastroIbcModeSelector, {
 import CadastroIbcPoolList from "../components/CadastroIbcPoolList";
 import CadastroIbcAlertsPanel from "../components/CadastroIbcAlertsPanel";
 import CadastroIbcSectionError from "../components/CadastroIbcSectionError";
-import IbcPageHeader from "../components/IbcPageHeader";
+import GestaoIbcHeader from "../components/GestaoIbcHeader";
 import IbcStatusContent from "../components/IbcStatusContent";
 import ConfirmarMudancaIbcModal, {
   type IbcMudancaModo,
@@ -151,8 +151,9 @@ export default function CadastroIbcView() {
   return (
     <DefaultLayout>
       <div className="space-y-6">
-        <IbcPageHeader
-          title="Cadastro IBC"
+        <GestaoIbcHeader
+          activeSection="containers"
+          userRole={user?.role}
           primaryAction={canWrite ? <Button type="button" onClick={() => setNovoAberto(true)}>Novo IBC</Button> : null}
         />
         <p className="max-w-prose text-sm text-muted-foreground">
