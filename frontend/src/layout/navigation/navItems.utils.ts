@@ -18,6 +18,19 @@ export function filterNavItems(
   return items.filter((item) => item.group === group && canSeeNavItem(item, role));
 }
 
+/** Início mais os atalhos. 7 cabe CRM, Perdidos, Cargas e as três superfícies do IBC. */
+const MOBILE_NAV_LIMIT = 7;
+
+export function selectMobileNavItems(
+  mainItems: readonly NavItem[],
+  adminItems: readonly NavItem[],
+  home: NavItem,
+): NavItem[] {
+  return [home, ...mainItems, ...adminItems]
+    .filter((item) => item.showOnMobile)
+    .slice(0, MOBILE_NAV_LIMIT);
+}
+
 export function isNavPathActive(itemPath: string, pathname: string): boolean {
   if (itemPath === "/") {
     return pathname === "/";

@@ -214,6 +214,14 @@ const AppRoutes = () => {
             }
           />
           <Route
+            path="/gestao-ibc"
+            element={
+              <PrivateRoute>
+                <Navigate to="/gestao-ibc/containers" replace />
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/gestao-ibc/containers"
             element={
               <PrivateRoute>
