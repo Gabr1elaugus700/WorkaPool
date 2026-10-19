@@ -13,6 +13,7 @@ import {
   conciliacaoViagem,
   DestinoConciliacaoIbc,
   ModalidadeConciliacaoIbc,
+  PedidoConciliacaoViagem,
 } from "../services/conciliacaoViagem";
 import { AlocacaoIbcRecord, CargaPedidoIbcSnapshot } from "../types/IbcExpedicao.types";
 import { loadCargaFotoExpedicao } from "./loadCargaFotoExpedicao";
@@ -41,6 +42,7 @@ export type ConciliacaoViagemView = {
   viagemFechadaEm: Date | null;
   viagemFechadaPorId: string | null;
   itens: ConciliacaoViagemItem[];
+  pedidos: PedidoConciliacaoViagem[];
   clientes: ConciliacaoViagemCliente[];
 };
 
@@ -77,37 +79,46 @@ function montar(input: {
   const pedidos = new Map(input.pedidos.map((pedido) => [pedido.numPed, pedido]));
   const marcas = new Map(input.marcas.map((marca) => [marca.alocacaoIbcId, marca]));
   const retornos = new Map(input.retornos.map((retorno) => [retorno.chaveCliente, retorno]));
-  const itens = input.alocacoes
+  const viagemFechada = input.expedicao.viagemFechadaEm != null;
+  const ordenadas = input.alocacoes
     .slice()
-    .sort((a, b) => a.identificador.localeCompare(b.identificador, undefined, { numeric: true }))
-    .map((alocacao) => {
-      const pedido =
-        alocacao.numPed == null ? undefined : pedidos.get(alocacao.numPed);
-      const marca = marcas.get(alocacao.id);
-      return {
-        alocacaoIbcId: alocacao.id,
-        ibcId: alocacao.ibcId,
-        identificador: alocacao.identificador,
-        numPed: alocacao.numPed,
-        codCli: pedido?.codCli ?? null,
-        cliente: pedido?.cliente ?? "",
-        destino: marca?.destino ?? null,
-        modalidade: marca?.modalidade ?? null,
-        modalidadeSugerida: pedido
-          ? conciliacaoViagem.sugerirModalidade(
-              pedido.quantidadeEsperadaVenda,
-              pedido.quantidadeEsperadaEmprestimo,
-            )
-          : null,
-        ibcEntradaId: marca?.ibcEntradaId ?? null,
-      };
+    .sort((a, b) => a.identificador.localeCompare(b.identificador, undefined, { numeric: true }));
+  const escolhas = ordenadas.map((alocacao) => {
+    const marca = marcas.get(alocacao.id);
+    return conciliacaoViagem.pedidoNaVolta({
+      viagemFechada,
+      destino: marca?.destino ?? null,
+      numPedAlocacao: alocacao.numPed,
+      numPedMarca: marca?.numPed ?? null,
     });
+  });
+  const itens = ordenadas.map((alocacao, index) => {
+    const marca = marcas.get(alocacao.id);
+    const numPed = escolhas[index]?.exibido ?? null;
+    const pedido = numPed == null ? undefined : pedidos.get(numPed);
+    const sugestao = viagemFechada && alocacao.numPed != null ? pedidos.get(alocacao.numPed) : undefined;
+    return {
+      alocacaoIbcId: alocacao.id,
+      ibcId: alocacao.ibcId,
+      identificador: alocacao.identificador,
+      numPed,
+      codCli: pedido?.codCli ?? null,
+      cliente: pedido?.cliente ?? "",
+      destino: marca?.destino ?? null,
+      modalidade: marca?.modalidade ?? null,
+      modalidadeSugerida: sugestao
+        ? conciliacaoViagem.sugerirModalidade(sugestao.quantidadeEsperadaVenda, sugestao.quantidadeEsperadaEmprestimo)
+        : null,
+      ibcEntradaId: marca?.ibcEntradaId ?? null,
+    };
+  });
   return {
     codCar: input.codCar,
     expedicaoIbcId: input.expedicao.id,
     viagemFechadaEm: input.expedicao.viagemFechadaEm,
     viagemFechadaPorId: input.expedicao.viagemFechadaPorId,
     itens,
+    pedidos: conciliacaoViagem.progressoPedidos(input.pedidos, escolhas.map((escolha) => escolha.apontado)),
     clientes: conciliacaoViagem.clientes(input.pedidos).map((cliente) => {
       const salvo = retornos.get(cliente.chaveCliente);
       return {

@@ -12,6 +12,7 @@ export type MarcaConciliacaoSalva = {
   alocacaoIbcId: string;
   destino: DestinoConciliacaoIbc;
   modalidade: ModalidadeConciliacaoIbc | null;
+  numPed: string | null;
   ibcEntradaId: string | null;
 };
 
@@ -34,6 +35,7 @@ export type SalvarConciliacaoData = {
     alocacaoIbcId: string;
     destino: DestinoConciliacaoIbc;
     modalidade: ModalidadeConciliacaoIbc | null;
+    numPed: string | null;
   }>;
   retornos: Array<{
     chaveCliente: string;
@@ -82,6 +84,7 @@ export class IbcConciliacaoRepository implements IIbcConciliacaoRepository {
       alocacaoIbcId: row.alocacaoIbcId,
       destino: row.destino,
       modalidade: row.modalidade,
+      numPed: row.numPed,
       ibcEntradaId: row.ibcEntradaId,
     }));
   }
@@ -114,9 +117,21 @@ export class IbcConciliacaoRepository implements IIbcConciliacaoRepository {
             alocacaoIbcId: marca.alocacaoIbcId,
             destino: marca.destino,
             modalidade: marca.modalidade,
+            numPed: marca.numPed,
             lancadoPorId: data.lancadoPorId,
           },
-          update: { destino: marca.destino, modalidade: marca.modalidade, lancadoPorId: data.lancadoPorId },
+          update: {
+            destino: marca.destino,
+            modalidade: marca.modalidade,
+            numPed: marca.numPed,
+            lancadoPorId: data.lancadoPorId,
+          },
+        }),
+      ),
+      ...data.marcas.map((marca) =>
+        this.prisma.alocacaoIbc.update({
+          where: { id: marca.alocacaoIbcId },
+          data: { numPed: marca.numPed },
         }),
       ),
       ...data.retornos.map((retorno) =>
