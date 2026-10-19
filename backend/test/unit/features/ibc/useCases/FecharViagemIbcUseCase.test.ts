@@ -82,6 +82,25 @@ describe("planejarFechamentoViagem", () => {
       { ibcId: "ibc-in", origem: "TROCA" },
     ]);
     assert.deepEqual(plano.ficaram.map((item) => item.modalidade), ["VENDA", "EMPRESTIMO"]);
+    assert.deepEqual(plano.ficaram.map((item) => item.numPed), ["10", "10"]);
+  });
+
+  it("não perde o pedido gravado e não quebra quando a alocação ainda não tem pedido", () => {
+    const comPedido = alocacao("venda", "H1");
+    const semPedido = { ...alocacao("ret", "H3"), numPed: null };
+    const marcas: MarcaConciliacaoSalva[] = [
+      { alocacaoIbcId: "venda", destino: "FICOU", modalidade: "VENDA", ibcEntradaId: null },
+      { alocacaoIbcId: "ret", destino: "RETORNOU", modalidade: null, ibcEntradaId: null },
+    ];
+    const plano = planejarFechamentoViagem({
+      now: NOW,
+      alocacoes: [comPedido, semPedido],
+      pedidos: [pedido()],
+      marcas,
+      retornos: papel(0),
+    });
+    assert.deepEqual(plano.ficaram.map((item) => item.numPed), ["10"]);
+    assert.equal(plano.efeitos.some((efeito) => efeito.alocacaoIbcId === "ret"), true);
   });
 
   it("bloqueia troca sem entrada e divergência do papel sem confirmação", () => {

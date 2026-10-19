@@ -17,7 +17,7 @@ export type AlocacaoIbcRecord = {
   id: string;
   ibcId: string;
   cargaId: string;
-  numPed: string;
+  numPed: string | null;
   alocadoPorId: string;
   alocadoEm: Date;
   expedicaoIbcId: string | null;
@@ -61,7 +61,7 @@ export type CargaExpedicaoPendente = CargaExpedicaoRef & {
 export type CreateAlocacaoIbcData = {
   ibcId: string;
   cargaId: string;
-  numPed: string;
+  numPed: string | null;
   alocadoPorId: string;
 };
 
