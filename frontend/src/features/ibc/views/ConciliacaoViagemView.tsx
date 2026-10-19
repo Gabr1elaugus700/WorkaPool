@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
@@ -12,10 +11,8 @@ import ConciliacaoTrocaDialog from "../components/ConciliacaoTrocaDialog";
 import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
 import ExpedicaoIbcAsyncState from "../components/ExpedicaoIbcAsyncState";
 import ExpedicaoIbcPageHeader from "../components/ExpedicaoIbcPageHeader";
-import { conciliacaoViagemService } from "../services/conciliacaoViagemService";
-import type { ConciliacaoViagemDTO, DestinoConciliacao, ModalidadeConciliacao } from "../types/conciliacaoViagem.types";
+import { useConciliacaoViagem } from "../hooks/useConciliacaoViagem";
 import { canAccessExpedicaoIbc } from "../utils/canAccessExpedicaoIbc";
-import { toError } from "../utils/toError";
 function parseCodCar(raw: string | undefined): number | null {
   const n = Number(raw);
   return Number.isFinite(n) && n > 0 ? n : null;
@@ -26,93 +23,14 @@ export default function ConciliacaoViagemView() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const allowed = canAccessExpedicaoIbc(user?.role);
-  const [viagem, setViagem] = useState<ConciliacaoViagemDTO | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
-  const [salvando, setSalvando] = useState(false);
   const [trocaId, setTrocaId] = useState<string | null>(null);
-  const carregar = useCallback(async () => {
-    if (codCar == null) {
-      setError(new Error("Código de carga inválido."));
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      setViagem(await conciliacaoViagemService.consultar(codCar));
-    } catch (err) {
-      setError(toError(err));
-    } finally {
-      setLoading(false);
-    }
-  }, [codCar]);
-  useEffect(() => {
-    if (!allowed) {
-      setLoading(false);
-      return;
-    }
-    void carregar();
-  }, [allowed, carregar]);
+  const conciliacao = useConciliacaoViagem(codCar, allowed, () => navigate("/expedicao-ibc/em-viagem"));
   if (!allowed) return <ExpedicaoIbcAccessDeniedAlert />;
-  const fechada = viagem?.viagemFechadaEm != null;
-  const marcados = viagem?.itens.filter((item) => item.destino != null).length ?? 0;
-  const total = viagem?.itens.length ?? 0;
-  const papelCompleto = viagem?.clientes.every((cliente) => cliente.quantidadePapel != null) ?? false;
+  const { viagem, fechada, salvando, marcados, total, aviso } = conciliacao;
+  const error = codCar == null ? new Error("Código de carga inválido.") : conciliacao.error;
   const trocaAberta = viagem?.itens.find((item) => item.alocacaoIbcId === trocaId) ?? null;
-  const atualizar = (
-    alocacaoIbcId: string,
-    patch: (item: ConciliacaoViagemDTO["itens"][number]) => ConciliacaoViagemDTO["itens"][number],
-  ) => {
-    setViagem((atual) => atual && {
-      ...atual,
-      itens: atual.itens.map((item) => (item.alocacaoIbcId === alocacaoIbcId ? patch(item) : item)),
-    });
-  };
-  const persistir = async (): Promise<boolean> => {
-    if (!viagem || codCar == null) return false;
-    const incompleta = viagem.itens.find((item) => item.destino === "FICOU" && item.modalidade == null);
-    if (incompleta) {
-      setAviso(`Escolha venda ou empréstimo para o IBC ${incompleta.identificador}.`);
-      return false;
-    }
-    const salva = await conciliacaoViagemService.salvar(codCar, {
-      itens: viagem.itens.flatMap((item) => item.destino == null ? [] : [{
-        alocacaoIbcId: item.alocacaoIbcId,
-        destino: item.destino,
-        modalidade: item.modalidade,
-      }]),
-      retornosSemId: viagem.clientes.flatMap((cliente) => cliente.quantidadePapel == null ? [] : [{
-        chaveCliente: cliente.chaveCliente,
-        quantidadePapel: cliente.quantidadePapel,
-        confirmouDivergencia: cliente.confirmouDivergencia,
-      }]),
-    });
-    setViagem(salva);
-    return true;
-  };
-  const executar = async (fechar: boolean) => {
-    setSalvando(true);
-    setAviso(null);
-    try {
-      if (!(await persistir())) return;
-      if (!fechar) {
-        toast.success("Conciliação salva.");
-        return;
-      }
-      if (codCar == null) return;
-      await conciliacaoViagemService.fechar(codCar);
-      toast.success("Viagem fechada.");
-      navigate("/expedicao-ibc/em-viagem");
-    } catch (err) {
-      setAviso(toError(err).message);
-    } finally {
-      setSalvando(false);
-    }
-  };
   return (
-    <ExpedicaoIbcAsyncState loading={loading} error={error} loadingLabel="Carregando conciliação…">
+    <ExpedicaoIbcAsyncState loading={conciliacao.loading || (viagem == null && error == null)} error={error} loadingLabel="Carregando conciliação…">
       <DefaultLayout>
         {viagem ? (
           <>
@@ -140,15 +58,8 @@ export default function ConciliacaoViagemView() {
                   key={item.alocacaoIbcId}
                   item={item}
                   disabled={fechada || salvando}
-                  onDestino={(destino: DestinoConciliacao) => atualizar(item.alocacaoIbcId, (atual) => ({
-                    ...atual,
-                    destino,
-                    modalidade: destino === "FICOU" ? atual.modalidade ?? atual.modalidadeSugerida : null,
-                  }))}
-                  onModalidade={(modalidade: ModalidadeConciliacao) => atualizar(item.alocacaoIbcId, (atual) => ({
-                    ...atual,
-                    modalidade,
-                  }))}
+                  onDestino={(destino) => conciliacao.marcarDestino(item.alocacaoIbcId, destino)}
+                  onModalidade={(modalidade) => conciliacao.marcarModalidade(item.alocacaoIbcId, modalidade)}
                   onTroca={() => setTrocaId(item.alocacaoIbcId)}
                 />
               ))}
@@ -157,10 +68,7 @@ export default function ConciliacaoViagemView() {
               clientes={viagem.clientes}
               itens={viagem.itens}
               disabled={fechada || salvando}
-              onChange={(chaveCliente, patch) => setViagem((atual) => atual && ({
-                ...atual,
-                clientes: atual.clientes.map((cliente) => cliente.chaveCliente === chaveCliente ? { ...cliente, ...patch } : cliente),
-              }))}
+              onChange={conciliacao.atualizarCliente}
             />
             {trocaAberta && codCar != null ? (
               <ConciliacaoTrocaDialog
@@ -169,15 +77,15 @@ export default function ConciliacaoViagemView() {
                 identificador={trocaAberta.identificador}
                 open
                 onOpenChange={(open) => { if (!open) setTrocaId(null); }}
-                onRegistrada={(ibcEntradaId) => atualizar(trocaAberta.alocacaoIbcId, (atual) => ({ ...atual, ibcEntradaId }))}
+                onRegistrada={(ibcEntradaId) => conciliacao.vincularTroca(trocaAberta.alocacaoIbcId, ibcEntradaId)}
               />
             ) : null}
             {fechada ? null : (
               <div className="mt-6 flex flex-wrap gap-2">
-                <Button type="button" variant="outline" disabled={salvando} onClick={() => void executar(false)}>
+                <Button type="button" variant="outline" disabled={salvando} onClick={() => void conciliacao.salvarAndamento()}>
                   Salvar andamento
                 </Button>
-                <Button type="button" disabled={salvando || marcados !== total || total === 0 || !papelCompleto} onClick={() => void executar(true)}>
+                <Button type="button" disabled={!conciliacao.podeFechar} onClick={() => void conciliacao.fecharViagem()}>
                   Fechar viagem
                 </Button>
               </div>
