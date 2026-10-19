@@ -19,10 +19,6 @@ export interface IIbcExpedicaoRepository {
   markIbcDataLimite(ibcId: string): Promise<IbcRecord>;
   findAlocacaoByIbcId(ibcId: string): Promise<AlocacaoIbcRecord | null>;
   findAlocacaoById(id: string): Promise<AlocacaoIbcRecord | null>;
-  countAlocacoesByCargaAndNumPed(
-    cargaId: string,
-    numPed: string,
-  ): Promise<number>;
   listAlocacoesByCargaId(cargaId: string): Promise<AlocacaoIbcRecord[]>;
   findExpedicaoByCargaId(cargaId: string): Promise<ExpedicaoIbcRecord | null>;
   findPlacaByCargaId(cargaId: string): Promise<string | null>;

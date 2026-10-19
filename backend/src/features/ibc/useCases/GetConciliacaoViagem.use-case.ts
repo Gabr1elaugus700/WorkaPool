@@ -21,7 +21,7 @@ export type ConciliacaoViagemItem = {
   alocacaoIbcId: string;
   ibcId: string;
   identificador: string;
-  numPed: string;
+  numPed: string | null;
   codCli: string | null;
   cliente: string;
   destino: DestinoConciliacaoIbc | null;
@@ -81,7 +81,8 @@ function montar(input: {
     .slice()
     .sort((a, b) => a.identificador.localeCompare(b.identificador, undefined, { numeric: true }))
     .map((alocacao) => {
-      const pedido = pedidos.get(alocacao.numPed);
+      const pedido =
+        alocacao.numPed == null ? undefined : pedidos.get(alocacao.numPed);
       const marca = marcas.get(alocacao.id);
       return {
         alocacaoIbcId: alocacao.id,

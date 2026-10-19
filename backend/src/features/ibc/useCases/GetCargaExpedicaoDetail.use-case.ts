@@ -31,6 +31,7 @@ export type CargaExpedicaoDetail = {
   temExpedicao: boolean;
   podeFecharExpedicao: boolean;
   pedidos: PedidoExpedicaoDetail[];
+  alocacoes: AlocacaoIbcRecord[];
 };
 
 export class GetCargaExpedicaoDetailUseCase {
@@ -96,6 +97,6 @@ export class GetCargaExpedicaoDetailUseCase {
         };
       });
 
-    return { ...summary, pedidos };
+    return { ...summary, pedidos, alocacoes };
   }
 }
