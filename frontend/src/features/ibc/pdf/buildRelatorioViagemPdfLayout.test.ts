@@ -7,7 +7,8 @@ import {
 } from "./buildRelatorioViagemPdfLayout";
 
 const EMITIDO = new Date("2026-10-12T15:30:00.000Z");
-const MARCAS = ["Ficou no cliente", "Retornou no caminhão", "Troca"] as const;
+const MARCAS = ["Ficou no cliente", "Troca"] as const;
+const LISTA = [{ identificador: "H0001" }, { identificador: "H0010" }] as const;
 
 function relatorio(overrides: Partial<RelatorioViagemDTO> = {}): RelatorioViagemDTO {
   return {
@@ -17,20 +18,22 @@ function relatorio(overrides: Partial<RelatorioViagemDTO> = {}): RelatorioViagem
     placa: "ABC1D23",
     totalIbcs: 2,
     totalClientes: 2,
-    clientes: [
+    blocos: [
       {
         codCli: "B",
         cliente: "Beta",
-        pedidos: [{ numPed: "12", quantidade: 3, modalidade: "Empréstimo" }],
-        checklist: [{ identificador: "H0001" }, { identificador: "H0010" }],
+        numPed: "12",
+        quantidadeEsperada: 3,
+        incluso: false,
+        checklist: [...LISTA],
       },
       {
         codCli: "A",
         cliente: "Acme",
-        pedidos: [
-          { numPed: "40", quantidade: 2, modalidade: "Embalagem Inclusa (Venda)" },
-        ],
-        checklist: [{ identificador: "H0001" }, { identificador: "H0010" }],
+        numPed: "40",
+        quantidadeEsperada: 2,
+        incluso: true,
+        checklist: [...LISTA],
       },
     ],
     ...overrides,
@@ -75,12 +78,8 @@ describe("buildRelatorioViagemPdfLayout", () => {
     const clientes = textoIgual(pagina.itens, "Total de clientes: 2");
     const motorista = textoIgual(pagina.itens, "Motorista");
     const assinatura = textoIgual(pagina.itens, "Assinatura");
-    const pedido = textoIgual(pagina.itens, "12");
-    const quantidade = textoIgual(pagina.itens, "3");
-    const modalidade = textoIgual(pagina.itens, "Empréstimo");
-    const cabecalhoPedido = textoIgual(pagina.itens, "Pedido");
-    const cabecalhoQuantidade = textoIgual(pagina.itens, "Quantidade");
-    const cabecalhoModalidade = textoIgual(pagina.itens, "Modalidade");
+    const pedido = textoIgual(pagina.itens, "Pedido 12");
+    const quantidade = textoIgual(pagina.itens, "Quantidade 3");
 
     assert.equal(layout.paginas.length, 1);
     assert.equal(pagina.rodape, "Página 1 de 1 · Emitido em 12/10/2026 12:30");
@@ -105,23 +104,23 @@ describe("buildRelatorioViagemPdfLayout", () => {
     assert.ok(linhaAssinatura.x2 > assinatura.x);
 
     assert.equal(pedido.y, quantidade.y);
-    assert.equal(quantidade.y, modalidade.y);
-    assert.ok(pedido.x < quantidade.x && quantidade.x < modalidade.x);
-    assert.equal(cabecalhoPedido.x, pedido.x);
-    assert.equal(cabecalhoQuantidade.x, quantidade.x);
-    assert.equal(cabecalhoModalidade.x, modalidade.x);
+    assert.ok(pedido.x < quantidade.x);
+    assert.equal(unidos.includes("Empréstimo"), false);
+    assert.equal(unidos.includes("Modalidade"), false);
+    assert.equal(unidos.includes("Transbordo"), false);
+    assert.equal(unidos.includes("Retornou"), false);
+    assert.equal(unidos.includes("Retorno"), false);
 
     const marcas = MARCAS.map((marca) => textoIgual(pagina.itens, marca));
+    assert.equal(marcas.length, 2);
     assert.ok(marcas.every((marca) => marca.y === marcas[0].y && marca.alinhamento === "centro"));
-    const passo = marcas[1].x - marcas[0].x;
-    assert.ok(Math.abs(marcas[2].x - marcas[1].x - passo) < 0.05);
-    assert.ok(passo > 40);
+    assert.ok(marcas[1].x - marcas[0].x > 40);
 
     const fileiraY = Math.min(
       ...pagina.itens.filter((item) => item.tipo === "caixa").map((item) => item.y),
     );
     const fileira = pagina.itens.filter((item) => item.tipo === "caixa" && item.y === fileiraY);
-    assert.equal(fileira.length, 3);
+    assert.equal(fileira.length, 2);
     marcas.forEach((marca, indice) => {
       const caixa = fileira[indice];
       assert.ok(caixa && caixa.tipo === "caixa");
@@ -130,11 +129,31 @@ describe("buildRelatorioViagemPdfLayout", () => {
       assert.ok(caixa.y > marca.y);
     });
 
-    assert.equal(tracos.filter((item) => item.papel === "pauta").length, 4);
+    const inclusos = textos(pagina.itens).filter((item) => item.texto === "Incluso");
+    assert.equal(inclusos.length, 2);
+    for (const badge of inclusos) {
+      assert.equal(badge.negrito, true);
+      assert.equal(badge.alinhamento, "centro");
+      const linha = pagina.itens.filter((item) => item.y === badge.y);
+      const identificador = linha.find((item) => item.tipo === "texto" && item.texto.startsWith("H"));
+      const selo = linha.find((item) => item.tipo === "selo");
+      const caixas = linha.filter((item) => item.tipo === "caixa");
+      assert.ok(identificador && identificador.tipo === "texto");
+      assert.ok(selo && selo.tipo === "selo");
+      assert.equal(caixas.length, 2);
+      assert.ok(selo.x > identificador.x);
+      assert.ok(badge.x > selo.x && badge.x < selo.x + selo.largura);
+      assert.ok(caixas.every((caixa) => caixa.tipo === "caixa" && caixa.x > selo.x + selo.largura));
+    }
+    const yEmprestimo = textoIgual(pagina.itens, "H0001").y;
     assert.equal(
-      textos(pagina.itens).filter((item) => item.texto.startsWith("Retornos sem identificação")).length,
-      2,
+      pagina.itens.some(
+        (item) => item.y === yEmprestimo && (item.tipo === "selo" || (item.tipo === "texto" && item.texto === "Incluso")),
+      ),
+      false,
     );
+
+    assert.equal(tracos.filter((item) => item.papel === "pauta").length, 4);
   });
 
   it("flui os clientes na mesma página e repete o cliente ao quebrar o checklist", () => {
@@ -151,11 +170,13 @@ describe("buildRelatorioViagemPdfLayout", () => {
       relatorio({
         totalIbcs: 45,
         totalClientes: 1,
-        clientes: [
+        blocos: [
           {
             codCli: null,
             cliente: "Beta",
-            pedidos: [{ numPed: "12", quantidade: 1, modalidade: "Empréstimo" }],
+            numPed: "12",
+            quantidadeEsperada: 1,
+            incluso: false,
             checklist,
           },
         ],

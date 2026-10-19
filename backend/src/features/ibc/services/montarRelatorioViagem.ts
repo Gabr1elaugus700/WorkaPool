@@ -7,24 +7,16 @@ import {
   ExpedicaoIbcRecord,
 } from "../types/IbcExpedicao.types";
 
-export type ModalidadeRelatorioViagem =
-  | "Embalagem Inclusa (Venda)"
-  | "Empréstimo";
-
-export type RelatorioViagemPedido = {
-  numPed: string;
-  quantidade: number;
-  modalidade: ModalidadeRelatorioViagem;
-};
-
 export type RelatorioViagemIbc = {
   identificador: string;
 };
 
-export type RelatorioViagemCliente = {
+export type RelatorioViagemBloco = {
   codCli: string | null;
   cliente: string;
-  pedidos: RelatorioViagemPedido[];
+  numPed: string;
+  quantidadeEsperada: number;
+  incluso: boolean;
   checklist: RelatorioViagemIbc[];
 };
 
@@ -35,7 +27,7 @@ export type RelatorioViagem = {
   placa: string | null;
   totalIbcs: number;
   totalClientes: number;
-  clientes: RelatorioViagemCliente[];
+  blocos: RelatorioViagemBloco[];
 };
 
 export type MontarRelatorioViagemInput = {
@@ -46,67 +38,12 @@ export type MontarRelatorioViagemInput = {
   placa: string | null;
 };
 
-type ClienteGrupo = {
-  codCli: string | null;
-  cliente: string;
-  pedidos: CargaPedidoIbcSnapshot[];
-};
-
-function chaveCliente(pedido: CargaPedidoIbcSnapshot): string {
-  return `${pedido.codCli ?? ""}\u0000${pedido.cliente}`;
-}
-
-function ordemDoCliente(pedidos: CargaPedidoIbcSnapshot[]) {
-  const [primeiro] = pedidos.slice().sort(comparePedidosOrdemEntrega);
-  return { posCar: primeiro.posCar, numPed: primeiro.numPed };
-}
-
-function agruparClientes(pedidos: CargaPedidoIbcSnapshot[]): ClienteGrupo[] {
-  const grupos = new Map<string, ClienteGrupo>();
-  for (const pedido of pedidos) {
-    if (!isPedidoIbcElegivel(pedido)) continue;
-    const chave = chaveCliente(pedido);
-    const grupo = grupos.get(chave);
-    if (grupo) {
-      grupo.pedidos.push(pedido);
-    } else {
-      grupos.set(chave, {
-        codCli: pedido.codCli,
-        cliente: pedido.cliente,
-        pedidos: [pedido],
-      });
-    }
-  }
-
-  return [...grupos.values()].sort((a, b) =>
-    comparePedidosOrdemEntrega(
-      ordemDoCliente(a.pedidos),
-      ordemDoCliente(b.pedidos),
-    ),
-  );
-}
-
-function linhasDoPedido(pedido: CargaPedidoIbcSnapshot): RelatorioViagemPedido[] {
-  const linhas: RelatorioViagemPedido[] = [];
-  if (pedido.quantidadeEsperadaVenda > 0) {
-    linhas.push({
-      numPed: pedido.numPed,
-      quantidade: pedido.quantidadeEsperadaVenda,
-      modalidade: "Embalagem Inclusa (Venda)",
-    });
-  }
-  if (pedido.quantidadeEsperadaEmprestimo > 0) {
-    linhas.push({
-      numPed: pedido.numPed,
-      quantidade: pedido.quantidadeEsperadaEmprestimo,
-      modalidade: "Empréstimo",
-    });
-  }
-  return linhas;
-}
-
-function compararNumPed(a: string, b: string): number {
-  return a.localeCompare(b, undefined, { numeric: true });
+/** Pedido misto (venda e empréstimo) e pedido inválido ficam fora do papel. */
+function pedidoViraBloco(pedido: CargaPedidoIbcSnapshot): boolean {
+  if (!isPedidoIbcElegivel(pedido)) return false;
+  const venda = pedido.quantidadeEsperadaVenda > 0;
+  const emprestimo = pedido.quantidadeEsperadaEmprestimo > 0;
+  return venda !== emprestimo;
 }
 
 function checklistDaCarga(alocacoes: AlocacaoIbcRecord[]): RelatorioViagemIbc[] {
@@ -120,19 +57,24 @@ function checklistDaCarga(alocacoes: AlocacaoIbcRecord[]): RelatorioViagemIbc[] 
     .map((identificador) => ({ identificador }));
 }
 
+function chaveCliente(bloco: Pick<RelatorioViagemBloco, "codCli" | "cliente">): string {
+  return `${bloco.codCli ?? ""}\u0000${bloco.cliente}`;
+}
+
 export function montarRelatorioViagem(
   input: MontarRelatorioViagemInput,
 ): RelatorioViagem {
   const checklist = checklistDaCarga(input.alocacoes);
-  const clientes = agruparClientes(input.pedidos).map((grupo) => ({
-    codCli: grupo.codCli,
-    cliente: grupo.cliente,
-    pedidos: grupo.pedidos
-      .slice()
-      .sort((a, b) => compararNumPed(a.numPed, b.numPed))
-      .flatMap(linhasDoPedido),
-    checklist,
-  }));
+  const blocos = input.pedidos.filter(pedidoViraBloco).sort(comparePedidosOrdemEntrega).map(
+    (pedido): RelatorioViagemBloco => ({
+      codCli: pedido.codCli,
+      cliente: pedido.cliente,
+      numPed: pedido.numPed,
+      quantidadeEsperada: pedido.quantidadeEsperadaTotal,
+      incluso: pedido.quantidadeEsperadaVenda > 0,
+      checklist,
+    }),
+  );
 
   return {
     codCar: input.carga.codCar,
@@ -140,7 +82,7 @@ export function montarRelatorioViagem(
     destino: input.carga.destino,
     placa: input.placa,
     totalIbcs: checklist.length,
-    totalClientes: clientes.length,
-    clientes,
+    totalClientes: new Set(blocos.map(chaveCliente)).size,
+    blocos,
   };
 }
