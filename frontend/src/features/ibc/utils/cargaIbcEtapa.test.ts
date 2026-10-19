@@ -2,8 +2,11 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   buildCargaIbcEtapas,
+  cargaIbcEtapaPath,
   parseCargaIbcEtapa,
   resolveCargaIbcEtapaAtual,
+  resolveCargaIbcEtapaNaRota,
+  resolveCargaIbcEtapaPedida,
   resolveCargaIbcEtapaVista,
   resolveCargaIbcVoltar,
 } from "./cargaIbcEtapa";
@@ -80,6 +83,89 @@ describe("buildCargaIbcEtapas", () => {
     assert.deepEqual(
       etapas.map(({ estado }) => estado),
       ["concluida", "concluida", "concluida"],
+    );
+  });
+});
+
+describe("resolveCargaIbcEtapaPedida", () => {
+  it("trata ?origem=em-viagem como a etapa Em viagem, mesmo com outro path", () => {
+    assert.equal(resolveCargaIbcEtapaPedida(undefined, "em-viagem"), "em-viagem");
+    assert.equal(resolveCargaIbcEtapaPedida("fechar-viagem", "em-viagem"), "em-viagem");
+  });
+
+  it("sem a query antiga, usa a etapa do path", () => {
+    assert.equal(resolveCargaIbcEtapaPedida("preparacao", null), "preparacao");
+    assert.equal(resolveCargaIbcEtapaPedida("conciliacao", null), null);
+    assert.equal(resolveCargaIbcEtapaPedida(undefined, "aguardando"), null);
+  });
+});
+
+describe("resolveCargaIbcEtapaNaRota", () => {
+  it("manda o link antigo para Em viagem mesmo com a viagem já fechada", () => {
+    const atual = resolveCargaIbcEtapaAtual({
+      temExpedicao: true,
+      viagemFechadaEm: "2026-10-19T12:00:00.000Z",
+    });
+    const rota = resolveCargaIbcEtapaNaRota({
+      codCar: 378,
+      etapaParam: undefined,
+      origem: "em-viagem",
+      atual,
+    });
+    assert.equal(rota.vista, "em-viagem");
+    assert.equal(rota.redirectTo, "/expedicao-ibc/378/em-viagem");
+  });
+
+  it("antes de fechar a expedição, o link antigo fica na Preparação", () => {
+    const rota = resolveCargaIbcEtapaNaRota({
+      codCar: 10,
+      etapaParam: undefined,
+      origem: "em-viagem",
+      atual: "preparacao",
+    });
+    assert.equal(rota.vista, "preparacao");
+    assert.equal(rota.redirectTo, cargaIbcEtapaPath(10, "preparacao"));
+  });
+
+  it("tira a query legada mesmo quando o path já é a etapa vista", () => {
+    const rota = resolveCargaIbcEtapaNaRota({
+      codCar: 378,
+      etapaParam: "em-viagem",
+      origem: "em-viagem",
+      atual: "em-viagem",
+    });
+    assert.equal(rota.redirectTo, "/expedicao-ibc/378/em-viagem");
+  });
+
+  it("não redireciona a URL que já mostra a etapa certa", () => {
+    const rota = resolveCargaIbcEtapaNaRota({
+      codCar: 378,
+      etapaParam: undefined,
+      origem: null,
+      atual: "em-viagem",
+    });
+    assert.equal(rota.vista, "em-viagem");
+    assert.equal(rota.redirectTo, null);
+  });
+
+  it("corrige etapa inválida ou ainda não alcançável", () => {
+    assert.equal(
+      resolveCargaIbcEtapaNaRota({
+        codCar: 378,
+        etapaParam: "conciliacao",
+        origem: null,
+        atual: "em-viagem",
+      }).redirectTo,
+      "/expedicao-ibc/378/em-viagem",
+    );
+    assert.equal(
+      resolveCargaIbcEtapaNaRota({
+        codCar: 10,
+        etapaParam: "fechar-viagem",
+        origem: null,
+        atual: "preparacao",
+      }).redirectTo,
+      "/expedicao-ibc/10/preparacao",
     );
   });
 });
