@@ -14,6 +14,7 @@ export const IbcConciliacaoHttpSchemas = {
       .array(z.object({
         alocacaoIbcId: z.string().uuid(),
         destino,
+        numPed: z.string().min(1).optional(),
         modalidade: modalidade.nullable().optional(),
       }))
       .max(500)

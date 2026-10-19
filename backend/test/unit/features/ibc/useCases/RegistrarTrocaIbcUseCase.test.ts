@@ -63,6 +63,7 @@ function harness(options: { destino?: "TROCA" | "FICOU"; ibcEntradaId?: string |
       alocacaoIbcId: "aloc-1",
       destino: options.destino ?? "TROCA",
       modalidade: null,
+      numPed: null,
       ibcEntradaId: options.ibcEntradaId ?? null,
     }]),
     listRetornos: mock.fn(async () => []),

@@ -283,6 +283,7 @@ model ConciliacaoViagemIbc {
   alocacaoIbcId  String                    @unique
   destino        ConciliacaoDestinoIbc
   modalidade     ConciliacaoModalidadeIbc?
+  numPed         String?
   ibcEntradaId   String?                   @unique
   lancadoPorId   String
   atualizadoEm   DateTime                  @updatedAt

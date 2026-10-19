@@ -52,7 +52,7 @@ describe("planejarFechamentoViagem", () => {
       () => planejarFechamentoViagem({ now: NOW, alocacoes: [alocacao("a1", "H1")], pedidos: [pedido()], marcas: [], retornos: papel(0) }),
       hasCode("IBC_VIAGEM_INCOMPLETA"),
     );
-    const marca: MarcaConciliacaoSalva = { alocacaoIbcId: "a1", destino: "RETORNOU", modalidade: null, ibcEntradaId: null };
+    const marca: MarcaConciliacaoSalva = { alocacaoIbcId: "a1", destino: "RETORNOU", modalidade: null, numPed: null, ibcEntradaId: null };
     assert.throws(
       () => planejarFechamentoViagem({ now: NOW, alocacoes: [alocacao("a1", "H1")], pedidos: [pedido()], marcas: [marca], retornos: [] }),
       hasCode("IBC_VIAGEM_INCOMPLETA"),
@@ -62,10 +62,10 @@ describe("planejarFechamentoViagem", () => {
   it("vende, empresta, devolve e troca sem apagar a alocação de quem ficou", () => {
     const alocs = [alocacao("venda", "H1"), alocacao("emp", "H2"), alocacao("ret", "H3"), alocacao("troca", "H4")];
     const marcas: MarcaConciliacaoSalva[] = [
-      { alocacaoIbcId: "venda", destino: "FICOU", modalidade: "VENDA", ibcEntradaId: null },
-      { alocacaoIbcId: "emp", destino: "FICOU", modalidade: "EMPRESTIMO", ibcEntradaId: null },
-      { alocacaoIbcId: "ret", destino: "RETORNOU", modalidade: null, ibcEntradaId: null },
-      { alocacaoIbcId: "troca", destino: "TROCA", modalidade: null, ibcEntradaId: "ibc-in" },
+      { alocacaoIbcId: "venda", destino: "FICOU", modalidade: "VENDA", numPed: "10", ibcEntradaId: null },
+      { alocacaoIbcId: "emp", destino: "FICOU", modalidade: "EMPRESTIMO", numPed: "10", ibcEntradaId: null },
+      { alocacaoIbcId: "ret", destino: "RETORNOU", modalidade: null, numPed: null, ibcEntradaId: null },
+      { alocacaoIbcId: "troca", destino: "TROCA", modalidade: null, numPed: null, ibcEntradaId: "ibc-in" },
     ];
     const plano = planejarFechamentoViagem({ now: NOW, alocacoes: alocs, pedidos: [pedido()], marcas, retornos: papel(1, true) });
     const porId = new Map(plano.efeitos.map((efeito) => [efeito.alocacaoIbcId, efeito]));
@@ -89,8 +89,8 @@ describe("planejarFechamentoViagem", () => {
     const comPedido = alocacao("venda", "H1");
     const semPedido = { ...alocacao("ret", "H3"), numPed: null };
     const marcas: MarcaConciliacaoSalva[] = [
-      { alocacaoIbcId: "venda", destino: "FICOU", modalidade: "VENDA", ibcEntradaId: null },
-      { alocacaoIbcId: "ret", destino: "RETORNOU", modalidade: null, ibcEntradaId: null },
+      { alocacaoIbcId: "venda", destino: "FICOU", modalidade: "VENDA", numPed: "10", ibcEntradaId: null },
+      { alocacaoIbcId: "ret", destino: "RETORNOU", modalidade: null, numPed: null, ibcEntradaId: null },
     ];
     const plano = planejarFechamentoViagem({
       now: NOW,
@@ -104,7 +104,7 @@ describe("planejarFechamentoViagem", () => {
   });
 
   it("bloqueia troca sem entrada e divergência do papel sem confirmação", () => {
-    const marca: MarcaConciliacaoSalva = { alocacaoIbcId: "troca", destino: "TROCA", modalidade: null, ibcEntradaId: null };
+    const marca: MarcaConciliacaoSalva = { alocacaoIbcId: "troca", destino: "TROCA", modalidade: null, numPed: null, ibcEntradaId: null };
     assert.throws(
       () => planejarFechamentoViagem({ now: NOW, alocacoes: [alocacao("troca", "H4")], pedidos: [pedido()], marcas: [marca], retornos: papel(1) }),
       hasCode("IBC_TROCA_SEM_ENTRADA"),
@@ -119,7 +119,7 @@ describe("planejarFechamentoViagem", () => {
 
 describe("FecharViagemIbcUseCase", () => {
   it("abre as entradas na mesma transação e grava o fechamento", async () => {
-    const marca: MarcaConciliacaoSalva = { alocacaoIbcId: "ret", destino: "RETORNOU", modalidade: null, ibcEntradaId: null };
+    const marca: MarcaConciliacaoSalva = { alocacaoIbcId: "ret", destino: "RETORNOU", modalidade: null, numPed: null, ibcEntradaId: null };
     let abriu = false;
     const fecharViagem = mock.fn(async (cmd: FecharViagemComando, abrir: () => Promise<void>) => {
       assert.equal(cmd.efeitos[0]?.encerrarAlocacao, true);
