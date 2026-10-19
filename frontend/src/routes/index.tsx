@@ -19,6 +19,7 @@ import ChecklistsIbcView from "@/features/ibc/views/ChecklistsIbcView";
 import LegacyIbcTabRedirect from "@/features/ibc/components/LegacyIbcTabRedirect";
 import { IBC_CADASTRO_VIEW_ROLES, IBC_CADASTRO_WRITE_ROLES } from "@/features/ibc/utils/ibcCadastroPermissions";
 import { IBC_EXPEDICAO_ROLES } from "@/features/ibc/utils/canAccessExpedicaoIbc";
+import { controleIbcSections } from "@/features/ibc/utils/controleIbcSections";
 import { ibcEmprestimoAtrasadoPermissions } from "@/features/ibc/utils/ibcEmprestimoAtrasadoPermissions";
 import ClientesInativos from "../pages/ClientesInativos";
 import { OrderLossView } from "@/features/orderLoss";
@@ -141,10 +142,26 @@ const AppRoutes = () => {
             }
           />
           <Route
+            path="/controle-ibc"
+            element={
+              <PrivateRoute allowedRoles={controleIbcSections.roles}>
+                <AvisosRepresentantePage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/controle-ibc/emprestimos"
+            element={
+              <PrivateRoute allowedRoles={controleIbcSections.roles}>
+                <EmprestimosAtrasadosPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/avisos-ibc"
             element={
               <PrivateRoute allowedRoles={["VENDAS", "ADMIN"]}>
-                <AvisosRepresentantePage />
+                <Navigate to="/controle-ibc" replace />
               </PrivateRoute>
             }
           />
@@ -152,7 +169,7 @@ const AppRoutes = () => {
             path="/emprestimos-ibc"
             element={
               <PrivateRoute allowedRoles={ibcEmprestimoAtrasadoPermissions.roles}>
-                <EmprestimosAtrasadosPage />
+                <Navigate to="/controle-ibc/emprestimos" replace />
               </PrivateRoute>
             }
           />

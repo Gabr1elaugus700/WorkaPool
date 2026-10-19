@@ -1,45 +1,49 @@
-import { Bell } from "lucide-react";
-import DefaultLayout from "@/layout/DefaultLayout";
+import { useAuth } from "@/auth/AuthContext";
 import AvisoRepresentanteCard from "../components/AvisoRepresentanteCard";
-import ExpedicaoIbcAsyncState from "../components/ExpedicaoIbcAsyncState";
+import ControleIbcShell from "../components/ControleIbcShell";
 import { useAvisosRepresentante } from "../hooks/useAvisosRepresentante";
-import { toError } from "../utils/toError";
+import { controleIbcSections } from "../utils/controleIbcSections";
+import { resolveIbcTabStatus } from "../utils/resolveIbcTabStatus";
 
 /**
  * Lista de avisos do representante depois do Fechar Viagem (#39).
  */
 export default function AvisosRepresentanteView() {
-  const { isLoading, error, data, marcarLido } = useAvisosRepresentante();
+  const { user } = useAuth();
+  const access = controleIbcSections.resolve(user?.role, "avisos");
+  const { isLoading, error, data, marcarLido } = useAvisosRepresentante(access.status === "ok");
   const avisos = data?.avisos ?? [];
   const pendingId = marcarLido.isPending ? marcarLido.variables : undefined;
 
   return (
-    <ExpedicaoIbcAsyncState
-      loading={isLoading}
-      error={error ? toError(error) : null}
-      loadingLabel="Carregando avisos…"
+    <ControleIbcShell
+      activeSection="avisos"
+      description="Containers que ficaram no cliente depois do Fechar viagem."
+      status={
+        access.status === "ok"
+          ? resolveIbcTabStatus({
+              isLoading,
+              error,
+              isEmpty: avisos.length === 0,
+              loadingLabel: "Carregando avisos…",
+              empty: {
+                title: "Nenhum container ficou no cliente.",
+                nextStep: "Depois do Fechar viagem, o aviso do representante aparece aqui.",
+              },
+            })
+          : null
+      }
     >
-      <DefaultLayout>
-        <div className="mb-6 flex items-center gap-3">
-          <Bell className="h-7 w-7 text-primary" aria-hidden="true" />
-          <h1 className="text-2xl font-bold text-foreground">Avisos IBC</h1>
-        </div>
-
-        <div className="rounded-lg bg-card p-4 shadow-md sm:p-6">
-          {avisos.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum container ficou no cliente.</p>
-          ) : (
-            avisos.map((aviso) => (
-              <AvisoRepresentanteCard
-                key={aviso.id}
-                aviso={aviso}
-                marcando={pendingId === aviso.id}
-                onMarcarLido={marcarLido.mutate}
-              />
-            ))
-          )}
-        </div>
-      </DefaultLayout>
-    </ExpedicaoIbcAsyncState>
+      <div className="flex flex-col gap-3">
+        {avisos.map((aviso) => (
+          <AvisoRepresentanteCard
+            key={aviso.id}
+            aviso={aviso}
+            marcando={pendingId === aviso.id}
+            onMarcarLido={marcarLido.mutate}
+          />
+        ))}
+      </div>
+    </ControleIbcShell>
   );
 }
