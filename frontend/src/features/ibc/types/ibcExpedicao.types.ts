@@ -100,17 +100,13 @@ export type ListCargasEmViagemResponseDTO = {
   cargas: CargaEmViagemListItemDTO[];
 };
 
-/** GET /api/ibc/expedicoes/:codCar/relatorio-viagem */
-export type RelatorioViagemPedidoDTO = {
-  numPed: string;
-  quantidade: number;
-  modalidade: "Embalagem Inclusa (Venda)" | "Empréstimo";
-};
-
-export type RelatorioViagemClienteDTO = {
+/** GET /api/ibc/expedicoes/:codCar/relatorio-viagem — um bloco por pedido. */
+export type RelatorioViagemBlocoDTO = {
   codCli: string | null;
   cliente: string;
-  pedidos: RelatorioViagemPedidoDTO[];
+  numPed: string;
+  quantidadeEsperada: number;
+  incluso: boolean;
   checklist: { identificador: string }[];
 };
 
@@ -121,7 +117,7 @@ export type RelatorioViagemDTO = {
   placa: string | null;
   totalIbcs: number;
   totalClientes: number;
-  clientes: RelatorioViagemClienteDTO[];
+  blocos: RelatorioViagemBlocoDTO[];
 };
 
 export type IbcRealtimeNotification = {
