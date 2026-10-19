@@ -1,5 +1,5 @@
 import { comparePedidosOrdemEntrega } from "./comparePedidosOrdemEntrega";
-import { isPedidoIbcElegivel } from "./isPedidoIbcElegivel";
+import { pedidosNaSomaDaCarga } from "./pedidosNaSomaDaCarga";
 import {
   AlocacaoIbcRecord,
   CargaExpedicaoRef,
@@ -38,14 +38,6 @@ export type MontarRelatorioViagemInput = {
   placa: string | null;
 };
 
-/** Pedido misto (venda e empréstimo) e pedido inválido ficam fora do papel. */
-function pedidoViraBloco(pedido: CargaPedidoIbcSnapshot): boolean {
-  if (!isPedidoIbcElegivel(pedido)) return false;
-  const venda = pedido.quantidadeEsperadaVenda > 0;
-  const emprestimo = pedido.quantidadeEsperadaEmprestimo > 0;
-  return venda !== emprestimo;
-}
-
 function checklistDaCarga(alocacoes: AlocacaoIbcRecord[]): RelatorioViagemIbc[] {
   const identificadores = new Set<string>();
   for (const alocacao of alocacoes) {
@@ -65,7 +57,7 @@ export function montarRelatorioViagem(
   input: MontarRelatorioViagemInput,
 ): RelatorioViagem {
   const checklist = checklistDaCarga(input.alocacoes);
-  const blocos = input.pedidos.filter(pedidoViraBloco).sort(comparePedidosOrdemEntrega).map(
+  const blocos = pedidosNaSomaDaCarga(input.pedidos).sort(comparePedidosOrdemEntrega).map(
     (pedido): RelatorioViagemBloco => ({
       codCli: pedido.codCli,
       cliente: pedido.cliente,
