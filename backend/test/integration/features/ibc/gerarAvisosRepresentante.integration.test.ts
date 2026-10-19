@@ -4,6 +4,7 @@ import { after, before, describe, it } from "node:test";
 import { PrismaClient, Role } from "@prisma/client";
 import { AvisoRepresentanteRepository } from "../../../../src/features/ibc/repositories/AvisoRepresentanteRepository";
 import { GerarAvisosRepresentanteUseCase } from "../../../../src/features/ibc/useCases/GerarAvisosRepresentante.use-case";
+import { conciliacaoViagem } from "../../../../src/features/ibc/services/conciliacaoViagem";
 import type { FicouNaViagem } from "../../../../src/features/ibc/services/planejarFechamentoViagem";
 import prismaPadrao from "../../../../src/config/prisma";
 import { ensureIbcCadastroSchema } from "../../../helpers/ensureIbcCadastroSchema";
@@ -11,11 +12,17 @@ import { ensureProcessedEventSchema } from "../../../helpers/ensureProcessedEven
 
 const PREFIX = "test-aviso-39-";
 const COD_CAR = 39039;
+const PEDIDO_SAIDA = "3899";
 const NUM_PED = "3901";
+const NUM_PED_INCLUSO = "3903";
 const NUM_PED_SEM_REP = "3902";
 const COD_REP = 39;
+const COD_REP_SAIDA = 7;
+const COD_REP_INCLUSO = 88;
 const CONSUMER = "IBC_AVISO_REPRESENTANTE";
-const VENCIMENTO = new Date("2024-06-15T00:00:00.000Z");
+const FECHADA_EM = new Date("2026-10-19T00:00:00.000Z");
+const VENCIMENTO = conciliacaoViagem.vencimento(FECHADA_EM);
+const PRAZO_MS = 90 * 24 * 60 * 60 * 1000;
 
 const prisma = new PrismaClient();
 const eventIds: string[] = [];
@@ -139,7 +146,7 @@ describe("GerarAvisosRepresentante persiste na transação (#39)", () => {
     await prismaPadrao.$disconnect();
   });
 
-  it("dois delivers do mesmo evento deixam um aviso com o vencimento da alocação", async () => {
+  it("dois empréstimos e um incluso deixam um aviso só dos empréstimos, com o pedido da volta", async () => {
     const cargaId = `${PREFIX}carga`;
     const user = await prisma.user.create({
       data: {
@@ -159,11 +166,14 @@ describe("GerarAvisosRepresentante persiste na transação (#39)", () => {
         situacao: "FECHADA",
       },
     });
-    const venda = await prisma.ibc.create({
+    const incluso = await prisma.ibc.create({
       data: { identificador: `${PREFIX}HM00001`, aptidao: "APTO", custodia: "PATIO" },
     });
     const emprestimo = await prisma.ibc.create({
       data: { identificador: `${PREFIX}HM00002`, aptidao: "APTO", custodia: "PATIO" },
+    });
+    const emprestimoDois = await prisma.ibc.create({
+      data: { identificador: `${PREFIX}HM00004`, aptidao: "APTO", custodia: "PATIO" },
     });
     const semRep = await prisma.ibc.create({
       data: { identificador: `${PREFIX}HM00003`, aptidao: "APTO", custodia: "PATIO" },
@@ -173,9 +183,9 @@ describe("GerarAvisosRepresentante persiste na transação (#39)", () => {
     });
     await prisma.alocacaoIbc.create({
       data: {
-        ibcId: venda.id,
+        ibcId: incluso.id,
         cargaId,
-        numPed: NUM_PED,
+        numPed: PEDIDO_SAIDA,
         alocadoPorId: user.id,
         expedicaoIbcId: expedicao.id,
       },
@@ -184,7 +194,17 @@ describe("GerarAvisosRepresentante persiste na transação (#39)", () => {
       data: {
         ibcId: emprestimo.id,
         cargaId,
-        numPed: NUM_PED,
+        numPed: PEDIDO_SAIDA,
+        alocadoPorId: user.id,
+        expedicaoIbcId: expedicao.id,
+        emprestimoVenceEm: VENCIMENTO,
+      },
+    });
+    await prisma.alocacaoIbc.create({
+      data: {
+        ibcId: emprestimoDois.id,
+        cargaId,
+        numPed: PEDIDO_SAIDA,
         alocadoPorId: user.id,
         expedicaoIbcId: expedicao.id,
         emprestimoVenceEm: VENCIMENTO,
@@ -194,7 +214,7 @@ describe("GerarAvisosRepresentante persiste na transação (#39)", () => {
       data: {
         ibcId: semRep.id,
         cargaId,
-        numPed: NUM_PED_SEM_REP,
+        numPed: PEDIDO_SAIDA,
         alocadoPorId: user.id,
         expedicaoIbcId: expedicao.id,
         emprestimoVenceEm: new Date("2030-01-01T00:00:00.000Z"),
@@ -204,7 +224,9 @@ describe("GerarAvisosRepresentante persiste na transação (#39)", () => {
       data: {
         cargaId,
         pedidos: [
-          { numPed: NUM_PED, codRep: COD_REP, codCli: "C1", cliente: "Cliente W" },
+          { numPed: PEDIDO_SAIDA, codRep: COD_REP_SAIDA, codCli: "C0", cliente: "Cliente da Saída" },
+          { numPed: NUM_PED, codRep: COD_REP, codCli: "C1", cliente: "Cliente da Volta" },
+          { numPed: NUM_PED_INCLUSO, codRep: COD_REP_INCLUSO, codCli: "C2", cliente: "Cliente Incluso" },
           { numPed: NUM_PED_SEM_REP, cliente: "Cliente Sem Rep" },
         ],
       },
@@ -212,19 +234,27 @@ describe("GerarAvisosRepresentante persiste na transação (#39)", () => {
 
     const ficaram: FicouNaViagem[] = [
       {
-        ibcId: venda.id,
+        ibcId: incluso.id,
         identificador: `${PREFIX}HM00001`,
         modalidade: "VENDA",
-        codCli: "C1",
-        cliente: "Cliente W",
-        numPed: NUM_PED,
+        codCli: "C2",
+        cliente: "Cliente Incluso",
+        numPed: NUM_PED_INCLUSO,
       },
       {
         ibcId: emprestimo.id,
         identificador: `${PREFIX}HM00002`,
         modalidade: "EMPRESTIMO",
         codCli: "C1",
-        cliente: "Cliente W",
+        cliente: "Cliente da Volta",
+        numPed: NUM_PED,
+      },
+      {
+        ibcId: emprestimoDois.id,
+        identificador: `${PREFIX}HM00004`,
+        modalidade: "EMPRESTIMO",
+        codCli: "C1",
+        cliente: "Cliente da Volta",
         numPed: NUM_PED,
       },
       {
@@ -270,22 +300,28 @@ describe("GerarAvisosRepresentante persiste na transação (#39)", () => {
     assert.equal(doPedido.length, 1);
     assert.equal(doPedido[0]?.numPed, NUM_PED);
     assert.equal(doPedido[0]?.codRep, COD_REP);
+    assert.equal(doPedido[0]?.cliente, "Cliente da Volta");
     const itens = doPedido[0]?.itens;
     assert.ok(Array.isArray(itens));
     assert.equal(itens.length, 2);
-    const vendaItem = itens.find(
-      (item) => isItemAviso(item) && item.modalidade === "VENDA",
+    assert.equal(itens.some((item) => isItemAviso(item) && item.modalidade === "VENDA"), false);
+    assert.equal(VENCIMENTO.getTime() - FECHADA_EM.getTime(), PRAZO_MS);
+    assert.deepEqual(
+      itens.filter(isItemAviso).map((item) => ({
+        modalidade: item.modalidade,
+        emprestimoVenceEm: item.emprestimoVenceEm,
+      })),
+      [
+        { modalidade: "EMPRESTIMO", emprestimoVenceEm: VENCIMENTO.toISOString() },
+        { modalidade: "EMPRESTIMO", emprestimoVenceEm: VENCIMENTO.toISOString() },
+      ],
     );
-    const emprestimoItem = itens.find(
-      (item) => isItemAviso(item) && item.modalidade === "EMPRESTIMO",
-    );
-    assert.equal(vendaItem?.emprestimoVenceEm, null);
-    assert.equal(emprestimoItem?.emprestimoVenceEm, VENCIMENTO.toISOString());
     assert.equal(
       await prisma.processedEvent.count({ where: { consumerName: CONSUMER, eventId } }),
       1,
     );
     assert.ok(avisosLog.some((linha) => linha.includes(NUM_PED_SEM_REP)));
+    assert.equal(avisosLog.some((linha) => linha.includes(NUM_PED_INCLUSO)), false);
 
     const alocacao = await prisma.alocacaoIbc.findFirst({
       where: { ibcId: emprestimo.id },
