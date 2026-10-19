@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import type { ConciliacaoViagemItemDTO, DestinoConciliacao, ModalidadeConciliacao } from "../types/conciliacaoViagem.types";
+import IbcSegmentedControl from "./IbcSegmentedControl";
 const DESTINOS: Array<{ id: DestinoConciliacao; label: string }> = [
   { id: "FICOU", label: "Ficou no cliente" },
   { id: "RETORNOU", label: "Retornou no caminhão" },
@@ -27,49 +28,37 @@ export default function ConciliacaoIbcLinha({ item, disabled, onDestino, onModal
           {item.numPed ? ` · pedido ${item.numPed}` : ""}
         </p>
       </div>
-      <fieldset className="mt-3" disabled={disabled}>
-        <legend className="text-xs font-medium text-foreground">Destino neste retorno</legend>
-        <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label={`Destino de ${item.identificador}`}>
-          {DESTINOS.map((destino) => (
-            <Button
-              key={destino.id}
-              type="button"
-              size="sm"
-              variant={item.destino === destino.id ? "default" : "outline"}
-              aria-pressed={item.destino === destino.id}
-              onClick={() => onDestino(destino.id)}
-            >
-              {destino.label}
-            </Button>
-          ))}
+      <div className="mt-3 flex flex-wrap items-start gap-x-6 gap-y-3">
+        <div>
+          <p className="mb-1.5 text-xs font-medium text-foreground">Destino neste retorno</p>
+          <IbcSegmentedControl
+            ariaLabel={`Destino de ${item.identificador}`}
+            options={DESTINOS}
+            value={item.destino}
+            disabled={disabled}
+            onChange={onDestino}
+          />
         </div>
-      </fieldset>
-      {item.destino === "FICOU" ? (
-        <fieldset className="mt-3" disabled={disabled}>
-          <legend className="text-xs font-medium text-foreground">Como ficou no cliente</legend>
-          <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label={`Modalidade de ${item.identificador}`}>
-            {MODALIDADES.map((modalidade) => (
-              <Button
-                key={modalidade.id}
-                type="button"
-                size="sm"
-                variant={item.modalidade === modalidade.id ? "default" : "outline"}
-                aria-pressed={item.modalidade === modalidade.id}
-                onClick={() => onModalidade(modalidade.id)}
-              >
-                {modalidade.label}
-              </Button>
-            ))}
+        {item.destino === "FICOU" ? (
+          <div>
+            <p className="mb-1.5 text-xs font-medium text-foreground">Como ficou no cliente</p>
+            <IbcSegmentedControl
+              ariaLabel={`Modalidade de ${item.identificador}`}
+              options={MODALIDADES}
+              value={item.modalidade}
+              disabled={disabled}
+              onChange={onModalidade}
+            />
+            {item.modalidade == null ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {sugestao == null
+                  ? "O pedido mistura venda e empréstimo. Escolha uma."
+                  : "Confirme a modalidade sugerida pelo pedido."}
+              </p>
+            ) : null}
           </div>
-          {item.modalidade == null ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              {sugestao == null
-                ? "O pedido mistura venda e empréstimo. Escolha uma."
-                : "Confirme a modalidade sugerida pelo pedido."}
-            </p>
-          ) : null}
-        </fieldset>
-      ) : null}
+        ) : null}
+      </div>
       {item.destino === "TROCA" ? (
         item.ibcEntradaId ? (
           <p className="mt-3 text-sm text-muted-foreground">Entrada da troca vinculada.</p>

@@ -11,8 +11,7 @@ import ExpedicaoIbcPage from "../pages/ExpedicaoIbcPage";
 import ExpedicaoIbcEmViagemPage from "../pages/ExpedicaoIbcEmViagemPage";
 import AvisosRepresentantePage from "../pages/AvisosRepresentantePage";
 import EntradaPatioIbcPage from "../pages/EntradaPatioIbcPage";
-import ExpedicaoIbcPreparacaoPage from "../pages/ExpedicaoIbcPreparacaoPage";
-import ConciliacaoViagemView from "@/features/ibc/views/ConciliacaoViagemView";
+import ExpedicaoIbcCargaPage from "../pages/ExpedicaoIbcCargaPage";
 import CadastroIbcPage from "../pages/CadastroIbcPage";
 import ConciliacaoErpPage from "../pages/ConciliacaoErpPage";
 import EmprestimosAtrasadosPage from "../pages/EmprestimosAtrasadosPage";
@@ -41,6 +40,11 @@ function LegacyOverviewCustomerRedirect() {
       replace
     />
   );
+}
+
+function LegacyConciliacaoViagemRedirect() {
+  const { codCar } = useParams();
+  return <Navigate to={`/expedicao-ibc/${codCar}/fechar-viagem`} replace />;
 }
 
 const AppRoutes = () => {
@@ -179,15 +183,15 @@ const AppRoutes = () => {
             path="/expedicao-ibc/:codCar/conciliacao"
             element={
               <PrivateRoute allowedRoles={IBC_EXPEDICAO_ROLES}>
-                <ConciliacaoViagemView />
+                <LegacyConciliacaoViagemRedirect />
               </PrivateRoute>
             }
           />
           <Route
-            path="/expedicao-ibc/:codCar"
+            path="/expedicao-ibc/:codCar/:etapa?"
             element={
               <PrivateRoute allowedRoles={IBC_EXPEDICAO_ROLES}>
-                <ExpedicaoIbcPreparacaoPage />
+                <ExpedicaoIbcCargaPage />
               </PrivateRoute>
             }
           />

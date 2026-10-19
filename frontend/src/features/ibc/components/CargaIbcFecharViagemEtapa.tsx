@@ -65,7 +65,7 @@ export default function CargaIbcFecharViagemEtapa({ codCar, viagem, conciliacao 
             Salvar andamento
           </Button>
           <Button type="button" disabled={!conciliacao.podeFechar} onClick={() => void conciliacao.fecharViagem()}>
-            {salvando ? "Salvando…" : "Fechar viagem"}
+            Fechar viagem
           </Button>
         </div>
       )}
