@@ -1,16 +1,14 @@
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import CargaIbcPreparacaoEtapa from "../components/CargaIbcPreparacaoEtapa";
 import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
 import ExportarRelatorioViagemButton from "../components/ExportarRelatorioViagemButton";
 import ExpedicaoIbcAsyncState from "../components/ExpedicaoIbcAsyncState";
 import ExpedicaoIbcPageHeader from "../components/ExpedicaoIbcPageHeader";
 import FecharExpedicaoButton from "../components/FecharExpedicaoButton";
-import PedidoIbcPreparacaoCard from "../components/PedidoIbcPreparacaoCard";
-import PedidoIbcProgress from "../components/PedidoIbcProgress";
 import { useCargaExpedicaoDetalhe } from "../hooks/useCargaExpedicaoDetalhe";
 import { canAccessExpedicaoIbc } from "../utils/canAccessExpedicaoIbc";
 
@@ -107,59 +105,15 @@ export default function ExpedicaoIbcPreparacaoView() {
               </div>
             </ExpedicaoIbcPageHeader>
 
-            <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border-2 border-border bg-card p-4">
-              <Badge variant="secondary" className="text-[10px]">
-                {detalhe.situacao}
-              </Badge>
-              {detalhe.destino ? (
-                <span className="text-sm font-medium text-foreground">
-                  {detalhe.destino}
-                </span>
-              ) : null}
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Progresso:</span>
-                <PedidoIbcProgress
-                  alocado={detalhe.quantidadeAlocada}
-                  esperado={detalhe.quantidadeEsperadaTotal}
-                />
-              </div>
-              {fromEmViagem ? (
-                <Badge variant="secondary" className="text-[10px]">
-                  Em viagem
-                </Badge>
-              ) : detalhe.temExpedicao ? (
-                <Badge variant="outline" className="text-[10px]">
-                  Expedição fechada
-                </Badge>
-              ) : null}
-            </div>
-
-            {detalhe.pedidos.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Nenhum pedido IBC nesta carga.
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {detalhe.pedidos.map((pedido) => (
-                  <PedidoIbcPreparacaoCard
-                    key={pedido.numPed}
-                    pedido={pedido}
-                    mutationsLocked={detalhe.temExpedicao || fromEmViagem}
-                    allocating={allocatingNumPed === pedido.numPed}
-                    deallocatingId={deallocatingId}
-                    allocationNotice={
-                      substituidoNotice?.numPed === pedido.numPed
-                        ? substituidoNotice
-                        : null
-                    }
-                    onAllocate={(identificador) =>
-                      vincular(pedido.numPed, identificador)
-                    }
-                    onDeallocate={desvincular}
-                  />
-                ))}
-              </div>
-            )}
+            <CargaIbcPreparacaoEtapa
+              detalhe={detalhe}
+              mutationsLocked={detalhe.temExpedicao || fromEmViagem}
+              allocatingNumPed={allocatingNumPed}
+              deallocatingId={deallocatingId}
+              substituidoNotice={substituidoNotice}
+              onAllocate={vincular}
+              onDeallocate={desvincular}
+            />
           </>
         ) : null}
       </DefaultLayout>
