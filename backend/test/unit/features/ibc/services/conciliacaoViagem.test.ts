@@ -89,8 +89,8 @@ describe("conciliacaoViagem", () => {
       pedido({ numPed: "30", quantidadeEsperadaVenda: 1, quantidadeEsperadaEmprestimo: 1 }),
     ], ["20", "20", null, "10"]);
     assert.deepEqual(progresso, [
-      { numPed: "10", codCli: "C1", cliente: "Cliente", quantidadeEsperada: 1, quantidadeApontada: 1 },
-      { numPed: "20", codCli: "C1", cliente: "Cliente", quantidadeEsperada: 2, quantidadeApontada: 2 },
+      { numPed: "10", codCli: "C1", cliente: "Cliente", incluso: true, quantidadeEsperada: 1, quantidadeApontada: 1 },
+      { numPed: "20", codCli: "C1", cliente: "Cliente", incluso: false, quantidadeEsperada: 2, quantidadeApontada: 2 },
     ]);
   });
 

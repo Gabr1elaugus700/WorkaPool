@@ -40,6 +40,7 @@ export type PedidoConciliacaoViagem = {
   numPed: string;
   codCli: string | null;
   cliente: string;
+  incluso: boolean;
   quantidadeEsperada: number;
   quantidadeApontada: number;
 };
@@ -121,6 +122,7 @@ function progressoPedidos(
     cliente: pedido.cliente,
     quantidadeEsperada: pedido.quantidadeEsperadaTotal,
     quantidadeApontada: contagem.get(pedido.numPed) ?? 0,
+    incluso: pedido.quantidadeEsperadaVenda > 0,
   }));
 }
 
