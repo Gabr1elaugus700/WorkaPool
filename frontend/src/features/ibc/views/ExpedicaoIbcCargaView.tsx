@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Package } from "lucide-react";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
@@ -19,9 +19,8 @@ import { canAccessExpedicaoIbc } from "../utils/canAccessExpedicaoIbc";
 import {
   buildCargaIbcEtapas,
   cargaIbcEtapaPath,
-  parseCargaIbcEtapa,
   resolveCargaIbcEtapaAtual,
-  resolveCargaIbcEtapaVista,
+  resolveCargaIbcEtapaNaRota,
   resolveCargaIbcVoltar,
 } from "../utils/cargaIbcEtapa";
 
@@ -36,6 +35,7 @@ function parseCodCar(raw: string | undefined): number | null {
  */
 export default function ExpedicaoIbcCargaView() {
   const { codCar: codCarParam, etapa: etapaParam } = useParams<{ codCar: string; etapa?: string }>();
+  const [searchParams] = useSearchParams();
   const codCar = parseCodCar(codCarParam);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -59,10 +59,14 @@ export default function ExpedicaoIbcCargaView() {
 
   const viagemFechada = viagem?.viagemFechadaEm != null;
   const atual = resolveCargaIbcEtapaAtual({ temExpedicao, viagemFechadaEm: viagem?.viagemFechadaEm ?? null });
-  const vista = resolveCargaIbcEtapaVista(atual, parseCargaIbcEtapa(etapaParam));
-  if (etapaParam != null && etapaParam !== vista) {
-    return <Navigate to={cargaIbcEtapaPath(codCar, vista)} replace />;
-  }
+  const rota = resolveCargaIbcEtapaNaRota({
+    codCar,
+    etapaParam,
+    origem: searchParams.get("origem"),
+    atual,
+  });
+  if (rota.redirectTo != null) return <Navigate to={rota.redirectTo} replace />;
+  const { vista } = rota;
 
   const relatorio = temExpedicao ? (
     <ExportarRelatorioViagemButton
@@ -82,7 +86,7 @@ export default function ExpedicaoIbcCargaView() {
     );
   } else if (vista === "em-viagem" && atual === "em-viagem") {
     primaryAction = (
-      <Button asChild size="sm">
+      <Button asChild>
         <Link to={cargaIbcEtapaPath(codCar, "fechar-viagem")}>Fechar viagem</Link>
       </Button>
     );
