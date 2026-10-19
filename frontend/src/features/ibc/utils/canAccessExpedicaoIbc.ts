@@ -1,7 +1,7 @@
-/**
- * ALMOX e ADMIN acessam a UI de expedição IBC (#59–#61).
- */
+import type { UserRole } from "@/features/users/types/user.types";
+
+export const IBC_EXPEDICAO_ROLES = ["ALMOX", "ADMIN"] as const satisfies readonly UserRole[];
+
 export function canAccessExpedicaoIbc(role: string | undefined): boolean {
-  if (!role) return false;
-  return role === "ALMOX" || role === "ADMIN";
+  return IBC_EXPEDICAO_ROLES.some((allowed) => allowed === role);
 }

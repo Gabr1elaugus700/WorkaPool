@@ -18,6 +18,7 @@ import ConciliacaoErpPage from "../pages/ConciliacaoErpPage";
 import EmprestimosAtrasadosPage from "../pages/EmprestimosAtrasadosPage";
 import ChecklistsIbcView from "@/features/ibc/views/ChecklistsIbcView";
 import { IBC_CADASTRO_VIEW_ROLES, IBC_CADASTRO_WRITE_ROLES } from "@/features/ibc/utils/ibcCadastroPermissions";
+import { IBC_EXPEDICAO_ROLES } from "@/features/ibc/utils/canAccessExpedicaoIbc";
 import { ibcEmprestimoAtrasadoPermissions } from "@/features/ibc/utils/ibcEmprestimoAtrasadoPermissions";
 import ClientesInativos from "../pages/ClientesInativos";
 import { OrderLossView } from "@/features/orderLoss";
@@ -153,7 +154,7 @@ const AppRoutes = () => {
           <Route
             path="/expedicao-ibc"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={IBC_EXPEDICAO_ROLES}>
                 <ExpedicaoIbcPage />
               </PrivateRoute>
             }
@@ -161,7 +162,7 @@ const AppRoutes = () => {
           <Route
             path="/expedicao-ibc/em-viagem"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={IBC_EXPEDICAO_ROLES}>
                 <ExpedicaoIbcEmViagemPage />
               </PrivateRoute>
             }
@@ -169,7 +170,7 @@ const AppRoutes = () => {
           <Route
             path="/expedicao-ibc/entrada"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={IBC_EXPEDICAO_ROLES}>
                 <EntradaPatioIbcPage />
               </PrivateRoute>
             }
@@ -177,7 +178,7 @@ const AppRoutes = () => {
           <Route
             path="/expedicao-ibc/:codCar/conciliacao"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={IBC_EXPEDICAO_ROLES}>
                 <ConciliacaoViagemView />
               </PrivateRoute>
             }
@@ -185,7 +186,7 @@ const AppRoutes = () => {
           <Route
             path="/expedicao-ibc/:codCar"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={IBC_EXPEDICAO_ROLES}>
                 <ExpedicaoIbcPreparacaoPage />
               </PrivateRoute>
             }

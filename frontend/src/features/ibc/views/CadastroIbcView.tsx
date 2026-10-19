@@ -33,6 +33,7 @@ import type {
   IbcCadastroDTO,
 } from "../types/ibcCadastro.types";
 import {
+  IBC_CADASTRO_VIEW_ROLES,
   canViewIbcCadastro,
   canWriteIbcCadastro,
 } from "../utils/ibcCadastroPermissions";
@@ -132,7 +133,10 @@ export default function CadastroIbcView() {
 
   if (!allowed) {
     return (
-      <ExpedicaoIbcAccessDeniedAlert targetPhrase="o Cadastro IBC" />
+      <ExpedicaoIbcAccessDeniedAlert
+        targetPhrase="o Cadastro IBC"
+        requiredRoles={IBC_CADASTRO_VIEW_ROLES}
+      />
     );
   }
 

@@ -23,6 +23,7 @@ import {
   IBC_CADASTRO_WRITE_ROLES,
 } from "@/features/ibc/utils/ibcCadastroPermissions";
 import { ibcEmprestimoAtrasadoPermissions } from "@/features/ibc/utils/ibcEmprestimoAtrasadoPermissions";
+import { IBC_EXPEDICAO_ROLES } from "@/features/ibc/utils/canAccessExpedicaoIbc";
 
 export type NavItemGroup = "main" | "admin";
 
@@ -120,7 +121,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     to: "/expedicao-ibc",
     icon: Package,
     group: "main",
-    allowedRoles: ["ALMOX", "ADMIN"],
+    allowedRoles: IBC_EXPEDICAO_ROLES,
     showOnMobile: true,
   },
   {

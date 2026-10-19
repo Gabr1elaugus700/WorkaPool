@@ -7,7 +7,10 @@ import IbcChecklistItensSection from "../components/IbcChecklistItensSection";
 import IbcChecklistsSection from "../components/IbcChecklistsSection";
 import { useIbcChecklistItens } from "../hooks/useIbcChecklistItens";
 import { useIbcChecklists } from "../hooks/useIbcChecklists";
-import { canWriteIbcCadastro } from "../utils/ibcCadastroPermissions";
+import {
+  IBC_CADASTRO_WRITE_ROLES,
+  canWriteIbcCadastro,
+} from "../utils/ibcCadastroPermissions";
 import { toError } from "../utils/toError";
 
 export default function ChecklistsIbcView() {
@@ -17,7 +20,12 @@ export default function ChecklistsIbcView() {
   const checklists = useIbcChecklists(allowed);
 
   if (!allowed) {
-    return <ExpedicaoIbcAccessDeniedAlert targetPhrase="os Checklists de IBC" />;
+    return (
+      <ExpedicaoIbcAccessDeniedAlert
+        targetPhrase="os Checklists de IBC"
+        requiredRoles={IBC_CADASTRO_WRITE_ROLES}
+      />
+    );
   }
 
   return (
