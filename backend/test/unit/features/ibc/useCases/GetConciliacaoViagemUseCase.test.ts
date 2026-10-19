@@ -111,7 +111,7 @@ describe("GetConciliacaoViagemUseCase", () => {
     assert.equal(view.itens[1]?.numPed, null);
     assert.equal(view.itens[0]?.codCli, null);
     assert.deepEqual(view.pedidos, [
-      { numPed: "10", codCli: "B", cliente: "Beta", quantidadeEsperada: 1, quantidadeApontada: 0 },
+      { numPed: "10", codCli: "B", cliente: "Beta", incluso: false, quantidadeEsperada: 1, quantidadeApontada: 0 },
     ]);
     assert.deepEqual(view.clientes, [
       { chaveCliente: "B\u0000Beta", codCli: "B", cliente: "Beta", quantidadePapel: 1, confirmouDivergencia: false },
