@@ -11,13 +11,15 @@ import ExpedicaoIbcPage from "../pages/ExpedicaoIbcPage";
 import ExpedicaoIbcEmViagemPage from "../pages/ExpedicaoIbcEmViagemPage";
 import AvisosRepresentantePage from "../pages/AvisosRepresentantePage";
 import EntradaPatioIbcPage from "../pages/EntradaPatioIbcPage";
-import ExpedicaoIbcPreparacaoPage from "../pages/ExpedicaoIbcPreparacaoPage";
-import ConciliacaoViagemView from "@/features/ibc/views/ConciliacaoViagemView";
+import ExpedicaoIbcCargaPage from "../pages/ExpedicaoIbcCargaPage";
 import CadastroIbcPage from "../pages/CadastroIbcPage";
 import ConciliacaoErpPage from "../pages/ConciliacaoErpPage";
 import EmprestimosAtrasadosPage from "../pages/EmprestimosAtrasadosPage";
 import ChecklistsIbcView from "@/features/ibc/views/ChecklistsIbcView";
+import LegacyIbcTabRedirect from "@/features/ibc/components/LegacyIbcTabRedirect";
 import { IBC_CADASTRO_VIEW_ROLES, IBC_CADASTRO_WRITE_ROLES } from "@/features/ibc/utils/ibcCadastroPermissions";
+import { IBC_EXPEDICAO_ROLES } from "@/features/ibc/utils/canAccessExpedicaoIbc";
+import { controleIbcSections } from "@/features/ibc/utils/controleIbcSections";
 import { ibcEmprestimoAtrasadoPermissions } from "@/features/ibc/utils/ibcEmprestimoAtrasadoPermissions";
 import ClientesInativos from "../pages/ClientesInativos";
 import { OrderLossView } from "@/features/orderLoss";
@@ -40,6 +42,11 @@ function LegacyOverviewCustomerRedirect() {
       replace
     />
   );
+}
+
+function LegacyConciliacaoViagemRedirect() {
+  const { codCar } = useParams();
+  return <Navigate to={`/expedicao-ibc/${codCar}/fechar-viagem`} replace />;
 }
 
 const AppRoutes = () => {
@@ -135,10 +142,26 @@ const AppRoutes = () => {
             }
           />
           <Route
+            path="/controle-ibc"
+            element={
+              <PrivateRoute allowedRoles={controleIbcSections.roles}>
+                <AvisosRepresentantePage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/controle-ibc/emprestimos"
+            element={
+              <PrivateRoute allowedRoles={controleIbcSections.roles}>
+                <EmprestimosAtrasadosPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/avisos-ibc"
             element={
               <PrivateRoute allowedRoles={["VENDAS", "ADMIN"]}>
-                <AvisosRepresentantePage />
+                <Navigate to="/controle-ibc" replace />
               </PrivateRoute>
             }
           />
@@ -146,14 +169,14 @@ const AppRoutes = () => {
             path="/emprestimos-ibc"
             element={
               <PrivateRoute allowedRoles={ibcEmprestimoAtrasadoPermissions.roles}>
-                <EmprestimosAtrasadosPage />
+                <Navigate to="/controle-ibc/emprestimos" replace />
               </PrivateRoute>
             }
           />
           <Route
             path="/expedicao-ibc"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={IBC_EXPEDICAO_ROLES}>
                 <ExpedicaoIbcPage />
               </PrivateRoute>
             }
@@ -161,7 +184,7 @@ const AppRoutes = () => {
           <Route
             path="/expedicao-ibc/em-viagem"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={IBC_EXPEDICAO_ROLES}>
                 <ExpedicaoIbcEmViagemPage />
               </PrivateRoute>
             }
@@ -169,7 +192,7 @@ const AppRoutes = () => {
           <Route
             path="/expedicao-ibc/entrada"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={IBC_EXPEDICAO_ROLES}>
                 <EntradaPatioIbcPage />
               </PrivateRoute>
             }
@@ -177,21 +200,29 @@ const AppRoutes = () => {
           <Route
             path="/expedicao-ibc/:codCar/conciliacao"
             element={
-              <PrivateRoute>
-                <ConciliacaoViagemView />
+              <PrivateRoute allowedRoles={IBC_EXPEDICAO_ROLES}>
+                <LegacyConciliacaoViagemRedirect />
               </PrivateRoute>
             }
           />
           <Route
-            path="/expedicao-ibc/:codCar"
+            path="/expedicao-ibc/:codCar/:etapa?"
+            element={
+              <PrivateRoute allowedRoles={IBC_EXPEDICAO_ROLES}>
+                <ExpedicaoIbcCargaPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/gestao-ibc"
             element={
               <PrivateRoute>
-                <ExpedicaoIbcPreparacaoPage />
+                <Navigate to="/gestao-ibc/containers" replace />
               </PrivateRoute>
             }
           />
           <Route
-            path="/cadastro-ibc"
+            path="/gestao-ibc/containers"
             element={
               <PrivateRoute>
                 <CadastroIbcPage />
@@ -199,7 +230,7 @@ const AppRoutes = () => {
             }
           />
           <Route
-            path="/conciliacao-ibc"
+            path="/gestao-ibc/conciliacao"
             element={
               <PrivateRoute allowedRoles={IBC_CADASTRO_VIEW_ROLES}>
                 <ConciliacaoErpPage />
@@ -207,10 +238,34 @@ const AppRoutes = () => {
             }
           />
           <Route
-            path="/checklists-ibc"
+            path="/gestao-ibc/checklists"
             element={
               <PrivateRoute allowedRoles={IBC_CADASTRO_WRITE_ROLES}>
                 <ChecklistsIbcView />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/cadastro-ibc"
+            element={
+              <PrivateRoute>
+                <LegacyIbcTabRedirect />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/conciliacao-ibc"
+            element={
+              <PrivateRoute allowedRoles={IBC_CADASTRO_VIEW_ROLES}>
+                <LegacyIbcTabRedirect />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/checklists-ibc"
+            element={
+              <PrivateRoute allowedRoles={IBC_CADASTRO_WRITE_ROLES}>
+                <LegacyIbcTabRedirect />
               </PrivateRoute>
             }
           />

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import { downloadRelatorioViagemPdf } from "../pdf/downloadRelatorioViagemPdf";
 import { ibcExpedicaoService } from "../services/ibcExpedicaoService";
 import { toError } from "../utils/toError";
@@ -8,9 +8,10 @@ import { toError } from "../utils/toError";
 type Props = {
   codCar: number;
   rotulo: string;
+  variant?: ButtonProps["variant"];
 };
 
-export default function ExportarRelatorioViagemButton({ codCar, rotulo }: Props) {
+export default function ExportarRelatorioViagemButton({ codCar, rotulo, variant = "outline" }: Props) {
   const [gerando, setGerando] = useState(false);
 
   const exportar = async () => {
@@ -28,7 +29,7 @@ export default function ExportarRelatorioViagemButton({ codCar, rotulo }: Props)
   return (
     <Button
       type="button"
-      variant="outline"
+      variant={variant}
       size="sm"
       disabled={gerando}
       onClick={() => {

@@ -5,11 +5,12 @@ import { toError } from "../utils/toError";
 
 const AVISOS_REPRESENTANTE_QUERY_KEY = ["ibc", "avisos-representante"] as const;
 
-export function useAvisosRepresentante() {
+export function useAvisosRepresentante(enabled = true) {
   const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: AVISOS_REPRESENTANTE_QUERY_KEY,
     queryFn: avisoRepresentanteService.listar,
+    enabled,
   });
   const marcarLido = useMutation({
     mutationFn: avisoRepresentanteService.marcarLido,

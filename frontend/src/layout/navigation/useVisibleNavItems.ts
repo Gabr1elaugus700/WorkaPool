@@ -1,11 +1,8 @@
 import { useCallback, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/auth/AuthContext";
-import { HOME_NAV_ITEM, NAV_ITEMS, type NavItem } from "./navItems";
-import { filterNavItems, isNavPathActive } from "./navItems.utils";
-
-/** Início mais os atalhos. 6 mantém Atraso no celular e Conciliação para logística. */
-const MOBILE_NAV_LIMIT = 6;
+import { HOME_NAV_ITEM, NAV_ITEMS } from "./navItems";
+import { filterNavItems, isNavPathActive, selectMobileNavItems } from "./navItems.utils";
 
 export function useVisibleNavItems() {
   const { user } = useAuth();
@@ -14,11 +11,8 @@ export function useVisibleNavItems() {
 
   const mainItems = useMemo(() => filterNavItems(NAV_ITEMS, role, "main"), [role]);
   const adminItems = useMemo(() => filterNavItems(NAV_ITEMS, role, "admin"), [role]);
-  const mobileItems = useMemo<NavItem[]>(
-    () =>
-      [HOME_NAV_ITEM, ...mainItems, ...adminItems]
-        .filter((item) => item.showOnMobile)
-        .slice(0, MOBILE_NAV_LIMIT),
+  const mobileItems = useMemo(
+    () => selectMobileNavItems(mainItems, adminItems, HOME_NAV_ITEM),
     [mainItems, adminItems],
   );
 

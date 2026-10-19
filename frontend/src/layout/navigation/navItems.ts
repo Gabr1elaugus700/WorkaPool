@@ -1,15 +1,12 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Bell,
-  ClipboardCheck,
-  Clock,
+  ClipboardList,
   Contact,
   Container,
   Home,
   Package,
   PackageX,
   RefreshCw,
-  Scale,
   Truck,
   UserCog,
 } from "lucide-react";
@@ -18,11 +15,9 @@ import {
   CRM_ACCESS_ROLES,
   CRM_PORTFOLIO_PATH,
 } from "@/features/overviewCustomer/utils/overviewCustomerRoutes.utils";
-import {
-  IBC_CADASTRO_VIEW_ROLES,
-  IBC_CADASTRO_WRITE_ROLES,
-} from "@/features/ibc/utils/ibcCadastroPermissions";
-import { ibcEmprestimoAtrasadoPermissions } from "@/features/ibc/utils/ibcEmprestimoAtrasadoPermissions";
+import { IBC_EXPEDICAO_ROLES } from "@/features/ibc/utils/canAccessExpedicaoIbc";
+import { IBC_CADASTRO_VIEW_ROLES } from "@/features/ibc/utils/ibcCadastroPermissions";
+import { controleIbcSections } from "@/features/ibc/utils/controleIbcSections";
 
 export type NavItemGroup = "main" | "admin";
 
@@ -71,56 +66,32 @@ export const NAV_ITEMS: readonly NavItem[] = [
     showOnMobile: true,
   },
   {
-    label: "Avisos IBC",
-    mobileLabel: "Avisos",
-    to: "/avisos-ibc",
-    icon: Bell,
-    group: "main",
-    allowedRoles: ["VENDAS", "ADMIN"],
-    showOnMobile: true,
-  },
-  {
-    label: "Empréstimos IBC",
-    mobileLabel: "Atraso",
-    to: "/emprestimos-ibc",
-    icon: Clock,
-    group: "main",
-    allowedRoles: ibcEmprestimoAtrasadoPermissions.roles,
-    showOnMobile: true,
-  },
-  {
-    label: "Cadastro IBC",
-    mobileLabel: "Cad. IBC",
-    to: "/cadastro-ibc",
-    icon: Container,
-    group: "main",
-    allowedRoles: IBC_CADASTRO_VIEW_ROLES,
-    showOnMobile: true,
-  },
-  {
-    label: "Conciliação IBC",
-    mobileLabel: "Conciliação",
-    to: "/conciliacao-ibc",
-    icon: Scale,
-    group: "main",
-    allowedRoles: IBC_CADASTRO_VIEW_ROLES,
-    showOnMobile: true,
-  },
-  {
-    label: "Checklists de IBC",
-    mobileLabel: "Checklists",
-    to: "/checklists-ibc",
-    icon: ClipboardCheck,
-    group: "main",
-    allowedRoles: IBC_CADASTRO_WRITE_ROLES,
-  },
-  {
     label: "Expedição IBC",
     mobileLabel: "Exp. IBC",
     to: "/expedicao-ibc",
     icon: Package,
     group: "main",
-    allowedRoles: ["ALMOX", "ADMIN"],
+    allowedRoles: IBC_EXPEDICAO_ROLES,
+    showOnMobile: true,
+  },
+  {
+    label: "Gestão de IBC",
+    mobileLabel: "Gest. IBC",
+    to: "/gestao-ibc",
+    icon: Container,
+    group: "main",
+    // União das abas: Containers e Conciliação (leitura) já incluem Checklists (escrita).
+    allowedRoles: IBC_CADASTRO_VIEW_ROLES,
+    showOnMobile: true,
+  },
+  {
+    label: "Controle IBC",
+    mobileLabel: "Ctrl. IBC",
+    to: "/controle-ibc",
+    icon: ClipboardList,
+    group: "main",
+    // União das abas Avisos e Empréstimos em atraso.
+    allowedRoles: controleIbcSections.roles,
     showOnMobile: true,
   },
   {
