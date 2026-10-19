@@ -39,7 +39,7 @@ export default function PedidoIbcPreparacaoCard({
   const noticeId = `ibc-alocacao-aviso-${pedido.numPed}`;
 
   return (
-    <div className="rounded-xl border-2 border-border bg-card p-4 space-y-3">
+    <div className="space-y-3 rounded-lg border border-border bg-card p-4 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-base font-bold text-foreground">
@@ -75,17 +75,29 @@ export default function PedidoIbcPreparacaoCard({
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             IBCs vinculados
           </p>
-          {pedido.alocacoes.map((alocacao) => (
-            <DeallocateIbcButton
-              key={alocacao.id}
-              identificador={alocacao.identificador}
-              disabled={mutationsLocked}
-              loading={deallocatingId === alocacao.id}
-              onDeallocate={() => {
-                void onDeallocate(alocacao.id);
-              }}
-            />
-          ))}
+          {mutationsLocked ? (
+            <ul className="flex flex-wrap gap-2">
+              {pedido.alocacoes.map((alocacao) => (
+                <li
+                  key={alocacao.id}
+                  className="rounded-md border border-border bg-muted/30 px-3 py-1.5 font-mono text-sm font-medium text-foreground"
+                >
+                  {alocacao.identificador}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            pedido.alocacoes.map((alocacao) => (
+              <DeallocateIbcButton
+                key={alocacao.id}
+                identificador={alocacao.identificador}
+                loading={deallocatingId === alocacao.id}
+                onDeallocate={() => {
+                  void onDeallocate(alocacao.id);
+                }}
+              />
+            ))
+          )}
         </div>
       ) : (
         <p className="text-xs text-muted-foreground">Nenhum IBC vinculado.</p>

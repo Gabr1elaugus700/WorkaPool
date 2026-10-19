@@ -35,14 +35,11 @@ export default function AllocateIbcForm({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col gap-2 sm:flex-row sm:items-end"
-    >
-      <div className="flex-1 space-y-1.5">
-        <Label htmlFor={inputId} className="text-xs">
-          Identificador IBC
-        </Label>
+    <form onSubmit={handleSubmit} className="space-y-1.5">
+      <Label htmlFor={inputId} className="text-xs">
+        Identificador IBC
+      </Label>
+      <div className="flex max-w-md">
         <Input
           id={inputId}
           name="identificador"
@@ -55,18 +52,19 @@ export default function AllocateIbcForm({
           aria-describedby={describedBy}
           className={
             invalid
-              ? "border-destructive focus-visible:ring-destructive"
-              : undefined
+              ? "rounded-r-none border-destructive focus-visible:z-10 focus-visible:ring-destructive"
+              : "rounded-r-none focus-visible:z-10"
           }
         />
+        <Button
+          type="submit"
+          variant="outline"
+          className="-ml-px rounded-l-none"
+          disabled={disabled || submitting || !identificador.trim()}
+        >
+          {submitting ? "Vinculando…" : "Vincular"}
+        </Button>
       </div>
-      <Button
-        type="submit"
-        size="sm"
-        disabled={disabled || submitting || !identificador.trim()}
-      >
-        {submitting ? "Vinculando…" : "Vincular"}
-      </Button>
     </form>
   );
 }

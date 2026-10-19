@@ -71,7 +71,7 @@ export default function CargaIbcCard(props: Props) {
             rotulo="Reimprimir relatório de viagem"
             variant="ghost"
           />
-          <OpenCargaLink to={`/expedicao-ibc/${item.codCar}?origem=em-viagem`} label="Ver detalhe" />
+          <OpenCargaLink to={`/expedicao-ibc/${item.codCar}`} label="Ver detalhe" />
         </>
       }
     >
