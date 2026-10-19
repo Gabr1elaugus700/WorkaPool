@@ -6,7 +6,6 @@ import { IbcAlocacaoRequestError } from "../utils/ibcAlocacaoError";
 import { toError } from "../utils/toError";
 
 export type SubstituidoNotice = {
-  numPed: string;
   title: string;
   message: string;
 };
@@ -15,7 +14,7 @@ export function useCargaExpedicaoDetalhe(codCar: number | null, enabled: boolean
   const [detalhe, setDetalhe] = useState<CargaExpedicaoDetalheDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [allocatingNumPed, setAllocatingNumPed] = useState<string | null>(null);
+  const [allocating, setAllocating] = useState(false);
   const [substituidoNotice, setSubstituidoNotice] = useState<SubstituidoNotice | null>(null);
   const [deallocatingId, setDeallocatingId] = useState<string | null>(null);
   const [fechando, setFechando] = useState(false);
@@ -45,25 +44,24 @@ export function useCargaExpedicaoDetalhe(codCar: number | null, enabled: boolean
     void carregar();
   }, [enabled, carregar]);
 
-  const vincular = async (numPed: string, identificador: string): Promise<boolean> => {
+  const vincular = async (identificador: string): Promise<boolean> => {
     if (codCar == null) return false;
-    setAllocatingNumPed(numPed);
-    setSubstituidoNotice((current) => (current?.numPed === numPed ? null : current));
+    setAllocating(true);
+    setSubstituidoNotice(null);
     try {
-      await ibcExpedicaoService.createAlocacao({ codCar, numPed, identificador });
-      setSubstituidoNotice(null);
-      toast.success(`IBC ${identificador} vinculado ao pedido ${numPed}`);
+      await ibcExpedicaoService.createAlocacao({ codCar, identificador });
+      toast.success(`IBC ${identificador} vinculado à carga`);
       await carregar();
       return true;
     } catch (err) {
       if (err instanceof IbcAlocacaoRequestError && err.substituido && err.title) {
-        setSubstituidoNotice({ numPed, title: err.title, message: err.message });
+        setSubstituidoNotice({ title: err.title, message: err.message });
         return false;
       }
       toast.error(toError(err).message);
       return true;
     } finally {
-      setAllocatingNumPed(null);
+      setAllocating(false);
     }
   };
 
@@ -98,7 +96,7 @@ export function useCargaExpedicaoDetalhe(codCar: number | null, enabled: boolean
     detalhe,
     loading,
     error,
-    allocatingNumPed,
+    allocating,
     substituidoNotice,
     deallocatingId,
     fechando,

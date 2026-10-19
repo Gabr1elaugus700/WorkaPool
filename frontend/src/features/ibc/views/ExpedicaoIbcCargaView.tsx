@@ -122,7 +122,7 @@ export default function ExpedicaoIbcCargaView() {
         <CargaIbcPreparacaoEtapa
           detalhe={detalhe}
           mutationsLocked={temExpedicao}
-          allocatingNumPed={carga.allocatingNumPed}
+          allocating={carga.allocating}
           deallocatingId={carga.deallocatingId}
           substituidoNotice={carga.substituidoNotice}
           onAllocate={carga.vincular}
