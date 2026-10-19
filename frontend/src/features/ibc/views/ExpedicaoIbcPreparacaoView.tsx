@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { toast } from "sonner";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
 import { Badge } from "@/components/ui/badge";
@@ -13,11 +11,8 @@ import ExpedicaoIbcPageHeader from "../components/ExpedicaoIbcPageHeader";
 import FecharExpedicaoButton from "../components/FecharExpedicaoButton";
 import PedidoIbcPreparacaoCard from "../components/PedidoIbcPreparacaoCard";
 import PedidoIbcProgress from "../components/PedidoIbcProgress";
-import { ibcExpedicaoService } from "../services/ibcExpedicaoService";
-import type { CargaExpedicaoDetalheDTO } from "../types/ibcExpedicao.types";
+import { useCargaExpedicaoDetalhe } from "../hooks/useCargaExpedicaoDetalhe";
 import { canAccessExpedicaoIbc } from "../utils/canAccessExpedicaoIbc";
-import { IbcAlocacaoRequestError } from "../utils/ibcAlocacaoError";
-import { toError } from "../utils/toError";
 
 function parseCodCar(raw: string | undefined): number | null {
   if (raw == null || raw === "") return null;
@@ -37,110 +32,18 @@ export default function ExpedicaoIbcPreparacaoView() {
   const codCar = parseCodCar(codCarParam);
   const { user } = useAuth();
   const allowed = canAccessExpedicaoIbc(user?.role);
-
-  const [detalhe, setDetalhe] = useState<CargaExpedicaoDetalheDTO | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [allocatingNumPed, setAllocatingNumPed] = useState<string | null>(null);
-  const [substituidoNotice, setSubstituidoNotice] = useState<{
-    numPed: string;
-    title: string;
-    message: string;
-  } | null>(null);
-  const [deallocatingId, setDeallocatingId] = useState<string | null>(null);
-  const [fechando, setFechando] = useState(false);
-
-  const carregar = useCallback(async () => {
-    if (codCar == null) {
-      setError(new Error("Código de carga inválido."));
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await ibcExpedicaoService.getCargaExpedicao(codCar);
-      setDetalhe(data);
-    } catch (err) {
-      setError(toError(err));
-    } finally {
-      setLoading(false);
-    }
-  }, [codCar]);
-
-  useEffect(() => {
-    if (!allowed) {
-      setLoading(false);
-      return;
-    }
-    void carregar();
-  }, [allowed, carregar]);
-
-  const handleAllocate = async (
-    numPed: string,
-    identificador: string,
-  ): Promise<boolean> => {
-    if (codCar == null) return false;
-    setAllocatingNumPed(numPed);
-    setSubstituidoNotice((current) =>
-      current?.numPed === numPed ? null : current,
-    );
-    try {
-      await ibcExpedicaoService.createAlocacao({
-        codCar,
-        numPed,
-        identificador,
-      });
-      setSubstituidoNotice(null);
-      toast.success(`IBC ${identificador} vinculado ao pedido ${numPed}`);
-      await carregar();
-      return true;
-    } catch (err) {
-      if (
-        err instanceof IbcAlocacaoRequestError &&
-        err.substituido &&
-        err.title
-      ) {
-        setSubstituidoNotice({
-          numPed,
-          title: err.title,
-          message: err.message,
-        });
-        return false;
-      }
-      toast.error(toError(err).message);
-      return true;
-    } finally {
-      setAllocatingNumPed(null);
-    }
-  };
-
-  const handleDeallocate = async (alocacaoId: string) => {
-    setDeallocatingId(alocacaoId);
-    try {
-      await ibcExpedicaoService.removeAlocacao(alocacaoId);
-      toast.success("IBC desvinculado");
-      await carregar();
-    } catch (err) {
-      toast.error(toError(err).message);
-    } finally {
-      setDeallocatingId(null);
-    }
-  };
-
-  const handleFechar = async () => {
-    if (codCar == null) return;
-    setFechando(true);
-    try {
-      await ibcExpedicaoService.fecharExpedicao({ codCar });
-      toast.success("Expedição IBC fechada — IBCs em viagem");
-      await carregar();
-    } catch (err) {
-      toast.error(toError(err).message);
-    } finally {
-      setFechando(false);
-    }
-  };
+  const {
+    detalhe,
+    loading,
+    error,
+    allocatingNumPed,
+    substituidoNotice,
+    deallocatingId,
+    fechando,
+    vincular,
+    desvincular,
+    fecharExpedicao,
+  } = useCargaExpedicaoDetalhe(codCar, allowed);
 
   if (!allowed) {
     return <ExpedicaoIbcAccessDeniedAlert />;
@@ -197,7 +100,7 @@ export default function ExpedicaoIbcPreparacaoView() {
                     podeFechar={detalhe.podeFecharExpedicao}
                     loading={fechando}
                     onFechar={() => {
-                      void handleFechar();
+                      void fecharExpedicao();
                     }}
                   />
                 )}
@@ -250,9 +153,9 @@ export default function ExpedicaoIbcPreparacaoView() {
                         : null
                     }
                     onAllocate={(identificador) =>
-                      handleAllocate(pedido.numPed, identificador)
+                      vincular(pedido.numPed, identificador)
                     }
-                    onDeallocate={handleDeallocate}
+                    onDeallocate={desvincular}
                   />
                 ))}
               </div>
