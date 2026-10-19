@@ -13,7 +13,7 @@ type Props = {
  */
 export default function AvisoRepresentanteCard({ aviso, marcando, onMarcarLido }: Props) {
   return (
-    <article className="mb-3 rounded-xl border-2 border-border bg-card p-4">
+    <article className="rounded-lg border border-border bg-card p-4 shadow-sm">
       <h2 className="text-lg font-bold text-foreground">
         Pedido {aviso.numPed} · Carga {aviso.codCar} · {aviso.cliente}
       </h2>
