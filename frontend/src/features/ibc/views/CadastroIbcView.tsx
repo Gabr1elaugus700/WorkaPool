@@ -4,8 +4,8 @@ import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
 import CadastroIbcForm from "../components/CadastroIbcForm";
 import CadastroIbcLoteForm from "../components/CadastroIbcLoteForm";
@@ -17,7 +17,8 @@ import CadastroIbcModeSelector, {
 import CadastroIbcPoolList from "../components/CadastroIbcPoolList";
 import CadastroIbcAlertsPanel from "../components/CadastroIbcAlertsPanel";
 import CadastroIbcSectionError from "../components/CadastroIbcSectionError";
-import CadastroIbcSectionSkeleton from "../components/CadastroIbcSectionSkeleton";
+import IbcPageHeader from "../components/IbcPageHeader";
+import IbcStatusContent from "../components/IbcStatusContent";
 import ConfirmarMudancaIbcModal, {
   type IbcMudancaModo,
 } from "../components/ConfirmarMudancaIbcModal";
@@ -61,6 +62,7 @@ export default function CadastroIbcView() {
   const [inspecaoIbc, setInspecaoIbc] = useState<IbcCadastroDTO | null>(null);
   const [inspecoesIbc, setInspecoesIbc] = useState<IbcCadastroDTO | null>(null);
   const [incluirHistorico, setIncluirHistorico] = useState(false);
+  const [novoAberto, setNovoAberto] = useState(false);
 
   const poolQuery = useQuery({
     queryKey: [...POOL_KEY, incluirHistorico],
@@ -75,7 +77,7 @@ export default function CadastroIbcView() {
   const produtosQuery = useQuery({
     queryKey: PRODUTOS_KEY,
     queryFn: ibcCadastroService.listProdutos,
-    enabled: canWrite,
+    enabled: allowed,
   });
 
   const invalidateLists = async () => {
@@ -140,8 +142,6 @@ export default function CadastroIbcView() {
     );
   }
 
-  const alertsCount = alertsQuery.data?.length;
-  const poolCount = poolQuery.data?.length;
   const produtos = produtosQuery.data ?? [];
   const loteResult: CreateLoteIbcResultDTO | undefined =
     createLoteMutation.data;
@@ -150,21 +150,27 @@ export default function CadastroIbcView() {
 
   return (
     <DefaultLayout>
-      <div className="space-y-6 p-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Cadastro IBC</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+      <div className="space-y-6">
+        <IbcPageHeader
+          title="Cadastro IBC"
+          primaryAction={canWrite ? <Button type="button" onClick={() => setNovoAberto(true)}>Novo IBC</Button> : null}
+        />
+        <p className="max-w-prose text-sm text-muted-foreground">
             {canWrite
               ? "Novo IBC nasce Apto, com alerta Sem inspeção até a primeira inspeção, e identificador HM + letra do produto. Lote de compra gera N unidades com a mesma data limite. Conversão e mudança de produto criam um novo registro."
               : "Consulta do pool, dos alertas e do histórico de inspeções de IBC."}
-          </p>
-        </div>
+        </p>
 
         {canWrite ? (
-          <section className="rounded-lg border border-border bg-card p-4 shadow-sm sm:p-6">
-            <h2 className="mb-3 text-base font-semibold tracking-tight">
-              Novo IBC
-            </h2>
+          <Dialog open={novoAberto} onOpenChange={setNovoAberto}>
+          <DialogContent
+            className="left-auto right-0 top-0 flex h-screen max-h-screen w-full max-w-2xl translate-x-0 translate-y-0 flex-col overflow-y-auto rounded-none border-y-0 border-r-0 sm:rounded-none"
+            style={{ left: "auto", right: 0, top: 0, bottom: 0, height: "100vh", transform: "none" }}
+          >
+            <DialogHeader>
+              <DialogTitle>Novo IBC</DialogTitle>
+              <DialogDescription>Cadastro unitário ou em lote.</DialogDescription>
+            </DialogHeader>
             <div className="mb-3">
               <CadastroProdutoModal
                 produtos={produtos}
@@ -247,73 +253,50 @@ export default function CadastroIbcView() {
                 ) : null}
               </>
             ) : null}
-          </section>
+          </DialogContent>
+          </Dialog>
         ) : null}
 
-        <section className="rounded-lg border border-border bg-muted/20 p-4 shadow-sm sm:p-6">
-          <h2 className="mb-3 text-sm font-medium text-muted-foreground">
-            Alertas
-            {typeof alertsCount === "number" ? ` (${alertsCount})` : null}
-          </h2>
-          {alertsQuery.isLoading ? (
-            <CadastroIbcSectionSkeleton rows={3} />
-          ) : alertsQuery.error ? (
-            <CadastroIbcSectionError
-              message={toError(alertsQuery.error).message}
-              onRetry={() => {
-                void alertsQuery.refetch();
-              }}
-            />
-          ) : (
-            <CadastroIbcAlertsPanel alerts={alertsQuery.data ?? []} />
-          )}
-        </section>
+        {alertsQuery.isLoading ? (
+          <p className="text-sm text-muted-foreground">Carregando alertas…</p>
+        ) : alertsQuery.error ? (
+          <CadastroIbcSectionError
+            message={toError(alertsQuery.error).message}
+            onRetry={() => {
+              void alertsQuery.refetch();
+            }}
+          />
+        ) : (
+          <CadastroIbcAlertsPanel alerts={alertsQuery.data ?? []} />
+        )}
 
-        <section className="rounded-lg border border-border bg-muted/20 p-4 shadow-sm sm:p-6">
-          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-sm font-medium text-muted-foreground">
-              {incluirHistorico ? "Pool" : "Pool ativo"}
-              {typeof poolCount === "number" ? ` (${poolCount})` : null}
-            </h2>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="ibc-incluir-historico"
-                checked={incluirHistorico}
-                onCheckedChange={(value) => setIncluirHistorico(value === true)}
-              />
-              <Label htmlFor="ibc-incluir-historico" className="text-sm font-normal">
-                Incluir baixados e substituídos
-              </Label>
-            </div>
+        {poolQuery.isLoading ? (
+          <IbcStatusContent status="loading" loadingLabel="Carregando containers…" />
+        ) : poolQuery.error ? (
+          <div className="space-y-3">
+            <IbcStatusContent status="error" error={toError(poolQuery.error)} />
+            <Button type="button" variant="outline" size="sm" onClick={() => void poolQuery.refetch()}>
+              Tentar novamente
+            </Button>
           </div>
-          {poolQuery.isLoading ? (
-            <CadastroIbcSectionSkeleton />
-          ) : poolQuery.error ? (
-            <CadastroIbcSectionError
-              message={toError(poolQuery.error).message}
-              onRetry={() => {
-                void poolQuery.refetch();
-              }}
-            />
-          ) : (
-            <CadastroIbcPoolList
-              items={poolQuery.data ?? []}
-              canWrite={canWrite}
-              emptyMessage={
-                incluirHistorico
-                  ? "Nenhum IBC no histórico."
-                  : "Nenhum IBC ativo no pool."
-              }
-              actionsDisabled={conversao.isPending}
-              onConverter={(ibc) => setMudanca({ ibc, modo: "conversion" })}
-              onMudarProduto={(ibc) => setMudanca({ ibc, modo: "product_change" })}
-              onVerHistorico={setHistoricoIbc}
-              onGerenciarChecklists={setChecklistsIbc}
-              onInspecionar={setInspecaoIbc}
-              onVerInspecoes={setInspecoesIbc}
-            />
-          )}
-        </section>
+        ) : (
+          <CadastroIbcPoolList
+            items={poolQuery.data ?? []}
+            produtos={produtos}
+            canWrite={canWrite}
+            incluirHistorico={incluirHistorico}
+            onIncluirHistoricoChange={setIncluirHistorico}
+            emptyMessage={incluirHistorico ? "Nenhum IBC no histórico." : "Nenhum IBC ativo no pool."}
+            emptyNextStep={incluirHistorico ? "O histórico reúne baixados e substituídos." : canWrite ? "Use Novo IBC para cadastrar o primeiro container." : "Quando o almox cadastrar um IBC, ele aparece nesta tabela."}
+            actionsDisabled={conversao.isPending}
+            onConverter={(ibc) => setMudanca({ ibc, modo: "conversion" })}
+            onMudarProduto={(ibc) => setMudanca({ ibc, modo: "product_change" })}
+            onVerHistorico={setHistoricoIbc}
+            onGerenciarChecklists={setChecklistsIbc}
+            onInspecionar={setInspecaoIbc}
+            onVerInspecoes={setInspecoesIbc}
+          />
+        )}
       </div>
       {canWrite && mudanca ? (
         <ConfirmarMudancaIbcModal
