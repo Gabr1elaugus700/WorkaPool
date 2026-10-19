@@ -10,8 +10,8 @@ A empresa opera com containers IBC (empréstimo, venda, troca, transbordo) sem i
 ## Goals
 
 - [ ] Cada IBC do pool tem identidade (número + QR) e histórico de custódia/modalidade/inspeção
-- [ ] Operação sabe **IBC X está no Cliente Y** (confirmado na entrega), não só o plano do pátio
-- [ ] Empréstimos têm prazo (padrão 30 dias) e Representante é avisado quando containers ficam no Cliente após a viagem
+- [ ] Operação sabe **IBC X está no Cliente Y** pelo pedido apontado na volta, não pelo plano da saída
+- [ ] Empréstimos têm prazo (**90 dias** a partir do Fechar Viagem) e o Representante é avisado só nesse caso; incluso não gera aviso
 - [ ] IBC Inapto (inspeção ou data limite) aparece em alerta no módulo e não entra em nova viagem
 - [ ] Troca, Transbordo, Empréstimo e Venda são distinguíveis no modelo e no fluxo operacional
 
@@ -32,10 +32,10 @@ A empresa opera com containers IBC (empréstimo, venda, troca, transbordo) sem i
 
 | Papel | Responsabilidade no módulo |
 | ----- | -------------------------- |
-| ALMOX (pátio) | Cadastro IBC, Preparação de expedição (`AlocacaoIbc`), Fechar expedição (`ExpedicaoIbc`), Entrada no pátio, Troca 1:1, Inspeção/Aptidão |
+| ALMOX (pátio) | Cadastro IBC, Preparação de expedição (`AlocacaoIbc` na carga, sem pedido), Fechar expedição (`ExpedicaoIbc`), na volta aponta o pedido, Entrada no pátio, Troca 1:1, Inspeção/Aptidão |
 | Logística | Fechar Carga com `CargaDespacho` (motorista + caminhão); cadastro de caminhões em [Frota](../frota/spec.md) |
-| Motorista | Confirma Custódia no Cliente por Pedido (scan QR) |
-| Representante (vendedor) | Recebe Aviso quando IBC do Pedido ficou no Cliente |
+| Motorista | Marca no papel, em cada bloco de pedido, o que ficou e o que foi troca. Não escolhe pedido no sistema |
+| Representante (vendedor) | Recebe Aviso só quando IBC de empréstimo do Pedido ficou no Cliente |
 | Admin | Visão ampla, alertas, configuração de acesso |
 
 ---
@@ -79,44 +79,46 @@ A empresa opera com containers IBC (empréstimo, venda, troca, transbordo) sem i
 
 ### P1: Expedição — Preparação e Em viagem ⭐ MVP
 
-**User Story**: Como operador ALMOX, quero preparar a expedição de IBCs por pedido em uma Carga e fechar a expedição quando a logística tiver fechado a carga, para que os containers Aptos saiam do pátio (**Em viagem**) com rastreabilidade.
+**User Story**: Como operador ALMOX, quero preparar a expedição vinculando os IBCs à Carga, sem escolher pedido, e fechar a expedição quando a quantidade vinculada for o total dos pedidos elegíveis, para que os containers Aptos saiam do pátio (**Em viagem**) ainda sem pedido.
 
-**Why P1**: Início do ciclo de custódia da viagem. Depende de cadastro + aptidão (#32, #35) e fechamento de carga com despacho (#33 MOTORISTA).
+**Why P1**: Início do ciclo de custódia da viagem. O pedido só nasce na volta. Depende de cadastro + aptidão (#32, #35) e fechamento de carga com despacho (#33).
 
 **Acceptance Criteria**:
 
 1. WHEN LOGISTICA fecha uma Carga THEN o sistema SHALL exigir `CargaDespacho` (motorista + caminhão `Trucks` **ativo**) e SHALL rejeitar sem eles ou com caminhão inativo (ver [Frota](../frota/spec.md))
-2. WHEN ALMOX prepara expedição THEN o sistema SHALL permitir `AlocacaoIbc` por **Pedido** (`numPed`) — qtd esperada = soma no backend de `QUANTIDADE_PEDIDO / VOLUME_EMBALAGEM` onde `CODIGO_EMBALAGEM = 251001`
-3. WHEN a Carga está FECHADA com foto `CargaPedidoIbc` THEN ALMOX MAY vincular IBCs (progresso parcial visível) e MAY desvincular enquanto a expedição não estiver fechada (item 5); detalhe, alocação e Fechar expedição SHALL ler pedidos e quantidade esperada só da foto e SHALL NOT consultar o Sapiens. WHEN a Carga está ABERTA THEN detalhe, alocação e Fechar expedição SHALL recusar com `IBC_CARGA_NAO_FECHADA`; WHEN FECHADA sem foto THEN SHALL recusar com `IBC_CARGA_SEM_FOTO_EXPEDICAO` (#297)
-4. WHEN a Carga está FECHADA e todos os pedidos IBC estão supridos THEN ALMOX MAY fechar expedição (`ExpedicaoIbc`)
-5. WHEN expedição fecha THEN IBCs alocados SHALL passar a **Em viagem** e alocações SHALL tornar-se imutáveis
-6. WHEN ALMOX tenta alocar IBC Inapto, Em viagem, já vinculado, ou acima do limite THEN o sistema SHALL recusar com motivo claro
+2. WHEN ALMOX prepara expedição THEN o sistema SHALL permitir `AlocacaoIbc` do container na **Carga**, com pedido vazio. A quantidade esperada de cada pedido é a soma no backend de `QUANTIDADE_PEDIDO / VOLUME_EMBALAGEM` onde `CODIGO_EMBALAGEM = 251001`. O teto da alocação SHALL ser a soma dessas quantidades nos pedidos elegíveis. O ALMOX SHALL NOT escolher pedido na saída.
+3. WHEN a Carga está FECHADA com foto `CargaPedidoIbc` THEN ALMOX MAY vincular e desvincular IBCs na lista da carga enquanto a expedição não estiver fechada, com o progresso do vinculado contra o total; detalhe, alocação e Fechar expedição SHALL ler a elegibilidade e a quantidade esperada só da foto e SHALL NOT consultar o Sapiens. WHEN a Carga está ABERTA THEN detalhe, alocação e Fechar expedição SHALL recusar com `IBC_CARGA_NAO_FECHADA`; WHEN FECHADA sem foto THEN SHALL recusar com `IBC_CARGA_SEM_FOTO_EXPEDICAO` (#297)
+4. WHEN a Carga está FECHADA e a quantidade vinculada é igual à soma dos pedidos elegíveis THEN ALMOX MAY fechar expedição (`ExpedicaoIbc`). WHEN a quantidade é diferente THEN o sistema SHALL recusar.
+5. WHEN expedição fecha THEN IBCs alocados SHALL passar a **Em viagem** e alocações SHALL tornar-se imutáveis, ainda sem pedido
+6. WHEN ALMOX tenta alocar IBC Inapto, Em viagem, no cliente, com entrada pendente, substituído, já vinculado, ou acima do total da carga THEN o sistema SHALL recusar com motivo claro
 7. WHEN Carga não tem pedidos com `CODIGO_EMBALAGEM = 251001` na foto `CargaPedidoIbc` (sem IBC ou fechada antes da foto existir) THEN SHALL NOT aparecer na lista de expedição
-8. WHEN expedição fecha THEN o sistema SHALL NOT afirmar Custódia no Cliente (motorista confirma na descarga)
+8. WHEN expedição fecha THEN o sistema SHALL NOT afirmar Custódia no Cliente e SHALL NOT gravar pedido no container
 9. WHEN ALMOX abre a lista de expedição IBC THEN o sistema SHALL listar só Cargas `FECHADA` com pelo menos um registro em `CargaPedidoIbc` e sem `ExpedicaoIbc`, lendo esperado e alocado da foto e das alocações numa única consulta ao Postgres, SHALL NOT consultar o Sapiens (#296)
+10. WHEN um pedido da foto tem cota de incluso e cota de empréstimo ao mesmo tempo (**Pedido misto**) THEN o sistema SHALL recusá-lo para a soma: ele fica fora do total, aparece como alerta e SHALL NOT derrubar os outros pedidos da carga
 
-**Independent Test**: Logística fecha carga com motorista/caminhão → ALMOX vincula 3 IBCs ao pedido 1120 → Fechar expedição → status Em viagem; tentar Inapto → erro.
+**Independent Test**: Logística fecha carga cuja soma elegível é 3 → ALMOX vincula 3 IBCs à carga, sem pedido → Fechar expedição → status Em viagem; o quarto container é recusado; pedido misto não altera a soma; tentar Inapto → erro.
 
 **Tracker**: [#36](https://github.com/Gabr1elaugus700/WorkaPool/issues/36) · Test suite [#56](https://github.com/Gabr1elaugus700/WorkaPool/issues/56)
 
 ---
 
-### P1: Custódia no Cliente por Pedido (motorista) ⭐ MVP
+### P1: Volta — pedido apontado e modalidade derivada ⭐ MVP
 
-**User Story**: Como motorista, quero na entrega escolher o Cliente, ver só Pedidos com IBC daquela Carga, e por Pedido escanear os QRs que ficam lá, para registrar a verdade física IBC→Cliente→Pedido.
+**User Story**: Como operador ALMOX, quero na volta apontar o pedido de cada container que ficou ou foi trocado, para o sistema derivar incluso ou empréstimo a partir do pedido que o vendedor já definiu.
 
-**Why P1**: Fonte da verdade de localização; resolve João/Maria.
+**Why P1**: O vínculo container↔pedido nasce aqui, transcrevendo o Relatório de Viagem. O ALMOX não escolhe venda nem empréstimo.
 
 **Acceptance Criteria**:
 
-1. WHEN o motorista abre a Carga e o Cliente da parada THEN o sistema SHALL listar apenas **Pedidos com IBC** (`CODIGO_EMBALAGEM = 251001`)
-2. WHEN o Cliente tem Pedido sem embalagem IBC THEN esse Pedido SHALL NÃO aparecer na tela
-3. WHEN o Pedido tem quantidade N THEN a tela SHALL mostrar **Quantidade esperada** = N (soma backend de `QUANTIDADE_PEDIDO / VOLUME_EMBALAGEM`; distinto de `CODIGO_EMBALAGEM`)
-4. WHEN o motorista salva scans do Pedido 1120 THEN o sistema SHALL registrar Custódia no Cliente (IBC + data + Cliente + Pedido) e Quantidade realizada
-5. WHEN há 2+ Pedidos com IBC no mesmo Cliente THEN o motorista SHALL lançar e salvar **por Pedido** (ex. 3 no 1120, depois 2 no 1121)
-6. WHEN linhas container com **INCLUSO = S** THEN IBCs correspondentes SHALL ser modalidade **Venda**; Senão (**INCLUSO ≠ S**) SHALL ser **Empréstimo** com Prazo de devolução (padrão 30 dias). Split Venda/Empréstimo pode coexistir no mesmo Pedido.
+1. WHEN a viagem ainda está aberta THEN a conciliação SHALL listar os containers da carga sem pedido escolhido e os pedidos elegíveis com a quantidade esperada
+2. WHEN o destino é ficou ou troca THEN o ALMOX SHALL apontar um pedido elegível daquela carga. WHEN o destino é retornou THEN o sistema SHALL gravar sem pedido
+3. WHEN o corpo traz uma modalidade THEN o sistema SHALL recusar. Pedido só incluso SHALL derivar venda. Pedido só empréstimo SHALL derivar empréstimo
+4. WHEN o pedido derivado é incluso THEN o container SHALL ir para Custódia no Cliente com baixa no pool, sem prazo e sem aviso
+5. WHEN o pedido derivado é empréstimo THEN o container SHALL ir para Custódia no Cliente com Prazo de devolução de **90 dias** UTC a partir do Fechar Viagem, alocação aberta, e o Representante SHALL receber aviso
+6. WHEN a quantidade apontada no pedido (ficou + troca) difere da esperada THEN o Fechar Viagem SHALL recusar enquanto aquele pedido não vier com confirmação explícita da divergência. Os outros pedidos da carga SHALL seguir
+7. WHEN o pedido é misto THEN ele SHALL permanecer fora dos elegíveis e SHALL NOT derrubar o resto da carga
 
-**Independent Test**: Carga com João/1120 (3) e João/1121 (2) → dois lançamentos; Cliente certo no scan mesmo se o “plano mental” do pátio fosse outro.
+**Independent Test**: Dois empréstimos e um incluso na mesma carga → aviso só dos empréstimos, com 90 dias; o incluso baixa sem aviso; divergência 1/2 sem confirmação recusa, com confirmação fecha.
 
 ---
 
@@ -140,17 +142,17 @@ A empresa opera com containers IBC (empréstimo, venda, troca, transbordo) sem i
 
 ### P1: Aviso ao Representante ⭐ MVP
 
-**User Story**: Como operador no fechamento da volta, quero que o Representante do Pedido seja avisado quando containers daquele Pedido ficaram no Cliente (não voltaram no caminhão).
+**User Story**: Como operador no fechamento da volta, quero que o Representante seja avisado só dos containers de empréstimo que ficaram no Cliente, com o pedido apontado na volta.
 
 **Why P1**: Dor original “quem não devolve” / visibilidade comercial.
 
 **Acceptance Criteria**:
 
-1. WHEN após Entrada/fechamento da viagem restam IBCs em Custódia no Cliente para um Pedido THEN o sistema SHALL gerar **Aviso ao Representante** daquele Pedido (in-app)
+1. WHEN após o Fechar Viagem restam IBCs de empréstimo em Custódia no Cliente THEN o sistema SHALL gerar **Aviso ao Representante** daquele Pedido (in-app). Incluso SHALL NOT entrar no aviso
 2. WHEN o Representante acessa o WorkaPool THEN SHALL ver o aviso com Pedido, Cliente e identificadores relevantes
-3. WHEN o Pedido era Venda (embalagem inclusa) THEN NÃO SHALL tratar como obrigação de devolução (aviso informativo de saída definitiva vs Empréstimo — ver design)
+3. WHEN o Pedido é incluso THEN o sistema SHALL NOT gerar aviso. WHEN o Pedido é empréstimo THEN o aviso SHALL informar o container, o cliente e o vencimento de 90 dias do pedido apontado na volta
 
-**Independent Test**: Pedido W com 2 IBCs em custódia e 0 na entrada → aviso para o codRep do Pedido W.
+**Independent Test**: Dois empréstimos e um incluso que ficaram → aviso só dos dois empréstimos, com o pedido da volta e o vencimento de 90 dias.
 
 ---
 
@@ -181,20 +183,20 @@ A empresa opera com containers IBC (empréstimo, venda, troca, transbordo) sem i
 
 ### P3: Override de prazo por Cliente
 
-**User Story**: Como admin, quero prazo padrão por Cliente (em vez de só 30 dias global).
+**User Story**: Como admin, quero prazo padrão por Cliente (em vez de só 90 dias global).
 
-**Why P3**: Hoje não há padrão por Cliente; 30 dias global basta na v1.
+**Why P3**: Hoje não há padrão por Cliente; 90 dias a partir do Fechar Viagem bastam na v1.
 
 ---
 
 ## Edge Cases
 
-- WHEN motorista escaneia IBC que não está Em viagem nesta Carga THEN system SHALL rejeitar ou alertar (não silenciar)
-- WHEN Quantidade realizada ≠ Quantidade esperada THEN system SHALL permitir salvar com indicação de divergência (não travar a rua sem regra explícita de bloqueio — default: avisar)
-- WHEN Pedido com IBC tem Volume 0 ou nulo THEN system SHALL tratar como dados inválidos para tela de descarga (não inventar quantidade)
-- WHEN todos os IBCs da Carga voltam com QR (só Transbordo) THEN não há Pendentes de retorno e não há Troca
+- WHEN a transcrição aponta um IBC que não está Em viagem nesta Carga THEN system SHALL rejeitar ou alertar (não silenciar)
+- WHEN Quantidade apontada (ficou + troca) ≠ Quantidade esperada no pedido THEN o Fechar Viagem SHALL recusar sem a confirmação explícita daquele pedido
+- WHEN Pedido com IBC tem Volume 0 ou nulo THEN system SHALL tratá-lo como Pedido IBC inválido, fora da soma (não inventar quantidade); os outros pedidos seguem
+- WHEN todos os IBCs da Carga retornam THEN não há Pendentes de retorno e não há Troca
 - WHEN Empréstimo antigo no mesmo Cliente e volta vazio sem QR THEN Troca pode usar caminho secundário (não default) para quitar pendente antigo — v1 pode documentar como extensão
-- WHEN IBC Em viagem nunca é escaneado em Cliente nem entra no pátio THEN permanece Em viagem / exceção operacional (lista de inconsistência)
+- WHEN IBC Em viagem não recebe destino na volta THEN a viagem SHALL NOT fechar
 
 ---
 
@@ -205,7 +207,7 @@ A empresa opera com containers IBC (empréstimo, venda, troca, transbordo) sem i
 | IBC-01 | P1 Cadastro/identidade | Design | In Design |
 | IBC-02 | P1 Inspeção/Aptidão | Design | In Design |
 | IBC-03 | P1 Expedição/Em viagem | Design | In Design |
-| IBC-04 | P1 Custódia por Pedido | Design | In Design |
+| IBC-04 | P1 Volta — pedido apontado | Design | In Design |
 | IBC-05 | P1 Entrada + Troca 1:1 | Design | In Design |
 | IBC-06 | P1 Aviso Representante | Design | In Design |
 | IBC-07 | P2 Consulta QR | Design | In Design |
@@ -228,6 +230,7 @@ A empresa opera com containers IBC (empréstimo, venda, troca, transbordo) sem i
 
 - Foco = **container** only (sem validade de produto neste módulo)
 - **`CODIGO_EMBALAGEM = 251001`** ≠ **Quantidade esperada** — count = backend `QUANTIDADE_PEDIDO / VOLUME_EMBALAGEM` (termo `QUANTIDADE_EMBALAGEM` aposentado)
-- Modalidade Venda vs Empréstimo via **INCLUSO** (`S` / resto) só em linhas 251001; Troca só na entrada
+- Modalidade Venda vs Empréstimo via **INCLUSO** (`S` / resto) só em linhas 251001, **derivada na volta** do pedido apontado. Troca só na entrada. O ALMOX não escolhe a modalidade
+- **Pedido misto** (incluso e empréstimo no mesmo pedido): recusado, fora do total, sem derrubar o resto da carga
 - Inspeção obrigatória a **cada** Entrada no pátio
-- **Expedição (ago/2026)**: `CargaDespacho` + `AlocacaoIbc` (por pedido, cap = total) + `ExpedicaoIbc`; ALMOX prepara/fecha; LOGISTICA fecha carga; v1 sem reabrir carga — ver `.specs/features/ibc/context.md`
+- **Expedição (epic #374)**: `AlocacaoIbc` é container ↔ carga; o pedido nasce na volta. Cap = soma dos pedidos elegíveis. Relatório em um bloco por pedido, com badge **Incluso** só nesse bloco, sem rótulo de empréstimo ou transbordo. Volta: apontamento do pedido, modalidade derivada, incluso sem aviso, empréstimo com 90 dias e aviso — ver `.specs/features/ibc/context.md`

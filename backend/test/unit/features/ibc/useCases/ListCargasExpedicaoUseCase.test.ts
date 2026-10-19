@@ -16,8 +16,8 @@ const buildPedidoIbc = (
   codCli: "C1",
   cliente: "Cliente",
   quantidadeEsperadaTotal: 3,
-  quantidadeEsperadaVenda: 2,
-  quantidadeEsperadaEmprestimo: 1,
+  quantidadeEsperadaVenda: 3,
+  quantidadeEsperadaEmprestimo: 0,
   ibcInvalido: false,
   posCar: null,
   ...overrides,
@@ -172,5 +172,36 @@ describe("ListCargasExpedicaoUseCase", () => {
     assert.strictEqual(item.quantidadeEsperadaTotal, 3);
     assert.strictEqual(item.quantidadeAlocada, 3);
     assert.strictEqual(item.podeFecharExpedicao, true);
+  });
+
+  it("pedido misto não entra na soma e o total da carga fecha os demais", async () => {
+    const repo = buildRepo([
+      buildCargaPendente({
+        pedidosIbc: [
+          buildPedidoIbc("1120", {
+            quantidadeEsperadaTotal: 2,
+            quantidadeEsperadaVenda: 2,
+            quantidadeEsperadaEmprestimo: 0,
+          }),
+          buildPedidoIbc("9000", {
+            quantidadeEsperadaTotal: 7,
+            quantidadeEsperadaVenda: 3,
+            quantidadeEsperadaEmprestimo: 4,
+          }),
+        ],
+        alocacoes: [
+          buildAlocacao({ id: "a1", ibcId: "i1", numPed: null }),
+          buildAlocacao({ id: "a2", ibcId: "i2", numPed: null }),
+        ],
+      }),
+    ]);
+
+    const result = await new ListCargasExpedicaoUseCase(
+      repo as IIbcExpedicaoRepository,
+    ).execute();
+
+    assert.strictEqual(result.cargas[0].quantidadeEsperadaTotal, 2);
+    assert.strictEqual(result.cargas[0].quantidadeAlocada, 2);
+    assert.strictEqual(result.cargas[0].podeFecharExpedicao, true);
   });
 });

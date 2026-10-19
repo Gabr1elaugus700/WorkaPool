@@ -8,7 +8,7 @@ export type RemoveAlocacaoIbcInput = {
 export type RemoveAlocacaoIbcResult = {
   removed: boolean;
   identificador: string;
-  numPed: string;
+  numPed: string | null;
 };
 
 export class RemoveAlocacaoIbcUseCase {

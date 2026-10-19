@@ -19,7 +19,7 @@ type AlocacaoRow = {
   id: string;
   ibcId: string;
   cargaId: string;
-  numPed: string;
+  numPed: string | null;
   alocadoPorId: string;
   alocadoEm: Date;
   expedicaoIbcId: string | null;
@@ -158,15 +158,6 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
       return null;
     }
     return this.toAlocacaoRecord(alocacao);
-  }
-
-  async countAlocacoesByCargaAndNumPed(
-    cargaId: string,
-    numPed: string,
-  ): Promise<number> {
-    return this.prisma.alocacaoIbc.count({
-      where: { cargaId, numPed },
-    });
   }
 
   async listAlocacoesByCargaId(

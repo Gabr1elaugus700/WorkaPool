@@ -35,11 +35,63 @@ describe("conciliacaoViagem", () => {
     assert.equal(conciliacaoViagem.sugerirModalidade(0, 0), null);
   });
 
-  it("exige modalidade só quando o IBC ficou no cliente", () => {
-    assert.deepEqual(conciliacaoViagem.modalidadeDaMarca("FICOU", "VENDA"), { ok: true, modalidade: "VENDA" });
-    assert.deepEqual(conciliacaoViagem.modalidadeDaMarca("FICOU", null), { ok: false });
-    assert.deepEqual(conciliacaoViagem.modalidadeDaMarca("RETORNOU", null), { ok: true, modalidade: null });
-    assert.deepEqual(conciliacaoViagem.modalidadeDaMarca("TROCA", "EMPRESTIMO"), { ok: false });
+  it("deriva a modalidade do pedido e recusa modalidade no corpo", () => {
+    const incluso = pedido({ numPed: "1", quantidadeEsperadaVenda: 2, quantidadeEsperadaEmprestimo: 0 });
+    const emprestimo = pedido({ numPed: "2", quantidadeEsperadaTotal: 1, quantidadeEsperadaVenda: 0, quantidadeEsperadaEmprestimo: 1 });
+    const misto = pedido({ numPed: "3", quantidadeEsperadaVenda: 1, quantidadeEsperadaEmprestimo: 1 });
+    assert.deepEqual(
+      conciliacaoViagem.resolverApontamento({ destino: "FICOU", numPed: "1", modalidade: null, pedido: incluso }),
+      { ok: true, numPed: "1", modalidade: "VENDA" },
+    );
+    assert.deepEqual(
+      conciliacaoViagem.resolverApontamento({ destino: "TROCA", numPed: "2", modalidade: null, pedido: emprestimo }),
+      { ok: true, numPed: "2", modalidade: "EMPRESTIMO" },
+    );
+    assert.equal(conciliacaoViagem.resolverApontamento({ destino: "FICOU", numPed: null, modalidade: null, pedido: null }).ok, false);
+    assert.equal(
+      conciliacaoViagem.resolverApontamento({ destino: "FICOU", numPed: "1", modalidade: "VENDA", pedido: incluso }).ok,
+      false,
+    );
+    assert.equal(
+      conciliacaoViagem.resolverApontamento({ destino: "RETORNOU", numPed: "1", modalidade: null, pedido: incluso }).ok,
+      false,
+    );
+    assert.deepEqual(
+      conciliacaoViagem.resolverApontamento({ destino: "RETORNOU", numPed: null, modalidade: null, pedido: null }),
+      { ok: true, numPed: null, modalidade: null },
+    );
+    assert.equal(conciliacaoViagem.resolverApontamento({ destino: "FICOU", numPed: "3", modalidade: null, pedido: misto }).ok, false);
+    assert.equal(conciliacaoViagem.resolverApontamento({ destino: "FICOU", numPed: "9", modalidade: null, pedido: null }).ok, false);
+  });
+
+  it("esconde o pedido da saída na viagem aberta e conserva o da viagem fechada", () => {
+    assert.deepEqual(conciliacaoViagem.pedidoNaVolta({
+      viagemFechada: false, destino: "FICOU", numPedAlocacao: "10", numPedMarca: null,
+    }), { exibido: null, apontado: null });
+    assert.deepEqual(conciliacaoViagem.pedidoNaVolta({
+      viagemFechada: false, destino: "TROCA", numPedAlocacao: "10", numPedMarca: "20",
+    }), { exibido: "20", apontado: "20" });
+    assert.deepEqual(conciliacaoViagem.pedidoNaVolta({
+      viagemFechada: false, destino: "RETORNOU", numPedAlocacao: "10", numPedMarca: null,
+    }), { exibido: null, apontado: null });
+    assert.deepEqual(conciliacaoViagem.pedidoNaVolta({
+      viagemFechada: true, destino: null, numPedAlocacao: "10", numPedMarca: null,
+    }), { exibido: "10", apontado: null });
+    assert.deepEqual(conciliacaoViagem.pedidoNaVolta({
+      viagemFechada: true, destino: "FICOU", numPedAlocacao: "10", numPedMarca: null,
+    }), { exibido: "10", apontado: "10" });
+  });
+
+  it("soma esperado e apontado só nos pedidos elegíveis", () => {
+    const progresso = conciliacaoViagem.progressoPedidos([
+      pedido({ numPed: "20", quantidadeEsperadaTotal: 2, quantidadeEsperadaVenda: 0, quantidadeEsperadaEmprestimo: 2, posCar: 2 }),
+      pedido({ numPed: "10", quantidadeEsperadaTotal: 1, posCar: 1 }),
+      pedido({ numPed: "30", quantidadeEsperadaVenda: 1, quantidadeEsperadaEmprestimo: 1 }),
+    ], ["20", "20", null, "10"]);
+    assert.deepEqual(progresso, [
+      { numPed: "10", codCli: "C1", cliente: "Cliente", incluso: true, quantidadeEsperada: 1, quantidadeApontada: 1 },
+      { numPed: "20", codCli: "C1", cliente: "Cliente", incluso: false, quantidadeEsperada: 2, quantidadeApontada: 2 },
+    ]);
   });
 
   it("agrupa clientes elegíveis na ordem de entrega", () => {

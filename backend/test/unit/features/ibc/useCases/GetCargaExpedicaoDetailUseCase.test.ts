@@ -28,8 +28,8 @@ const buildPedidoIbc = (
   codCli: "C1",
   cliente: "Cliente",
   quantidadeEsperadaTotal: 3,
-  quantidadeEsperadaVenda: 2,
-  quantidadeEsperadaEmprestimo: 1,
+  quantidadeEsperadaVenda: 3,
+  quantidadeEsperadaEmprestimo: 0,
   ibcInvalido: false,
   posCar: null,
   ...overrides,
@@ -99,6 +99,8 @@ describe("GetCargaExpedicaoDetailUseCase", () => {
     assert.strictEqual(detail.pedidos[0].cliente, "Cliente");
     assert.strictEqual(detail.pedidos[0].quantidadeAlocada, 2);
     assert.strictEqual(detail.pedidos[0].quantidadeEsperadaTotal, 3);
+    assert.strictEqual(detail.quantidadeAlocada, 2);
+    assert.strictEqual(detail.alocacoes.length, 2);
     assert.strictEqual(detail.podeFecharExpedicao, false);
     assert.deepEqual(listPedidosIbcByCargaId.mock.calls[0].arguments, [
       "carga-1",
@@ -125,6 +127,35 @@ describe("GetCargaExpedicaoDetailUseCase", () => {
     assert.strictEqual(detail.pedidos.length, 2);
     assert.strictEqual(detail.pedidos[1].ibcInvalido, true);
     assert.strictEqual(detail.quantidadeEsperadaTotal, 2);
+  });
+
+  it("pedido misto fica fora da soma e alocação sem pedido continua na carga", async () => {
+    const semPedido = buildAlocacao({ id: "a1", ibcId: "i1", numPed: null });
+    const repo = buildRepo({
+      listPedidosIbcByCargaId: mock.fn(async () => [
+        buildPedidoIbc("1120", {
+          quantidadeEsperadaTotal: 1,
+          quantidadeEsperadaVenda: 1,
+          quantidadeEsperadaEmprestimo: 0,
+        }),
+        buildPedidoIbc("9000", {
+          quantidadeEsperadaTotal: 6,
+          quantidadeEsperadaVenda: 3,
+          quantidadeEsperadaEmprestimo: 3,
+        }),
+      ]),
+      listAlocacoesByCargaId: mock.fn(async () => [semPedido]),
+    });
+
+    const detail = await new GetCargaExpedicaoDetailUseCase(
+      repo as IIbcExpedicaoRepository,
+    ).execute({ codCar: 101 });
+
+    assert.strictEqual(detail.quantidadeEsperadaTotal, 1);
+    assert.strictEqual(detail.quantidadeAlocada, 1);
+    assert.strictEqual(detail.podeFecharExpedicao, true);
+    assert.strictEqual(detail.alocacoes[0]?.numPed, null);
+    assert.strictEqual(detail.pedidos[0]?.quantidadeAlocada, 0);
   });
 
   it("retorna 404 quando carga não existe", async () => {

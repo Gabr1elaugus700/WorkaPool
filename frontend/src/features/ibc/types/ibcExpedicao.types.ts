@@ -5,7 +5,8 @@ export type AlocacaoIbcDTO = {
   id: string;
   ibcId: string;
   cargaId: string;
-  numPed: string;
+  /** Vazio na saída. O pedido só nasce na volta. */
+  numPed: string | null;
   alocadoPorId: string;
   alocadoEm: string;
   expedicaoIbcId: string | null;
@@ -30,7 +31,8 @@ export type CargaExpedicaoListItemDTO = CargaExpedicaoResumoDTO & {
 };
 
 /**
- * Pedido no detalhe de preparação (só IBC elegíveis + inválidos com alerta).
+ * Pedido da foto no detalhe. A tela não monta card por pedido:
+ * misto e inválido viram alerta; a soma fica em `quantidadeEsperadaTotal`.
  */
 export type PedidoIbcPreparacaoDTO = {
   numPed: string;
@@ -47,6 +49,8 @@ export type PedidoIbcPreparacaoDTO = {
 export type CargaExpedicaoDetalheDTO = CargaExpedicaoResumoDTO & {
   situacao: "FECHADA";
   pedidos: PedidoIbcPreparacaoDTO[];
+  /** Vínculos da carga, com ou sem pedido. A lista da preparação lê daqui. */
+  alocacoes: AlocacaoIbcDTO[];
 };
 
 /** Envelope opcional de GET /cargas-expedicao */
@@ -56,7 +60,6 @@ export type ListCargasExpedicaoResponseDTO = {
 
 export type CreateAlocacaoIbcInput = {
   codCar: number;
-  numPed: string;
   identificador: string;
 };
 
@@ -100,17 +103,13 @@ export type ListCargasEmViagemResponseDTO = {
   cargas: CargaEmViagemListItemDTO[];
 };
 
-/** GET /api/ibc/expedicoes/:codCar/relatorio-viagem */
-export type RelatorioViagemPedidoDTO = {
-  numPed: string;
-  quantidade: number;
-  modalidade: "Embalagem Inclusa (Venda)" | "Empréstimo";
-};
-
-export type RelatorioViagemClienteDTO = {
+/** GET /api/ibc/expedicoes/:codCar/relatorio-viagem — um bloco por pedido. */
+export type RelatorioViagemBlocoDTO = {
   codCli: string | null;
   cliente: string;
-  pedidos: RelatorioViagemPedidoDTO[];
+  numPed: string;
+  quantidadeEsperada: number;
+  incluso: boolean;
   checklist: { identificador: string }[];
 };
 
@@ -121,7 +120,7 @@ export type RelatorioViagemDTO = {
   placa: string | null;
   totalIbcs: number;
   totalClientes: number;
-  clientes: RelatorioViagemClienteDTO[];
+  blocos: RelatorioViagemBlocoDTO[];
 };
 
 export type IbcRealtimeNotification = {

@@ -5,16 +5,11 @@ const MARGEM_TOPO = 18;
 const FUNDO = 274;
 const DIREITA = 196;
 const CAIXA = 5;
-const LARGURA_IBC = 40;
-const LARGURA_MARCA = (DIREITA - MARGEM_X - LARGURA_IBC) / 3;
+const LARGURA_IBC = 34;
+const LARGURA_BADGE = 22;
+const LARGURA_MARCA = (DIREITA - MARGEM_X - LARGURA_IBC - LARGURA_BADGE) / 2;
 
-const MARCAS = ["Ficou no cliente", "Retornou no caminhão", "Troca"] as const;
-
-const COLUNAS_PEDIDO = [
-  { rotulo: "Pedido", x: MARGEM_X },
-  { rotulo: "Quantidade", x: 56 },
-  { rotulo: "Modalidade", x: 96 },
-] as const;
+const MARCAS = ["Ficou no cliente", "Troca"] as const;
 
 const dataPt = new Intl.DateTimeFormat("pt-BR", {
   day: "2-digit",
@@ -46,11 +41,13 @@ type Texto = {
 
 type Caixa = { tipo: "caixa"; x: number; tamanho: number };
 
-type PapelTraco = "motorista" | "assinatura" | "retorno" | "pauta" | "fio";
+type Selo = { tipo: "selo"; x: number; largura: number; altura: number };
+
+type PapelTraco = "motorista" | "assinatura" | "pauta" | "fio";
 
 type Traco = { tipo: "traco"; papel: PapelTraco; x1: number; x2: number };
 
-type Rascunho = Texto | Caixa | Traco;
+type Rascunho = Texto | Caixa | Selo | Traco;
 
 export type RelatorioViagemPdfItem = Rascunho & { y: number };
 
@@ -84,11 +81,15 @@ function formatarDataIso(iso: string): string {
 }
 
 function centroMarca(indice: number): number {
-  return MARGEM_X + LARGURA_IBC + LARGURA_MARCA * indice + LARGURA_MARCA / 2;
+  return MARGEM_X + LARGURA_IBC + LARGURA_BADGE + LARGURA_MARCA * indice + LARGURA_MARCA / 2;
 }
 
-function nomeCliente(cliente: RelatorioViagemDTO["clientes"][number]): string {
-  return cliente.codCli ? `${cliente.cliente} (${cliente.codCli})` : cliente.cliente;
+function centroBadge(): number {
+  return MARGEM_X + LARGURA_IBC + LARGURA_BADGE / 2;
+}
+
+function nomeCliente(bloco: RelatorioViagemDTO["blocos"][number]): string {
+  return bloco.codCli ? `${bloco.cliente} (${bloco.codCli})` : bloco.cliente;
 }
 
 function criarEstado(): Estado {
@@ -156,21 +157,9 @@ function emitirNome(estado: Estado, nome: string, tamanho = 12) {
   estado.y += 5;
 }
 
-function emitirCabecalhoPedidos(estado: Estado) {
-  for (const coluna of COLUNAS_PEDIDO) {
-    texto(estado, coluna.rotulo, coluna.x, true, 8);
-  }
-  estado.y += 5;
-}
-
-function emitirPedido(
-  estado: Estado,
-  pedido: RelatorioViagemDTO["clientes"][number]["pedidos"][number],
-) {
-  const valores = [pedido.numPed, String(pedido.quantidade), pedido.modalidade];
-  COLUNAS_PEDIDO.forEach((coluna, indice) => {
-    texto(estado, valores[indice] ?? "", coluna.x, false, 10);
-  });
+function emitirResumoPedido(estado: Estado, bloco: RelatorioViagemDTO["blocos"][number]) {
+  texto(estado, `Pedido ${bloco.numPed}`, MARGEM_X, false, 10);
+  texto(estado, `Quantidade ${bloco.quantidadeEsperada}`, 70, false, 10);
   estado.y += 5;
 }
 
@@ -184,8 +173,21 @@ function emitirCabecalhoMarcas(estado: Estado) {
   estado.y += 5.4;
 }
 
-function emitirLinhaIbc(estado: Estado, identificador: string) {
+function emitirSeloIncluso(estado: Estado) {
+  const largura = 18;
+  const altura = 4.4;
+  colocar(estado, {
+    tipo: "selo",
+    x: centroBadge() - largura / 2,
+    largura,
+    altura,
+  });
+  texto(estado, "Incluso", centroBadge(), true, 7, "centro");
+}
+
+function emitirLinhaIbc(estado: Estado, identificador: string, incluso: boolean) {
   texto(estado, identificador, MARGEM_X, false, 10);
+  if (incluso) emitirSeloIncluso(estado);
   for (let indice = 0; indice < MARCAS.length; indice += 1) {
     colocar(estado, {
       tipo: "caixa",
@@ -193,12 +195,6 @@ function emitirLinhaIbc(estado: Estado, identificador: string) {
       tamanho: CAIXA,
     });
   }
-  estado.y += 8;
-}
-
-function emitirRetorno(estado: Estado) {
-  texto(estado, "Retornos sem identificação", MARGEM_X, false, 10);
-  colocar(estado, { tipo: "traco", papel: "retorno", x1: 68, x2: 100 });
   estado.y += 8;
 }
 
@@ -211,42 +207,39 @@ function emitirObservacoes(estado: Estado) {
   estado.y += 8;
 }
 
-function emitirCliente(estado: Estado, cliente: RelatorioViagemDTO["clientes"][number]) {
-  const nome = nomeCliente(cliente);
+function repetirBloco(estado: Estado, nome: string, numPed: string) {
+  emitirNome(estado, nome, 11);
+  texto(estado, `Pedido ${numPed}`, MARGEM_X, false, 9);
+  estado.y += 4;
+}
+
+function emitirBloco(estado: Estado, bloco: RelatorioViagemDTO["blocos"][number]) {
+  const nome = nomeCliente(bloco);
   if (estado.y > MARGEM_TOPO + 1) estado.y += 4;
 
-  const alturaPedido = cliente.pedidos.length > 0 ? 5 : 0;
-  garantir(estado, 7 + 5 + alturaPedido);
+  garantir(estado, 7 + 5);
   emitirNome(estado, nome);
-  emitirCabecalhoPedidos(estado);
-  for (const pedido of cliente.pedidos) {
-    garantir(estado, 5, () => {
-      emitirNome(estado, nome, 11);
-      emitirCabecalhoPedidos(estado);
-    });
-    emitirPedido(estado, pedido);
-  }
+  emitirResumoPedido(estado, bloco);
 
   estado.y += 2;
   const continuarMarcas = () => {
-    emitirNome(estado, nome, 11);
+    repetirBloco(estado, nome, bloco.numPed);
     emitirCabecalhoMarcas(estado);
   };
   if (!garantir(estado, 7 + 8, continuarMarcas)) emitirCabecalhoMarcas(estado);
-  for (const ibc of cliente.checklist) {
+  for (const ibc of bloco.checklist) {
     garantir(estado, 8, continuarMarcas);
-    emitirLinhaIbc(estado, ibc.identificador);
+    emitirLinhaIbc(estado, ibc.identificador, bloco.incluso);
   }
 
-  garantir(estado, 8 + 6 + 8 + 8, () => emitirNome(estado, nome, 11));
-  emitirRetorno(estado);
+  garantir(estado, 6 + 8 + 8, () => repetirBloco(estado, nome, bloco.numPed));
   emitirObservacoes(estado);
 }
 
 function paginar(relatorio: RelatorioViagemDTO): RelatorioViagemPdfItem[][] {
   const estado = criarEstado();
   emitirFaixa(estado, relatorio);
-  for (const cliente of relatorio.clientes) emitirCliente(estado, cliente);
+  for (const bloco of relatorio.blocos) emitirBloco(estado, bloco);
   if (estado.itens.length > 0) estado.paginas.push(estado.itens);
   return estado.paginas;
 }

@@ -32,7 +32,7 @@ const pedido = (
   ...overrides,
 });
 
-const alocacao = (identificador: string, numPed: string): AlocacaoIbcRecord => ({
+const alocacao = (identificador: string, numPed: string | null): AlocacaoIbcRecord => ({
   id: `aloc-${identificador}`,
   ibcId: `ibc-${identificador}`,
   cargaId: "carga-1",
@@ -93,7 +93,7 @@ describe("GetConciliacaoViagemUseCase", () => {
     );
   });
 
-  it("devolve o checklist com sugestão do pedido e o papel já lançado", async () => {
+  it("não herda o pedido da saída e lista o esperado dos pedidos elegíveis", async () => {
     const { expedicoes, conciliacoes } = repos();
     const view = await new GetConciliacaoViagemUseCase(expedicoes, conciliacoes).execute({
       codCar: 202,
@@ -105,12 +105,74 @@ describe("GetConciliacaoViagemUseCase", () => {
     assert.deepEqual(view.itens.map((item) => item.identificador), ["H0010", "H0020"]);
     assert.equal(view.itens[0]?.destino, "FICOU");
     assert.equal(view.itens[0]?.modalidade, "EMPRESTIMO");
-    assert.equal(view.itens[0]?.modalidadeSugerida, "EMPRESTIMO");
+    assert.equal(view.itens[0]?.modalidadeSugerida, null);
     assert.equal(view.itens[1]?.destino, null);
-    assert.equal(view.itens[1]?.modalidadeSugerida, null);
+    assert.equal(view.itens[0]?.numPed, null);
+    assert.equal(view.itens[1]?.numPed, null);
+    assert.equal(view.itens[0]?.codCli, null);
+    assert.deepEqual(view.pedidos, [
+      { numPed: "10", codCli: "B", cliente: "Beta", incluso: false, quantidadeEsperada: 1, quantidadeApontada: 0 },
+    ]);
     assert.deepEqual(view.clientes, [
       { chaveCliente: "B\u0000Beta", codCli: "B", cliente: "Beta", quantidadePapel: 1, confirmouDivergencia: false },
       { chaveCliente: "A\u0000Acme", codCli: "A", cliente: "Acme", quantidadePapel: null, confirmouDivergencia: false },
     ]);
+  });
+
+  it("mostra o pedido apontado e soma ficou com troca", async () => {
+    const { expedicoes, conciliacoes } = repos({
+      conciliacao: {
+        listMarcas: mock.fn(async () => [
+          { alocacaoIbcId: "aloc-H0010", destino: "FICOU" as const, modalidade: "EMPRESTIMO" as const, numPed: "10", ibcEntradaId: null },
+          { alocacaoIbcId: "aloc-H0020", destino: "TROCA" as const, modalidade: "EMPRESTIMO" as const, numPed: "10", ibcEntradaId: null },
+        ]),
+        listRetornos: mock.fn(async () => []),
+      },
+    });
+    const view = await new GetConciliacaoViagemUseCase(expedicoes, conciliacoes).execute({
+      codCar: 202,
+      actorRole: Role.ALMOX,
+    });
+    assert.deepEqual(view.itens.map((item) => item.numPed), ["10", "10"]);
+    assert.equal(view.pedidos[0]?.quantidadeEsperada, 1);
+    assert.equal(view.pedidos[0]?.quantidadeApontada, 2);
+  });
+
+  it("conserva o pedido de viagem já fechada e tolera alocação sem pedido", async () => {
+    const fechadaEm = new Date("2026-10-12T18:00:00.000Z");
+    const { expedicoes, conciliacoes } = repos({
+      expedicao: {
+        listAlocacoesByCargaId: mock.fn(async () => [
+          alocacao("H0020", "20"),
+          alocacao("H0010", "10"),
+          alocacao("H0099", null),
+        ]),
+      },
+      conciliacao: {
+        findPorCarga: mock.fn(async () => ({
+          id: "exp-1",
+          viagemFechadaEm: fechadaEm,
+          viagemFechadaPorId: "almox-1",
+        })),
+        listMarcas: mock.fn(async () => [
+          { alocacaoIbcId: "aloc-H0010", destino: "FICOU" as const, modalidade: "EMPRESTIMO" as const, numPed: null, ibcEntradaId: null },
+        ]),
+        listRetornos: mock.fn(async () => []),
+      },
+    });
+
+    const view = await new GetConciliacaoViagemUseCase(expedicoes, conciliacoes).execute({
+      codCar: 202,
+      actorRole: Role.ALMOX,
+    });
+
+    assert.equal(view.viagemFechadaEm, fechadaEm);
+    const porIdentificador = new Map(view.itens.map((item) => [item.identificador, item.numPed]));
+    assert.equal(porIdentificador.get("H0020"), "20");
+    assert.equal(porIdentificador.get("H0010"), "10");
+    assert.equal(porIdentificador.get("H0099"), null);
+    assert.equal(view.pedidos[0]?.numPed, "10");
+    assert.equal(view.pedidos[0]?.quantidadeApontada, 1);
+    assert.equal(view.pedidos.some((pedido) => pedido.numPed === "20"), false);
   });
 });

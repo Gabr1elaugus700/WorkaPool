@@ -19,7 +19,7 @@ Contar “quantos containers temos” não resolve isso. O novo processo trata *
 
 ## Em uma frase
 
-> Cada IBC ganha identidade; o pátio registra o que saiu na carga; o motorista confirma o que ficou em cada cliente; na volta o pátio dá entrada no que retornou (incluindo trocas); qualidade libera ou bloqueia o próximo uso; o vendedor é avisado quando o container ficou com o cliente.
+> Cada IBC ganha identidade; na saída a carga leva só o conjunto de containers; o motorista marca no relatório qual container ficou em qual pedido; na volta o pátio aponta o pedido e dá entrada no que retornou (incluindo trocas); qualidade libera ou bloqueia o próximo uso; o vendedor é avisado só no empréstimo.
 
 ---
 
@@ -27,9 +27,9 @@ Contar “quantos containers temos” não resolve isso. O novo processo trata *
 
 | Quem | O que faz neste processo |
 | ---- | ------------------------ |
-| **Pátio / Almox** | Cadastra containers, cola adesivo QR, inspeciona qualidade, monta a carga com os IBCs, dá entrada na volta e registra trocas |
-| **Motorista** | No descarregamento, informa em qual cliente ficou qual container (lendo o QR), pedido a pedido |
-| **Vendedor (representante)** | Recebe aviso quando, na volta da viagem, containers do pedido dele ficaram no cliente |
+| **Pátio / Almox** | Cadastra containers, cola adesivo QR, inspeciona qualidade, monta a carga com o conjunto de IBCs (sem escolher pedido), na volta aponta o pedido do papel, dá entrada no que retornou e registra trocas |
+| **Motorista** | No papel da viagem, marca em cada bloco de pedido o que ficou e o que foi troca. Não entra no sistema |
+| **Vendedor (representante)** | Recebe aviso só quando, na volta, um container de empréstimo do pedido dele ficou no cliente |
 | **Gestão / Logística** | Acompanha alertas (container inapto, data limite, empréstimos em atraso) |
 
 ---
@@ -55,14 +55,16 @@ A validade do produto químico **não** entra neste módulo — o foco é só o 
 | Situação | O que acontece na prática |
 | -------- | ------------------------- |
 | **Transbordo** | Descarrega o produto no cliente e **traz o mesmo** container de volta |
-| **Empréstimo** | O container **fica** com o cliente e **o mesmo número** deve voltar depois (prazo padrão: **30 dias**) |
+| **Empréstimo** | O container **fica** com o cliente e **o mesmo número** deve voltar depois (prazo: **90 dias** a partir da volta) |
 | **Venda** | O container vai junto com a venda (embalagem inclusa) e **não precisa voltar** |
 | **Troca** | Sai um container nosso; volta **outro** (do cliente), sem nosso adesivo. No pátio cadastramos o novo e ligamos: “o H030 foi trocado pelo H067” |
 
-Na mesma viagem pode misturar casos (ex.: 2 transbordos + 5 trocas). O pátio classifica cada um na entrada.
+Na mesma viagem pode misturar casos. O pátio não escolhe a modalidade na saída: na volta aponta o pedido, e a regra do pedido decide.
+
+No papel, **transbordo e empréstimo não são rótulo**. O container que volta no caminhão simplesmente não é marcado como ficou nem como troca. Empréstimo também não leva nome no papel — só o pedido incluso mostra o badge **Incluso**.
 
 **Como o sistema sabe se é venda ou empréstimo?**  
-Pelo pedido: se a embalagem está **inclusa**, é venda do container; se não, é empréstimo.
+Pelo pedido apontado na volta: se a embalagem está **inclusa**, é venda do container (baixa, sem aviso); se não, é empréstimo (90 dias e aviso). Pedido com as duas cotas ao mesmo tempo é **pedido misto**: fica de fora da conta e não impede o resto da carga.
 
 ---
 
@@ -89,46 +91,50 @@ O checklist (coloração, registro, bolsa, base, tampa, grade, etc.) pode ganhar
 1. A logística monta a carga (pedidos) e, ao fechar, **obrigatoriamente** informa **motorista** e **caminhão**.
 2. A carga passa a situação **FECHADA**.
 
-**Preparação — ALMOX vincula containers por pedido:**
+**Preparação — ALMOX vincula os containers à carga:**
 
-1. O ALMOX abre a carga no WorkaPool (pode começar a preparar ainda com carga **ABERTA** — progresso parcial visível).
-2. Para cada **pedido que usa container IBC** (`CODIGO_EMBALAGEM = 251001`), informa quantos containers sobem — escaneando QR (web) ou digitando o código (desktop).
-3. O vínculo é **por pedido** (quantidade total), não por item de pedido. Na prática, no caminhão os containers podem estar misturados — **não importa neste momento** qual # vai para qual cliente.
-4. Só quando a carga está **FECHADA** e **todos os pedidos com IBC** têm a quantidade suprida, o ALMOX **fecha a expedição**.
+1. O ALMOX abre a carga já **FECHADA** no WorkaPool.
+2. Informa quais containers sobem — escaneando QR (web) ou digitando o código (desktop) — **sem escolher pedido**.
+3. A tela é uma lista da carga: o que já foi vinculado contra o total esperado (a soma dos pedidos elegíveis). Não há card por pedido.
+4. **Pedido misto** (incluso e empréstimo no mesmo pedido) aparece como alerta, fica fora desse total e não impede o restante da carga.
+5. Só quando a quantidade vinculada é **exatamente** esse total, o ALMOX **fecha a expedição**. Quantidade diferente não fecha.
 
-Nesse momento o sistema entende: esses containers **não estão mais no pátio** — estão **em viagem**.  
-Ainda **não** sabemos em qual cliente cada um ficou (isso o **motorista confirma na entrega**, lendo o QR).
+Nesse momento o sistema entende: esses containers **não estão mais no pátio** — estão **em viagem**, ainda **sem pedido**.  
+Qual container ficou em qual pedido é o que o motorista marca no papel; o vínculo no sistema nasce na volta.
 
-**Cargas sem pedido IBC:** aparecem na lista com indicador diferente, sem ação de vínculo.
+**Cargas sem pedido IBC:** não entram na lista de expedição.
 
 ---
 
-### 3. Descarregamento (motorista)
+### 3. O papel (Relatório de Viagem)
 
-1. O motorista sabe a carga e os pedidos que está levando.  
-2. No cliente, abre a parada daquele cliente.  
-3. Vê **somente os pedidos que usam embalagem IBC** (`CODIGO_EMBALAGEM = 251001`; pedido só de outro tipo de embalagem **não aparece**, para não confundir).  
-4. Se o cliente tem **mais de um pedido com IBC** (ex.: pedido 1120 com 3 containers e 1121 com 2), lança **separado**:  
-   - 3 QRs no 1120 → salva  
-   - 2 QRs no 1121 → salva  
-5. A tela mostra **quantos eram esperados** naquele pedido (soma no backend de `QUANTIDADE_PEDIDO / VOLUME_EMBALAGEM` nas linhas 251001) e o motorista confirma lendo os QRs dos que **ficam** no cliente.
+Depois que a expedição fecha, o papel sai em **um bloco por pedido**. Dois pedidos do mesmo cliente são dois blocos. A ordem dos blocos segue a ordem de entrega da carga.
 
-**O que isso resolve:** na preparação o pátio registra quantidades por pedido para controle, mas fisicamente os containers podem estar misturados no caminhão. **Na entrega, vale o que o motorista escaneou em cada cliente** — a verdade operacional é a descarga, não a preparação.
+Cada bloco mostra o cliente, o número do pedido, a quantidade esperada e a **lista inteira** de containers da carga, de novo, com os identificadores em ordem.
 
-Containers que **voltam no caminhão** (transbordo) **não** são marcados como “ficou no cliente”.
+- No bloco de pedido **incluso**, cada linha traz o badge **Incluso**, antes de qualquer marcação.
+- No bloco de **empréstimo** não há modalidade.
+- Nada vem marcado. Cada linha tem uma caixa de **ficou** e uma caixa de **troca**, vazias.
+- Não existe rótulo de empréstimo, de transbordo nem de retorno.
+
+O motorista marca no papel, no bloco do pedido, o que ficou e o que foi troca. O sistema não pede login de motorista. O PDF é só o papel: o servidor não guarda arquivo.
 
 ---
 
 ### 4. Volta ao pátio
 
-O caminhão chega. O operador dá **entrada** no que voltou. Podem existir misturas:
+O caminhão chega com o papel marcado. O ALMOX transcreve, container a container, e **aponta o pedido** — é aqui que o vínculo nasce. Ninguém escolhe venda ou empréstimo: a modalidade sai do pedido.
 
-| O que veio | O que o pátio faz |
-| ---------- | ----------------- |
-| Container **com nosso QR** | Dá entrada → volta a **aguardar inspeção** (transbordo ou devolução de empréstimo) |
-| Container **sem nosso QR** (veio do cliente) | Cadastra como novo (origem: **troca**), cola adesivo novo, e **amarra** ao nosso que ficou lá: “H030 foi trocado pelo H067”. O H030 deixa de ser nosso para cobrança de devolução |
+| O que o papel diz | O que o pátio faz |
+| ----------------- | ----------------- |
+| **Ficou** ou **troca** num pedido **incluso** | Aponta esse pedido. O container fica no cliente, sai do pool (baixa) e **não** gera prazo nem aviso |
+| **Ficou** ou **troca** num pedido de **empréstimo** | Aponta esse pedido. O container fica no cliente, com prazo de **90 dias** e aviso ao vendedor |
+| **Voltou** no caminhão | Não aponta pedido. Dá entrada → volta a **aguardar inspeção** |
+| Container **sem nosso QR** (veio do cliente) | Cadastra como novo (origem: **troca**), cola adesivo novo, e **amarra** ao nosso que ficou: “H030 foi trocado pelo H067”. O que ficou segue a regra do pedido apontado |
 
-Lista de apoio na troca: primeiro os containers **pendentes de retorno daquela viagem** (os que o motorista marcou como ficaram no cliente e não voltaram com QR).
+Se num pedido a quantidade apontada (ficou + troca) for diferente da esperada, a viagem só fecha com a **confirmação** dessa divergência. Os outros pedidos da carga seguem. Pedido misto não entra nessa conta.
+
+Lista de apoio na troca: primeiro os containers **pendentes de retorno daquela viagem** (os que ficaram no cliente e não voltaram com o nosso QR).
 
 ---
 
@@ -136,10 +142,10 @@ Lista de apoio na troca: primeiro os containers **pendentes de retorno daquela v
 
 Quando a viagem é fechada na volta:
 
-- Se containers de um pedido **ficaram no cliente** (não voltaram no caminhão), o **vendedor daquele pedido** recebe um **aviso no WorkaPool**.  
-- Assim o comercial acompanha o que está “lá fora” sem depender só de planilha ou memória.
+- Só o **empréstimo** gera aviso. O vendedor daquele pedido vê, no WorkaPool, o container, o cliente e o vencimento de **90 dias**.
+- **Incluso não gera aviso.**
 
-Depois, empréstimos que passam dos **30 dias** também podem aparecer em uma visão de **atrasados** (acompanhamento contínuo).
+Depois, empréstimos que passam dos **90 dias** também podem aparecer em uma visão de **atrasados** (acompanhamento contínuo).
 
 ---
 
@@ -157,13 +163,12 @@ Container **Inapto não sobe em carga nova**.
 
 ## Exemplo narrado (uma viagem)
 
-1. Logística fecha a carga 500 (motorista + caminhão).  
-2. ALMOX vincula H010, H011, H012 por pedido → fecha expedição → ficam **em viagem**.  
-3. No cliente João: pedido 1120 esperava 2 IBCs; motorista lê H010 e H011 → ficam com João (empréstimo, 30 dias).  
-4. H012 fez **transbordo** (produto descarregado, container voltou no caminhão).  
-5. No pátio: entrada do H012 (com QR) → aguarda inspeção de novo.  
-6. João devolveu um vazio **sem adesivo nosso** no lugar de um que ficou: pátio cadastra H050 (troca), liga “H010 ↔ H050”, H010 sai da nossa conta cobrável.  
-7. Vendedor do pedido 1120 recebe aviso do que ficou / da situação da viagem.
+1. Logística fecha a carga 500 (caminhão).  
+2. ALMOX vincula H010, H011 e H012 **à carga**, sem escolher pedido, e fecha a expedição. Ficam **em viagem**.  
+3. O papel sai em bloco por pedido. No bloco de empréstimo não há modalidade; no bloco incluso cada linha traz o badge **Incluso**. Nada vem marcado. O motorista marca no papel o que ficou e o que foi troca.  
+4. Na volta o ALMOX aponta: H010 ficou no pedido de empréstimo (90 dias e aviso) e H012 ficou no pedido incluso (baixa, sem aviso). H011 voltou no caminhão — sem rótulo de transbordo — e entra no pátio para nova inspeção.  
+5. João devolveu um vazio **sem adesivo nosso** no lugar de um que ficou: pátio cadastra H050 (troca), liga “H010 ↔ H050”. O que ficou segue a regra do pedido apontado.  
+6. O vendedor recebe aviso só do empréstimo, com o pedido da volta.
 
 ---
 
@@ -172,7 +177,7 @@ Container **Inapto não sobe em carga nova**.
 | Antes (dor) | Depois (processo) |
 | ----------- | ----------------- |
 | “Quem não devolveu?” sem clareza | Empréstimo com prazo + avisos + lista de atrasados |
-| “Qual container foi pra qual cliente?” | Confirmação do motorista com QR na entrega |
+| “Qual container foi pra qual cliente?” | Marca no papel, por pedido; o pátio aponta o pedido na volta |
 | Troca e transbordo misturados na cabeça | Entrada no pátio classifica e documenta |
 | Qualidade só no papel / POP solto | Inspeção obrigatória + histórico de notas + alertas |
 | Data limite do recipiente esquecida | Alerta no módulo; bloqueio para nova viagem |
@@ -192,15 +197,17 @@ Container **Inapto não sobe em carga nova**.
 
 | Termo | Significado simples |
 | ----- | ------------------- |
-| **Preparação de expedição** | ALMOX vincula containers Aptos aos pedidos da carga (controle de quantidade) |
-| **Fechar expedição** | ALMOX confirma saída; containers passam a **em viagem** |
-| **CargaDespacho** | Motorista + caminhão informados pela logística ao fechar a carga |
-| **Em viagem** | Fechou expedição; ainda não confirmado no cliente nem na entrada do pátio |
-| **Custódia no cliente** | Motorista confirmou: este IBC ficou neste cliente neste pedido |
+| **Preparação de expedição** | ALMOX vincula containers Aptos à carga, sem escolher pedido |
+| **Fechar expedição** | A quantidade vinculada é o total da carga; containers passam a **em viagem**, ainda sem pedido |
+| **Relatório de Viagem** | Um bloco por pedido, com a lista inteira da carga. Badge **Incluso** só no bloco incluso. Sem rótulo de empréstimo ou transbordo. Caixas de ficou e de troca vazias |
+| **CargaDespacho** | Caminhão informado pela logística ao fechar a carga |
+| **Em viagem** | Fechou expedição; o pedido ainda não foi apontado |
+| **Custódia no cliente** | Na volta, o ALMOX apontou o pedido: este IBC ficou neste cliente neste pedido. Incluso baixa sem aviso; empréstimo fica 90 dias e gera aviso |
+| **Pedido misto** | O mesmo pedido tem cota de incluso e de empréstimo. Fica fora do total e não derruba o resto da carga |
 | **Pendente de retorno** | Ficou no cliente nesta viagem e ainda não voltou com nosso QR |
 | **Apto / Inapto** | Pode ou não circular / subir em carga |
 | **Data limite de uso** | Até quando **este recipiente** pode ser usado |
-| **Prazo de devolução** | Até quando o **empréstimo** deveria voltar (padrão 30 dias) |
+| **Prazo de devolução** | Até quando o **empréstimo** deveria voltar (**90 dias** a partir da volta) |
 
 ---
 

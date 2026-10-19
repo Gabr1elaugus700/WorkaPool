@@ -33,8 +33,8 @@ const buildPedidoIbc = (
   codCli: "C1",
   cliente: "Cliente",
   quantidadeEsperadaTotal: 3,
-  quantidadeEsperadaVenda: 2,
-  quantidadeEsperadaEmprestimo: 1,
+  quantidadeEsperadaVenda: 3,
+  quantidadeEsperadaEmprestimo: 0,
   ibcInvalido: false,
   posCar: null,
   ...overrides,
@@ -147,20 +147,45 @@ describe("FecharExpedicaoIbcUseCase", () => {
     );
   });
 
-  it("rejeita fechar expedição quando pedido da foto está incompleto e nomeia o numPed", async () => {
+  it("recusa fechar com 5 quando a soma elegível é 6", async () => {
     await rejectsWithoutClosing(
       {
-        listAlocacoesByCargaId: mock.fn(async () => [
-          buildAlocacao({ id: "aloc-1" }),
-          buildAlocacao({ id: "aloc-2", ibcId: "ibc-2", identificador: "H0046" }),
+        listPedidosIbcByCargaId: mock.fn(async () => [
+          buildPedidoIbc("1120", {
+            quantidadeEsperadaTotal: 4,
+            quantidadeEsperadaVenda: 4,
+            quantidadeEsperadaEmprestimo: 0,
+          }),
+          buildPedidoIbc("1121", {
+            quantidadeEsperadaTotal: 2,
+            quantidadeEsperadaVenda: 0,
+            quantidadeEsperadaEmprestimo: 2,
+          }),
+          buildPedidoIbc("9000", {
+            quantidadeEsperadaTotal: 9,
+            quantidadeEsperadaVenda: 4,
+            quantidadeEsperadaEmprestimo: 5,
+          }),
         ]),
+        listAlocacoesByCargaId: mock.fn(async () =>
+          Array.from({ length: 5 }, (_, index) =>
+            buildAlocacao({
+              id: `aloc-${index}`,
+              ibcId: `ibc-${index}`,
+              numPed: null,
+            }),
+          ),
+        ),
       },
       (error) => {
-        assert.strictEqual(error.code, "IBC_EXPEDICAO_PEDIDO_INSUFICIENTE");
+        assert.strictEqual(error.code, "IBC_EXPEDICAO_TOTAL_DIVERGENTE");
         assert.strictEqual(error.statusCode, 409);
-        assert.ok(String(error.message).includes("1120"));
-        const details = error.details as { numPed?: string };
-        assert.strictEqual(details.numPed, "1120");
+        const details = error.details as {
+          quantidadeAlocada?: number;
+          quantidadeEsperadaTotal?: number;
+        };
+        assert.strictEqual(details.quantidadeAlocada, 5);
+        assert.strictEqual(details.quantidadeEsperadaTotal, 6);
       },
     );
   });
@@ -195,5 +220,74 @@ describe("FecharExpedicaoIbcUseCase", () => {
     };
     assert.strictEqual(call.alocacaoIds.length, 3);
     assert.strictEqual(call.ibcIds.length, 3);
+    assert.deepEqual(call.ibcIds, ["ibc-1", "ibc-2", "ibc-3"]);
+  });
+
+  it("pedido misto não altera a soma e não impede fechar os demais", async () => {
+    const fecharExpedicao = mock.fn(async () => ({
+      id: "exp-1",
+      cargaId: CARGA_ID,
+      fechadoPorId: FECHADO_POR_ID,
+      fechadoEm: new Date("2026-08-24T15:00:00.000Z"),
+    }));
+    const repo = buildHappyRepo({
+      listPedidosIbcByCargaId: mock.fn(async () => [
+        buildPedidoIbc("1120", {
+          quantidadeEsperadaTotal: 2,
+          quantidadeEsperadaVenda: 2,
+          quantidadeEsperadaEmprestimo: 0,
+        }),
+        buildPedidoIbc("9000", {
+          quantidadeEsperadaTotal: 8,
+          quantidadeEsperadaVenda: 3,
+          quantidadeEsperadaEmprestimo: 5,
+        }),
+      ]),
+      listAlocacoesByCargaId: mock.fn(async () => [
+        buildAlocacao({ id: "aloc-1", ibcId: "ibc-1", numPed: null }),
+        buildAlocacao({ id: "aloc-2", ibcId: "ibc-2", numPed: null }),
+      ]),
+      fecharExpedicao,
+    });
+
+    const result = await new FecharExpedicaoIbcUseCase(
+      repo as IIbcExpedicaoRepository,
+    ).execute({ codCar: COD_CAR, fechadoPorId: FECHADO_POR_ID });
+
+    assert.strictEqual(result.ibcsEmViagem, 2);
+    assert.strictEqual(fecharExpedicao.mock.calls.length, 1);
+  });
+
+  it("fechar não reescreve o pedido já gravado na alocação", async () => {
+    const fecharExpedicao = mock.fn(async () => ({
+      id: "exp-1",
+      cargaId: CARGA_ID,
+      fechadoPorId: FECHADO_POR_ID,
+      fechadoEm: new Date("2026-08-24T15:00:00.000Z"),
+    }));
+    const alocacoes = [
+      buildAlocacao({ id: "aloc-1", ibcId: "ibc-1", numPed: "1120" }),
+      buildAlocacao({ id: "aloc-2", ibcId: "ibc-2", numPed: "1120" }),
+      buildAlocacao({ id: "aloc-3", ibcId: "ibc-3", numPed: "1120" }),
+    ];
+    const repo = buildHappyRepo({
+      listAlocacoesByCargaId: mock.fn(async () => alocacoes),
+      fecharExpedicao,
+    });
+
+    await new FecharExpedicaoIbcUseCase(repo as IIbcExpedicaoRepository).execute({
+      codCar: COD_CAR,
+      fechadoPorId: FECHADO_POR_ID,
+    });
+
+    const call = fecharExpedicao.mock.calls[0]?.arguments[0] as {
+      alocacaoIds: string[];
+    };
+    assert.deepEqual(call.alocacaoIds, ["aloc-1", "aloc-2", "aloc-3"]);
+    assert.equal("numPed" in call, false);
+    assert.deepEqual(
+      alocacoes.map((alocacao) => alocacao.numPed),
+      ["1120", "1120", "1120"],
+    );
   });
 });

@@ -81,12 +81,19 @@ export class IbcConciliacaoController {
       if (!Number.isFinite(codCar)) {
         return res.status(400).json({ error: "Código da carga inválido.", code: "IBC_COD_CAR_INVALID" });
       }
+      const parsed = IbcConciliacaoHttpSchemas.fechar.safeParse(req.body ?? {});
+      if (!parsed.success) throw invalidBody("IBC_FECHAR_VIAGEM_INVALID_BODY", parsed.error.format());
       const { actorRole, actorId } = actor(req);
       const fechamento = await new FecharViagemIbcUseCase(
         new IbcExpedicaoRepository(),
         new IbcConciliacaoRepository(),
         new AbrirEntradaPatioUseCase(new IbcEntradaPatioRepository()),
-      ).execute({ codCar, actorRole, actorId });
+      ).execute({
+        codCar,
+        actorRole,
+        actorId,
+        confirmacoes: parsed.data.confirmacoes?.map((item) => item.numPed),
+      });
       return res.status(200).json(fechamento);
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao fechar a viagem");
