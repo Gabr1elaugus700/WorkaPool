@@ -1,6 +1,6 @@
 import { IIbcExpedicaoRepository } from "../repositories/IIbcExpedicaoRepository";
 import { assertIbcNotReplaced } from "../services/assertIbcNotReplaced";
-import { isPedidoIbcElegivel } from "../services/isPedidoIbcElegivel";
+import { pedidosNaSomaDaCarga } from "../services/pedidosNaSomaDaCarga";
 import { AlocacaoIbcRecord } from "../types/IbcExpedicao.types";
 import { AppError } from "../../../utils/AppError";
 import { isDataLimiteDue } from "../utils/ibcDataLimite";
@@ -8,7 +8,6 @@ import { loadCargaFotoExpedicao } from "./loadCargaFotoExpedicao";
 
 export type CreateAlocacaoIbcInput = {
   codCar: number;
-  numPed: string;
   identificador: string;
   alocadoPorId: string;
 };
@@ -34,7 +33,7 @@ export class CreateAlocacaoIbcUseCase {
   }
 
   async execute(input: CreateAlocacaoIbcInput): Promise<CreateAlocacaoIbcResult> {
-    const { codCar, numPed, identificador, alocadoPorId } = input;
+    const { codCar, identificador, alocadoPorId } = input;
 
     if (codCar == null) {
       throw new AppError({
@@ -42,15 +41,6 @@ export class CreateAlocacaoIbcUseCase {
         statusCode: 400,
         code: "IBC_COD_CAR_REQUIRED",
         details: { codCar },
-      });
-    }
-
-    if (!numPed?.trim()) {
-      throw new AppError({
-        message: "Número do pedido é obrigatório",
-        statusCode: 400,
-        code: "IBC_NUM_PED_REQUIRED",
-        details: { numPed },
       });
     }
 
@@ -157,48 +147,30 @@ export class CreateAlocacaoIbcUseCase {
       });
     }
 
-    const pedido = pedidosIbc.find((p) => p.numPed === numPed.trim());
-    if (!pedido) {
-      throw new AppError({
-        message: `Pedido ${numPed} não encontrado na carga ${codCar}`,
-        statusCode: 404,
-        code: "IBC_PEDIDO_NOT_FOUND",
-        details: { codCar, numPed },
-      });
-    }
-
-    if (pedido.ibcInvalido) {
-      throw new AppError({
-        message: `Pedido ${numPed} é Pedido IBC inválido e não pode receber alocação`,
-        statusCode: 409,
-        code: "IBC_PEDIDO_INVALIDO",
-        details: { numPed, ibcInvalido: true },
-      });
-    }
-
-    if (!isPedidoIbcElegivel(pedido)) {
-      throw new AppError({
-        message: `Pedido ${numPed} não é elegível para IBC nesta carga`,
-        statusCode: 409,
-        code: "IBC_PEDIDO_NAO_CONTAINER",
-        details: { numPed, quantidadeEsperadaTotal: pedido.quantidadeEsperadaTotal },
-      });
-    }
-
-    const quantidadeAtual = await this.repository.countAlocacoesByCargaAndNumPed(
-      carga.id,
-      pedido.numPed,
+    const elegiveis = pedidosNaSomaDaCarga(pedidosIbc);
+    const quantidadeEsperadaTotal = elegiveis.reduce(
+      (sum, pedido) => sum + pedido.quantidadeEsperadaTotal,
+      0,
     );
-
-    if (quantidadeAtual >= pedido.quantidadeEsperadaTotal) {
+    if (quantidadeEsperadaTotal <= 0) {
       throw new AppError({
-        message: `Pedido ${numPed} já atingiu a quantidade esperada de IBC (${pedido.quantidadeEsperadaTotal})`,
+        message: `Carga ${codCar} não possui pedidos elegíveis para IBC`,
+        statusCode: 409,
+        code: "IBC_EXPEDICAO_SEM_PEDIDOS",
+        details: { codCar },
+      });
+    }
+
+    const alocacoes = await this.repository.listAlocacoesByCargaId(carga.id);
+    if (alocacoes.length >= quantidadeEsperadaTotal) {
+      throw new AppError({
+        message: `Carga ${codCar} já atingiu a quantidade de IBC (${quantidadeEsperadaTotal})`,
         statusCode: 409,
         code: "IBC_QUANTIDADE_EXCEDIDA",
         details: {
-          numPed,
-          quantidadeAlocada: quantidadeAtual,
-          quantidadeEsperadaTotal: pedido.quantidadeEsperadaTotal,
+          codCar,
+          quantidadeAlocada: alocacoes.length,
+          quantidadeEsperadaTotal,
         },
       });
     }
@@ -206,14 +178,14 @@ export class CreateAlocacaoIbcUseCase {
     const alocacao = await this.repository.createAlocacao({
       ibcId: ibc.id,
       cargaId: carga.id,
-      numPed: pedido.numPed,
+      numPed: null,
       alocadoPorId,
     });
 
     return {
       alocacao,
-      quantidadeAlocada: quantidadeAtual + 1,
-      quantidadeEsperadaTotal: pedido.quantidadeEsperadaTotal,
+      quantidadeAlocada: alocacoes.length + 1,
+      quantidadeEsperadaTotal,
     };
   }
 }

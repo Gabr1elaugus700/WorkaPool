@@ -57,7 +57,8 @@ export function planejarFechamentoViagem(input: {
   for (const alocacao of input.alocacoes) {
     const marca = marcas.get(alocacao.id);
     if (!marca) continue;
-    const pedido = pedidos.get(alocacao.numPed);
+    const numPed = alocacao.numPed;
+    const pedido = numPed == null ? undefined : pedidos.get(numPed);
     const chave = conciliacaoViagem.chaveCliente(pedido?.codCli ?? null, pedido?.cliente ?? "");
     if (marca.destino === "TROCA") {
       if (!marca.ibcEntradaId) falha(409, "IBC_TROCA_SEM_ENTRADA", "Troca sem IBC de entrada", { alocacaoIbcId: alocacao.id });
@@ -103,14 +104,16 @@ export function planejarFechamentoViagem(input: {
       emprestimoIniciadoEm: emprestimo ? input.now : null,
       emprestimoVenceEm: emprestimo ? conciliacaoViagem.vencimento(input.now) : null,
     });
-    ficaram.push({
-      ibcId: alocacao.ibcId,
-      identificador: alocacao.identificador,
-      modalidade: marca.modalidade,
-      codCli: pedido?.codCli ?? null,
-      cliente: pedido?.cliente ?? "",
-      numPed: alocacao.numPed,
-    });
+    if (numPed != null) {
+      ficaram.push({
+        ibcId: alocacao.ibcId,
+        identificador: alocacao.identificador,
+        modalidade: marca.modalidade,
+        codCli: pedido?.codCli ?? null,
+        cliente: pedido?.cliente ?? "",
+        numPed,
+      });
+    }
   }
 
   for (const cliente of conciliacaoViagem.clientes(input.pedidos)) {

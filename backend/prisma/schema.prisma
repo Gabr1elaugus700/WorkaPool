@@ -241,7 +241,7 @@ model AlocacaoIbc {
   id                    String    @id @default(uuid())
   ibcId                 String
   cargaId               String
-  numPed                String
+  numPed                String?
   alocadoPorId          String
   alocadoEm             DateTime  @default(now())
   expedicaoIbcId        String?

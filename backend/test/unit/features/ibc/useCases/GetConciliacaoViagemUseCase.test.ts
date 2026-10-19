@@ -32,7 +32,7 @@ const pedido = (
   ...overrides,
 });
 
-const alocacao = (identificador: string, numPed: string): AlocacaoIbcRecord => ({
+const alocacao = (identificador: string, numPed: string | null): AlocacaoIbcRecord => ({
   id: `aloc-${identificador}`,
   ibcId: `ibc-${identificador}`,
   cargaId: "carga-1",
@@ -108,9 +108,42 @@ describe("GetConciliacaoViagemUseCase", () => {
     assert.equal(view.itens[0]?.modalidadeSugerida, "EMPRESTIMO");
     assert.equal(view.itens[1]?.destino, null);
     assert.equal(view.itens[1]?.modalidadeSugerida, null);
+    assert.equal(view.itens[0]?.numPed, "10");
+    assert.equal(view.itens[1]?.numPed, "20");
     assert.deepEqual(view.clientes, [
       { chaveCliente: "B\u0000Beta", codCli: "B", cliente: "Beta", quantidadePapel: 1, confirmouDivergencia: false },
       { chaveCliente: "A\u0000Acme", codCli: "A", cliente: "Acme", quantidadePapel: null, confirmouDivergencia: false },
     ]);
+  });
+
+  it("conserva o pedido de viagem já fechada e tolera alocação sem pedido", async () => {
+    const fechadaEm = new Date("2026-10-12T18:00:00.000Z");
+    const { expedicoes, conciliacoes } = repos({
+      expedicao: {
+        listAlocacoesByCargaId: mock.fn(async () => [
+          alocacao("H0020", "20"),
+          alocacao("H0099", null),
+        ]),
+      },
+      conciliacao: {
+        findPorCarga: mock.fn(async () => ({
+          id: "exp-1",
+          viagemFechadaEm: fechadaEm,
+          viagemFechadaPorId: "almox-1",
+        })),
+        listMarcas: mock.fn(async () => []),
+        listRetornos: mock.fn(async () => []),
+      },
+    });
+
+    const view = await new GetConciliacaoViagemUseCase(expedicoes, conciliacoes).execute({
+      codCar: 202,
+      actorRole: Role.ALMOX,
+    });
+
+    assert.equal(view.viagemFechadaEm, fechadaEm);
+    const porIdentificador = new Map(view.itens.map((item) => [item.identificador, item.numPed]));
+    assert.equal(porIdentificador.get("H0020"), "20");
+    assert.equal(porIdentificador.get("H0099"), null);
   });
 });

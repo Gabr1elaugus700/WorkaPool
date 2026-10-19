@@ -1,5 +1,6 @@
 import { describe, it, mock, after } from "node:test";
 import assert from "node:assert/strict";
+import { CreateAlocacaoIbcSchema } from "../../../../../src/features/ibc/http/schemas/CreateAlocacaoIbcSchema";
 import { CreateAlocacaoIbcUseCase } from "../../../../../src/features/ibc/useCases/CreateAlocacaoIbc.use-case";
 import { IIbcExpedicaoRepository } from "../../../../../src/features/ibc/repositories/IIbcExpedicaoRepository";
 import { AppError } from "../../../../../src/utils/AppError";
@@ -33,8 +34,8 @@ const buildPedidoIbc = (
   codCli: "C1",
   cliente: "Cliente Teste",
   quantidadeEsperadaTotal: 3,
-  quantidadeEsperadaVenda: 2,
-  quantidadeEsperadaEmprestimo: 1,
+  quantidadeEsperadaVenda: 3,
+  quantidadeEsperadaEmprestimo: 0,
   ibcInvalido: false,
   posCar: null,
   ...overrides,
@@ -71,7 +72,7 @@ type RepoMock = Pick<
   | "listPedidosIbcByCargaId"
   | "findIbcByIdentificador"
   | "findAlocacaoByIbcId"
-  | "countAlocacoesByCargaAndNumPed"
+  | "listAlocacoesByCargaId"
   | "createAlocacao"
   | "markIbcDataLimite"
 >;
@@ -80,18 +81,24 @@ const buildHappyRepo = (
   overrides: Partial<RepoMock> = {},
 ): RepoMock => {
   const ibc = buildIbc();
-  const alocacao = buildAlocacao();
+  const alocacao = buildAlocacao({ numPed: null });
   return {
     getCargaByCodCar: mock.fn(async () => buildCarga()),
     listPedidosIbcByCargaId: mock.fn(async () => [buildPedidoIbc("1120")]),
     findIbcByIdentificador: mock.fn(async () => ibc),
     findAlocacaoByIbcId: mock.fn(async () => null),
-    countAlocacoesByCargaAndNumPed: mock.fn(async () => 0),
+    listAlocacoesByCargaId: mock.fn(async () => []),
     createAlocacao: mock.fn(async () => alocacao),
     markIbcDataLimite: mock.fn(async () => ibc),
     ...overrides,
   };
 };
+
+const vincular = (identificador = "H0045") => ({
+  codCar: COD_CAR,
+  identificador,
+  alocadoPorId: ALOCADO_POR_ID,
+});
 
 describe("CreateAlocacaoIbcUseCase", () => {
   after(async () => {
@@ -99,23 +106,34 @@ describe("CreateAlocacaoIbcUseCase", () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
   });
 
-  it("aloca IBC Apto no pátio a pedido elegível e retorna progresso 1 de 3", async () => {
+  it("vincula o container na carga sem pedir nem gravar pedido", async () => {
     const repo = buildHappyRepo();
     const useCase = new CreateAlocacaoIbcUseCase(
       repo as IIbcExpedicaoRepository,
     );
 
-    const result = await useCase.execute({
+    const parsed = CreateAlocacaoIbcSchema.safeParse({
       codCar: COD_CAR,
-      numPed: "1120",
       identificador: "H0045",
+      numPed: "1120",
+    });
+    assert.equal(parsed.success, true);
+    if (!parsed.success) return;
+    assert.equal("numPed" in parsed.data, false);
+
+    const result = await useCase.execute({
+      ...parsed.data,
       alocadoPorId: ALOCADO_POR_ID,
     });
 
     assert.strictEqual(result.alocacao.identificador, "H0045");
-    assert.strictEqual(result.alocacao.numPed, "1120");
+    assert.strictEqual(result.alocacao.numPed, null);
     assert.strictEqual(result.quantidadeAlocada, 1);
     assert.strictEqual(result.quantidadeEsperadaTotal, 3);
+    const gravado = (
+      repo.createAlocacao as ReturnType<typeof mock.fn>
+    ).mock.calls[0]?.arguments[0] as { numPed: string | null };
+    assert.strictEqual(gravado.numPed, null);
     assert.strictEqual(
       (repo.createAlocacao as ReturnType<typeof mock.fn>).mock.calls.length,
       1,
@@ -136,7 +154,6 @@ describe("CreateAlocacaoIbcUseCase", () => {
 
     const result = await useCase.execute({
       codCar: COD_CAR,
-      numPed: "1120",
       identificador: "HMS00001",
       alocadoPorId: ALOCADO_POR_ID,
     });
@@ -163,7 +180,6 @@ describe("CreateAlocacaoIbcUseCase", () => {
       async () =>
         useCase.execute({
           codCar: COD_CAR,
-          numPed: "1120",
           identificador: "H0099",
           alocadoPorId: ALOCADO_POR_ID,
         }),
@@ -195,7 +211,6 @@ describe("CreateAlocacaoIbcUseCase", () => {
       async () =>
         useCase.execute({
           codCar: COD_CAR,
-          numPed: "1120",
           identificador: "H0100",
           alocadoPorId: ALOCADO_POR_ID,
         }),
@@ -224,7 +239,6 @@ describe("CreateAlocacaoIbcUseCase", () => {
       () =>
         useCase.execute({
           codCar: COD_CAR,
-          numPed: "1120",
           identificador: "H0103",
           alocadoPorId: ALOCADO_POR_ID,
         }),
@@ -253,7 +267,6 @@ describe("CreateAlocacaoIbcUseCase", () => {
       () =>
         useCase.execute({
           codCar: COD_CAR,
-          numPed: "1120",
           identificador: "H0102",
           alocadoPorId: ALOCADO_POR_ID,
         }),
@@ -292,7 +305,6 @@ describe("CreateAlocacaoIbcUseCase", () => {
       async () =>
         useCase.execute({
           codCar: COD_CAR,
-          numPed: "1120",
           identificador: "H0101",
           alocadoPorId: ALOCADO_POR_ID,
         }),
@@ -333,7 +345,6 @@ describe("CreateAlocacaoIbcUseCase", () => {
       async () =>
         useCase.execute({
           codCar: COD_CAR,
-          numPed: "1120",
           identificador: "H0102",
           alocadoPorId: ALOCADO_POR_ID,
         }),
@@ -349,37 +360,51 @@ describe("CreateAlocacaoIbcUseCase", () => {
     assert.strictEqual(createAlocacao.mock.calls.length, 0);
   });
 
-  it("rejeita alocação além da quantidadeEsperadaTotal (cap total, não split)", async () => {
+  it("recusa o sétimo container quando a soma elegível é 6", async () => {
     const createAlocacao = mock.fn(async () => {
       throw new Error("não deve criar");
     });
     const repo = buildHappyRepo({
       listPedidosIbcByCargaId: mock.fn(async () => [
         buildPedidoIbc("1120", {
-          quantidadeEsperadaTotal: 3,
-          quantidadeEsperadaVenda: 2,
-          quantidadeEsperadaEmprestimo: 1,
+          quantidadeEsperadaTotal: 4,
+          quantidadeEsperadaVenda: 4,
+          quantidadeEsperadaEmprestimo: 0,
+        }),
+        buildPedidoIbc("1121", {
+          quantidadeEsperadaTotal: 2,
+          quantidadeEsperadaVenda: 0,
+          quantidadeEsperadaEmprestimo: 2,
+        }),
+        buildPedidoIbc("1122", {
+          quantidadeEsperadaTotal: 10,
+          quantidadeEsperadaVenda: 5,
+          quantidadeEsperadaEmprestimo: 5,
         }),
       ]),
-      countAlocacoesByCargaAndNumPed: mock.fn(async () => 3),
+      listAlocacoesByCargaId: mock.fn(async () =>
+        Array.from({ length: 6 }, (_, index) =>
+          buildAlocacao({ id: `aloc-${index}`, ibcId: `ibc-${index}` }),
+        ),
+      ),
       createAlocacao,
     });
-    const useCase = new CreateAlocacaoIbcUseCase(
-      repo as IIbcExpedicaoRepository,
-    );
 
     await assert.rejects(
-      async () =>
-        useCase.execute({
-          codCar: COD_CAR,
-          numPed: "1120",
-          identificador: "H0045",
-          alocadoPorId: ALOCADO_POR_ID,
-        }),
+      () =>
+        new CreateAlocacaoIbcUseCase(repo as IIbcExpedicaoRepository).execute(
+          vincular(),
+        ),
       (error: unknown) => {
         assert.ok(error instanceof AppError);
         assert.strictEqual(error.code, "IBC_QUANTIDADE_EXCEDIDA");
         assert.strictEqual(error.statusCode, 409);
+        const details = error.details as {
+          quantidadeAlocada?: number;
+          quantidadeEsperadaTotal?: number;
+        };
+        assert.strictEqual(details.quantidadeAlocada, 6);
+        assert.strictEqual(details.quantidadeEsperadaTotal, 6);
         return true;
       },
     );
@@ -409,13 +434,12 @@ describe("CreateAlocacaoIbcUseCase", () => {
       async () =>
         useCase.execute({
           codCar: COD_CAR,
-          numPed: "1120",
           identificador: "H0045",
           alocadoPorId: ALOCADO_POR_ID,
         }),
       (error: unknown) => {
         assert.ok(error instanceof AppError);
-        assert.strictEqual(error.code, "IBC_PEDIDO_INVALIDO");
+        assert.strictEqual(error.code, "IBC_EXPEDICAO_SEM_PEDIDOS");
         return true;
       },
     );
@@ -425,7 +449,6 @@ describe("CreateAlocacaoIbcUseCase", () => {
   const rejectsWithoutCreating = async (
     overrides: Partial<RepoMock>,
     expected: { code: string; statusCode: number },
-    numPed = "1120",
   ) => {
     const createAlocacao = mock.fn(async () => {
       throw new Error("não deve criar");
@@ -433,12 +456,9 @@ describe("CreateAlocacaoIbcUseCase", () => {
     const repo = buildHappyRepo({ ...overrides, createAlocacao });
     await assert.rejects(
       () =>
-        new CreateAlocacaoIbcUseCase(repo as IIbcExpedicaoRepository).execute({
-          codCar: COD_CAR,
-          numPed,
-          identificador: "H0045",
-          alocadoPorId: ALOCADO_POR_ID,
-        }),
+        new CreateAlocacaoIbcUseCase(repo as IIbcExpedicaoRepository).execute(
+          vincular(),
+        ),
       (error: unknown) => {
         assert.ok(error instanceof AppError);
         assert.strictEqual(error.code, expected.code);
@@ -463,12 +483,29 @@ describe("CreateAlocacaoIbcUseCase", () => {
     );
   });
 
-  it("rejeita alocação em pedido fora da foto", async () => {
-    await rejectsWithoutCreating(
-      {},
-      { code: "IBC_PEDIDO_NOT_FOUND", statusCode: 404 },
-      "7777",
-    );
+  it("pedido misto não entra na soma e não impede vincular no teto dos demais", async () => {
+    const repo = buildHappyRepo({
+      listPedidosIbcByCargaId: mock.fn(async () => [
+        buildPedidoIbc("1120", {
+          quantidadeEsperadaTotal: 1,
+          quantidadeEsperadaVenda: 1,
+          quantidadeEsperadaEmprestimo: 0,
+        }),
+        buildPedidoIbc("9000", {
+          quantidadeEsperadaTotal: 8,
+          quantidadeEsperadaVenda: 4,
+          quantidadeEsperadaEmprestimo: 4,
+        }),
+      ]),
+    });
+
+    const result = await new CreateAlocacaoIbcUseCase(
+      repo as IIbcExpedicaoRepository,
+    ).execute(vincular());
+
+    assert.strictEqual(result.quantidadeEsperadaTotal, 1);
+    assert.strictEqual(result.quantidadeAlocada, 1);
+    assert.strictEqual(result.alocacao.numPed, null);
   });
 
   it("rejeita alocação de IBC substituído com 409 IBC_SUBSTITUIDO", async () => {
@@ -496,7 +533,6 @@ describe("CreateAlocacaoIbcUseCase", () => {
       async () =>
         useCase.execute({
           codCar: COD_CAR,
-          numPed: "1120",
           identificador: "HMS00007",
           alocadoPorId: ALOCADO_POR_ID,
         }),
@@ -545,7 +581,6 @@ describe("CreateAlocacaoIbcUseCase", () => {
       async () =>
         useCase.execute({
           codCar: COD_CAR,
-          numPed: "1120",
           identificador: "HM0010",
           alocadoPorId: ALOCADO_POR_ID,
         }),
