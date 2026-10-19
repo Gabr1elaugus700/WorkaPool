@@ -1,6 +1,7 @@
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
 import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
+import GestaoIbcHeader from "../components/GestaoIbcHeader";
 import CadastroIbcSectionError from "../components/CadastroIbcSectionError";
 import CadastroIbcSectionSkeleton from "../components/CadastroIbcSectionSkeleton";
 import IbcChecklistItensSection from "../components/IbcChecklistItensSection";
@@ -30,14 +31,12 @@ export default function ChecklistsIbcView() {
 
   return (
     <DefaultLayout>
-      <div className="space-y-6 p-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Checklists de IBC</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Cadastre os itens de inspeção e monte checklists nomeados com itens ordenados e notas
-            mínimas. Item crítico vale em qualquer checklist.
-          </p>
-        </div>
+      <div className="space-y-6">
+        <GestaoIbcHeader activeSection="checklists" userRole={user?.role} />
+        <p className="max-w-prose text-sm text-muted-foreground">
+          Cadastre os itens de inspeção e monte checklists nomeados com itens ordenados e notas
+          mínimas. Item crítico vale em qualquer checklist.
+        </p>
 
         <section className="rounded-lg border border-border bg-card p-4 shadow-sm sm:p-6">
           <h2 className="mb-3 text-base font-semibold tracking-tight">Catálogo de itens</h2>
