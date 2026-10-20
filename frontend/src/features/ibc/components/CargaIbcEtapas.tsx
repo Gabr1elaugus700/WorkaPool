@@ -10,22 +10,15 @@ type Props = {
 
 function EtapaConteudo({ etapa, numero }: { etapa: CargaIbcEtapaItem; numero: number }) {
   const tone = expedicaoIbcStationTone[etapa.station];
+  const apagada = etapa.estado === "futura" && !etapa.selecionada;
   return (
     <>
-      <span
-        className={cn(
-          "h-1 rounded-full",
-          etapa.estado === "futura" && !etapa.selecionada ? "bg-border" : tone.stripeClass,
-        )}
-        aria-hidden
-      />
+      <span className={cn("h-1 rounded-full", apagada ? "bg-border" : tone.stripeClass)} aria-hidden />
       <span className="flex items-center gap-2">
         <span
           className={cn(
             "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold tabular-nums",
-            etapa.estado === "futura" && !etapa.selecionada
-              ? "border-border bg-background text-muted-foreground"
-              : tone.badgeClass,
+            apagada ? "border-border bg-background text-muted-foreground" : tone.badgeClass,
           )}
           aria-hidden
         >

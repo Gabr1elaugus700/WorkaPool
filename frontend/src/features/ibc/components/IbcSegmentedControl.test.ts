@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import IbcSegmentedControl from "./IbcSegmentedControl";
-import { nextSegmentIndex } from "../utils/nextSegmentIndex";
+import { nextSegmentIndex } from "@/utils/nextSegmentIndex";
 
 const OPCOES = [
   { id: "FICOU", label: "Ficou no cliente" },
