@@ -43,6 +43,34 @@ function resolverVista(atual: CargaIbcEtapa, pedida: CargaIbcEtapa | null): Carg
   return pedida != null && alcancavel(atual, pedida) ? pedida : atual;
 }
 
+/**
+ * Etapa que a URL pede. `?origem=em-viagem` é o link antigo do detalhe em viagem
+ * e vale mais do que o path, que nessa época não tinha etapa.
+ */
+function pedida(etapaParam: string | undefined, origem: string | null): CargaIbcEtapa | null {
+  if (origem === "em-viagem") return "em-viagem";
+  return parse(etapaParam);
+}
+
+/**
+ * Etapa a mostrar e, quando a URL ainda é o link antigo ou uma etapa fora da vista,
+ * o path canônico para onde redirecionar.
+ */
+function naRota(input: {
+  codCar: number;
+  etapaParam: string | undefined;
+  origem: string | null;
+  atual: CargaIbcEtapa;
+}): { vista: CargaIbcEtapa; redirectTo: string | null } {
+  const vista = resolverVista(input.atual, pedida(input.etapaParam, input.origem));
+  const legado = input.origem === "em-viagem";
+  const etapaForaDaVista = input.etapaParam != null && input.etapaParam !== vista;
+  return {
+    vista,
+    redirectTo: legado || etapaForaDaVista ? path(input.codCar, vista) : null,
+  };
+}
+
 function montarItens(input: {
   codCar: number;
   atual: CargaIbcEtapa;
@@ -72,6 +100,8 @@ export const cargaIbcEtapa = {
   parse,
   resolverAtual,
   resolverVista,
+  pedida,
+  naRota,
   montarItens,
   voltarPara,
 };

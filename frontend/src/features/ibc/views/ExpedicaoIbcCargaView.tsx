@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Package } from "lucide-react";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
@@ -29,6 +29,7 @@ function parseCodCar(raw: string | undefined): number | null {
  */
 export default function ExpedicaoIbcCargaView() {
   const { codCar: codCarParam, etapa: etapaParam } = useParams<{ codCar: string; etapa?: string }>();
+  const [searchParams] = useSearchParams();
   const codCar = parseCodCar(codCarParam);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -51,10 +52,14 @@ export default function ExpedicaoIbcCargaView() {
   }
 
   const atual = cargaIbcEtapa.resolverAtual({ temExpedicao, viagemFechadaEm: viagem?.viagemFechadaEm ?? null });
-  const vista = cargaIbcEtapa.resolverVista(atual, cargaIbcEtapa.parse(etapaParam));
-  if (etapaParam != null && etapaParam !== vista) {
-    return <Navigate to={cargaIbcEtapa.path(codCar, vista)} replace />;
-  }
+  const rota = cargaIbcEtapa.naRota({
+    codCar,
+    etapaParam,
+    origem: searchParams.get("origem"),
+    atual,
+  });
+  if (rota.redirectTo != null) return <Navigate to={rota.redirectTo} replace />;
+  const { vista } = rota;
 
   const relatorio = temExpedicao ? (
     <ExportarRelatorioViagemButton
@@ -74,7 +79,7 @@ export default function ExpedicaoIbcCargaView() {
     );
   } else if (vista === "em-viagem" && atual === "em-viagem") {
     primaryAction = (
-      <Button asChild size="sm">
+      <Button asChild>
         <Link to={cargaIbcEtapa.path(codCar, "fechar-viagem")}>Fechar viagem</Link>
       </Button>
     );

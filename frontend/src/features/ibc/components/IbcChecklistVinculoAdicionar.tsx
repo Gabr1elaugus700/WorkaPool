@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { IbcChecklistSummaryDTO } from "../types/ibcChecklist.types";
+import { gestaoIbcSections } from "../utils/gestaoIbcSections";
 
 type Props = {
   disponiveis: IbcChecklistSummaryDTO[];
@@ -30,7 +31,7 @@ export default function IbcChecklistVinculoAdicionar({
         ) : (
           <>
             Nenhum checklist de IBC ativo.{" "}
-            <Link to="/checklists-ibc" className="font-medium text-primary underline-offset-4 hover:underline">
+            <Link to={gestaoIbcSections.path("checklists")} className="font-medium text-primary underline-offset-4 hover:underline">
               Cadastre um checklist
             </Link>{" "}
             para vincular.

@@ -1,15 +1,17 @@
-import { Scale } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import DefaultLayout from "@/layout/DefaultLayout";
+import { useAuth } from "@/auth/AuthContext";
 import ConciliacaoErpLista from "../components/ConciliacaoErpLista";
 import ConciliacaoErpPainel from "../components/ConciliacaoErpPainel";
-import ExpedicaoIbcAsyncState from "../components/ExpedicaoIbcAsyncState";
+import GestaoIbcHeader from "../components/GestaoIbcHeader";
+import IbcStatusContent from "../components/IbcStatusContent";
 import { useConciliacaoErp } from "../hooks/useConciliacaoErp";
 import type { BucketConsultaConciliacaoErp } from "../types/conciliacaoErp.types";
 import { conciliacaoErpApresentacao } from "../utils/conciliacaoErp.utils";
 import { toError } from "../utils/toError";
 
 export default function ConciliacaoErpView() {
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const bruto = searchParams.get("bucket");
   const bucket = conciliacaoErpApresentacao.isBucket(bruto) ? bruto : undefined;
@@ -23,24 +25,23 @@ export default function ConciliacaoErpView() {
   }
 
   return (
-    <ExpedicaoIbcAsyncState
-      loading={isLoading}
-      error={error ? toError(error) : null}
-      loadingLabel="Carregando conciliação…"
-    >
-      <DefaultLayout>
-        <div className="mb-6 flex items-center gap-3">
-          <Scale className="h-7 w-7 text-primary" aria-hidden="true" />
-          <h1 className="text-2xl font-bold text-foreground">Conciliação IBC</h1>
-        </div>
-        <p className="mb-6 max-w-3xl text-sm text-muted-foreground">Saldo fiscal do ERP comparado aos IBCs vivos no WorkaPool. Somente leitura.</p>
-        {data ? (
+    <DefaultLayout>
+      <div className="space-y-6">
+        <GestaoIbcHeader activeSection="conciliacao" userRole={user?.role} />
+        <p className="max-w-prose text-sm text-muted-foreground">
+          Saldo fiscal do ERP comparado aos IBCs vivos no WorkaPool. Somente leitura.
+        </p>
+        {isLoading ? (
+          <IbcStatusContent status="loading" loadingLabel="Carregando conciliação…" />
+        ) : error ? (
+          <IbcStatusContent status="error" error={toError(error)} />
+        ) : data ? (
           <>
             <ConciliacaoErpPainel relatorio={data} ativo={bucket} onSelecionar={selecionar} />
             {bucket ? <ConciliacaoErpLista bucket={bucket} itens={data.itens} /> : null}
           </>
         ) : null}
-      </DefaultLayout>
-    </ExpedicaoIbcAsyncState>
+      </div>
+    </DefaultLayout>
   );
 }

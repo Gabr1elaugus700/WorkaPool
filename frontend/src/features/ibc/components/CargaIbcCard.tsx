@@ -7,6 +7,7 @@ import ExportarRelatorioViagemButton from "./ExportarRelatorioViagemButton";
 import IbcStationCard from "./IbcStationCard";
 import PedidoIbcProgress from "./PedidoIbcProgress";
 import { formatClientesCarga } from "../utils/cargaIbcCard.utils";
+import { cargaIbcEtapa } from "../utils/cargaIbcEtapa";
 import type { CargaEmViagemListItemDTO, CargaExpedicaoListItemDTO } from "../types/ibcExpedicao.types";
 
 type Props =
@@ -71,7 +72,7 @@ export default function CargaIbcCard(props: Props) {
             rotulo="Reimprimir relatório de viagem"
             variant="ghost"
           />
-          <OpenCargaLink to={`/expedicao-ibc/${item.codCar}`} label="Ver detalhe" />
+          <OpenCargaLink to={cargaIbcEtapa.path(item.codCar, "em-viagem")} label="Ver detalhe" />
         </>
       }
     >

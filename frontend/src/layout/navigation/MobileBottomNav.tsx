@@ -22,18 +22,23 @@ export function MobileBottomNav({ items, isActive }: MobileBottomNavProps) {
           const Icon = item.icon;
           const active = isActive(item.to);
           return (
-            <li key={item.to} className="flex-1">
+            <li key={item.to} className="min-w-0 flex-1">
               <Link
                 to={item.to}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-h-12 flex-col items-center justify-center gap-1 rounded-md px-1 transition-colors duration-150",
+                  "flex min-h-12 flex-col items-center justify-center gap-1 rounded-md px-0.5 transition-colors duration-150",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <Icon className="h-5 w-5" aria-hidden="true" />
-                <span className={cn("text-xs", active ? "font-semibold" : "font-medium")}>
+                <span
+                  className={cn(
+                    "max-w-full text-center text-xs leading-tight",
+                    active ? "font-semibold" : "font-medium",
+                  )}
+                >
                   {item.mobileLabel ?? item.label}
                 </span>
               </Link>
