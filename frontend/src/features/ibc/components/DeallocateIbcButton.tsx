@@ -3,7 +3,6 @@ import { Unlink } from "lucide-react";
 
 type Props = {
   identificador: string;
-  disabled?: boolean;
   loading?: boolean;
   onDeallocate: () => void;
 };
@@ -13,7 +12,6 @@ type Props = {
  */
 export default function DeallocateIbcButton({
   identificador,
-  disabled = false,
   loading = false,
   onDeallocate,
 }: Props) {
@@ -26,7 +24,7 @@ export default function DeallocateIbcButton({
         type="button"
         variant="ghost"
         size="sm"
-        disabled={disabled || loading}
+        disabled={loading}
         onClick={onDeallocate}
         className="text-destructive hover:text-destructive"
       >

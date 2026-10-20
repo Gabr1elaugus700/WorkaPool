@@ -1,6 +1,6 @@
 import { useRef, type KeyboardEvent } from "react";
 import { cn } from "@/lib/utils";
-import { nextSegmentIndex } from "../utils/nextSegmentIndex";
+import { nextSegmentIndex } from "@/utils/nextSegmentIndex";
 
 type Option<T extends string> = { id: T; label: string };
 

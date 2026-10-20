@@ -1,21 +1,52 @@
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import type { useConciliacaoViagem } from "../hooks/useConciliacaoViagem";
-import type { ConciliacaoViagemDTO } from "../types/conciliacaoViagem.types";
+import type {
+  ConciliacaoViagemClienteDTO,
+  ConciliacaoViagemDTO,
+  DestinoConciliacao,
+  ModalidadeConciliacao,
+} from "../types/conciliacaoViagem.types";
 import ConciliacaoIbcLinha from "./ConciliacaoIbcLinha";
 import ConciliacaoRetornosPainel from "./ConciliacaoRetornosPainel";
 import ConciliacaoTrocaDialog from "./ConciliacaoTrocaDialog";
 
+type ClientePatch = Partial<Pick<ConciliacaoViagemClienteDTO, "quantidadePapel" | "confirmouDivergencia">>;
+
 type Props = {
   codCar: number;
   viagem: ConciliacaoViagemDTO;
-  conciliacao: ReturnType<typeof useConciliacaoViagem>;
+  aviso: string | null;
+  salvando: boolean;
+  fechada: boolean;
+  marcados: number;
+  total: number;
+  podeFechar: boolean;
+  onDestino: (alocacaoIbcId: string, destino: DestinoConciliacao) => void;
+  onModalidade: (alocacaoIbcId: string, modalidade: ModalidadeConciliacao) => void;
+  onTrocaRegistrada: (alocacaoIbcId: string, ibcEntradaId: string) => void;
+  onClienteChange: (chaveCliente: string, patch: ClientePatch) => void;
+  onSalvar: () => void;
+  onFechar: () => void;
 };
 
-export default function CargaIbcFecharViagemEtapa({ codCar, viagem, conciliacao }: Props) {
+export default function CargaIbcFecharViagemEtapa({
+  codCar,
+  viagem,
+  aviso,
+  salvando,
+  fechada,
+  marcados,
+  total,
+  podeFechar,
+  onDestino,
+  onModalidade,
+  onTrocaRegistrada,
+  onClienteChange,
+  onSalvar,
+  onFechar,
+}: Props) {
   const [trocaId, setTrocaId] = useState<string | null>(null);
-  const { fechada, salvando, marcados, total, aviso } = conciliacao;
   const trocaAberta = viagem.itens.find((item) => item.alocacaoIbcId === trocaId) ?? null;
   const bloqueada = fechada || salvando;
 
@@ -37,8 +68,8 @@ export default function CargaIbcFecharViagemEtapa({ codCar, viagem, conciliacao 
             key={item.alocacaoIbcId}
             item={item}
             disabled={bloqueada}
-            onDestino={(destino) => conciliacao.marcarDestino(item.alocacaoIbcId, destino)}
-            onModalidade={(modalidade) => conciliacao.marcarModalidade(item.alocacaoIbcId, modalidade)}
+            onDestino={(destino) => onDestino(item.alocacaoIbcId, destino)}
+            onModalidade={(modalidade) => onModalidade(item.alocacaoIbcId, modalidade)}
             onTroca={() => setTrocaId(item.alocacaoIbcId)}
           />
         ))}
@@ -47,7 +78,7 @@ export default function CargaIbcFecharViagemEtapa({ codCar, viagem, conciliacao 
         clientes={viagem.clientes}
         itens={viagem.itens}
         disabled={bloqueada}
-        onChange={conciliacao.atualizarCliente}
+        onChange={onClienteChange}
       />
       {trocaAberta ? (
         <ConciliacaoTrocaDialog
@@ -56,15 +87,15 @@ export default function CargaIbcFecharViagemEtapa({ codCar, viagem, conciliacao 
           identificador={trocaAberta.identificador}
           open
           onOpenChange={(open) => { if (!open) setTrocaId(null); }}
-          onRegistrada={(ibcEntradaId) => conciliacao.vincularTroca(trocaAberta.alocacaoIbcId, ibcEntradaId)}
+          onRegistrada={(ibcEntradaId) => onTrocaRegistrada(trocaAberta.alocacaoIbcId, ibcEntradaId)}
         />
       ) : null}
       {fechada ? null : (
         <div className="mt-6 flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
-          <Button type="button" variant="outline" disabled={salvando} onClick={() => void conciliacao.salvarAndamento()}>
+          <Button type="button" variant="outline" disabled={salvando} onClick={onSalvar}>
             Salvar andamento
           </Button>
-          <Button type="button" disabled={!conciliacao.podeFechar} onClick={() => void conciliacao.fecharViagem()}>
+          <Button type="button" disabled={!podeFechar} onClick={onFechar}>
             Fechar viagem
           </Button>
         </div>

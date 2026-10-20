@@ -16,14 +16,7 @@ import IbcStatusContent from "../components/IbcStatusContent";
 import { useCargaExpedicaoDetalhe } from "../hooks/useCargaExpedicaoDetalhe";
 import { useConciliacaoViagem } from "../hooks/useConciliacaoViagem";
 import { canAccessExpedicaoIbc } from "../utils/canAccessExpedicaoIbc";
-import {
-  buildCargaIbcEtapas,
-  cargaIbcEtapaPath,
-  parseCargaIbcEtapa,
-  resolveCargaIbcEtapaAtual,
-  resolveCargaIbcEtapaVista,
-  resolveCargaIbcVoltar,
-} from "../utils/cargaIbcEtapa";
+import { cargaIbcEtapa } from "../utils/cargaIbcEtapa";
 
 function parseCodCar(raw: string | undefined): number | null {
   const n = Number(raw);
@@ -57,11 +50,10 @@ export default function ExpedicaoIbcCargaView() {
     return <IbcPageStatus status="loading" loadingLabel="Carregando carga…" />;
   }
 
-  const viagemFechada = viagem?.viagemFechadaEm != null;
-  const atual = resolveCargaIbcEtapaAtual({ temExpedicao, viagemFechadaEm: viagem?.viagemFechadaEm ?? null });
-  const vista = resolveCargaIbcEtapaVista(atual, parseCargaIbcEtapa(etapaParam));
+  const atual = cargaIbcEtapa.resolverAtual({ temExpedicao, viagemFechadaEm: viagem?.viagemFechadaEm ?? null });
+  const vista = cargaIbcEtapa.resolverVista(atual, cargaIbcEtapa.parse(etapaParam));
   if (etapaParam != null && etapaParam !== vista) {
-    return <Navigate to={cargaIbcEtapaPath(codCar, vista)} replace />;
+    return <Navigate to={cargaIbcEtapa.path(codCar, vista)} replace />;
   }
 
   const relatorio = temExpedicao ? (
@@ -83,7 +75,7 @@ export default function ExpedicaoIbcCargaView() {
   } else if (vista === "em-viagem" && atual === "em-viagem") {
     primaryAction = (
       <Button asChild size="sm">
-        <Link to={cargaIbcEtapaPath(codCar, "fechar-viagem")}>Fechar viagem</Link>
+        <Link to={cargaIbcEtapa.path(codCar, "fechar-viagem")}>Fechar viagem</Link>
       </Button>
     );
   }
@@ -97,7 +89,7 @@ export default function ExpedicaoIbcCargaView() {
         secondaryActions={
           <>
             <Button asChild variant="outline" size="sm">
-              <Link to={resolveCargaIbcVoltar(atual)}>
+              <Link to={cargaIbcEtapa.voltarPara(atual)}>
                 <ArrowLeft className="h-4 w-4" aria-hidden />
                 Voltar
               </Link>
@@ -107,10 +99,25 @@ export default function ExpedicaoIbcCargaView() {
         }
         primaryAction={primaryAction}
       />
-      <CargaIbcEtapas etapas={buildCargaIbcEtapas({ codCar, atual, vista, viagemFechada })} />
+      <CargaIbcEtapas etapas={cargaIbcEtapa.montarItens({ codCar, atual, vista, viagemFechada: conciliacao.fechada })} />
       {vista === "fechar-viagem" ? (
         viagem ? (
-          <CargaIbcFecharViagemEtapa codCar={codCar} viagem={viagem} conciliacao={conciliacao} />
+          <CargaIbcFecharViagemEtapa
+            codCar={codCar}
+            viagem={viagem}
+            aviso={conciliacao.aviso}
+            salvando={conciliacao.salvando}
+            fechada={conciliacao.fechada}
+            marcados={conciliacao.marcados}
+            total={conciliacao.total}
+            podeFechar={conciliacao.podeFechar}
+            onDestino={conciliacao.marcarDestino}
+            onModalidade={conciliacao.marcarModalidade}
+            onTrocaRegistrada={conciliacao.vincularTroca}
+            onClienteChange={conciliacao.atualizarCliente}
+            onSalvar={() => void conciliacao.salvarAndamento()}
+            onFechar={() => void conciliacao.fecharViagem()}
+          />
         ) : conciliacao.error ? (
           <IbcStatusContent status="error" error={conciliacao.error} />
         ) : null
