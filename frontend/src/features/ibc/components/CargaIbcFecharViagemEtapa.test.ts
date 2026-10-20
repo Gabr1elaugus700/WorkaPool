@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import React from "react";
+import React, { type ComponentProps } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { useConciliacaoViagem } from "../hooks/useConciliacaoViagem";
 import type { ConciliacaoViagemDTO, PedidoConciliacaoDTO } from "../types/conciliacaoViagem.types";
 import CargaIbcFecharViagemEtapa from "./CargaIbcFecharViagemEtapa";
 
@@ -37,42 +36,31 @@ function viagem(): ConciliacaoViagemDTO {
   };
 }
 
-function conciliacao(
-  patch: Partial<ReturnType<typeof useConciliacaoViagem>>,
-): ReturnType<typeof useConciliacaoViagem> {
-  const base: ReturnType<typeof useConciliacaoViagem> = {
-    viagem: null,
-    loading: false,
-    error: null,
+type Props = ComponentProps<typeof CargaIbcFecharViagemEtapa>;
+
+function html(patch: Partial<Props> = {}): string {
+  const props: Props = {
+    codCar: 1,
+    viagem: viagem(),
     aviso: null,
     salvando: false,
     fechada: false,
     marcados: 0,
     total: 1,
+    podeFechar: true,
     barras: [pedido("10", 1, 2)],
     divergencias: [],
     pedindoConfirmacao: false,
-    podeFechar: true,
-    marcarDestino: () => undefined,
-    marcarPedido: () => undefined,
-    vincularTroca: () => undefined,
-    atualizarCliente: () => undefined,
-    salvarAndamento: async () => undefined,
-    fecharViagem: async () => undefined,
-    confirmarFechamento: async () => undefined,
-    cancelarConfirmacao: () => undefined,
+    onDestino: () => undefined,
+    onPedido: () => undefined,
+    onTrocaRegistrada: () => undefined,
+    onClienteChange: () => undefined,
+    onSalvar: () => undefined,
+    onFechar: () => undefined,
+    onConfirmarFechamento: () => undefined,
+    onCancelarConfirmacao: () => undefined,
   };
-  return { ...base, ...patch };
-}
-
-function html(patch: Partial<ReturnType<typeof useConciliacaoViagem>> = {}): string {
-  return renderToStaticMarkup(
-    React.createElement(CargaIbcFecharViagemEtapa, {
-      codCar: 1,
-      viagem: viagem(),
-      conciliacao: conciliacao(patch),
-    }),
-  );
+  return renderToStaticMarkup(React.createElement(CargaIbcFecharViagemEtapa, { ...props, ...patch }));
 }
 
 describe("CargaIbcFecharViagemEtapa", () => {
