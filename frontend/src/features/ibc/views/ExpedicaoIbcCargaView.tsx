@@ -116,12 +116,17 @@ export default function ExpedicaoIbcCargaView() {
             marcados={conciliacao.marcados}
             total={conciliacao.total}
             podeFechar={conciliacao.podeFechar}
+            barras={conciliacao.barras}
+            divergencias={conciliacao.divergencias}
+            pedindoConfirmacao={conciliacao.pedindoConfirmacao}
             onDestino={conciliacao.marcarDestino}
-            onModalidade={conciliacao.marcarModalidade}
+            onPedido={conciliacao.marcarPedido}
             onTrocaRegistrada={conciliacao.vincularTroca}
             onClienteChange={conciliacao.atualizarCliente}
             onSalvar={() => void conciliacao.salvarAndamento()}
             onFechar={() => void conciliacao.fecharViagem()}
+            onConfirmarFechamento={() => void conciliacao.confirmarFechamento()}
+            onCancelarConfirmacao={conciliacao.cancelarConfirmacao}
           />
         ) : conciliacao.error ? (
           <IbcStatusContent status="error" error={conciliacao.error} />
@@ -130,7 +135,7 @@ export default function ExpedicaoIbcCargaView() {
         <CargaIbcPreparacaoEtapa
           detalhe={detalhe}
           mutationsLocked={temExpedicao}
-          allocatingNumPed={carga.allocatingNumPed}
+          allocating={carga.allocating}
           deallocatingId={carga.deallocatingId}
           substituidoNotice={carga.substituidoNotice}
           onAllocate={carga.vincular}

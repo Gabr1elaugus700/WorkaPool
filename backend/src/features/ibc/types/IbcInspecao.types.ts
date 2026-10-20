@@ -59,7 +59,7 @@ export type IbcInspecaoReprovadaVigente = {
 
 export type IbcAptidaoSnapshot = IbcAptidao & { primeiraInspecaoEm: string | null };
 
-export type IbcAlocacaoAberta = { codCar: number; numPed: string };
+export type IbcAlocacaoAberta = { codCar: number; numPed: string | null };
 
 export type RegistrarIbcInspecaoResult = {
   inspecao: IbcInspecaoDto;

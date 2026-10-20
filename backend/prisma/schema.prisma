@@ -241,7 +241,7 @@ model AlocacaoIbc {
   id                    String    @id @default(uuid())
   ibcId                 String
   cargaId               String
-  numPed                String
+  numPed                String?
   alocadoPorId          String
   alocadoEm             DateTime  @default(now())
   expedicaoIbcId        String?
@@ -283,6 +283,7 @@ model ConciliacaoViagemIbc {
   alocacaoIbcId  String                    @unique
   destino        ConciliacaoDestinoIbc
   modalidade     ConciliacaoModalidadeIbc?
+  numPed         String?
   ibcEntradaId   String?                   @unique
   lancadoPorId   String
   atualizadoEm   DateTime                  @updatedAt

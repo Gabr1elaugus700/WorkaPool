@@ -47,6 +47,26 @@ describe("RemoveAlocacaoIbcUseCase", () => {
     assert.strictEqual(deleteAlocacao.mock.calls.length, 1);
   });
 
+  it("desvincula alocação sem pedido antes do fechamento", async () => {
+    const deleteAlocacao = mock.fn(async () => undefined);
+    const repo: Pick<
+      IIbcExpedicaoRepository,
+      "findAlocacaoById" | "findExpedicaoByCargaId" | "deleteAlocacao"
+    > = {
+      findAlocacaoById: mock.fn(async () => buildAlocacao({ numPed: null })),
+      findExpedicaoByCargaId: mock.fn(async () => null),
+      deleteAlocacao,
+    };
+
+    const result = await new RemoveAlocacaoIbcUseCase(
+      repo as IIbcExpedicaoRepository,
+    ).execute({ alocacaoId: "aloc-1" });
+
+    assert.strictEqual(result.removed, true);
+    assert.strictEqual(result.numPed, null);
+    assert.strictEqual(deleteAlocacao.mock.calls.length, 1);
+  });
+
   it("rejeita remoção quando alocação já está vinculada a ExpedicaoIbc", async () => {
     const deleteAlocacao = mock.fn(async () => undefined);
     const repo: Pick<

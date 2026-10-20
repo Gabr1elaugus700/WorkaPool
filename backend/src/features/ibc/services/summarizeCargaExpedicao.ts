@@ -3,12 +3,9 @@ import {
   CargaExpedicaoRef,
   ExpedicaoIbcRecord,
 } from "../types/IbcExpedicao.types";
-import {
-  isPedidoIbcElegivel,
-  PedidoIbcElegibilidade,
-} from "./isPedidoIbcElegivel";
+import { PedidoSomaCarga, pedidosNaSomaDaCarga } from "./pedidosNaSomaDaCarga";
 
-export type PedidoIbcResumo = PedidoIbcElegibilidade & {
+export type PedidoIbcResumo = PedidoSomaCarga & {
   numPed: string | number;
 };
 
@@ -44,29 +41,15 @@ export function summarizeCargaExpedicao(params: {
   alocacoes: AlocacaoIbcRecord[];
   expedicao: ExpedicaoIbcRecord | null;
 }): CargaExpedicaoListItem {
-  const elegiveis = params.pedidos.filter(isPedidoIbcElegivel);
+  const elegiveis = pedidosNaSomaDaCarga(params.pedidos);
   const quantidadeEsperadaTotal = elegiveis.reduce(
     (sum, p) => sum + p.quantidadeEsperadaTotal,
     0,
   );
-
-  const countsByNumPed = new Map<string, number>();
-  for (const alocacao of params.alocacoes) {
-    const key = String(alocacao.numPed);
-    countsByNumPed.set(key, (countsByNumPed.get(key) ?? 0) + 1);
-  }
-
-  const quantidadeAlocada = elegiveis.reduce((sum, pedido) => {
-    return sum + (countsByNumPed.get(String(pedido.numPed)) ?? 0);
-  }, 0);
-
+  const quantidadeAlocada = params.alocacoes.length;
   const temExpedicao = params.expedicao != null;
   const pedidosElegiveisCompletos =
-    elegiveis.length > 0 &&
-    elegiveis.every((pedido) => {
-      const alocado = countsByNumPed.get(String(pedido.numPed)) ?? 0;
-      return alocado >= pedido.quantidadeEsperadaTotal;
-    });
+    elegiveis.length > 0 && quantidadeAlocada === quantidadeEsperadaTotal;
 
   return {
     id: params.carga.id,

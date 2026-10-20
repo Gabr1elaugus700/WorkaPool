@@ -85,7 +85,7 @@ const execute = (overrides: Partial<Repo> = {}) =>
   });
 
 describe("GetRelatorioViagemUseCase", () => {
-  it("ordena clientes pelo menor posCar e pedidos do cliente por numPed", async () => {
+  it("ordena blocos pela entrega e deixa o pedido misto fora do papel", async () => {
     const relatorio = await execute({
       listPedidosIbcByCargaId: mock.fn(async () => [
         pedido({
@@ -119,21 +119,99 @@ describe("GetRelatorioViagemUseCase", () => {
     });
 
     assert.deepEqual(
-      relatorio.clientes.map((cliente) => cliente.cliente),
-      ["Beta", "Acme"],
+      relatorio.blocos.map((bloco) => ({
+        cliente: bloco.cliente,
+        numPed: bloco.numPed,
+        quantidadeEsperada: bloco.quantidadeEsperada,
+        incluso: bloco.incluso,
+      })),
+      [
+        { cliente: "Beta", numPed: "12", quantidadeEsperada: 3, incluso: false },
+        { cliente: "Acme", numPed: "40", quantidadeEsperada: 2, incluso: true },
+      ],
     );
-    assert.deepEqual(relatorio.clientes[1].pedidos, [
-      { numPed: "40", quantidade: 2, modalidade: "Embalagem Inclusa (Venda)" },
-      { numPed: "50", quantidade: 1, modalidade: "Embalagem Inclusa (Venda)" },
-      { numPed: "50", quantidade: 1, modalidade: "Empréstimo" },
-    ]);
     assert.equal(relatorio.placa, "ABC1D23");
     assert.equal(relatorio.destino, "Blumenau");
     assert.equal(relatorio.fechadoEm, FECHADO_EM);
     assert.equal(relatorio.totalClientes, 2);
   });
 
-  it("sem posCar ordena o cliente pelo menor numPed", async () => {
+  it("três pedidos do mesmo cliente viram três blocos com a lista inteira", async () => {
+    const relatorio = await execute({
+      listPedidosIbcByCargaId: mock.fn(async () => [
+        pedido({
+          numPed: "30",
+          codCli: "A",
+          cliente: "Acme",
+          posCar: 3,
+          quantidadeEsperadaTotal: 2,
+          quantidadeEsperadaVenda: 2,
+          quantidadeEsperadaEmprestimo: 0,
+        }),
+        pedido({
+          numPed: "10",
+          codCli: "A",
+          cliente: "Acme",
+          posCar: 1,
+          quantidadeEsperadaTotal: 4,
+          quantidadeEsperadaVenda: 0,
+          quantidadeEsperadaEmprestimo: 4,
+        }),
+        pedido({
+          numPed: "20",
+          codCli: "A",
+          cliente: "Acme",
+          posCar: 2,
+          quantidadeEsperadaTotal: 1,
+          quantidadeEsperadaVenda: 1,
+          quantidadeEsperadaEmprestimo: 0,
+        }),
+      ]),
+    });
+    const lista = [
+      { identificador: "H0001" },
+      { identificador: "H0002" },
+      { identificador: "H0010" },
+    ];
+
+    assert.deepEqual(
+      relatorio.blocos.map((bloco) => bloco.numPed),
+      ["10", "20", "30"],
+    );
+    assert.deepEqual(
+      relatorio.blocos.map((bloco) => bloco.incluso),
+      [false, true, true],
+    );
+    assert.equal(relatorio.totalClientes, 1);
+    for (const bloco of relatorio.blocos) {
+      assert.equal(bloco.cliente, "Acme");
+      assert.deepEqual(bloco.checklist, lista);
+    }
+  });
+
+  it("intercala blocos pela ordem de entrega, sem reunir o cliente", async () => {
+    const relatorio = await execute({
+      listPedidosIbcByCargaId: mock.fn(async () => [
+        pedido({ numPed: "30", codCli: "A", cliente: "Acme", posCar: 3 }),
+        pedido({
+          numPed: "10",
+          codCli: "B",
+          cliente: "Beta",
+          posCar: 2,
+          quantidadeEsperadaVenda: 0,
+          quantidadeEsperadaEmprestimo: 1,
+        }),
+        pedido({ numPed: "20", codCli: "A", cliente: "Acme", posCar: 1 }),
+      ]),
+    });
+
+    assert.deepEqual(
+      relatorio.blocos.map((bloco) => `${bloco.cliente}:${bloco.numPed}`),
+      ["Acme:20", "Beta:10", "Acme:30"],
+    );
+  });
+
+  it("sem posCar ordena o bloco pelo menor numPed", async () => {
     const relatorio = await execute({
       listPedidosIbcByCargaId: mock.fn(async () => [
         pedido({ numPed: "30", codCli: "A", cliente: "Acme", posCar: null }),
@@ -150,12 +228,12 @@ describe("GetRelatorioViagemUseCase", () => {
     });
 
     assert.deepEqual(
-      relatorio.clientes.map((cliente) => cliente.codCli),
+      relatorio.blocos.map((bloco) => bloco.codCli),
       ["B", "A"],
     );
   });
 
-  it("repete o checklist completo da carga em cada cliente, por identificador", async () => {
+  it("repete o checklist completo da carga em cada bloco, por identificador", async () => {
     const relatorio = await execute();
     const esperado = [
       { identificador: "H0001" },
@@ -164,12 +242,17 @@ describe("GetRelatorioViagemUseCase", () => {
     ];
 
     assert.equal(relatorio.totalIbcs, 3);
-    assert.deepEqual(relatorio.clientes[0].checklist, esperado);
-    assert.deepEqual(relatorio.clientes[1].checklist, esperado);
-    assert.deepEqual(
-      Object.keys(relatorio.clientes[0].pedidos[0]).sort(),
-      ["modalidade", "numPed", "quantidade"],
-    );
+    assert.deepEqual(relatorio.blocos[0].checklist, esperado);
+    assert.deepEqual(relatorio.blocos[1].checklist, esperado);
+    assert.equal(relatorio.blocos[0].incluso, true);
+    assert.deepEqual(Object.keys(relatorio.blocos[0]).sort(), [
+      "checklist",
+      "cliente",
+      "codCli",
+      "incluso",
+      "numPed",
+      "quantidadeEsperada",
+    ]);
   });
 
   it("devolve placa nula quando a carga não tem CargaDespacho", async () => {

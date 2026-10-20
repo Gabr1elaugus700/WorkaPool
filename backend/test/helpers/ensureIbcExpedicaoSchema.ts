@@ -55,13 +55,17 @@ export async function ensureIbcExpedicaoSchema(
       "id" TEXT NOT NULL,
       "ibcId" TEXT NOT NULL,
       "cargaId" TEXT NOT NULL,
-      "numPed" TEXT NOT NULL,
+      "numPed" TEXT,
       "alocadoPorId" TEXT NOT NULL,
       "alocadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "expedicaoIbcId" TEXT,
       CONSTRAINT "AlocacaoIbc_pkey" PRIMARY KEY ("id")
     )
   `);
+
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "AlocacaoIbc" ALTER COLUMN "numPed" DROP NOT NULL`,
+  );
 
   await prisma.$executeRawUnsafe(
     `CREATE UNIQUE INDEX IF NOT EXISTS "AlocacaoIbc_ibcId_key" ON "AlocacaoIbc"("ibcId")`,

@@ -1,9 +1,6 @@
 import { IIbcExpedicaoRepository } from "../repositories/IIbcExpedicaoRepository";
-import { isPedidoIbcElegivel } from "../services/isPedidoIbcElegivel";
-import {
-  CargaPedidoIbcSnapshot,
-  ExpedicaoIbcRecord,
-} from "../types/IbcExpedicao.types";
+import { pedidosNaSomaDaCarga } from "../services/pedidosNaSomaDaCarga";
+import { ExpedicaoIbcRecord } from "../types/IbcExpedicao.types";
 import { AppError } from "../../../utils/AppError";
 import { loadCargaFotoExpedicao } from "./loadCargaFotoExpedicao";
 
@@ -71,7 +68,7 @@ export class FecharExpedicaoIbcUseCase {
       });
     }
 
-    const pedidosElegiveis = pedidosIbc.filter(isPedidoIbcElegivel);
+    const pedidosElegiveis = pedidosNaSomaDaCarga(pedidosIbc);
 
     if (pedidosElegiveis.length === 0) {
       throw new AppError({
@@ -82,27 +79,20 @@ export class FecharExpedicaoIbcUseCase {
       });
     }
 
-    const alocacoes = await this.repository.listAlocacoesByCargaId(carga.id);
-    const countsByNumPed = new Map<string, number>();
-    for (const alocacao of alocacoes) {
-      const key = String(alocacao.numPed);
-      countsByNumPed.set(key, (countsByNumPed.get(key) ?? 0) + 1);
-    }
-
-    const insuficiente = this.findPedidoInsuficiente(
-      pedidosElegiveis,
-      countsByNumPed,
+    const quantidadeEsperadaTotal = pedidosElegiveis.reduce(
+      (sum, pedido) => sum + pedido.quantidadeEsperadaTotal,
+      0,
     );
-    if (insuficiente) {
-      const alocado = countsByNumPed.get(insuficiente.numPed) ?? 0;
+    const alocacoes = await this.repository.listAlocacoesByCargaId(carga.id);
+    if (alocacoes.length !== quantidadeEsperadaTotal) {
       throw new AppError({
-        message: `Pedido ${insuficiente.numPed} está incompleto (${alocado}/${insuficiente.quantidadeEsperadaTotal} IBCs)`,
+        message: `Carga ${codCar} tem ${alocacoes.length} IBC(s) e a soma elegível é ${quantidadeEsperadaTotal}`,
         statusCode: 409,
-        code: "IBC_EXPEDICAO_PEDIDO_INSUFICIENTE",
+        code: "IBC_EXPEDICAO_TOTAL_DIVERGENTE",
         details: {
-          numPed: insuficiente.numPed,
-          quantidadeAlocada: alocado,
-          quantidadeEsperadaTotal: insuficiente.quantidadeEsperadaTotal,
+          codCar,
+          quantidadeAlocada: alocacoes.length,
+          quantidadeEsperadaTotal,
         },
       });
     }
@@ -118,15 +108,5 @@ export class FecharExpedicaoIbcUseCase {
       expedicao,
       ibcsEmViagem: alocacoes.length,
     };
-  }
-
-  private findPedidoInsuficiente(
-    pedidos: CargaPedidoIbcSnapshot[],
-    countsByNumPed: Map<string, number>,
-  ): CargaPedidoIbcSnapshot | undefined {
-    return pedidos.find((pedido) => {
-      const alocado = countsByNumPed.get(pedido.numPed) ?? 0;
-      return alocado < pedido.quantidadeEsperadaTotal;
-    });
   }
 }

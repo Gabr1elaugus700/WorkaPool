@@ -20,33 +20,19 @@ function ficou(
 }
 
 describe("agruparFicaramEmAvisos", () => {
-  it("agrupa só venda sem data de empréstimo", () => {
+  it("descarta incluso e não gera aviso", () => {
     const avisos = agruparFicaramEmAvisos(
       [ficou("100", "VENDA", "ibc-1")],
       new Map([["ibc-1", "2026-12-01T00:00:00.000Z"]]),
     );
 
-    assert.deepEqual(avisos, [
-      {
-        numPed: "100",
-        codCli: "10",
-        cliente: "Cliente A",
-        itens: [
-          {
-            ibcId: "ibc-1",
-            identificador: "HM-ibc-1",
-            modalidade: "VENDA",
-            emprestimoVenceEm: null,
-          },
-        ],
-      },
-    ]);
+    assert.deepEqual(avisos, []);
   });
 
   it("agrupa só empréstimo copiando o vencimento já buscado", () => {
     const avisos = agruparFicaramEmAvisos(
       [ficou("100", "EMPRESTIMO", "ibc-1")],
-      new Map([["ibc-1", "2027-01-11T00:00:00.000Z"]]),
+      new Map([["ibc-1", "2027-01-17T00:00:00.000Z"]]),
     );
 
     assert.equal(avisos.length, 1);
@@ -55,33 +41,53 @@ describe("agruparFicaramEmAvisos", () => {
         ibcId: "ibc-1",
         identificador: "HM-ibc-1",
         modalidade: "EMPRESTIMO",
-        emprestimoVenceEm: "2027-01-11T00:00:00.000Z",
+        emprestimoVenceEm: "2027-01-17T00:00:00.000Z",
       },
     ]);
   });
 
-  it("junta venda e empréstimo do mesmo pedido num único aviso", () => {
+  it("dois empréstimos e um incluso geram aviso só dos empréstimos", () => {
     const avisos = agruparFicaramEmAvisos(
-      [ficou("100", "VENDA", "ibc-1"), ficou("100", "EMPRESTIMO", "ibc-2")],
-      new Map([["ibc-2", "2027-01-11T00:00:00.000Z"]]),
+      [
+        ficou("200", "VENDA", "ibc-inc", "Cliente Incluso"),
+        ficou("100", "EMPRESTIMO", "ibc-1", "Cliente Volta"),
+        ficou("100", "EMPRESTIMO", "ibc-2", "Cliente Volta"),
+      ],
+      new Map([
+        ["ibc-1", "2027-01-17T00:00:00.000Z"],
+        ["ibc-2", "2027-01-17T00:00:00.000Z"],
+        ["ibc-inc", "2027-01-17T00:00:00.000Z"],
+      ]),
     );
 
     assert.equal(avisos.length, 1);
+    assert.equal(avisos[0]?.numPed, "100");
+    assert.equal(avisos[0]?.cliente, "Cliente Volta");
+    assert.deepEqual(
+      avisos[0]?.itens.map((item) => item.identificador),
+      ["HM-ibc-1", "HM-ibc-2"],
+    );
     assert.deepEqual(
       avisos[0]?.itens.map((item) => item.modalidade),
-      ["VENDA", "EMPRESTIMO"],
+      ["EMPRESTIMO", "EMPRESTIMO"],
     );
-    assert.equal(avisos[0]?.itens[0]?.emprestimoVenceEm, null);
-    assert.equal(avisos[0]?.itens[1]?.emprestimoVenceEm, "2027-01-11T00:00:00.000Z");
+    assert.deepEqual(
+      avisos[0]?.itens.map((item) => item.emprestimoVenceEm),
+      ["2027-01-17T00:00:00.000Z", "2027-01-17T00:00:00.000Z"],
+    );
   });
 
-  it("separa dois pedidos", () => {
+  it("separa dois pedidos de empréstimo e deixa o incluso de fora", () => {
     const avisos = agruparFicaramEmAvisos(
       [
-        ficou("100", "VENDA", "ibc-1", "Cliente A"),
+        ficou("100", "EMPRESTIMO", "ibc-1", "Cliente A"),
+        ficou("300", "VENDA", "ibc-inc", "Cliente Incluso"),
         ficou("200", "EMPRESTIMO", "ibc-2", "Cliente B"),
       ],
-      new Map([["ibc-2", "2027-01-11T00:00:00.000Z"]]),
+      new Map([
+        ["ibc-1", "2027-01-17T00:00:00.000Z"],
+        ["ibc-2", "2027-01-17T00:00:00.000Z"],
+      ]),
     );
 
     assert.deepEqual(

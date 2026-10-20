@@ -45,7 +45,7 @@ const alocacao = (): AlocacaoIbcRecord => ({
 
 const chave = conciliacaoViagem.chaveCliente("B", "Beta");
 
-function harness(options: { fechada?: boolean; marcas?: MarcaConciliacaoSalva[] } = {}) {
+function harness(options: { fechada?: boolean; marcas?: MarcaConciliacaoSalva[]; pedidos?: CargaPedidoIbcSnapshot[] } = {}) {
   let marcas = options.marcas ?? [];
   let retornos: RetornoSemIdSalvo[] = [];
   const save = mock.fn(async (data: SalvarConciliacaoData) => {
@@ -64,7 +64,7 @@ function harness(options: { fechada?: boolean; marcas?: MarcaConciliacaoSalva[] 
   };
   const expedicoes = {
     getCargaByCodCar: mock.fn(async () => carga()),
-    listPedidosIbcByCargaId: mock.fn(async () => [pedido()]),
+    listPedidosIbcByCargaId: mock.fn(async () => options.pedidos ?? [pedido()]),
     listAlocacoesByCargaId: mock.fn(async () => [alocacao()]),
   } as unknown as IIbcExpedicaoRepository;
   return { useCase: new SaveConciliacaoViagemUseCase(expedicoes, conciliacoes), save };
@@ -84,21 +84,54 @@ const input = {
 };
 
 describe("SaveConciliacaoViagemUseCase", () => {
-  it("grava só o que veio e devolve a conciliação atualizada", async () => {
+  it("grava o pedido apontado, deriva a venda e devolve esperado e apontado", async () => {
     const { useCase, save } = harness();
     const view = await useCase.execute({
       ...input,
-      itens: [{ alocacaoIbcId: "aloc-1", destino: "FICOU", modalidade: "VENDA" }],
+      itens: [{ alocacaoIbcId: "aloc-1", destino: "FICOU", numPed: "10" }],
       retornosSemId: [{ chaveCliente: chave, quantidadePapel: 0 }],
     });
     assert.equal(save.mock.callCount(), 1);
     const gravado = save.mock.calls[0]?.arguments[0] as SalvarConciliacaoData;
     assert.equal(gravado.lancadoPorId, "almox-1");
-    assert.deepEqual(gravado.marcas, [{ alocacaoIbcId: "aloc-1", destino: "FICOU", modalidade: "VENDA" }]);
+    assert.deepEqual(gravado.marcas, [{ alocacaoIbcId: "aloc-1", destino: "FICOU", modalidade: "VENDA", numPed: "10" }]);
     assert.equal(gravado.retornos[0]?.confirmouDivergencia, false);
     assert.equal(view.itens[0]?.destino, "FICOU");
-    assert.equal(view.itens[0]?.modalidadeSugerida, "VENDA");
+    assert.equal(view.itens[0]?.numPed, "10");
+    assert.equal(view.itens[0]?.modalidade, "VENDA");
+    assert.equal(view.pedidos[0]?.quantidadeEsperada, 1);
+    assert.equal(view.pedidos[0]?.quantidadeApontada, 1);
     assert.equal(view.clientes[0]?.quantidadePapel, 0);
+  });
+
+  it("deriva empréstimo na troca e grava retornou sem pedido", async () => {
+    const emprestimo: CargaPedidoIbcSnapshot = {
+      ...pedido(),
+      numPed: "20",
+      quantidadeEsperadaVenda: 0,
+      quantidadeEsperadaEmprestimo: 1,
+    };
+    const troca = harness({ pedidos: [pedido(), emprestimo] });
+    const viewTroca = await troca.useCase.execute({
+      ...input,
+      itens: [{ alocacaoIbcId: "aloc-1", destino: "TROCA", numPed: "20" }],
+      retornosSemId: [],
+    });
+    const gravado = troca.save.mock.calls[0]?.arguments[0] as SalvarConciliacaoData;
+    assert.deepEqual(gravado.marcas, [{ alocacaoIbcId: "aloc-1", destino: "TROCA", modalidade: "EMPRESTIMO", numPed: "20" }]);
+    assert.equal(viewTroca.itens[0]?.modalidade, "EMPRESTIMO");
+    assert.equal(viewTroca.pedidos.find((item) => item.numPed === "20")?.quantidadeApontada, 1);
+
+    const retorno = harness();
+    const view = await retorno.useCase.execute({
+      ...input,
+      itens: [{ alocacaoIbcId: "aloc-1", destino: "RETORNOU" }],
+      retornosSemId: [],
+    });
+    const semPedido = retorno.save.mock.calls[0]?.arguments[0] as SalvarConciliacaoData;
+    assert.deepEqual(semPedido.marcas, [{ alocacaoIbcId: "aloc-1", destino: "RETORNOU", modalidade: null, numPed: null }]);
+    assert.equal(view.itens[0]?.numPed, null);
+    assert.equal(view.pedidos[0]?.quantidadeApontada, 0);
   });
 
   it("não grava viagem fechada, IBC de fora, modalidade inválida nem troca já vinculada", async () => {
@@ -116,12 +149,36 @@ describe("SaveConciliacaoViagemUseCase", () => {
     );
     await assert.rejects(
       () => useCase.execute({ ...input, itens: [{ alocacaoIbcId: "aloc-1", destino: "FICOU" }], retornosSemId: [] }),
+      hasCode("IBC_CONCILIACAO_PEDIDO", 422),
+    );
+    await assert.rejects(
+      () => useCase.execute({ ...input, itens: [{ alocacaoIbcId: "aloc-1", destino: "TROCA" }], retornosSemId: [] }),
+      hasCode("IBC_CONCILIACAO_PEDIDO", 422),
+    );
+    await assert.rejects(
+      () => useCase.execute({ ...input, itens: [{ alocacaoIbcId: "aloc-1", destino: "FICOU", numPed: "10", modalidade: "VENDA" }], retornosSemId: [] }),
       hasCode("IBC_CONCILIACAO_MODALIDADE", 422),
     );
     await assert.rejects(
-      () => useCase.execute({ ...input, itens: [{ alocacaoIbcId: "aloc-1", destino: "RETORNOU", modalidade: "VENDA" }], retornosSemId: [] }),
+      () => useCase.execute({ ...input, itens: [{ alocacaoIbcId: "aloc-1", destino: "RETORNOU", modalidade: "EMPRESTIMO" }], retornosSemId: [] }),
       hasCode("IBC_CONCILIACAO_MODALIDADE", 422),
     );
+    await assert.rejects(
+      () => useCase.execute({ ...input, itens: [{ alocacaoIbcId: "aloc-1", destino: "RETORNOU", numPed: "10" }], retornosSemId: [] }),
+      hasCode("IBC_CONCILIACAO_PEDIDO", 422),
+    );
+    await assert.rejects(
+      () => useCase.execute({ ...input, itens: [{ alocacaoIbcId: "aloc-1", destino: "FICOU", numPed: "99" }], retornosSemId: [] }),
+      hasCode("IBC_CONCILIACAO_FORA_DA_VIAGEM", 409),
+    );
+    const misto = harness({
+      pedidos: [{ ...pedido(), quantidadeEsperadaVenda: 1, quantidadeEsperadaEmprestimo: 1 }],
+    });
+    await assert.rejects(
+      () => misto.useCase.execute({ ...input, itens: [{ alocacaoIbcId: "aloc-1", destino: "FICOU", numPed: "10" }], retornosSemId: [] }),
+      hasCode("IBC_CONCILIACAO_PEDIDO", 422),
+    );
+    assert.equal(misto.save.mock.callCount(), 0);
     await assert.rejects(
       () => useCase.execute({ ...input, itens: [], retornosSemId: [{ chaveCliente: "x\u0000y", quantidadePapel: 1 }] }),
       hasCode("IBC_CONCILIACAO_FORA_DA_VIAGEM", 409),
@@ -129,7 +186,7 @@ describe("SaveConciliacaoViagemUseCase", () => {
     assert.equal(save.mock.callCount(), 0);
 
     const vinculada = harness({
-      marcas: [{ alocacaoIbcId: "aloc-1", destino: "TROCA", modalidade: null, ibcEntradaId: "ibc-in" }],
+      marcas: [{ alocacaoIbcId: "aloc-1", destino: "TROCA", modalidade: null, numPed: "10", ibcEntradaId: "ibc-in" }],
     });
     await assert.rejects(
       () => vinculada.useCase.execute({ ...input, itens: [{ alocacaoIbcId: "aloc-1", destino: "RETORNOU" }], retornosSemId: [] }),

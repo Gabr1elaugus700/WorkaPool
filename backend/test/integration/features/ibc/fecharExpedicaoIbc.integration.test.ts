@@ -137,5 +137,6 @@ describe("Fechar expedição persists atomically (#63)", () => {
     assert.ok(
       alocacoes.every((row) => row.expedicaoIbcId === persistedExpedicao.id),
     );
+    assert.ok(alocacoes.every((row) => row.numPed === "1120"));
   });
 });

@@ -72,16 +72,18 @@ function toLinha(row: LinhaRow, now: Date): LinhaEmprestimoAtrasado | null {
   const venceEm = alocacao?.emprestimoVenceEm;
   if (!alocacao || venceEm == null || venceEm.getTime() >= now.getTime()) return null;
 
-  const pedido = alocacao.carga.pedidosIbc.find((item) => item.numPed === alocacao.numPed);
+  if (alocacao.numPed == null) return null;
+  const numPed = alocacao.numPed;
+  const pedido = alocacao.carga.pedidosIbc.find((item) => item.numPed === numPed);
   const fechada = alocacao.carga.CargasFechadas[0];
   return {
     id: row.id,
     identificador: row.identificador,
     cliente: pedido?.cliente ?? null,
     codCli: pedido?.codCli ?? null,
-    numPed: alocacao.numPed,
+    numPed,
     codCar: alocacao.carga.codCar,
-    codRep: resolverCodRepPedidoFechado(fechada?.pedidos, alocacao.numPed),
+    codRep: resolverCodRepPedidoFechado(fechada?.pedidos, numPed),
     emprestimoVenceEm: venceEm,
     custodia: row.custodia,
     motivoBaixa: row.motivoBaixa,

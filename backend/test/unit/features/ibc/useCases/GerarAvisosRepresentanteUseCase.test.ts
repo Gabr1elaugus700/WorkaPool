@@ -5,12 +5,15 @@ import {
   GerarAvisosRepresentanteUseCase,
   type GerarAvisosRepresentanteInput,
 } from "../../../../../src/features/ibc/useCases/GerarAvisosRepresentante.use-case";
+import { conciliacaoViagem } from "../../../../../src/features/ibc/services/conciliacaoViagem";
 import type { FicouNaViagem } from "../../../../../src/features/ibc/services/planejarFechamentoViagem";
 
 const EXPEDICAO = "exp-1";
 const EVENTO = "evt-1";
 const CONSUMER = "IBC_AVISO_REPRESENTANTE";
-const VENCIMENTO_ALOCACAO = "2024-06-15T00:00:00.000Z";
+const FECHADA_EM = new Date("2026-10-19T00:00:00.000Z");
+const VENCIMENTO_ALOCACAO = conciliacaoViagem.vencimento(FECHADA_EM).toISOString();
+const PRAZO_MS = 90 * 24 * 60 * 60 * 1000;
 
 type Estado = {
   expedicaoExiste: boolean;
@@ -104,30 +107,85 @@ function entrada(
 }
 
 describe("GerarAvisosRepresentanteUseCase", () => {
-  it("agrupa venda e empréstimo do mesmo pedido e copia o vencimento da alocação", async () => {
+  it("dois empréstimos e um incluso avisam só os empréstimos, com o pedido da volta e os 90 dias gravados", async () => {
     const estado = estadoBase({
-      pedidos: [{ numPed: "100", codRep: 42, cliente: "Cliente W" }],
-      vencimentos: new Map([["ibc-emp", VENCIMENTO_ALOCACAO]]),
+      pedidos: [
+        { numPed: "saida-99", codRep: 7, cliente: "Cliente da Saída" },
+        { numPed: "volta-emp", codRep: 42, cliente: "Cliente da Volta" },
+        { numPed: "volta-inc", codRep: 99, cliente: "Cliente Incluso" },
+      ],
+      vencimentos: new Map([
+        ["ibc-emp-1", VENCIMENTO_ALOCACAO],
+        ["ibc-emp-2", VENCIMENTO_ALOCACAO],
+      ]),
     });
 
     const resultado = await criarUseCase(estado).execute(
       entrada([
-        ficou({ ibcId: "ibc-venda", identificador: "HM00001", modalidade: "VENDA", numPed: "100" }),
-        ficou({ ibcId: "ibc-emp", identificador: "HM00002", modalidade: "EMPRESTIMO", numPed: "100" }),
+        ficou({
+          ibcId: "ibc-inc",
+          identificador: "HM00001",
+          modalidade: "VENDA",
+          numPed: "volta-inc",
+          cliente: "Cliente Incluso",
+        }),
+        ficou({
+          ibcId: "ibc-emp-1",
+          identificador: "HM00002",
+          modalidade: "EMPRESTIMO",
+          numPed: "volta-emp",
+          cliente: "Cliente da Volta",
+        }),
+        ficou({
+          ibcId: "ibc-emp-2",
+          identificador: "HM00003",
+          modalidade: "EMPRESTIMO",
+          numPed: "volta-emp",
+          cliente: "Cliente da Volta",
+        }),
       ]),
     );
 
     assert.equal(resultado.inseridos, 1);
     assert.equal(estado.avisos.length, 1);
+    assert.equal(estado.avisos[0]?.numPed, "volta-emp");
     assert.equal(estado.avisos[0]?.codRep, 42);
-    assert.equal(estado.avisos[0]?.numPed, "100");
-    assert.equal(estado.avisos[0]?.itens.length, 2);
-    const venda = estado.avisos[0]?.itens.find((item) => item.modalidade === "VENDA");
-    const emprestimo = estado.avisos[0]?.itens.find((item) => item.modalidade === "EMPRESTIMO");
-    assert.equal(venda?.emprestimoVenceEm, null);
-    assert.equal(emprestimo?.emprestimoVenceEm, VENCIMENTO_ALOCACAO);
-    assert.deepEqual(estado.ibcIdsCarregados, [["ibc-emp"]]);
+    assert.equal(estado.avisos[0]?.cliente, "Cliente da Volta");
+    assert.deepEqual(
+      estado.avisos[0]?.itens.map((item) => item.identificador),
+      ["HM00002", "HM00003"],
+    );
+    assert.deepEqual(
+      estado.avisos[0]?.itens.map((item) => item.modalidade),
+      ["EMPRESTIMO", "EMPRESTIMO"],
+    );
+    assert.deepEqual(
+      estado.avisos[0]?.itens.map((item) => item.emprestimoVenceEm),
+      [VENCIMENTO_ALOCACAO, VENCIMENTO_ALOCACAO],
+    );
+    assert.equal(new Date(VENCIMENTO_ALOCACAO).getTime() - FECHADA_EM.getTime(), PRAZO_MS);
+    assert.equal(
+      estado.avisos[0]?.itens.some((item) => item.modalidade === "VENDA"),
+      false,
+    );
+    assert.deepEqual(estado.ibcIdsCarregados, [["ibc-emp-1", "ibc-emp-2"]]);
     assert.deepEqual(estado.ordem, ["carregar", "inserir", "processado"]);
+    assert.deepEqual(estado.processed, [`${CONSUMER}:${EVENTO}`]);
+  });
+
+  it("só incluso grava o ProcessedEvent e não gera aviso", async () => {
+    const estado = estadoBase({
+      pedidos: [{ numPed: "volta-inc", codRep: 99, cliente: "Cliente Incluso" }],
+    });
+
+    const resultado = await criarUseCase(estado).execute(
+      entrada([
+        ficou({ ibcId: "ibc-inc", identificador: "HM00001", modalidade: "VENDA", numPed: "volta-inc" }),
+      ]),
+    );
+
+    assert.deepEqual(resultado, { inseridos: 0 });
+    assert.equal(estado.avisos.length, 0);
     assert.deepEqual(estado.processed, [`${CONSUMER}:${EVENTO}`]);
   });
 
@@ -150,7 +208,7 @@ describe("GerarAvisosRepresentanteUseCase", () => {
     });
     const useCase = criarUseCase(estado);
     const ficaram = [
-      ficou({ ibcId: "ibc-venda", modalidade: "VENDA", numPed: "100" }),
+      ficou({ ibcId: "ibc-emp", modalidade: "EMPRESTIMO", numPed: "100" }),
     ];
 
     await useCase.execute(entrada(ficaram));
@@ -179,9 +237,10 @@ describe("GerarAvisosRepresentanteUseCase", () => {
     try {
       const resultado = await criarUseCase(estado).execute(
         entrada([
-          ficou({ ibcId: "ibc-ok", modalidade: "VENDA", numPed: "100" }),
+          ficou({ ibcId: "ibc-ok", modalidade: "EMPRESTIMO", numPed: "100" }),
           ficou({ ibcId: "ibc-sem", modalidade: "EMPRESTIMO", numPed: "200" }),
-          ficou({ ibcId: "ibc-zero", modalidade: "VENDA", numPed: "300" }),
+          ficou({ ibcId: "ibc-zero", modalidade: "EMPRESTIMO", numPed: "300" }),
+          ficou({ ibcId: "ibc-inc", modalidade: "VENDA", numPed: "400" }),
         ]),
       );
       assert.equal(resultado.inseridos, 1);
@@ -196,6 +255,7 @@ describe("GerarAvisosRepresentanteUseCase", () => {
     assert.equal(estado.processed.length, 1);
     assert.ok(avisos.some((linha) => linha.includes("200")));
     assert.ok(avisos.some((linha) => linha.includes("300")));
+    assert.equal(avisos.some((linha) => linha.includes("400")), false);
   });
 
   it("expedição ausente não marca o evento como processado", async () => {
@@ -203,7 +263,7 @@ describe("GerarAvisosRepresentanteUseCase", () => {
 
     await assert.rejects(() =>
       criarUseCase(estado).execute(
-        entrada([ficou({ ibcId: "ibc-1", modalidade: "VENDA", numPed: "100" })]),
+        entrada([ficou({ ibcId: "ibc-1", modalidade: "EMPRESTIMO", numPed: "100" })]),
       ),
     );
 

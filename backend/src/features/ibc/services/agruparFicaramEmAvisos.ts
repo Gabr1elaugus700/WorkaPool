@@ -21,14 +21,12 @@ export function agruparFicaramEmAvisos(
   const grupos = new Map<string, AvisoAgrupado>();
 
   for (const ficou of ficaram) {
+    if (ficou.modalidade !== "EMPRESTIMO") continue;
     const item: ItemAvisoRepresentante = {
       ibcId: ficou.ibcId,
       identificador: ficou.identificador,
       modalidade: ficou.modalidade,
-      emprestimoVenceEm:
-        ficou.modalidade === "EMPRESTIMO"
-          ? (vencimentoPorIbcId.get(ficou.ibcId) ?? null)
-          : null,
+      emprestimoVenceEm: vencimentoPorIbcId.get(ficou.ibcId) ?? null,
     };
     const grupo = grupos.get(ficou.numPed);
     if (grupo) {

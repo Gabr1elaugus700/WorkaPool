@@ -1,7 +1,8 @@
 import { AppError } from "../../../utils/AppError";
-import { MarcaConciliacaoSalva, RetornoSemIdSalvo } from "../repositories/IbcConciliacaoRepository";
+import { MarcaConciliacaoSalva } from "../repositories/IbcConciliacaoRepository";
 import { conciliacaoViagem, ModalidadeConciliacaoIbc } from "../services/conciliacaoViagem";
 import { AlocacaoIbcRecord, CargaPedidoIbcSnapshot } from "../types/IbcExpedicao.types";
+import { pedidosNaSomaDaCarga } from "./pedidosNaSomaDaCarga";
 
 export type EntradaNoFechamento = { ibcId: string; origem: "RETORNO" | "TROCA" };
 
@@ -40,16 +41,19 @@ export function planejarFechamentoViagem(input: {
   alocacoes: AlocacaoIbcRecord[];
   pedidos: CargaPedidoIbcSnapshot[];
   marcas: MarcaConciliacaoSalva[];
-  retornos: RetornoSemIdSalvo[];
+  confirmacoes?: readonly string[];
 }): PlanoFechamentoViagem {
-  const pedidos = new Map(input.pedidos.map((pedido) => [pedido.numPed, pedido]));
+  const elegiveis = new Map(pedidosNaSomaDaCarga(input.pedidos).map((pedido) => [pedido.numPed, pedido]));
   const marcas = new Map(input.marcas.map((marca) => [marca.alocacaoIbcId, marca]));
-  const pendentes = input.alocacoes.filter((alocacao) => !marcas.has(alocacao.id)).map((alocacao) => alocacao.identificador);
+  const confirmados = new Set(input.confirmacoes ?? []);
+  const pendentes = input.alocacoes
+    .filter((alocacao) => !marcas.has(alocacao.id))
+    .map((alocacao) => alocacao.identificador);
   if (pendentes.length > 0) {
     falha(409, "IBC_VIAGEM_INCOMPLETA", "Todos os IBCs da viagem precisam de destino", { pendentes });
   }
 
-  const trocasPorCliente = new Map<string, number>();
+  const apontados = new Map<string, number>();
   const entradas: EntradaNoFechamento[] = [];
   const efeitos: EfeitoFechamentoIbc[] = [];
   const ficaram: FicouNaViagem[] = [];
@@ -57,24 +61,6 @@ export function planejarFechamentoViagem(input: {
   for (const alocacao of input.alocacoes) {
     const marca = marcas.get(alocacao.id);
     if (!marca) continue;
-    const pedido = pedidos.get(alocacao.numPed);
-    const chave = conciliacaoViagem.chaveCliente(pedido?.codCli ?? null, pedido?.cliente ?? "");
-    if (marca.destino === "TROCA") {
-      if (!marca.ibcEntradaId) falha(409, "IBC_TROCA_SEM_ENTRADA", "Troca sem IBC de entrada", { alocacaoIbcId: alocacao.id });
-      trocasPorCliente.set(chave, (trocasPorCliente.get(chave) ?? 0) + 1);
-      entradas.push({ ibcId: marca.ibcEntradaId, origem: "TROCA" });
-      efeitos.push({
-        ibcId: alocacao.ibcId,
-        alocacaoIbcId: alocacao.id,
-        custodia: "CLIENTE",
-        motivoBaixa: "TROCA",
-        trocaEntradaId: marca.ibcEntradaId,
-        encerrarAlocacao: false,
-        emprestimoIniciadoEm: null,
-        emprestimoVenceEm: null,
-      });
-      continue;
-    }
     if (marca.destino === "RETORNOU") {
       entradas.push({ ibcId: alocacao.ibcId, origem: "RETORNO" });
       efeitos.push({
@@ -89,16 +75,30 @@ export function planejarFechamentoViagem(input: {
       });
       continue;
     }
-    if (marca.modalidade !== "VENDA" && marca.modalidade !== "EMPRESTIMO") {
-      falha(422, "IBC_CONCILIACAO_MODALIDADE", "Ficou no cliente exige venda ou empréstimo", { alocacaoIbcId: alocacao.id });
+
+    const entradaTrocaId = marca.destino === "TROCA" ? marca.ibcEntradaId : null;
+    if (marca.destino === "TROCA" && !entradaTrocaId) {
+      falha(409, "IBC_TROCA_SEM_ENTRADA", "Troca sem IBC de entrada", { alocacaoIbcId: alocacao.id });
     }
-    const emprestimo = marca.modalidade === "EMPRESTIMO";
+    const pedido = marca.numPed == null ? undefined : elegiveis.get(marca.numPed);
+    const modalidade = pedido
+      ? conciliacaoViagem.sugerirModalidade(pedido.quantidadeEsperadaVenda, pedido.quantidadeEsperadaEmprestimo)
+      : null;
+    if (!pedido || !modalidade) {
+      falha(422, "IBC_CONCILIACAO_PEDIDO", "Ficou e troca exigem um pedido elegível da carga", {
+        alocacaoIbcId: alocacao.id,
+        numPed: marca.numPed,
+      });
+    }
+    if (entradaTrocaId) entradas.push({ ibcId: entradaTrocaId, origem: "TROCA" });
+
+    const emprestimo = modalidade === "EMPRESTIMO";
     efeitos.push({
       ibcId: alocacao.ibcId,
       alocacaoIbcId: alocacao.id,
       custodia: "CLIENTE",
       motivoBaixa: emprestimo ? null : "VENDA",
-      trocaEntradaId: null,
+      trocaEntradaId: entradaTrocaId,
       encerrarAlocacao: false,
       emprestimoIniciadoEm: emprestimo ? input.now : null,
       emprestimoVenceEm: emprestimo ? conciliacaoViagem.vencimento(input.now) : null,
@@ -106,24 +106,25 @@ export function planejarFechamentoViagem(input: {
     ficaram.push({
       ibcId: alocacao.ibcId,
       identificador: alocacao.identificador,
-      modalidade: marca.modalidade,
-      codCli: pedido?.codCli ?? null,
-      cliente: pedido?.cliente ?? "",
-      numPed: alocacao.numPed,
+      modalidade,
+      codCli: pedido.codCli,
+      cliente: pedido.cliente,
+      numPed: pedido.numPed,
     });
+    apontados.set(pedido.numPed, (apontados.get(pedido.numPed) ?? 0) + 1);
   }
 
-  for (const cliente of conciliacaoViagem.clientes(input.pedidos)) {
-    const salvo = input.retornos.find((retorno) => retorno.chaveCliente === cliente.chaveCliente);
-    if (!salvo) falha(409, "IBC_VIAGEM_INCOMPLETA", "Informe os retornos sem identificação de cada cliente", { chaveCliente: cliente.chaveCliente });
-    const trocas = trocasPorCliente.get(cliente.chaveCliente) ?? 0;
-    if (trocas !== salvo.quantidadePapel && !salvo.confirmouDivergencia) {
-      falha(409, "IBC_TROCA_DIVERGENCIA", "A troca diverge dos retornos sem identificação do papel", {
-        chaveCliente: cliente.chaveCliente,
-        trocas,
-        quantidadePapel: salvo.quantidadePapel,
-      });
-    }
+  const divergencias = [...elegiveis.values()].flatMap((pedido) => {
+    const quantidadeApontada = apontados.get(pedido.numPed) ?? 0;
+    if (quantidadeApontada === pedido.quantidadeEsperadaTotal || confirmados.has(pedido.numPed)) return [];
+    return [{
+      numPed: pedido.numPed,
+      quantidadeEsperada: pedido.quantidadeEsperadaTotal,
+      quantidadeApontada,
+    }];
+  });
+  if (divergencias.length > 0) {
+    falha(409, "IBC_DIVERGENCIA_PEDIDO", "A quantidade apontada diverge da esperada neste pedido", { divergencias });
   }
 
   return { entradas, efeitos, ficaram };

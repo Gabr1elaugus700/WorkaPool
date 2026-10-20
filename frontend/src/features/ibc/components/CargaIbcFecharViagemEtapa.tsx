@@ -5,9 +5,10 @@ import type {
   ConciliacaoViagemClienteDTO,
   ConciliacaoViagemDTO,
   DestinoConciliacao,
-  ModalidadeConciliacao,
+  PedidoConciliacaoDTO,
 } from "../types/conciliacaoViagem.types";
 import ConciliacaoIbcLinha from "./ConciliacaoIbcLinha";
+import ConciliacaoPedidoBarras from "./ConciliacaoPedidoBarras";
 import ConciliacaoRetornosPainel from "./ConciliacaoRetornosPainel";
 import ConciliacaoTrocaDialog from "./ConciliacaoTrocaDialog";
 
@@ -22,12 +23,17 @@ type Props = {
   marcados: number;
   total: number;
   podeFechar: boolean;
+  barras: readonly PedidoConciliacaoDTO[];
+  divergencias: readonly PedidoConciliacaoDTO[];
+  pedindoConfirmacao: boolean;
   onDestino: (alocacaoIbcId: string, destino: DestinoConciliacao) => void;
-  onModalidade: (alocacaoIbcId: string, modalidade: ModalidadeConciliacao) => void;
+  onPedido: (alocacaoIbcId: string, numPed: string) => void;
   onTrocaRegistrada: (alocacaoIbcId: string, ibcEntradaId: string) => void;
   onClienteChange: (chaveCliente: string, patch: ClientePatch) => void;
   onSalvar: () => void;
   onFechar: () => void;
+  onConfirmarFechamento: () => void;
+  onCancelarConfirmacao: () => void;
 };
 
 export default function CargaIbcFecharViagemEtapa({
@@ -39,37 +45,44 @@ export default function CargaIbcFecharViagemEtapa({
   marcados,
   total,
   podeFechar,
+  barras,
+  divergencias,
+  pedindoConfirmacao,
   onDestino,
-  onModalidade,
+  onPedido,
   onTrocaRegistrada,
   onClienteChange,
   onSalvar,
   onFechar,
+  onConfirmarFechamento,
+  onCancelarConfirmacao,
 }: Props) {
   const [trocaId, setTrocaId] = useState<string | null>(null);
   const trocaAberta = viagem.itens.find((item) => item.alocacaoIbcId === trocaId) ?? null;
-  const bloqueada = fechada || salvando;
+  const bloqueada = fechada || salvando || pedindoConfirmacao;
 
   return (
     <section aria-label="Fechar viagem">
       <p className="mb-4 max-w-[65ch] text-sm text-muted-foreground">
         {fechada
-          ? "Esta viagem já foi fechada. O checklist fica só para consulta."
-          : `${marcados} de ${total} IBCs marcados. Salve o andamento e feche quando o papel estiver completo.`}
+          ? "Esta viagem já foi fechada. A conciliação fica só para consulta."
+          : `Aponte o pedido do que ficou ou foi trocado. O que voltou no caminhão não leva pedido. ${marcados} de ${total} IBCs com destino.`}
       </p>
       {aviso ? (
         <Alert className="mb-4" variant="destructive">
           <AlertDescription>{aviso}</AlertDescription>
         </Alert>
       ) : null}
+      <ConciliacaoPedidoBarras pedidos={barras} />
       <div className="flex flex-col gap-3">
         {viagem.itens.map((item) => (
           <ConciliacaoIbcLinha
             key={item.alocacaoIbcId}
             item={item}
+            pedidos={viagem.pedidos}
             disabled={bloqueada}
             onDestino={(destino) => onDestino(item.alocacaoIbcId, destino)}
-            onModalidade={(modalidade) => onModalidade(item.alocacaoIbcId, modalidade)}
+            onPedido={(numPed) => onPedido(item.alocacaoIbcId, numPed)}
             onTroca={() => setTrocaId(item.alocacaoIbcId)}
           />
         ))}
@@ -90,7 +103,28 @@ export default function CargaIbcFecharViagemEtapa({
           onRegistrada={(ibcEntradaId) => onTrocaRegistrada(trocaAberta.alocacaoIbcId, ibcEntradaId)}
         />
       ) : null}
-      {fechada ? null : (
+      {fechada ? null : pedindoConfirmacao ? (
+        <div className="mt-6 border-t border-border pt-4" aria-live="polite">
+          <p className="max-w-[65ch] text-sm text-foreground">
+            Estes pedidos não fecham o esperado. Confirme para fechar a viagem.
+          </p>
+          <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+            {divergencias.map((pedido) => (
+              <li key={pedido.numPed}>
+                Pedido {pedido.numPed} · {pedido.cliente} — {pedido.quantidadeApontada} de {pedido.quantidadeEsperada}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+            <Button type="button" variant="outline" disabled={salvando} onClick={onCancelarConfirmacao}>
+              Voltar
+            </Button>
+            <Button type="button" disabled={salvando} onClick={onConfirmarFechamento}>
+              Confirmar e fechar
+            </Button>
+          </div>
+        </div>
+      ) : (
         <div className="mt-6 flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
           <Button type="button" variant="outline" disabled={salvando} onClick={onSalvar}>
             Salvar andamento

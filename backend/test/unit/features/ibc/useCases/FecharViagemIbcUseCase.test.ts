@@ -9,36 +9,52 @@ import { AbrirEntradaPatioUseCase } from "../../../../../src/features/ibc/useCas
 import { AppError } from "../../../../../src/utils/AppError";
 import { MarcaConciliacaoSalva } from "../../../../../src/features/ibc/repositories/IbcConciliacaoRepository";
 import { AlocacaoIbcRecord, CargaExpedicaoRef, CargaPedidoIbcSnapshot } from "../../../../../src/features/ibc/types/IbcExpedicao.types";
-import { conciliacaoViagem } from "../../../../../src/features/ibc/services/conciliacaoViagem";
+import { IbcConciliacaoHttpSchemas } from "../../../../../src/features/ibc/http/schemas/IbcConciliacaoSchema";
 
 const NOW = new Date("2026-10-13T15:00:00.000Z");
-const chave = conciliacaoViagem.chaveCliente("B", "Beta");
+const VENCE = "2027-01-11T15:00:00.000Z";
 
-const pedido = (): CargaPedidoIbcSnapshot => ({
+const pedido = (over: Partial<CargaPedidoIbcSnapshot> = {}): CargaPedidoIbcSnapshot => ({
   numPed: "10",
   codCli: "B",
   cliente: "Beta",
-  quantidadeEsperadaTotal: 1,
-  quantidadeEsperadaVenda: 1,
+  quantidadeEsperadaTotal: 2,
+  quantidadeEsperadaVenda: 2,
   quantidadeEsperadaEmprestimo: 0,
   ibcInvalido: false,
   posCar: 1,
+  ...over,
 });
 
-const alocacao = (id: string, identificador: string): AlocacaoIbcRecord => ({
+const emprestimo = (numPed = "20"): CargaPedidoIbcSnapshot => pedido({
+  numPed,
+  codCli: "C",
+  cliente: "Gama",
+  quantidadeEsperadaTotal: 1,
+  quantidadeEsperadaVenda: 0,
+  quantidadeEsperadaEmprestimo: 1,
+  posCar: 2,
+});
+
+const alocacao = (id: string, identificador: string, numPed: string | null = null): AlocacaoIbcRecord => ({
   id,
   ibcId: `ibc-${id}`,
   cargaId: "carga-1",
-  numPed: "10",
+  numPed,
   alocadoPorId: "almox-1",
   alocadoEm: NOW,
   expedicaoIbcId: "exp-1",
   identificador,
 });
 
-const papel = (quantidadePapel: number, confirmouDivergencia = false) => [
-  { chaveCliente: chave, quantidadePapel, confirmouDivergencia },
-];
+const marca = (
+  over: Partial<MarcaConciliacaoSalva> & Pick<MarcaConciliacaoSalva, "alocacaoIbcId" | "destino">,
+): MarcaConciliacaoSalva => ({
+  modalidade: null,
+  numPed: "10",
+  ibcEntradaId: null,
+  ...over,
+});
 
 const hasCode = (code: string) => (error: unknown) => {
   assert.ok(error instanceof AppError);
@@ -46,90 +62,294 @@ const hasCode = (code: string) => (error: unknown) => {
   return true;
 };
 
+function plano(input: {
+  alocacoes: AlocacaoIbcRecord[];
+  pedidos: CargaPedidoIbcSnapshot[];
+  marcas: MarcaConciliacaoSalva[];
+  confirmacoes?: readonly string[];
+}) {
+  return planejarFechamentoViagem({ now: NOW, ...input });
+}
+
 describe("planejarFechamentoViagem", () => {
-  it("exige destino em todo IBC e papel em todo cliente", () => {
+  it("exige destino em todo container da carga", () => {
     assert.throws(
-      () => planejarFechamentoViagem({ now: NOW, alocacoes: [alocacao("a1", "H1")], pedidos: [pedido()], marcas: [], retornos: papel(0) }),
-      hasCode("IBC_VIAGEM_INCOMPLETA"),
-    );
-    const marca: MarcaConciliacaoSalva = { alocacaoIbcId: "a1", destino: "RETORNOU", modalidade: null, ibcEntradaId: null };
-    assert.throws(
-      () => planejarFechamentoViagem({ now: NOW, alocacoes: [alocacao("a1", "H1")], pedidos: [pedido()], marcas: [marca], retornos: [] }),
+      () => plano({
+        alocacoes: [alocacao("a1", "H1")],
+        pedidos: [pedido({ quantidadeEsperadaTotal: 1, quantidadeEsperadaVenda: 1 })],
+        marcas: [],
+      }),
       hasCode("IBC_VIAGEM_INCOMPLETA"),
     );
   });
 
-  it("vende, empresta, devolve e troca sem apagar a alocação de quem ficou", () => {
-    const alocs = [alocacao("venda", "H1"), alocacao("emp", "H2"), alocacao("ret", "H3"), alocacao("troca", "H4")];
-    const marcas: MarcaConciliacaoSalva[] = [
-      { alocacaoIbcId: "venda", destino: "FICOU", modalidade: "VENDA", ibcEntradaId: null },
-      { alocacaoIbcId: "emp", destino: "FICOU", modalidade: "EMPRESTIMO", ibcEntradaId: null },
-      { alocacaoIbcId: "ret", destino: "RETORNOU", modalidade: null, ibcEntradaId: null },
-      { alocacaoIbcId: "troca", destino: "TROCA", modalidade: null, ibcEntradaId: "ibc-in" },
+  it("fecha 2/2 sem confirmação e recusa 1/2 ou 3/2 até o pedido confirmar", () => {
+    const dois = [alocacao("a1", "H1"), alocacao("a2", "H2")];
+    const marcasDois = [marca({ alocacaoIbcId: "a1", destino: "FICOU" }), marca({ alocacaoIbcId: "a2", destino: "FICOU" })];
+    const fechado = plano({ alocacoes: dois, pedidos: [pedido()], marcas: marcasDois });
+    assert.equal(fechado.efeitos.length, 2);
+    assert.equal(fechado.ficaram.every((item) => item.numPed === "10"), true);
+
+    const um = plano.bind(null, {
+      alocacoes: [alocacao("a1", "H1")],
+      pedidos: [pedido()],
+      marcas: [marca({ alocacaoIbcId: "a1", destino: "FICOU" })],
+    });
+    assert.throws(um, (error: unknown) => {
+      assert.ok(error instanceof AppError);
+      assert.equal(error.code, "IBC_DIVERGENCIA_PEDIDO");
+      assert.deepEqual(error.details, {
+        divergencias: [{ numPed: "10", quantidadeEsperada: 2, quantidadeApontada: 1 }],
+      });
+      return true;
+    });
+    const confirmado = plano({
+      alocacoes: [alocacao("a1", "H1")],
+      pedidos: [pedido()],
+      marcas: [marca({ alocacaoIbcId: "a1", destino: "FICOU" })],
+      confirmacoes: ["10"],
+    });
+    assert.equal(confirmado.efeitos.length, 1);
+
+    const tresAloc = [alocacao("a1", "H1"), alocacao("a2", "H2"), alocacao("a3", "H3")];
+    const tresMarcas = tresAloc.map((item) => marca({ alocacaoIbcId: item.id, destino: "FICOU" }));
+    assert.throws(
+      () => plano({ alocacoes: tresAloc, pedidos: [pedido()], marcas: tresMarcas }),
+      (error: unknown) => {
+        assert.ok(error instanceof AppError);
+        assert.equal(error.code, "IBC_DIVERGENCIA_PEDIDO");
+        assert.deepEqual(error.details, {
+          divergencias: [{ numPed: "10", quantidadeEsperada: 2, quantidadeApontada: 3 }],
+        });
+        return true;
+      },
+    );
+    const tresConfirmados = plano({
+      alocacoes: tresAloc,
+      pedidos: [pedido()],
+      marcas: tresMarcas,
+      confirmacoes: ["10"],
+    });
+    assert.equal(tresConfirmados.efeitos.length, 3);
+  });
+
+  it("não derruba o pedido que já bate quando outro diverge", () => {
+    const pedidos = [pedido(), emprestimo()];
+    const alocs = [alocacao("a1", "H1"), alocacao("b1", "H2")];
+    const marcas = [
+      marca({ alocacaoIbcId: "a1", destino: "FICOU", numPed: "10" }),
+      marca({ alocacaoIbcId: "b1", destino: "FICOU", numPed: "20" }),
     ];
-    const plano = planejarFechamentoViagem({ now: NOW, alocacoes: alocs, pedidos: [pedido()], marcas, retornos: papel(1, true) });
-    const porId = new Map(plano.efeitos.map((efeito) => [efeito.alocacaoIbcId, efeito]));
+    assert.throws(
+      () => plano({ alocacoes: alocs, pedidos, marcas }),
+      (error: unknown) => {
+        assert.ok(error instanceof AppError);
+        assert.equal(error.code, "IBC_DIVERGENCIA_PEDIDO");
+        assert.deepEqual(error.details, {
+          divergencias: [{ numPed: "10", quantidadeEsperada: 2, quantidadeApontada: 1 }],
+        });
+        return true;
+      },
+    );
+    const fechado = plano({ alocacoes: alocs, pedidos, marcas, confirmacoes: ["10"] });
+    assert.deepEqual(fechado.ficaram.map((item) => item.numPed), ["10", "20"]);
+    assert.equal(fechado.efeitos.find((efeito) => efeito.alocacaoIbcId === "b1")?.motivoBaixa, null);
+  });
+
+  it("recusa ficou ou troca sem pedido elegível e ignora pedido misto na conta", () => {
+    const misto = pedido({
+      numPed: "30",
+      quantidadeEsperadaTotal: 2,
+      quantidadeEsperadaVenda: 1,
+      quantidadeEsperadaEmprestimo: 1,
+      posCar: 3,
+    });
+    assert.throws(
+      () => plano({
+        alocacoes: [alocacao("a1", "H1")],
+        pedidos: [pedido({ quantidadeEsperadaTotal: 1, quantidadeEsperadaVenda: 1 })],
+        marcas: [marca({ alocacaoIbcId: "a1", destino: "FICOU", numPed: null })],
+      }),
+      hasCode("IBC_CONCILIACAO_PEDIDO"),
+    );
+    assert.throws(
+      () => plano({
+        alocacoes: [alocacao("a1", "H1")],
+        pedidos: [misto, pedido({ quantidadeEsperadaTotal: 1, quantidadeEsperadaVenda: 1 })],
+        marcas: [marca({ alocacaoIbcId: "a1", destino: "TROCA", numPed: "30", ibcEntradaId: "ibc-in" })],
+      }),
+      hasCode("IBC_CONCILIACAO_PEDIDO"),
+    );
+    const soElegivel = plano({
+      alocacoes: [alocacao("a1", "H1")],
+      pedidos: [misto, pedido({ quantidadeEsperadaTotal: 1, quantidadeEsperadaVenda: 1 })],
+      marcas: [marca({ alocacaoIbcId: "a1", destino: "FICOU" })],
+    });
+    assert.equal(soElegivel.efeitos.length, 1);
+  });
+
+  it("aplica baixa sem prazo no incluso e 90 dias no empréstimo", () => {
+    const fechado = plano({
+      alocacoes: [alocacao("venda", "H1", "99"), alocacao("emp", "H2")],
+      pedidos: [pedido({ quantidadeEsperadaTotal: 1, quantidadeEsperadaVenda: 1 }), emprestimo()],
+      marcas: [
+        marca({ alocacaoIbcId: "venda", destino: "FICOU", modalidade: "EMPRESTIMO", numPed: "10" }),
+        marca({ alocacaoIbcId: "emp", destino: "FICOU", modalidade: "VENDA", numPed: "20" }),
+      ],
+    });
+    const porId = new Map(fechado.efeitos.map((efeito) => [efeito.alocacaoIbcId, efeito]));
+    assert.equal(porId.get("venda")?.custodia, "CLIENTE");
     assert.equal(porId.get("venda")?.motivoBaixa, "VENDA");
+    assert.equal(porId.get("venda")?.emprestimoVenceEm, null);
     assert.equal(porId.get("venda")?.encerrarAlocacao, false);
     assert.equal(porId.get("emp")?.motivoBaixa, null);
-    assert.equal(porId.get("emp")?.emprestimoVenceEm?.toISOString(), "2027-01-11T15:00:00.000Z");
-    assert.equal(porId.get("ret")?.encerrarAlocacao, true);
-    assert.equal(porId.get("ret")?.custodia, null);
-    assert.equal(porId.get("troca")?.motivoBaixa, "TROCA");
-    assert.equal(porId.get("troca")?.trocaEntradaId, "ibc-in");
-    assert.deepEqual(plano.entradas, [
-      { ibcId: "ibc-ret", origem: "RETORNO" },
-      { ibcId: "ibc-in", origem: "TROCA" },
+    assert.equal(porId.get("emp")?.custodia, "CLIENTE");
+    assert.equal(porId.get("emp")?.encerrarAlocacao, false);
+    assert.equal(porId.get("emp")?.emprestimoVenceEm?.toISOString(), VENCE);
+    assert.deepEqual(fechado.ficaram.map((item) => ({ numPed: item.numPed, modalidade: item.modalidade })), [
+      { numPed: "10", modalidade: "VENDA" },
+      { numPed: "20", modalidade: "EMPRESTIMO" },
     ]);
-    assert.deepEqual(plano.ficaram.map((item) => item.modalidade), ["VENDA", "EMPRESTIMO"]);
   });
 
-  it("bloqueia troca sem entrada e divergência do papel sem confirmação", () => {
-    const marca: MarcaConciliacaoSalva = { alocacaoIbcId: "troca", destino: "TROCA", modalidade: null, ibcEntradaId: null };
+  it("devolve o container sem cliente e aplica a regra do pedido no que ficou na troca", () => {
+    const pedidos = [
+      pedido({ quantidadeEsperadaTotal: 1, quantidadeEsperadaVenda: 1 }),
+      emprestimo(),
+    ];
+    const fechado = plano({
+      alocacoes: [alocacao("ret", "H1"), alocacao("troca-venda", "H2"), alocacao("troca-emp", "H3")],
+      pedidos,
+      marcas: [
+        marca({ alocacaoIbcId: "ret", destino: "RETORNOU", numPed: null }),
+        marca({ alocacaoIbcId: "troca-venda", destino: "TROCA", numPed: "10", ibcEntradaId: "ibc-in-venda" }),
+        marca({ alocacaoIbcId: "troca-emp", destino: "TROCA", numPed: "20", ibcEntradaId: "ibc-in-emp" }),
+      ],
+    });
+    const porId = new Map(fechado.efeitos.map((efeito) => [efeito.alocacaoIbcId, efeito]));
+    assert.equal(porId.get("ret")?.custodia, null);
+    assert.equal(porId.get("ret")?.encerrarAlocacao, true);
+    assert.equal(porId.get("troca-venda")?.motivoBaixa, "VENDA");
+    assert.equal(porId.get("troca-venda")?.emprestimoVenceEm, null);
+    assert.equal(porId.get("troca-venda")?.trocaEntradaId, "ibc-in-venda");
+    assert.equal(porId.get("troca-emp")?.motivoBaixa, null);
+    assert.equal(porId.get("troca-emp")?.emprestimoVenceEm?.toISOString(), VENCE);
+    assert.equal(porId.get("troca-emp")?.encerrarAlocacao, false);
+    assert.equal(porId.get("troca-emp")?.trocaEntradaId, "ibc-in-emp");
+    assert.deepEqual(fechado.entradas, [
+      { ibcId: "ibc-ret", origem: "RETORNO" },
+      { ibcId: "ibc-in-venda", origem: "TROCA" },
+      { ibcId: "ibc-in-emp", origem: "TROCA" },
+    ]);
+    assert.deepEqual(fechado.ficaram.map((item) => item.identificador), ["H2", "H3"]);
+    assert.equal(fechado.ficaram.some((item) => item.identificador === "H1"), false);
+  });
+
+  it("bloqueia troca sem o container de entrada", () => {
     assert.throws(
-      () => planejarFechamentoViagem({ now: NOW, alocacoes: [alocacao("troca", "H4")], pedidos: [pedido()], marcas: [marca], retornos: papel(1) }),
+      () => plano({
+        alocacoes: [alocacao("troca", "H4")],
+        pedidos: [pedido({ quantidadeEsperadaTotal: 1, quantidadeEsperadaVenda: 1 })],
+        marcas: [marca({ alocacaoIbcId: "troca", destino: "TROCA", numPed: "10", ibcEntradaId: null })],
+      }),
       hasCode("IBC_TROCA_SEM_ENTRADA"),
-    );
-    const vinculada: MarcaConciliacaoSalva = { ...marca, ibcEntradaId: "ibc-in" };
-    assert.throws(
-      () => planejarFechamentoViagem({ now: NOW, alocacoes: [alocacao("troca", "H4")], pedidos: [pedido()], marcas: [vinculada], retornos: papel(0) }),
-      hasCode("IBC_TROCA_DIVERGENCIA"),
     );
   });
 });
 
 describe("FecharViagemIbcUseCase", () => {
-  it("abre as entradas na mesma transação e grava o fechamento", async () => {
-    const marca: MarcaConciliacaoSalva = { alocacaoIbcId: "ret", destino: "RETORNOU", modalidade: null, ibcEntradaId: null };
+  const carga = {
+    id: "carga-1",
+    codCar: 202,
+    destino: "Blumenau",
+    situacao: "FECHADA",
+    previsaoSaida: NOW,
+  } satisfies CargaExpedicaoRef;
+
+  function expedicoes(pedidos: CargaPedidoIbcSnapshot[], alocacoes: AlocacaoIbcRecord[]): IIbcExpedicaoRepository {
+    return {
+      getCargaByCodCar: async () => carga,
+      listPedidosIbcByCargaId: async () => pedidos,
+      listAlocacoesByCargaId: async () => alocacoes,
+    } as unknown as IIbcExpedicaoRepository;
+  }
+
+  it("abre a entrada do retorno na mesma transação", async () => {
+    const marcaRetorno = marca({ alocacaoIbcId: "ret", destino: "RETORNOU", numPed: null });
     let abriu = false;
     const fecharViagem = mock.fn(async (cmd: FecharViagemComando, abrir: () => Promise<void>) => {
       assert.equal(cmd.efeitos[0]?.encerrarAlocacao, true);
+      assert.equal(cmd.efeitos[0]?.custodia, null);
       await abrir();
       abriu = true;
     });
     const execute = mock.fn(async () => ({ id: "entrada-1" }));
     const conciliacoes = {
       findPorCarga: async () => ({ id: "exp-1", viagemFechadaEm: null, viagemFechadaPorId: null }),
-      listMarcas: async () => [marca],
-      listRetornos: async () => papel(0),
-      save: async () => undefined,
-      vincularEntradaTroca: async () => true,
+      listMarcas: async () => [marcaRetorno],
       fecharViagem,
     } as unknown as IIbcConciliacaoRepository;
-    const expedicoes = {
-      getCargaByCodCar: async () => ({ id: "carga-1", codCar: 202, destino: "Blumenau", situacao: "FECHADA", previsaoSaida: NOW } satisfies CargaExpedicaoRef),
-      listPedidosIbcByCargaId: async () => [pedido()],
-      listAlocacoesByCargaId: async () => [alocacao("ret", "H3")],
-    } as unknown as IIbcExpedicaoRepository;
     const result = await new FecharViagemIbcUseCase(
-      expedicoes,
+      expedicoes([pedido({ quantidadeEsperadaTotal: 1, quantidadeEsperadaVenda: 1 })], [alocacao("ret", "H3")]),
       conciliacoes,
       { execute } as unknown as AbrirEntradaPatioUseCase,
       () => NOW,
-    ).execute({ codCar: 202, actorRole: Role.ADMIN, actorId: "almox-1" });
+    ).execute({ codCar: 202, actorRole: Role.ADMIN, actorId: "almox-1", confirmacoes: ["10"] });
     assert.equal(abriu, true);
     assert.equal(execute.mock.callCount(), 1);
+    assert.deepEqual(execute.mock.calls[0]?.arguments[0], {
+      actorRole: Role.ADMIN,
+      actorId: "almox-1",
+      ibcId: "ibc-ret",
+      origem: "RETORNO",
+    });
     assert.equal(result.viagemFechadaEm, NOW);
+  });
+
+  it("não grava 1/2 sem confirmação e grava quando o pedido confirma", async () => {
+    const fecharViagem = mock.fn(async (cmd: FecharViagemComando) => {
+      assert.deepEqual(cmd.ficaram.map((item) => item.modalidade), ["VENDA"]);
+      assert.equal(cmd.efeitos[0]?.motivoBaixa, "VENDA");
+      assert.equal(cmd.efeitos[0]?.emprestimoVenceEm, null);
+    });
+    const conciliacoes = {
+      findPorCarga: async () => ({ id: "exp-1", viagemFechadaEm: null, viagemFechadaPorId: null }),
+      listMarcas: async () => [marca({ alocacaoIbcId: "a1", destino: "FICOU" })],
+      fecharViagem,
+    } as unknown as IIbcConciliacaoRepository;
+    const useCase = new FecharViagemIbcUseCase(
+      expedicoes([pedido()], [alocacao("a1", "H1")]),
+      conciliacoes,
+      { execute: async () => ({ id: "entrada" }) } as unknown as AbrirEntradaPatioUseCase,
+      () => NOW,
+    );
+    await assert.rejects(
+      () => useCase.execute({ codCar: 202, actorRole: Role.ALMOX, actorId: "almox-1" }),
+      hasCode("IBC_DIVERGENCIA_PEDIDO"),
+    );
+    assert.equal(fecharViagem.mock.callCount(), 0);
+    await useCase.execute({ codCar: 202, actorRole: Role.ALMOX, actorId: "almox-1", confirmacoes: ["10"] });
+    assert.equal(fecharViagem.mock.callCount(), 1);
+  });
+
+  it("não reescreve viagem já fechada", async () => {
+    const fecharViagem = mock.fn(async () => undefined);
+    const execute = mock.fn(async () => ({ id: "entrada" }));
+    const conciliacoes = {
+      findPorCarga: async () => ({ id: "exp-1", viagemFechadaEm: NOW, viagemFechadaPorId: "antes" }),
+      fecharViagem,
+    } as unknown as IIbcConciliacaoRepository;
+    await assert.rejects(
+      () => new FecharViagemIbcUseCase(
+        expedicoes([pedido({ quantidadeEsperadaTotal: 1, quantidadeEsperadaVenda: 1 })], []),
+        conciliacoes,
+        { execute } as unknown as AbrirEntradaPatioUseCase,
+        () => NOW,
+      ).execute({ codCar: 202, actorRole: Role.ADMIN, actorId: "almox-1" }),
+      hasCode("IBC_VIAGEM_JA_FECHADA"),
+    );
+    assert.equal(fecharViagem.mock.callCount(), 0);
+    assert.equal(execute.mock.callCount(), 0);
   });
 
   it("recusa papel sem escrita antes de fechar", async () => {
@@ -144,5 +364,16 @@ describe("FecharViagemIbcUseCase", () => {
       hasCode("IBC_VIAGEM_FORBIDDEN"),
     );
     assert.equal(fecharViagem.mock.callCount(), 0);
+  });
+});
+
+describe("IbcConciliacaoHttpSchemas.fechar", () => {
+  it("aceita fechar sem corpo e exige numPed na confirmação", () => {
+    assert.deepEqual(IbcConciliacaoHttpSchemas.fechar.parse({}), {});
+    assert.deepEqual(
+      IbcConciliacaoHttpSchemas.fechar.parse({ confirmacoes: [{ numPed: "10" }] }).confirmacoes,
+      [{ numPed: "10" }],
+    );
+    assert.equal(IbcConciliacaoHttpSchemas.fechar.safeParse({ confirmacoes: [{ numPed: "" }] }).success, false);
   });
 });

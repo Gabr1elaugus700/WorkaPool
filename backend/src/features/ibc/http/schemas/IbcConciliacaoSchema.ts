@@ -9,11 +9,15 @@ export const IbcConciliacaoHttpSchemas = {
     produtoId: z.string().uuid(),
     dataLimite: z.coerce.date(),
   }),
+  fechar: z.object({
+    confirmacoes: z.array(z.object({ numPed: z.string().min(1) })).max(200).optional(),
+  }),
   salvar: z.object({
     itens: z
       .array(z.object({
         alocacaoIbcId: z.string().uuid(),
         destino,
+        numPed: z.string().min(1).optional(),
         modalidade: modalidade.nullable().optional(),
       }))
       .max(500)

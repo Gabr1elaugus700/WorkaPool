@@ -1,33 +1,29 @@
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { ConciliacaoViagemItemDTO, DestinoConciliacao, ModalidadeConciliacao } from "../types/conciliacaoViagem.types";
+import type { ConciliacaoViagemItemDTO, DestinoConciliacao, PedidoConciliacaoDTO } from "../types/conciliacaoViagem.types";
 import IbcSegmentedControl from "./IbcSegmentedControl";
+
 const DESTINOS: Array<{ id: DestinoConciliacao; label: string }> = [
   { id: "FICOU", label: "Ficou no cliente" },
   { id: "RETORNOU", label: "Retornou no caminhão" },
   { id: "TROCA", label: "Troca" },
 ];
-const MODALIDADES: Array<{ id: ModalidadeConciliacao; label: string }> = [
-  { id: "VENDA", label: "Venda" },
-  { id: "EMPRESTIMO", label: "Empréstimo" },
-];
+
 type Props = {
   item: ConciliacaoViagemItemDTO;
+  pedidos: readonly PedidoConciliacaoDTO[];
   disabled: boolean;
   onDestino: (destino: DestinoConciliacao) => void;
-  onModalidade: (modalidade: ModalidadeConciliacao) => void;
+  onPedido: (numPed: string) => void;
   onTroca?: () => void;
 };
-export default function ConciliacaoIbcLinha({ item, disabled, onDestino, onModalidade, onTroca }: Props) {
-  const sugestao = item.destino === "FICOU" && item.modalidade == null ? item.modalidadeSugerida : null;
+
+export default function ConciliacaoIbcLinha({ item, pedidos, disabled, onDestino, onPedido, onTroca }: Props) {
+  const pedePedido = item.destino === "FICOU" || item.destino === "TROCA";
+  const pedido = pedePedido ? pedidos.find((atual) => atual.numPed === item.numPed) ?? null : null;
   return (
     <article className="rounded-lg border border-border bg-card p-4 shadow-sm">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-lg font-semibold text-foreground">{item.identificador}</h2>
-        <p className="text-sm text-muted-foreground">
-          {item.cliente || "Cliente não identificado"}
-          {item.numPed ? ` · pedido ${item.numPed}` : ""}
-        </p>
-      </div>
+      <h3 className="text-lg font-semibold text-foreground">{item.identificador}</h3>
       <div className="mt-3 flex flex-wrap items-start gap-x-6 gap-y-3">
         <div>
           <p className="mb-1.5 text-xs font-medium text-foreground">Destino neste retorno</p>
@@ -39,23 +35,28 @@ export default function ConciliacaoIbcLinha({ item, disabled, onDestino, onModal
             onChange={onDestino}
           />
         </div>
-        {item.destino === "FICOU" ? (
-          <div>
-            <p className="mb-1.5 text-xs font-medium text-foreground">Como ficou no cliente</p>
-            <IbcSegmentedControl
-              ariaLabel={`Modalidade de ${item.identificador}`}
-              options={MODALIDADES}
-              value={item.modalidade}
+        {pedePedido ? (
+          <div className="min-w-0">
+            <label className="mb-1.5 flex items-center gap-2 text-xs font-medium text-foreground" htmlFor={`pedido-${item.alocacaoIbcId}`}>
+              Pedido
+              {pedido?.incluso ? <Badge variant="secondary">Incluso</Badge> : null}
+            </label>
+            <select
+              id={`pedido-${item.alocacaoIbcId}`}
+              className="h-10 w-full max-w-xs rounded-md border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
               disabled={disabled}
-              onChange={onModalidade}
-            />
-            {item.modalidade == null ? (
-              <p className="mt-2 text-xs text-muted-foreground">
-                {sugestao == null
-                  ? "O pedido mistura venda e empréstimo. Escolha uma."
-                  : "Confirme a modalidade sugerida pelo pedido."}
-              </p>
-            ) : null}
+              value={item.numPed ?? ""}
+              onChange={(event) => {
+                if (event.target.value) onPedido(event.target.value);
+              }}
+            >
+              <option value="" disabled>Escolha o pedido</option>
+              {pedidos.map((opcao) => (
+                <option key={opcao.numPed} value={opcao.numPed}>
+                  {opcao.numPed} · {opcao.cliente}
+                </option>
+              ))}
+            </select>
           </div>
         ) : null}
       </div>
