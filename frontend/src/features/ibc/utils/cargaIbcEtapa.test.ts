@@ -168,3 +168,38 @@ describe("cargaIbcEtapa.voltarPara", () => {
     assert.equal(cargaIbcEtapa.voltarPara("fechar-viagem"), "/expedicao-ibc/em-viagem");
   });
 });
+
+describe("cargaIbcEtapa.carregamento", () => {
+  const base = {
+    detalheCarregado: true,
+    temExpedicao: true,
+    viagemCarregada: false,
+    erroConciliacao: false,
+    fechouExpedicaoNestaTela: false,
+  };
+
+  it("ocupa a página enquanto a carga não chegou", () => {
+    assert.equal(cargaIbcEtapa.carregamento({ ...base, detalheCarregado: false }), "pagina");
+  });
+
+  it("ocupa a página no primeiro acesso a uma carga com expedição, até a viagem chegar", () => {
+    assert.equal(cargaIbcEtapa.carregamento(base), "pagina");
+  });
+
+  it("fica só na área da etapa quando a expedição acabou de ser fechada nesta tela", () => {
+    assert.equal(cargaIbcEtapa.carregamento({ ...base, fechouExpedicaoNestaTela: true }), "etapa");
+  });
+
+  it("para de carregar quando a conciliação falha", () => {
+    assert.equal(cargaIbcEtapa.carregamento({ ...base, erroConciliacao: true }), null);
+    assert.equal(
+      cargaIbcEtapa.carregamento({ ...base, erroConciliacao: true, fechouExpedicaoNestaTela: true }),
+      null,
+    );
+  });
+
+  it("não carrega nada com a viagem pronta ou sem expedição", () => {
+    assert.equal(cargaIbcEtapa.carregamento({ ...base, viagemCarregada: true }), null);
+    assert.equal(cargaIbcEtapa.carregamento({ ...base, temExpedicao: false }), null);
+  });
+});

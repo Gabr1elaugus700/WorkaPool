@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Package } from "lucide-react";
 import DefaultLayout from "@/layout/DefaultLayout";
@@ -35,6 +35,8 @@ export default function ExpedicaoIbcCargaView() {
   const { user } = useAuth();
   const allowed = canAccessExpedicaoIbc(user?.role);
 
+  const [expedicaoFechadaNaCarga, setExpedicaoFechadaNaCarga] = useState<number | null>(null);
+
   const carga = useCargaExpedicaoDetalhe(codCar, allowed);
   const temExpedicao = carga.detalhe?.temExpedicao ?? false;
   const conciliacao = useConciliacaoViagem(codCar, allowed && temExpedicao, () =>
@@ -47,7 +49,14 @@ export default function ExpedicaoIbcCargaView() {
 
   const { detalhe } = carga;
   const viagem = conciliacao.viagem;
-  if (detalhe == null || codCar == null || (temExpedicao && viagem == null && conciliacao.error == null)) {
+  const carregamento = cargaIbcEtapa.carregamento({
+    detalheCarregado: detalhe != null && codCar != null,
+    temExpedicao,
+    viagemCarregada: viagem != null,
+    erroConciliacao: conciliacao.error != null,
+    fechouExpedicaoNestaTela: codCar != null && expedicaoFechadaNaCarga === codCar,
+  });
+  if (detalhe == null || codCar == null || carregamento === "pagina") {
     return <IbcPageStatus status="loading" loadingLabel="Carregando carga…" />;
   }
 
@@ -74,7 +83,10 @@ export default function ExpedicaoIbcCargaView() {
       <FecharExpedicaoButton
         podeFechar={detalhe.podeFecharExpedicao}
         loading={carga.fechando}
-        onFechar={() => void carga.fecharExpedicao()}
+        onFechar={() => {
+          setExpedicaoFechadaNaCarga(codCar);
+          void carga.fecharExpedicao();
+        }}
       />
     );
   } else if (vista === "em-viagem" && atual === "em-viagem") {
@@ -105,7 +117,9 @@ export default function ExpedicaoIbcCargaView() {
         primaryAction={primaryAction}
       />
       <CargaIbcEtapas etapas={cargaIbcEtapa.montarItens({ codCar, atual, vista, viagemFechada: conciliacao.fechada })} />
-      {vista === "fechar-viagem" ? (
+      {carregamento === "etapa" ? (
+        <IbcStatusContent status="loading" loadingLabel="Carregando viagem…" />
+      ) : vista === "fechar-viagem" ? (
         viagem ? (
           <CargaIbcFecharViagemEtapa
             codCar={codCar}
