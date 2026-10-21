@@ -95,6 +95,24 @@ function voltarPara(atual: CargaIbcEtapa): string {
   return atual === "preparacao" ? "/expedicao-ibc" : "/expedicao-ibc/em-viagem";
 }
 
+export type CargaIbcCarregamento = "pagina" | "etapa" | null;
+
+/**
+ * Onde mostrar o carregamento. No primeiro acesso a conciliação decide a etapa atual,
+ * então ocupa a página; logo após fechar a expedição a etapa já é Em viagem.
+ */
+function carregamento(input: {
+  detalheCarregado: boolean;
+  temExpedicao: boolean;
+  viagemCarregada: boolean;
+  erroConciliacao: boolean;
+  fechouExpedicaoNestaTela: boolean;
+}): CargaIbcCarregamento {
+  if (!input.detalheCarregado) return "pagina";
+  if (!input.temExpedicao || input.viagemCarregada || input.erroConciliacao) return null;
+  return input.fechouExpedicaoNestaTela ? "etapa" : "pagina";
+}
+
 export const cargaIbcEtapa = {
   path,
   parse,
@@ -104,4 +122,5 @@ export const cargaIbcEtapa = {
   naRota,
   montarItens,
   voltarPara,
+  carregamento,
 };
