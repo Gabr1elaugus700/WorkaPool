@@ -92,7 +92,7 @@ function montarItens(input: {
 }
 
 function voltarPara(atual: CargaIbcEtapa): string {
-  return atual === "preparacao" ? "/expedicao-ibc" : "/expedicao-ibc/em-viagem";
+  return atual === "em-viagem" ? "/expedicao-ibc/em-viagem" : "/expedicao-ibc";
 }
 
 export type CargaIbcCarregamento = "pagina" | "etapa" | null;

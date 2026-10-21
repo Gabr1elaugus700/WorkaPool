@@ -162,10 +162,16 @@ describe("cargaIbcEtapa.naRota", () => {
 });
 
 describe("cargaIbcEtapa.voltarPara", () => {
-  it("volta para a aba de onde a carga vem", () => {
+  it("na Preparação, volta para Aguardando expedição", () => {
     assert.equal(cargaIbcEtapa.voltarPara("preparacao"), "/expedicao-ibc");
+  });
+
+  it("com a viagem aberta, volta para Em viagem", () => {
     assert.equal(cargaIbcEtapa.voltarPara("em-viagem"), "/expedicao-ibc/em-viagem");
-    assert.equal(cargaIbcEtapa.voltarPara("fechar-viagem"), "/expedicao-ibc/em-viagem");
+  });
+
+  it("com a viagem fechada, volta para a Expedição IBC, porque nenhuma aba lista mais a carga", () => {
+    assert.equal(cargaIbcEtapa.voltarPara("fechar-viagem"), "/expedicao-ibc");
   });
 });
 
