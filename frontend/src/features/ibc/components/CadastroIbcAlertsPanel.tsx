@@ -1,3 +1,4 @@
+import { AlertTriangle, CheckCircle2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { IbcAlertDTO } from "../types/ibcCadastro.types";
 import { IBC_ALERTA_MOTIVOS_DESTRUTIVOS, ibcCadastroLabels } from "../utils/ibcCadastroLabels";
@@ -18,7 +19,8 @@ function resumoAlertas(alerts: IbcAlertDTO[]): string {
 export default function CadastroIbcAlertsPanel({ alerts }: Props) {
   if (alerts.length === 0) {
     return (
-      <p className="rounded-md border border-border bg-card px-3 py-2 text-sm text-muted-foreground shadow-sm">
+      <p className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-muted-foreground shadow-sm">
+        <CheckCircle2 className="h-4 w-4 text-primary" aria-hidden />
         Nenhum alerta de IBC.
       </p>
     );
@@ -29,36 +31,41 @@ export default function CadastroIbcAlertsPanel({ alerts }: Props) {
   return (
     <details
       className={cn(
-        "rounded-md border bg-card px-3 py-2 text-sm shadow-sm",
+        "group rounded-lg border bg-card text-sm shadow-sm",
         destrutivo ? "border-destructive/40" : "border-border",
       )}
     >
-      <summary className="cursor-pointer font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-        {alerts.length === 1 ? "1 alerta" : `${alerts.length} alertas`}
-        <span className="font-normal text-muted-foreground"> · {resumoAlertas(alerts)}</span>
+      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-lg px-4 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 [&::-webkit-details-marker]:hidden">
+        <AlertTriangle
+          className={cn("h-4 w-4 shrink-0", destrutivo ? "text-destructive" : "text-amber-600")}
+          aria-hidden
+        />
+        <span className="font-medium tabular-nums">
+          {alerts.length === 1 ? "1 alerta" : `${alerts.length} alertas`}
+        </span>
+        <span className="min-w-0 truncate text-muted-foreground">{resumoAlertas(alerts)}</span>
+        <ChevronDown
+          className="ml-auto h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180"
+          aria-hidden
+        />
       </summary>
-      <ul className="mt-2 space-y-2">
-      {alerts.map((alert) => {
-        const isDestrutivo = IBC_ALERTA_MOTIVOS_DESTRUTIVOS.has(alert.motivo);
-        return (
-          <li
-            key={`${alert.identificador}-${alert.motivo}`}
-            className={cn(
-              "rounded-md border px-3 py-2 text-sm",
-              isDestrutivo
-                ? "border-destructive/40 bg-destructive/5"
-                : "border-border bg-background"
-            )}
-          >
-            <span className="font-medium">{alert.identificador}</span>
-            <span className="text-muted-foreground">
-              {" — "}
-              {ibcCadastroLabels.alertaMotivo[alert.motivo]}
-            </span>
-            {alert.detalhes ? <IbcAlertaReprovacaoDetalhes detalhes={alert.detalhes} /> : null}
-          </li>
-        );
-      })}
+      <ul className="max-h-80 divide-y divide-border overflow-y-auto border-t">
+        {alerts.map((alert) => {
+          const isDestrutivo = IBC_ALERTA_MOTIVOS_DESTRUTIVOS.has(alert.motivo);
+          return (
+            <li
+              key={`${alert.identificador}-${alert.motivo}`}
+              className={cn("px-4 py-2", isDestrutivo && "bg-destructive/5")}
+            >
+              <span className="font-medium tabular-nums">{alert.identificador}</span>
+              <span className={isDestrutivo ? "text-destructive" : "text-muted-foreground"}>
+                {" · "}
+                {ibcCadastroLabels.alertaMotivo[alert.motivo]}
+              </span>
+              {alert.detalhes ? <IbcAlertaReprovacaoDetalhes detalhes={alert.detalhes} /> : null}
+            </li>
+          );
+        })}
       </ul>
     </details>
   );

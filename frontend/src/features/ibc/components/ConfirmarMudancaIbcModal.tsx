@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -48,10 +49,12 @@ const COPY = {
   conversion: {
     title: "Converter para não homologado",
     action: "Converter",
+    pending: "Convertendo…",
   },
   product_change: {
     title: "Mudar produto do IBC",
     action: "Mudar produto",
+    pending: "Mudando produto…",
   },
 } as const;
 
@@ -98,12 +101,12 @@ export default function ConfirmarMudancaIbcModal({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg gap-5">
         <DialogHeader>
           <DialogTitle>{COPY[modo].title}</DialogTitle>
           <DialogDescription>
-            O IBC {ibc.identificador} não é editado: um novo registro é criado
-            com novo identificador e o vínculo fica no histórico.
+            O IBC {ibc.identificador} não é editado: um novo registro é criado com novo identificador e o vínculo
+            fica no histórico.
           </DialogDescription>
         </DialogHeader>
 
@@ -113,11 +116,7 @@ export default function ConfirmarMudancaIbcModal({
               <Label htmlFor="ibc-mudanca-produto" className="text-xs">
                 Novo produto
               </Label>
-              <Select
-                value={produtoId}
-                onValueChange={setProdutoId}
-                disabled={submitting}
-              >
+              <Select value={produtoId} onValueChange={setProdutoId} disabled={submitting}>
                 <SelectTrigger id="ibc-mudanca-produto">
                   <SelectValue placeholder="Selecione o produto de destino" />
                 </SelectTrigger>
@@ -132,19 +131,29 @@ export default function ConfirmarMudancaIbcModal({
             </div>
           ) : null}
 
-          <dl className="grid grid-cols-2 gap-2 rounded-md border px-3 py-2 text-sm">
-            <dt className="text-muted-foreground">Identificador atual</dt>
-            <dd className="font-medium">{ibc.identificador}</dd>
-            <dt className="text-muted-foreground">Novo prefixo</dt>
-            <dd className="font-medium">
-              {prefixoDestino ?? (modo === "conversion" ? "Não aplicável" : "—")}
-            </dd>
-          </dl>
+          <div className="flex items-center gap-3 rounded-md border bg-muted/40 px-3 py-2.5 text-sm">
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Identificador atual</p>
+              <p className="font-medium tabular-nums">{ibc.identificador}</p>
+            </div>
+            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Novo prefixo</p>
+              <p className="font-medium tabular-nums">
+                {prefixoDestino ?? (modo === "conversion" ? "Não aplicável" : "Escolha o produto")}
+              </p>
+            </div>
+          </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="ibc-mudanca-observacao" className="text-xs">
-              Observação (opcional)
-            </Label>
+            <div className="flex items-baseline justify-between">
+              <Label htmlFor="ibc-mudanca-observacao" className="text-xs">
+                Observação (opcional)
+              </Label>
+              <span className="text-xs tabular-nums text-muted-foreground">
+                {observacao.length}/{IBC_OBSERVACAO_MAX}
+              </span>
+            </div>
             <Textarea
               id="ibc-mudanca-observacao"
               value={observacao}
@@ -154,9 +163,6 @@ export default function ConfirmarMudancaIbcModal({
               disabled={submitting}
               placeholder="Ex.: avaria visual encontrada na inspeção"
             />
-            <p className="text-right text-xs text-muted-foreground">
-              {observacao.length}/{IBC_OBSERVACAO_MAX}
-            </p>
           </div>
 
           <div className="flex items-start gap-2">
@@ -165,19 +171,20 @@ export default function ConfirmarMudancaIbcModal({
               checked={confirmado}
               onCheckedChange={(checked) => setConfirmado(checked === true)}
               disabled={submitting}
+              className="mt-0.5"
             />
-            <Label htmlFor="ibc-mudanca-confirmado" className="text-sm leading-snug">
+            <Label htmlFor="ibc-mudanca-confirmado" className="text-sm font-normal leading-snug">
               Confirmo a criação do novo registro e o vínculo com {ibc.identificador}.
             </Label>
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:space-x-0">
           <Button variant="outline" onClick={onClose} disabled={submitting}>
             Cancelar
           </Button>
           <Button onClick={() => void handleConfirm()} disabled={!canSubmit}>
-            {COPY[modo].action}
+            {submitting ? COPY[modo].pending : COPY[modo].action}
           </Button>
         </DialogFooter>
       </DialogContent>
