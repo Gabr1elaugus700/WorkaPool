@@ -2,7 +2,7 @@ import { useState } from "react";
 import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
 import ExpedicaoIbcTabShell from "../components/ExpedicaoIbcTabShell";
 import EntradaPatioCard from "../components/EntradaPatioCard";
-import IbcInspecaoDialog from "../components/IbcInspecaoDialog";
+import IbcInspecaoDrawer from "../components/IbcInspecaoDrawer";
 import { useEntradaPatio } from "../hooks/useEntradaPatio";
 import type { EntradaPatioFilaItem } from "../types/ibcEntradaPatio.types";
 import { resolveIbcTabStatus } from "../utils/resolveIbcTabStatus";
@@ -45,7 +45,7 @@ export default function EntradaPatioIbcView() {
         ))}
       </ExpedicaoIbcTabShell>
       {inspecionando ? (
-        <IbcInspecaoDialog
+        <IbcInspecaoDrawer
           ibc={{ id: inspecionando.ibcId, identificador: inspecionando.identificador }}
           onClose={() => setInspecionando(null)}
         />
