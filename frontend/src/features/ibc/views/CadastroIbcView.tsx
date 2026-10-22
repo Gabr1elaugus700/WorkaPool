@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
 import CadastroIbcForm from "../components/CadastroIbcForm";
 import CadastroIbcLoteForm from "../components/CadastroIbcLoteForm";
-import CadastroProdutoModal from "../components/CadastroProdutoModal";
+import IbcProdutosDrawer from "../components/IbcProdutosDrawer";
 import CadastroIbcLoteWarningBanner from "../components/CadastroIbcLoteWarningBanner";
 import CadastroIbcModeSelector, {
   type CadastroIbcMode,
@@ -28,7 +28,6 @@ import {
   useCadastrarIbc,
   useIbcAlerts,
   useIbcPool,
-  useIbcProdutoMutations,
   useIbcProdutos,
 } from "../hooks/useIbcCadastro";
 import { useIbcConversao, useIbcHistorico } from "../hooks/useIbcConversao";
@@ -62,6 +61,7 @@ export default function CadastroIbcView() {
   const [inspecoesIbc, setInspecoesIbc] = useState<IbcCadastroDTO | null>(null);
   const [incluirHistorico, setIncluirHistorico] = useState(false);
   const [novoAberto, setNovoAberto] = useState(false);
+  const [produtosAberto, setProdutosAberto] = useState(false);
 
   const poolQuery = useIbcPool(allowed, incluirHistorico);
   const alertsQuery = useIbcAlerts(allowed);
@@ -69,7 +69,6 @@ export default function CadastroIbcView() {
   const cadastro = useCadastrarIbc();
   const createMutation = cadastro.unitario;
   const createLoteMutation = cadastro.lote;
-  const produtoMutations = useIbcProdutoMutations();
 
   if (!allowed) {
     return (
@@ -92,8 +91,18 @@ export default function CadastroIbcView() {
         <GestaoIbcHeader
           activeSection="containers"
           userRole={user?.role}
+          secondaryActions={
+            canWrite ? (
+              <Button type="button" variant="outline" onClick={() => setProdutosAberto(true)}>
+                Produtos
+              </Button>
+            ) : null
+          }
           primaryAction={canWrite ? <Button type="button" onClick={() => setNovoAberto(true)}>Novo IBC</Button> : null}
         />
+        {canWrite ? (
+          <IbcProdutosDrawer open={produtosAberto} produtos={produtos} onOpenChange={setProdutosAberto} />
+        ) : null}
         <p className="max-w-prose text-sm text-muted-foreground">
             {canWrite
               ? "Novo IBC nasce Apto, com alerta Sem inspeção até a primeira inspeção, e identificador HM + letra do produto. Lote de compra gera N unidades com a mesma data limite. Conversão e mudança de produto criam um novo registro."
@@ -110,27 +119,26 @@ export default function CadastroIbcView() {
               <DialogTitle>Novo IBC</DialogTitle>
               <DialogDescription>Cadastro unitário ou em lote.</DialogDescription>
             </DialogHeader>
-            <div className="mb-3">
-              <CadastroProdutoModal
-                produtos={produtos}
-                disabled={submitting}
-                onCreate={async (input) => {
-                  await produtoMutations.criar(input);
-                }}
-                onUpdate={async (id, input) => {
-                  await produtoMutations.atualizar(id, input);
-                }}
-              />
-            </div>
             <CadastroIbcModeSelector
               mode={mode}
               disabled={submitting}
               onChange={setMode}
             />
             {!produtosQuery.isLoading && produtos.length === 0 ? (
-              <p className="mb-3 text-sm text-muted-foreground">
-                Cadastre ao menos um produto para liberar o cadastro de IBC.
-              </p>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-muted/40 px-3 py-2.5 text-sm">
+                <p className="text-muted-foreground">Cadastre ao menos um produto para liberar o cadastro de IBC.</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setNovoAberto(false);
+                    setProdutosAberto(true);
+                  }}
+                >
+                  Abrir produtos
+                </Button>
+              </div>
             ) : null}
             {mode === "unitario" ? (
               <CadastroIbcForm

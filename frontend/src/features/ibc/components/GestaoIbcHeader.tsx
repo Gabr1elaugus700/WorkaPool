@@ -8,14 +8,16 @@ type Props = {
   activeSection: GestaoIbcSectionId;
   userRole?: string;
   primaryAction?: ReactNode;
+  secondaryActions?: ReactNode;
 };
 
-export default function GestaoIbcHeader({ activeSection, userRole, primaryAction }: Props) {
+export default function GestaoIbcHeader({ activeSection, userRole, primaryAction, secondaryActions }: Props) {
   return (
     <IbcPageHeader
       title="Gestão de IBC"
       icon={<Container className="h-7 w-7 text-primary" aria-hidden />}
       primaryAction={primaryAction}
+      secondaryActions={secondaryActions}
       tabs={
         <IbcPageTabs
           tabs={gestaoIbcSections.tabs}
