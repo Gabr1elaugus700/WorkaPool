@@ -1,5 +1,12 @@
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { formatIsoDateTimeLabel } from "@/utils/formatDate";
 import { useIbcInspecoes } from "../hooks/useIbcInspecao";
@@ -26,57 +33,58 @@ export default function IbcInspecoesDrawer({ ibc, onClose }: Props) {
   const inspecoes = query.data ?? [];
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Inspeções de {ibc.identificador}</DialogTitle>
-          <DialogDescription>
-            Mais recente primeiro, com os limites e itens do momento da inspeção.
-          </DialogDescription>
-        </DialogHeader>
-
-        {query.isLoading ? (
-          <CadastroIbcSectionSkeleton rows={2} />
-        ) : query.error ? (
-          <CadastroIbcSectionError message={toError(query.error).message} onRetry={() => void query.refetch()} />
-        ) : inspecoes.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma inspeção registrada para este IBC.</p>
-        ) : (
-          <ol className="max-h-[28rem] space-y-3 overflow-auto">
-            {inspecoes.map((inspecao) => (
-              <InspecaoItem key={inspecao.id} inspecao={inspecao} />
-            ))}
-          </ol>
-        )}
-      </DialogContent>
-    </Dialog>
+    <Sheet open onOpenChange={(open) => !open && onClose()}>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Inspeções de {ibc.identificador}</SheetTitle>
+          <SheetDescription>Mais recente primeiro, com os limites e itens do momento da inspeção.</SheetDescription>
+        </SheetHeader>
+        <SheetBody>
+          {query.isLoading ? (
+            <CadastroIbcSectionSkeleton rows={3} />
+          ) : query.error ? (
+            <CadastroIbcSectionError message={toError(query.error).message} onRetry={() => void query.refetch()} />
+          ) : inspecoes.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma inspeção registrada para este IBC.</p>
+          ) : (
+            <ol className="space-y-6">
+              {inspecoes.map((inspecao) => (
+                <InspecaoItem key={inspecao.id} inspecao={inspecao} />
+              ))}
+            </ol>
+          )}
+        </SheetBody>
+      </SheetContent>
+    </Sheet>
   );
 }
 
 function InspecaoItem({ inspecao }: { inspecao: IbcInspecaoHistoricoDTO }) {
   const reprovada = inspecao.resultado === "REPROVADA";
   return (
-    <li className={cn("rounded-md border px-3 py-2 text-sm", reprovada && "border-destructive/40")}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-medium">{inspecao.checklistNome}</span>
-        <Badge variant={reprovada ? "destructive" : "secondary"} className="text-[10px]">
+    <li className="space-y-2 text-sm">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <p className="font-medium text-foreground">{inspecao.checklistNome}</p>
+        <Badge variant={reprovada ? "destructive" : "secondary"}>
           {ibcCadastroLabels.inspecaoResultado[inspecao.resultado]}
         </Badge>
       </div>
-      <p className="mt-1 text-xs text-muted-foreground">
-        {formatMediaVsMinima(inspecao.mediaObtida, inspecao.mediaMinima)}
-        {" · crítico mín. "}
+      <p className="text-xs text-muted-foreground">
+        {formatIsoDateTimeLabel(inspecao.inspecionadoEm)} · {inspecao.inspetor.nome}
+      </p>
+      <p className="text-xs text-muted-foreground">
+        {formatMediaVsMinima(inspecao.mediaObtida, inspecao.mediaMinima)} · crítico mín.{" "}
         {formatNotaInspecao(inspecao.notaMinimaCritico)}
       </p>
-      <ul className="mt-2 divide-y divide-border rounded-md border">
+      <ul className={cn("divide-y divide-border rounded-md border", reprovada && "border-destructive/40")}>
         {inspecao.respostas.map((resposta) => {
           const abaixo = isNotaAbaixoDoMinimo(resposta, inspecao);
           return (
-            <li key={resposta.checklistItemId} className="flex items-center justify-between gap-3 px-2 py-1">
+            <li key={resposta.checklistItemId} className="flex items-center justify-between gap-3 px-3 py-1.5">
               <span className="flex min-w-0 flex-wrap items-center gap-2">
                 <span className="break-words">{resposta.descricao}</span>
                 {resposta.critico ? (
-                  <Badge variant="outline" className="text-[10px]">Crítico</Badge>
+                  <span className="text-xs font-medium text-muted-foreground">Crítico</span>
                 ) : null}
               </span>
               <span className={cn("shrink-0 tabular-nums", abaixo && "font-medium text-destructive")}>
@@ -87,14 +95,7 @@ function InspecaoItem({ inspecao }: { inspecao: IbcInspecaoHistoricoDTO }) {
           );
         })}
       </ul>
-      {inspecao.observacao ? (
-        <p className="mt-2 text-muted-foreground">“{inspecao.observacao}”</p>
-      ) : null}
-      <p className="mt-1 text-xs text-muted-foreground">
-        {formatIsoDateTimeLabel(inspecao.inspecionadoEm)}
-        {" · "}
-        {inspecao.inspetor.nome}
-      </p>
+      {inspecao.observacao ? <p className="text-muted-foreground">“{inspecao.observacao}”</p> : null}
     </li>
   );
 }
