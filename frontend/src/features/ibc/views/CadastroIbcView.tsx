@@ -1,17 +1,10 @@
 import { useState } from "react";
-import { CheckCircle2 } from "lucide-react";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
-import CadastroIbcForm from "../components/CadastroIbcForm";
-import CadastroIbcLoteForm from "../components/CadastroIbcLoteForm";
 import IbcProdutosDrawer from "../components/IbcProdutosDrawer";
-import CadastroIbcLoteWarningBanner from "../components/CadastroIbcLoteWarningBanner";
-import CadastroIbcModeSelector, {
-  type CadastroIbcMode,
-} from "../components/CadastroIbcModeSelector";
+import NovoIbcDrawer from "../components/NovoIbcDrawer";
 import CadastroIbcPoolList from "../components/CadastroIbcPoolList";
 import CadastroIbcAlertsPanel from "../components/CadastroIbcAlertsPanel";
 import CadastroIbcSectionError from "../components/CadastroIbcSectionError";
@@ -24,18 +17,10 @@ import IbcHistoricoDrawer from "../components/IbcHistoricoDrawer";
 import IbcChecklistsVinculoDrawer from "../components/IbcChecklistsVinculoDrawer";
 import IbcInspecaoDrawer from "../components/IbcInspecaoDrawer";
 import IbcInspecoesDrawer from "../components/IbcInspecoesDrawer";
-import {
-  useCadastrarIbc,
-  useIbcAlerts,
-  useIbcPool,
-  useIbcProdutos,
-} from "../hooks/useIbcCadastro";
+import { useIbcAlerts, useIbcPool, useIbcProdutos } from "../hooks/useIbcCadastro";
 import { useIbcConversao, useIbcHistorico } from "../hooks/useIbcConversao";
 import { useIbcChecklistVinculos } from "../hooks/useIbcChecklistVinculos";
-import type {
-  CreateLoteIbcResultDTO,
-  IbcCadastroDTO,
-} from "../types/ibcCadastro.types";
+import type { IbcCadastroDTO } from "../types/ibcCadastro.types";
 import {
   IBC_CADASTRO_VIEW_ROLES,
   canViewIbcCadastro,
@@ -47,7 +32,6 @@ export default function CadastroIbcView() {
   const { user } = useAuth();
   const allowed = canViewIbcCadastro(user?.role);
   const canWrite = canWriteIbcCadastro(user?.role);
-  const [mode, setMode] = useState<CadastroIbcMode>("unitario");
   const [mudanca, setMudanca] = useState<{
     ibc: IbcCadastroDTO;
     modo: IbcMudancaModo;
@@ -66,9 +50,6 @@ export default function CadastroIbcView() {
   const poolQuery = useIbcPool(allowed, incluirHistorico);
   const alertsQuery = useIbcAlerts(allowed);
   const produtosQuery = useIbcProdutos(allowed);
-  const cadastro = useCadastrarIbc();
-  const createMutation = cadastro.unitario;
-  const createLoteMutation = cadastro.lote;
 
   if (!allowed) {
     return (
@@ -80,10 +61,6 @@ export default function CadastroIbcView() {
   }
 
   const produtos = produtosQuery.data ?? [];
-  const loteResult: CreateLoteIbcResultDTO | undefined =
-    createLoteMutation.data;
-  const submitting =
-    createMutation.isPending || createLoteMutation.isPending;
 
   return (
     <DefaultLayout>
@@ -101,108 +78,25 @@ export default function CadastroIbcView() {
           primaryAction={canWrite ? <Button type="button" onClick={() => setNovoAberto(true)}>Novo IBC</Button> : null}
         />
         {canWrite ? (
-          <IbcProdutosDrawer open={produtosAberto} produtos={produtos} onOpenChange={setProdutosAberto} />
+          <>
+            <NovoIbcDrawer
+              open={novoAberto}
+              produtos={produtos}
+              produtosCarregando={produtosQuery.isLoading}
+              onOpenChange={setNovoAberto}
+              onAbrirProdutos={() => {
+                setNovoAberto(false);
+                setProdutosAberto(true);
+              }}
+            />
+            <IbcProdutosDrawer open={produtosAberto} produtos={produtos} onOpenChange={setProdutosAberto} />
+          </>
         ) : null}
         <p className="max-w-prose text-sm text-muted-foreground">
             {canWrite
               ? "Novo IBC nasce Apto, com alerta Sem inspeção até a primeira inspeção, e identificador HM + letra do produto. Lote de compra gera N unidades com a mesma data limite. Conversão e mudança de produto criam um novo registro."
               : "Consulta do pool, dos alertas e do histórico de inspeções de IBC."}
         </p>
-
-        {canWrite ? (
-          <Dialog open={novoAberto} onOpenChange={setNovoAberto}>
-          <DialogContent
-            className="left-auto right-0 top-0 flex h-screen max-h-screen w-full max-w-2xl translate-x-0 translate-y-0 flex-col overflow-y-auto rounded-none border-y-0 border-r-0 sm:rounded-none"
-            style={{ left: "auto", right: 0, top: 0, bottom: 0, height: "100vh", transform: "none" }}
-          >
-            <DialogHeader>
-              <DialogTitle>Novo IBC</DialogTitle>
-              <DialogDescription>Cadastro unitário ou em lote.</DialogDescription>
-            </DialogHeader>
-            <CadastroIbcModeSelector
-              mode={mode}
-              disabled={submitting}
-              onChange={setMode}
-            />
-            {!produtosQuery.isLoading && produtos.length === 0 ? (
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-muted/40 px-3 py-2.5 text-sm">
-                <p className="text-muted-foreground">Cadastre ao menos um produto para liberar o cadastro de IBC.</p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setNovoAberto(false);
-                    setProdutosAberto(true);
-                  }}
-                >
-                  Abrir produtos
-                </Button>
-              </div>
-            ) : null}
-            {mode === "unitario" ? (
-              <CadastroIbcForm
-                submitting={createMutation.isPending}
-                produtos={produtos}
-                onSubmit={async ({ dataLimite, produtoId }) => {
-                  await createMutation.mutateAsync({ dataLimite, produtoId });
-                }}
-              />
-            ) : (
-              <CadastroIbcLoteForm
-                submitting={createLoteMutation.isPending}
-                produtos={produtos}
-                onSubmit={async (input) => {
-                  await createLoteMutation.mutateAsync(input);
-                }}
-              />
-            )}
-            {mode === "unitario" &&
-            createMutation.isSuccess &&
-            createMutation.data ? (
-              <div
-                role="status"
-                className="mt-4 flex items-start gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm"
-              >
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <p>
-                  IBC cadastrado:{" "}
-                  <span className="font-semibold text-foreground">
-                    {createMutation.data.identificador}
-                  </span>
-                </p>
-              </div>
-            ) : null}
-            {mode === "lote" && createLoteMutation.isSuccess && loteResult ? (
-              <>
-                <div
-                  role="status"
-                  className="mt-4 flex items-start gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm"
-                >
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  <div>
-                    <p>
-                      Lote cadastrado:{" "}
-                      <span className="font-semibold text-foreground">
-                        {loteResult.items.length} IBCs
-                      </span>
-                      {loteResult.lote.numeroNf
-                        ? ` · NF ${loteResult.lote.numeroNf}`
-                        : null}
-                    </p>
-                    <p className="mt-1 text-muted-foreground">
-                      {loteResult.items.map((item) => item.identificador).join(", ")}
-                    </p>
-                  </div>
-                </div>
-                {loteResult.warning ? (
-                  <CadastroIbcLoteWarningBanner warning={loteResult.warning} />
-                ) : null}
-              </>
-            ) : null}
-          </DialogContent>
-          </Dialog>
-        ) : null}
 
         {alertsQuery.isLoading ? (
           <p className="text-sm text-muted-foreground">Carregando alertas…</p>
