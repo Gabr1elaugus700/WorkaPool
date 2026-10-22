@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { todayLocalIsoDate } from "@/utils/formatDate";
 import type { IbcProdutoDTO } from "../types/ibcCadastro.types";
 import IbcProdutoSelect from "./IbcProdutoSelect";
 
@@ -11,15 +12,6 @@ type Props = {
   produtos: IbcProdutoDTO[];
   onSubmit: (payload: { dataLimite: string; produtoId: string }) => Promise<void> | void;
 };
-
-/** YYYY-MM-DD in the user's local calendar (date-only, no time drift). */
-function todayLocalIsoDate(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 export default function CadastroIbcForm({
   disabled = false,

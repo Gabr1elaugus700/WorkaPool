@@ -79,6 +79,14 @@ export function formatEstimatedDaysUntilNextPurchase(
   return `${formatNumber(Math.abs(diffDays))} dias atrás`;
 }
 
+/** YYYY-MM-DD no calendário local do usuário (só data, sem deriva de fuso). */
+export function todayLocalIsoDate(now: Date = new Date()): string {
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export function formatIsoDateLabel(value: string | null): string {
   if (!value) {
     return "Não informado";

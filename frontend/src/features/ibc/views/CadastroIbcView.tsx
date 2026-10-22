@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2 } from "lucide-react";
-import { toast } from "sonner";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -26,9 +24,15 @@ import IbcHistoricoDrawer from "../components/IbcHistoricoDrawer";
 import IbcChecklistsVinculoDialog from "../components/IbcChecklistsVinculoDialog";
 import IbcInspecaoDialog from "../components/IbcInspecaoDialog";
 import IbcInspecoesDrawer from "../components/IbcInspecoesDrawer";
+import {
+  useCadastrarIbc,
+  useIbcAlerts,
+  useIbcPool,
+  useIbcProdutoMutations,
+  useIbcProdutos,
+} from "../hooks/useIbcCadastro";
 import { useIbcConversao, useIbcHistorico } from "../hooks/useIbcConversao";
 import { useIbcChecklistVinculos } from "../hooks/useIbcChecklistVinculos";
-import { ibcCadastroService } from "../services/ibcCadastroService";
 import type {
   CreateLoteIbcResultDTO,
   IbcCadastroDTO,
@@ -40,15 +44,10 @@ import {
 } from "../utils/ibcCadastroPermissions";
 import { toError } from "../utils/toError";
 
-const POOL_KEY = ["ibc", "pool"] as const;
-const ALERTS_KEY = ["ibc", "alerts"] as const;
-const PRODUTOS_KEY = ["ibc", "produtos"] as const;
-
 export default function CadastroIbcView() {
   const { user } = useAuth();
   const allowed = canViewIbcCadastro(user?.role);
   const canWrite = canWriteIbcCadastro(user?.role);
-  const queryClient = useQueryClient();
   const [mode, setMode] = useState<CadastroIbcMode>("unitario");
   const [mudanca, setMudanca] = useState<{
     ibc: IbcCadastroDTO;
@@ -64,74 +63,13 @@ export default function CadastroIbcView() {
   const [incluirHistorico, setIncluirHistorico] = useState(false);
   const [novoAberto, setNovoAberto] = useState(false);
 
-  const poolQuery = useQuery({
-    queryKey: [...POOL_KEY, incluirHistorico],
-    queryFn: () => ibcCadastroService.listPool(incluirHistorico),
-    enabled: allowed,
-  });
-  const alertsQuery = useQuery({
-    queryKey: ALERTS_KEY,
-    queryFn: ibcCadastroService.listAlerts,
-    enabled: allowed,
-  });
-  const produtosQuery = useQuery({
-    queryKey: PRODUTOS_KEY,
-    queryFn: ibcCadastroService.listProdutos,
-    enabled: allowed,
-  });
-
-  const invalidateLists = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: POOL_KEY }),
-      queryClient.invalidateQueries({ queryKey: ALERTS_KEY }),
-      queryClient.invalidateQueries({ queryKey: PRODUTOS_KEY }),
-    ]);
-  };
-
-  const createMutation = useMutation({
-    mutationFn: ibcCadastroService.createNovo,
-    onSuccess: async (created) => {
-      toast.success(`IBC ${created.identificador} cadastrado`);
-      await invalidateLists();
-    },
-    onError: (err) => {
-      toast.error(toError(err).message || "Falha ao cadastrar IBC");
-    },
-  });
-
-  const createLoteMutation = useMutation({
-    mutationFn: ibcCadastroService.createLote,
-    onSuccess: async (result) => {
-      toast.success(`Lote com ${result.items.length} IBCs cadastrado`);
-      await invalidateLists();
-    },
-    onError: (err) => {
-      toast.error(toError(err).message || "Falha ao cadastrar lote de IBC");
-    },
-  });
-
-  const createProdutoMutation = useMutation({
-    mutationFn: ibcCadastroService.createProduto,
-    onSuccess: async (created) => {
-      toast.success(`Produto ${created.nome} (${created.abreviacao}) cadastrado`);
-      await invalidateLists();
-    },
-    onError: (err) => {
-      toast.error(toError(err).message || "Falha ao cadastrar produto");
-    },
-  });
-
-  const updateProdutoMutation = useMutation({
-    mutationFn: ({ id, nome, abreviacao }: { id: string; nome: string; abreviacao: string }) =>
-      ibcCadastroService.updateProduto(id, { nome, abreviacao }),
-    onSuccess: async () => {
-      toast.success("Produto atualizado");
-      await invalidateLists();
-    },
-    onError: (err) => {
-      toast.error(toError(err).message || "Falha ao atualizar produto");
-    },
-  });
+  const poolQuery = useIbcPool(allowed, incluirHistorico);
+  const alertsQuery = useIbcAlerts(allowed);
+  const produtosQuery = useIbcProdutos(allowed);
+  const cadastro = useCadastrarIbc();
+  const createMutation = cadastro.unitario;
+  const createLoteMutation = cadastro.lote;
+  const produtoMutations = useIbcProdutoMutations();
 
   if (!allowed) {
     return (
@@ -177,10 +115,10 @@ export default function CadastroIbcView() {
                 produtos={produtos}
                 disabled={submitting}
                 onCreate={async (input) => {
-                  await createProdutoMutation.mutateAsync(input);
+                  await produtoMutations.criar(input);
                 }}
                 onUpdate={async (id, input) => {
-                  await updateProdutoMutation.mutateAsync({ id, ...input });
+                  await produtoMutations.atualizar(id, input);
                 }}
               />
             </div>

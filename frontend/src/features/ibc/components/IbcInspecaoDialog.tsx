@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useIbcChecklistVinculos } from "../hooks/useIbcChecklistVinculos";
 import { useIbcChecklistDetalhe, useRegistrarIbcInspecao } from "../hooks/useIbcInspecao";
 import type { IbcCadastroDTO } from "../types/ibcCadastro.types";
@@ -131,14 +132,13 @@ export default function IbcInspecaoDialog({ ibc, onClose }: Props) {
                 )}
                 <div className="space-y-1.5">
                   <Label htmlFor="ibc-inspecao-observacao" className="text-xs">Observação (opcional)</Label>
-                  <textarea
+                  <Textarea
                     id="ibc-inspecao-observacao"
                     value={observacao}
                     onChange={(event) => setObservacao(event.target.value)}
                     maxLength={IBC_OBSERVACAO_MAX}
                     rows={2}
                     disabled={inspecao.isPending}
-                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                 </div>
               </>
