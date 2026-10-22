@@ -21,7 +21,7 @@ import ConfirmarMudancaIbcModal, {
   type IbcMudancaModo,
 } from "../components/ConfirmarMudancaIbcModal";
 import IbcHistoricoDrawer from "../components/IbcHistoricoDrawer";
-import IbcChecklistsVinculoDialog from "../components/IbcChecklistsVinculoDialog";
+import IbcChecklistsVinculoDrawer from "../components/IbcChecklistsVinculoDrawer";
 import IbcInspecaoDialog from "../components/IbcInspecaoDialog";
 import IbcInspecoesDrawer from "../components/IbcInspecoesDrawer";
 import {
@@ -273,7 +273,7 @@ export default function CadastroIbcView() {
         />
       ) : null}
       {canWrite && checklistsIbc ? (
-        <IbcChecklistsVinculoDialog
+        <IbcChecklistsVinculoDrawer
           identificador={checklistsIbc.identificador}
           state={vinculos}
           onClose={() => setChecklistsIbc(null)}
