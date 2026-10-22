@@ -22,7 +22,7 @@ import ConfirmarMudancaIbcModal, {
 } from "../components/ConfirmarMudancaIbcModal";
 import IbcHistoricoDrawer from "../components/IbcHistoricoDrawer";
 import IbcChecklistsVinculoDrawer from "../components/IbcChecklistsVinculoDrawer";
-import IbcInspecaoDialog from "../components/IbcInspecaoDialog";
+import IbcInspecaoDrawer from "../components/IbcInspecaoDrawer";
 import IbcInspecoesDrawer from "../components/IbcInspecoesDrawer";
 import {
   useCadastrarIbc,
@@ -280,7 +280,7 @@ export default function CadastroIbcView() {
         />
       ) : null}
       {canWrite && inspecaoIbc ? (
-        <IbcInspecaoDialog key={inspecaoIbc.id} ibc={inspecaoIbc} onClose={() => setInspecaoIbc(null)} />
+        <IbcInspecaoDrawer key={inspecaoIbc.id} ibc={inspecaoIbc} onClose={() => setInspecaoIbc(null)} />
       ) : null}
       {inspecoesIbc ? (
         <IbcInspecoesDrawer ibc={inspecoesIbc} onClose={() => setInspecoesIbc(null)} />
