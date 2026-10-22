@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import type {
   IbcCadastroDTO,
   IbcMudancaConfirmacaoInput,
@@ -144,7 +145,7 @@ export default function ConfirmarMudancaIbcModal({
             <Label htmlFor="ibc-mudanca-observacao" className="text-xs">
               Observação (opcional)
             </Label>
-            <textarea
+            <Textarea
               id="ibc-mudanca-observacao"
               value={observacao}
               onChange={(event) => setObservacao(event.target.value)}
@@ -152,7 +153,6 @@ export default function ConfirmarMudancaIbcModal({
               rows={3}
               disabled={submitting}
               placeholder="Ex.: avaria visual encontrada na inspeção"
-              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
             <p className="text-right text-xs text-muted-foreground">
               {observacao.length}/{IBC_OBSERVACAO_MAX}

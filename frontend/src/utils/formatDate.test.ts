@@ -8,9 +8,14 @@ import {
   formatIsoDateTimeLabel,
   formatIsoDayMonthTimeLabel,
   formatPurchaseFrequencyDays,
+  todayLocalIsoDate,
 } from "./formatDate";
 
 describe("formatDate", () => {
+  it("formats today as a local YYYY-MM-DD date", () => {
+    assert.equal(todayLocalIsoDate(new Date(2026, 0, 5, 23, 59)), "2026-01-05");
+  });
+
   it("formats days since last purchase with today shortcut", () => {
     assert.equal(formatDaysSinceLastPurchase(0), "Hoje");
     assert.equal(formatDaysSinceLastPurchase(1), "1 dia");
