@@ -359,9 +359,10 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     const converted = await request(app)
       .patch(`/api/ibc/${created.body.id}/converter-nao-homologado`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ confirmado: true, observacao: "avaria visual" });
+      .send({ confirmado: true, destino: "manter_grupo", observacao: "avaria visual" });
     assert.equal(converted.status, 201);
-    assert.match(converted.body.identificador, /^NHMSC\d{5}$/);
+    assert.match(converted.body.identificador, /^NHSC\d{5}$/);
+    assert.equal(converted.body.corHex, corFromSigla("SC"));
 
     const sourceRows = await prisma.$queryRawUnsafe<
       Array<{ convertedToContainerId: string | null }>
@@ -378,9 +379,14 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
         toContainerId: string;
         changeType: string;
         observation: string | null;
+        identificadorAnterior: string | null;
+        corAnterior: string | null;
+        identificadorNovo: string | null;
+        corNova: string | null;
       }>
     >(
-      `SELECT "fromContainerId","toContainerId","changeType","observation"
+      `SELECT "fromContainerId","toContainerId","changeType","observation",
+              "identificadorAnterior","corAnterior","identificadorNovo","corNova"
        FROM "IbcConversionHistory"
        WHERE "fromContainerId" = '${created.body.id}'`,
     );
@@ -388,6 +394,10 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     assert.equal(historyRows[0].toContainerId, converted.body.id);
     assert.equal(historyRows[0].changeType, "conversion");
     assert.equal(historyRows[0].observation, "avaria visual");
+    assert.equal(historyRows[0].identificadorAnterior, created.body.identificador);
+    assert.equal(historyRows[0].corAnterior, corFromSigla("SC"));
+    assert.equal(historyRows[0].identificadorNovo, converted.body.identificador);
+    assert.equal(historyRows[0].corNova, corFromSigla("SC"));
   });
 
   it("product change creates a new record and product-change history", async () => {
@@ -402,10 +412,22 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
       abreviacao: "NX",
     });
 
-    const created = await request(app)
+    const homologado = await request(app)
       .post("/api/ibc")
       .set("Authorization", `Bearer ${token}`)
       .send(novoIbc(produtoOrigemId));
+    assert.equal(homologado.status, 201);
+    const hmRecusado = await request(app)
+      .patch(`/api/ibc/${homologado.body.id}/produto`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ produtoId: produtoDestinoId.id, confirmado: true });
+    assert.equal(hmRecusado.status, 409);
+    assert.equal(hmRecusado.body.code, "IBC_HOMOLOGADO_PRODUTO_FIXO");
+
+    const created = await request(app)
+      .post("/api/ibc")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ ...novoIbc(produtoOrigemId), homologado: false });
     assert.equal(created.status, 201);
 
     const changed = await request(app)
@@ -417,8 +439,9 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
         observacao: "mudanca de produto operacional",
       });
     assert.equal(changed.status, 201);
-    assert.match(changed.body.identificador, /^HMNX\d{5}$/);
+    assert.match(changed.body.identificador, /^NHNX\d{5}$/);
     assert.equal(changed.body.produtoId, produtoDestinoId.id);
+    assert.equal(changed.body.homologado, false);
 
     const historyRows = await prisma.$queryRawUnsafe<
       Array<{ changeType: string; toContainerId: string }>
@@ -445,13 +468,13 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     assert.equal(created.status, 201);
 
     const max = await prisma.ibc.aggregate({
-      where: { prefixo: "NHMRB" },
+      where: { prefixo: "NHRB" },
       _max: { sequencial: true },
     });
     const nextSequencial = (max._max.sequencial ?? 0) + 1;
     await prisma.ibc.create({
       data: {
-        identificador: `NHMRB${String(nextSequencial).padStart(5, "0")}`,
+        identificador: `NHRB${String(nextSequencial).padStart(5, "0")}`,
         aptidao: "APTO",
         custodia: "PATIO",
         tipoCadastro: "NOVO",
@@ -462,7 +485,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     const converted = await request(app)
       .patch(`/api/ibc/${created.body.id}/converter-nao-homologado`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ confirmado: true });
+      .send({ confirmado: true, destino: "manter_grupo" });
     assert.equal(converted.status, 409);
     assert.equal(converted.body.code, "IBC_IDENTIFICADOR_DUPLICADO");
 
@@ -490,10 +513,10 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     const forbidden = await request(app)
       .patch(`/api/ibc/${created.body.id}/converter-nao-homologado`)
       .set("Authorization", `Bearer ${createToken(Role.VENDAS, "ibc-vendas")}`)
-      .send({ confirmado: true });
+      .send({ confirmado: true, destino: "manter_grupo" });
     assert.equal(forbidden.status, 403);
 
-    const derived = await prisma.ibc.count({ where: { prefixo: "NHMAZ" } });
+    const derived = await prisma.ibc.count({ where: { prefixo: "NHAZ" } });
     assert.equal(derived, 0);
     const history = await prisma.ibcConversionHistory.count({
       where: { fromContainerId: created.body.id },
@@ -521,13 +544,13 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     const first = await request(app)
       .patch(`/api/ibc/${created.body.id}/converter-nao-homologado`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ confirmado: true });
+      .send({ confirmado: true, destino: "manter_grupo" });
     assert.equal(first.status, 201);
 
     const again = await request(app)
       .patch(`/api/ibc/${created.body.id}/converter-nao-homologado`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ confirmado: true });
+      .send({ confirmado: true, destino: "manter_grupo" });
     assert.equal(again.status, 409);
     assert.equal(again.body.code, "IBC_JA_SUBSTITUIDO");
 
@@ -545,7 +568,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     });
     assert.equal(history, 1);
     const derived = await prisma.ibc.count({
-      where: { prefixo: { in: ["NHMRV", "HMRD"] } },
+      where: { prefixo: { in: ["NHRV"] } },
     });
     assert.equal(derived, 1);
   });
@@ -568,7 +591,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
         request(app)
           .patch(`/api/ibc/${created.body.id}/converter-nao-homologado`)
           .set("Authorization", `Bearer ${token}`)
-          .send({ confirmado: true }),
+          .send({ confirmado: true, destino: "manter_grupo" }),
       ),
     );
 
@@ -577,7 +600,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     const rejected = responses.find((response) => response.status === 409);
     assert.equal(rejected?.body.code, "IBC_JA_SUBSTITUIDO");
 
-    const derived = await prisma.ibc.count({ where: { prefixo: "NHMCR" } });
+    const derived = await prisma.ibc.count({ where: { prefixo: "NHCR" } });
     assert.equal(derived, 1);
     const history = await prisma.ibcConversionHistory.count({
       where: { fromContainerId: created.body.id },
@@ -599,7 +622,7 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     const converted = await request(app)
       .patch(`/api/ibc/${created.body.id}/converter-nao-homologado`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ confirmado: true, observacao: "trinca na base" });
+      .send({ confirmado: true, destino: "manter_grupo", observacao: "trinca na base" });
     assert.equal(converted.status, 201);
 
     for (const id of [created.body.id, converted.body.id]) {
@@ -620,6 +643,10 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
         id: converted.body.id,
         identificador: converted.body.identificador,
       });
+      assert.equal(evento.identificadorAnterior, created.body.identificador);
+      assert.equal(evento.corAnterior, corFromSigla("HI"));
+      assert.equal(evento.identificadorNovo, converted.body.identificador);
+      assert.equal(evento.corNova, corFromSigla("HI"));
     }
 
     const missing = await request(app)

@@ -60,6 +60,9 @@ export type IbcProdutoRecord = {
   id: string;
   nome: string;
   abreviacao: string;
+  sigla: string | null;
+  corHex: string;
+  universal: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -68,6 +71,13 @@ export type IbcProdutoListItem = IbcProdutoRecord & { possuiIbcs: boolean };
 
 export type IbcStructuralChangeType = "conversion" | "product_change" | "status_change";
 
+/** Foto da placa gravada na mesma transação do IBC derivado. O identificador novo sai da linha criada. */
+export type IbcPlacaSnapshotInput = {
+  identificadorAnterior: string;
+  corAnterior: string | null;
+  corNova: string | null;
+};
+
 export type CreateDerivedIbcData = {
   sourceIbcId: string;
   prefixo: string;
@@ -75,6 +85,7 @@ export type CreateDerivedIbcData = {
   actorId: string;
   observation: string | null;
   changeType: IbcStructuralChangeType;
+  placa: IbcPlacaSnapshotInput;
 };
 
 export type IbcConversionHistoryRecord = {
@@ -86,4 +97,9 @@ export type IbcConversionHistoryRecord = {
   createdAt: Date;
   from: { id: string; identificador: string };
   to: { id: string; identificador: string };
+  /** Nulos em eventos gravados antes da foto da placa. */
+  identificadorAnterior: string | null;
+  corAnterior: string | null;
+  identificadorNovo: string | null;
+  corNova: string | null;
 };

@@ -230,6 +230,10 @@ model IbcConversionHistory {
   changeType      String
   observation     String?
   actorId         String
+  identificadorAnterior String?
+  corAnterior           String?
+  identificadorNovo     String?
+  corNova               String?
   createdAt       DateTime @default(now())
 
   fromContainer Ibc @relation("IbcConversionFrom", fields: [fromContainerId], references: [id], onDelete: Restrict, onUpdate: Cascade)

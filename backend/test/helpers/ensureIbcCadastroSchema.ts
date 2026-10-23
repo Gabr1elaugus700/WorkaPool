@@ -223,4 +223,11 @@ export async function ensureIbcCadastroSchema(
     EXCEPTION WHEN duplicate_table OR duplicate_object THEN NULL;
     END $$
   `);
+  await prisma.$executeRawUnsafe(`
+    ALTER TABLE "IbcConversionHistory"
+      ADD COLUMN IF NOT EXISTS "identificadorAnterior" TEXT,
+      ADD COLUMN IF NOT EXISTS "corAnterior" TEXT,
+      ADD COLUMN IF NOT EXISTS "identificadorNovo" TEXT,
+      ADD COLUMN IF NOT EXISTS "corNova" TEXT
+  `);
 }

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { RouteContract } from "../../../docs/openapi/contracts";
 import { appErrorSchema, internalServerErrorSchema, unauthorizedErrorSchema, validationErrorSchema } from "../../../docs/schemas/error.schemas";
-import { IbcCadastroHttpSchemas, ibcCadastroResponseSchema, ibcLoteResponseSchema } from "../http/schemas/IbcCadastroSchema";
+import { IbcCadastroHttpSchemas, ibcCadastroResponseSchema, ibcHistoricoEventoSchema, ibcLoteResponseSchema } from "../http/schemas/IbcCadastroSchema";
 
 const bearer = [{ bearerAuth: [] }];
 const erro = (description: string, componentName: string) => ({ description, schema: appErrorSchema, componentName });
@@ -39,6 +39,52 @@ export const ibcCadastroContracts: RouteContract[] = [
     responses: {
       "200": { description: "Pool de containers", schema: z.array(ibcCadastroResponseSchema), componentName: "IbcCadastroLista" },
       "401": comum["401"], "500": comum["500"],
+    },
+  },
+  {
+    method: "patch", path: "/api/ibc/{id}/converter-nao-homologado", tags: ["IBC"], security: bearer,
+    summary: "Converte HM em NH mantendo o grupo ou virando universal",
+    description: "Destino manter_grupo gera NH+sigla do grupo atual. Legado HM#### sem produto envia grupoCodigo ou destino universal (prefixo NH). Grava a placa de antes e de depois no histórico.",
+    request: {
+      params: z.object({ id: z.string() }),
+      body: IbcCadastroHttpSchemas.convertToNaoHomologado,
+    },
+    responses: {
+      "201": { description: "Container NH criado", schema: ibcCadastroResponseSchema, componentName: "IbcCadastro" },
+      "400": comum["400"], "401": comum["401"], "403": comum["403"],
+      "404": erro("IBC não encontrado (IBC_NOT_FOUND)", "IbcNotFoundError"),
+      "409": erro("Já NH, já substituído ou prefixo inválido", "IbcConversaoConflictError"),
+      "422": erro("Universal ou grupo sem configuração (IBC_PRODUTO_NAO_CONFIGURADO) ou legado sem grupo (IBC_PRODUTO_OBRIGATORIO)", "IbcConversaoProdutoError"),
+      "500": comum["500"],
+    },
+  },
+  {
+    method: "patch", path: "/api/ibc/{id}/produto", tags: ["IBC"], security: bearer,
+    summary: "Troca o produto de um NH",
+    description: "Aceita universal → grupo, grupo → grupo e grupo → universal. HM responde 409 IBC_HOMOLOGADO_PRODUTO_FIXO. O destino nunca é HM. Grava a placa no histórico.",
+    request: {
+      params: z.object({ id: z.string() }),
+      body: IbcCadastroHttpSchemas.changeProduto,
+    },
+    responses: {
+      "201": { description: "Container NH com o produto novo", schema: ibcCadastroResponseSchema, componentName: "IbcCadastro" },
+      "400": comum["400"], "401": comum["401"], "403": comum["403"],
+      "404": erro("IBC ou produto não encontrado", "IbcProdutoChangeNotFoundError"),
+      "409": erro("HM (IBC_HOMOLOGADO_PRODUTO_FIXO), produto igual ou IBC já substituído", "IbcProdutoChangeConflictError"),
+      "422": erro("Destino sem configuração de placa (IBC_PRODUTO_NAO_CONFIGURADO)", "IbcProdutoChangeConfigError"),
+      "500": comum["500"],
+    },
+  },
+  {
+    method: "get", path: "/api/ibc/{id}/historico", tags: ["IBC"], security: bearer,
+    summary: "Histórico de conversão e mudança de produto",
+    description: "Cada evento traz identificador e cor de antes e de depois. Eventos antigos vêm com esses campos nulos.",
+    request: { params: z.object({ id: z.string() }) },
+    responses: {
+      "200": { description: "Eventos da linhagem", schema: z.array(ibcHistoricoEventoSchema), componentName: "IbcHistorico" },
+      "401": comum["401"], "403": comum["403"],
+      "404": erro("IBC não encontrado (IBC_NOT_FOUND)", "IbcHistoricoNotFoundError"),
+      "500": comum["500"],
     },
   },
 ];
