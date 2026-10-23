@@ -5,13 +5,16 @@ export type LinhaGrupoPedido = {
   grupoCodigo?: string | null;
 };
 
-/** Grupos distintos, na ordem da primeira ocorrência, sem a linha 251001. */
+/**
+ * Grupos distintos, na ordem da primeira ocorrência, das linhas envasadas em IBC.
+ * 251001 é a embalagem da própria linha do produto, não um item separado do pedido.
+ */
 export function coletarGruposCodigo(linhas: readonly LinhaGrupoPedido[]): string[] {
   const grupos: string[] = [];
   const vistos = new Set<string>();
 
   for (const linha of linhas) {
-    if (Number(linha.codigoEmbalagem) === CODIGO_EMBALAGEM_IBC) continue;
+    if (Number(linha.codigoEmbalagem) !== CODIGO_EMBALAGEM_IBC) continue;
     const grupo = linha.grupoCodigo?.trim() ?? "";
     if (grupo.length === 0 || vistos.has(grupo)) continue;
     vistos.add(grupo);

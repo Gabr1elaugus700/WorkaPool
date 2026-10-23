@@ -18,10 +18,11 @@ function harness(fotos: FotoMutavel[]) {
   const saves: { id: string; gruposCodigo: string[] }[] = [];
   let consultasSapiens = 0;
   const itens: ItemPedidoSapiens[] = [
-    { numPed: "1", codPro: "P1", codigoEmbalagem: null },
-    { numPed: "1", codPro: "P2", codigoEmbalagem: 20 },
-    { numPed: "1", codPro: "EMB", codigoEmbalagem: 251001 },
-    { numPed: "9", codPro: "P9", codigoEmbalagem: null },
+    { numPed: "1", codPro: "P1", codigoEmbalagem: 251001 },
+    { numPed: "1", codPro: "P2", codigoEmbalagem: "251001" },
+    { numPed: "1", codPro: "P3", codigoEmbalagem: 20 },
+    { numPed: "1", codPro: "P4", codigoEmbalagem: null },
+    { numPed: "9", codPro: "P9", codigoEmbalagem: 251001 },
   ];
 
   const ports: CargaPedidoIbcGruposBackfillPorts = {
@@ -42,7 +43,8 @@ function harness(fotos: FotoMutavel[]) {
       return new Map([
         ["P1", "SODA"],
         ["P2", "CLORO"],
-        ["EMB", "EMB"],
+        ["P3", "BOMBONA"],
+        ["P4", "AVULSO"],
         ["P9", "SODA"],
       ]);
     },
@@ -52,7 +54,7 @@ function harness(fotos: FotoMutavel[]) {
 }
 
 describe("backfillCargaPedidoIbcGrupos (#419)", () => {
-  it("fills open trips, skips the 251001 line, and leaves closed trips empty", async () => {
+  it("fills open trips from the 251001 lines only, and leaves closed trips empty", async () => {
     const fotos: FotoMutavel[] = [
       { id: "aberta", numPed: "1", gruposCodigo: [], viagemFechada: false },
       { id: "fechada", numPed: "9", gruposCodigo: [], viagemFechada: true },
