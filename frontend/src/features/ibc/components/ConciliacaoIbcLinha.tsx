@@ -60,6 +60,11 @@ export default function ConciliacaoIbcLinha({ item, pedidos, disabled, onDestino
           </div>
         ) : null}
       </div>
+      {item.destino === "RETORNOU" ? (
+        <p className="mt-3 max-w-[65ch] text-sm text-muted-foreground">
+          Retornou não checa compatibilidade de produto. Qualquer container pode voltar no caminhão.
+        </p>
+      ) : null}
       {item.destino === "TROCA" ? (
         item.ibcEntradaId ? (
           <p className="mt-3 text-sm text-muted-foreground">Entrada da troca vinculada.</p>

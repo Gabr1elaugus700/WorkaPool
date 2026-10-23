@@ -70,6 +70,15 @@ describe("CargaIbcFecharViagemEtapa", () => {
     assert.match(markup, /Salvar andamento/);
     assert.match(markup, /Fechar viagem/);
     assert.doesNotMatch(markup, /Confirmar e fechar|Venda|Empréstimo/);
+    assert.match(markup, /não checa produto/);
+  });
+
+  it("titula o 409 de produto incompatível na volta", () => {
+    const markup = html({
+      aviso: "O container NHCL1 é de outro produto (grupo CLORO). Este pedido aceita SODA.",
+    });
+    assert.match(markup, /Container de outro produto/);
+    assert.match(markup, /Este pedido aceita SODA/);
   });
 
   it("pede confirmação só da divergência e deixa a viagem fechada em consulta", () => {

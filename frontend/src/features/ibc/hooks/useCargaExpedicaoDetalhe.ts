@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { ibcExpedicaoService } from "../services/ibcExpedicaoService";
 import type { CargaExpedicaoDetalheDTO } from "../types/ibcExpedicao.types";
 import { IbcAlocacaoRequestError } from "../utils/ibcAlocacaoError";
+import { ibcProdutoCompatibilidade } from "../utils/ibcProdutoCompatibilidade";
 import { toError } from "../utils/toError";
 
 export type SubstituidoNotice = {
@@ -49,12 +50,16 @@ export function useCargaExpedicaoDetalhe(codCar: number | null, enabled: boolean
     setAllocating(true);
     setSubstituidoNotice(null);
     try {
-      await ibcExpedicaoService.createAlocacao({ codCar, identificador });
+      const criado = await ibcExpedicaoService.createAlocacao({ codCar, identificador });
       toast.success(`IBC ${identificador} vinculado à carga`);
+      const avisos = ibcProdutoCompatibilidade.avisosDe(criado.avisos);
+      if (avisos.length > 0) {
+        toast.warning(ibcProdutoCompatibilidade.textoAvisos(avisos), { duration: 8000 });
+      }
       await carregar();
       return true;
     } catch (err) {
-      if (err instanceof IbcAlocacaoRequestError && err.substituido && err.title) {
+      if (err instanceof IbcAlocacaoRequestError && err.title) {
         setSubstituidoNotice({ title: err.title, message: err.message });
         return false;
       }

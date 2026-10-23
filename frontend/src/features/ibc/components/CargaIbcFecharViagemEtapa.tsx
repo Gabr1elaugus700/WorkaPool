@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type {
   ConciliacaoViagemClienteDTO,
@@ -7,6 +8,7 @@ import type {
   DestinoConciliacao,
   PedidoConciliacaoDTO,
 } from "../types/conciliacaoViagem.types";
+import { ibcProdutoCompatibilidade } from "../utils/ibcProdutoCompatibilidade";
 import ConciliacaoIbcLinha from "./ConciliacaoIbcLinha";
 import ConciliacaoPedidoBarras from "./ConciliacaoPedidoBarras";
 import ConciliacaoRetornosPainel from "./ConciliacaoRetornosPainel";
@@ -66,10 +68,14 @@ export default function CargaIbcFecharViagemEtapa({
       <p className="mb-4 max-w-[65ch] text-sm text-muted-foreground">
         {fechada
           ? "Esta viagem já foi fechada. A conciliação fica só para consulta."
-          : `Aponte o pedido do que ficou ou foi trocado. O que voltou no caminhão não leva pedido. ${marcados} de ${total} IBCs com destino.`}
+          : `Aponte o pedido do que ficou ou foi trocado. O que voltou no caminhão não leva pedido e não checa produto. ${marcados} de ${total} IBCs com destino.`}
       </p>
       {aviso ? (
         <Alert className="mb-4" variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          {ibcProdutoCompatibilidade.ehIncompativel(aviso) ? (
+            <AlertTitle>{ibcProdutoCompatibilidade.tituloIncompativel}</AlertTitle>
+          ) : null}
           <AlertDescription>{aviso}</AlertDescription>
         </Alert>
       ) : null}
