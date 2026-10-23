@@ -87,7 +87,7 @@ describe("IBC lote HTTP persistence (#117 / #121)", () => {
     await prisma.$disconnect();
   });
 
-  async function createProduto(token: string): Promise<string> {
+  async function createProduto(token: string): Promise<{ id: string; grupoCodigo: string }> {
     const app = createIbcTestApp();
     const grupoCodigo = "t17LO";
     await prisma.produtoGrupoMap.upsert({
@@ -108,7 +108,7 @@ describe("IBC lote HTTP persistence (#117 / #121)", () => {
       .set("Authorization", `Bearer ${token}`)
       .send({ sigla: "LO", corHex: "#004C4F" });
     assert.equal(created.status, 200);
-    return String(created.body.id);
+    return { id: String(created.body.id), grupoCodigo };
   }
 
   it("POST lote persists N rows and returns identifiers", async () => {
@@ -119,7 +119,12 @@ describe("IBC lote HTTP persistence (#117 / #121)", () => {
     const response = await request(app)
       .post("/api/ibc/lote")
       .set("Authorization", `Bearer ${token}`)
-      .send({ quantidade: 5, dataLimite: FUTURE_DATA_LIMITE, produtoId });
+      .send({
+        quantidade: 5,
+        dataLimite: FUTURE_DATA_LIMITE,
+        homologado: true,
+        grupoCodigo: produtoId.grupoCodigo,
+      });
 
     assert.equal(response.status, 201);
     assert.equal(response.body.items.length, 5);
@@ -133,7 +138,10 @@ describe("IBC lote HTTP persistence (#117 / #121)", () => {
       assert.equal(item.primeiraInspecaoEm, null);
       assert.equal(item.custodia, "PATIO");
       assert.equal(item.loteId, response.body.lote.id);
-      assert.equal(item.produtoId, produtoId);
+      assert.equal(item.produtoId, produtoId.id);
+      assert.equal(item.homologado, true);
+      assert.equal(item.universal, false);
+      assert.equal(item.corHex, "#004C4F");
     }
 
     const pool = await request(app)
@@ -161,7 +169,8 @@ describe("IBC lote HTTP persistence (#117 / #121)", () => {
         quantidade: 2,
         dataLimite: FUTURE_DATA_LIMITE,
         numeroNf: "998877",
-        produtoId,
+        homologado: true,
+        grupoCodigo: produtoId.grupoCodigo,
       });
 
     assert.equal(response.status, 201);

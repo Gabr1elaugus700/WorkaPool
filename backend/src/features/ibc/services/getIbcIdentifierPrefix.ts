@@ -1,16 +1,17 @@
 const HOMOLOGADO_PREFIX = "HM";
-const NAO_HOMOLOGADO_PREFIX = "NHM";
+const NAO_HOMOLOGADO_PREFIX = "NH";
 
-export function getIbcIdentifierPrefix(
-  abreviacao: string,
-  isHomologated = true,
-): string {
-  const normalized = abreviacao.toUpperCase();
-  return isHomologated
-    ? `${HOMOLOGADO_PREFIX}${normalized}`
-    : `${NAO_HOMOLOGADO_PREFIX}${normalized}`;
+/** `HM`+sigla, `NH`+sigla, or `NH` when there is no sigla (universal). Does not emit `NHM`. */
+export function getIbcIdentifierPrefix(input: {
+  homologado: boolean;
+  sigla?: string | null;
+}): string {
+  const sigla = (input.sigla ?? "").trim().toUpperCase();
+  if (!input.homologado && sigla.length === 0) return NAO_HOMOLOGADO_PREFIX;
+  return `${input.homologado ? HOMOLOGADO_PREFIX : NAO_HOMOLOGADO_PREFIX}${sigla}`;
 }
 
+/** `NH`, `NH`+sigla and legacy `NHM…` already stored. */
 export function isNaoHomologadoPrefixo(prefixo: string): boolean {
   return prefixo.startsWith(NAO_HOMOLOGADO_PREFIX);
 }

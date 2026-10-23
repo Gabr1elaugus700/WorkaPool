@@ -66,7 +66,7 @@ describe("ChangeIbcProdutoUseCase", () => {
     ]);
   });
 
-  it("keeps the non-homologated family when the source is NHM", async () => {
+  it("keeps NH + sigla when the source is legacy NHM", async () => {
     const cadastroRepo = buildCadastroRepo(
       buildIbcRecord({ identificador: "NHMSA00004", prefixo: "NHMSA" }),
     );
@@ -77,7 +77,7 @@ describe("ChangeIbcProdutoUseCase", () => {
       actorId: "user-1",
     });
 
-    assert.equal(cadastroRepo.createDerivedIbcFromSource.mock.calls[0].arguments[0].prefixo, "NHMSO");
+    assert.equal(cadastroRepo.createDerivedIbcFromSource.mock.calls[0].arguments[0].prefixo, "NHSO");
   });
 
   it("rejects when product does not change", async () => {

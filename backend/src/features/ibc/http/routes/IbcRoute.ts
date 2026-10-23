@@ -5,6 +5,7 @@ import {
   requireRoles,
 } from "../../../../middlewares/authMiddleware";
 import { validate } from "../../../../middlewares/validate";
+import { IbcCadastroHttpSchemas } from "../schemas/IbcCadastroSchema";
 import { ibcProdutoConfigSchemas } from "../schemas/IbcProdutoSchema";
 import { IbcController } from "../controllers/IbcController";
 import { IbcChecklistController } from "../controllers/IbcChecklistController";
@@ -44,6 +45,7 @@ router.post(
   "/",
   authMiddleware,
   requireRoles(ibcWriteRoles),
+  validate(IbcCadastroHttpSchemas.createNovo),
   IbcController.createNovoIbc,
 );
 
@@ -65,6 +67,7 @@ router.post(
   "/lote",
   authMiddleware,
   requireRoles(ibcWriteRoles),
+  validate(IbcCadastroHttpSchemas.createLote),
   IbcController.createLoteIbc,
 );
 

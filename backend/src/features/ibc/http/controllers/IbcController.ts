@@ -63,22 +63,16 @@ function requireActor(req: Request): NonNullable<Request["user"]> {
 export class IbcController {
   static async createNovoIbc(req: Request, res: Response): Promise<Response> {
     try {
-      const parsed = IbcCadastroHttpSchemas.createNovo.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json({
-          error: "Dados inválidos para cadastro de IBC",
-          code: "IBC_CADASTRO_INVALID_BODY",
-          details: parsed.error.format(),
-        });
-      }
-
+      const body = IbcCadastroHttpSchemas.createNovo.shape.body.parse(req.body);
       const useCase = new CreateNovoIbcUseCase(
         cadastroRepository(),
         produtoRepository(),
+        new ProdutoGrupoCatalogoRepository(),
       );
       const ibc = await useCase.execute({
-        dataLimite: parsed.data.dataLimite,
-        produtoId: parsed.data.produtoId,
+        dataLimite: body.dataLimite,
+        homologado: body.homologado,
+        grupoCodigo: body.grupoCodigo,
       });
       return res.status(201).json(ibc);
     } catch (err: unknown) {
@@ -88,25 +82,19 @@ export class IbcController {
 
   static async createLoteIbc(req: Request, res: Response): Promise<Response> {
     try {
-      const parsed = IbcCadastroHttpSchemas.createLote.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json({
-          error: "Dados inválidos para cadastro em lote de IBC",
-          code: "IBC_LOTE_INVALID_BODY",
-          details: parsed.error.format(),
-        });
-      }
-
+      const body = IbcCadastroHttpSchemas.createLote.shape.body.parse(req.body);
       const useCase = new CreateLoteIbcUseCase(
         cadastroRepository(),
         produtoRepository(),
+        new ProdutoGrupoCatalogoRepository(),
         createSapiensSaldoIbcErpPort(),
       );
       const result = await useCase.execute({
-        quantidade: parsed.data.quantidade,
-        dataLimite: parsed.data.dataLimite,
-        numeroNf: parsed.data.numeroNf,
-        produtoId: parsed.data.produtoId,
+        quantidade: body.quantidade,
+        dataLimite: body.dataLimite,
+        numeroNf: body.numeroNf,
+        homologado: body.homologado,
+        grupoCodigo: body.grupoCodigo,
       });
       return res.status(201).json(result);
     } catch (err: unknown) {

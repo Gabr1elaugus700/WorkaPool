@@ -65,7 +65,7 @@ export class RegistrarTrocaIbcUseCase {
     if (!produto) falha(404, "IBC_PRODUTO_NOT_FOUND", "Produto de container não encontrado");
 
     const [entrada] = await this.cadastro.createNovoIbcs({
-      prefixo: getIbcIdentifierPrefix(produto.abreviacao),
+      prefixo: getIbcIdentifierPrefix({ homologado: true, sigla: produto.abreviacao }),
       tipoCadastro: "TROCA",
       aquisicao: "TROCA",
       aptidao: "INAPTO",

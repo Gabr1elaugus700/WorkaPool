@@ -74,10 +74,10 @@ export class ChangeIbcProdutoUseCase {
 
     return this.repository.createDerivedIbcFromSource({
       sourceIbcId: source.id,
-      prefixo: getIbcIdentifierPrefix(
-        targetProduto.abreviacao,
-        !isSourceNaoHomologado(source),
-      ),
+      prefixo: getIbcIdentifierPrefix({
+        homologado: !isSourceNaoHomologado(source),
+        sigla: targetProduto.abreviacao,
+      }),
       produtoId: targetProduto.id,
       changeType: "product_change",
       actorId: input.actorId,

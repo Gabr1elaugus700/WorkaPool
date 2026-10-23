@@ -1,12 +1,16 @@
 import { IIbcCadastroRepository } from "../repositories/IIbcCadastroRepository";
-import { IIbcProdutoRepository } from "../repositories/IIbcProdutoRepository";
 import { ISaldoIbcErp } from "../ports/ISaldoIbcErp";
 import {
   IbcCadastroRecord,
   IbcLoteRecord,
 } from "../types/IbcCadastro.types";
 import { AppError } from "../../../utils/AppError";
-import { getIbcIdentifierPrefix } from "../services/getIbcIdentifierPrefix";
+import {
+  CatalogoCadastroLookup,
+  ProdutoCadastroLookup,
+  ProdutoCadastroResolvido,
+  resolverProdutoCadastroIbc,
+} from "../services/resolverProdutoCadastroIbc";
 
 export const IBC_LOTE_QUANTIDADE_BOUNDS = {
   min: 1,
@@ -17,7 +21,8 @@ export type CreateLoteIbcInput = {
   quantidade: number;
   dataLimite: Date;
   numeroNf?: string | null;
-  produtoId: string;
+  homologado: boolean;
+  grupoCodigo?: string | null;
 };
 
 export type LoteSaldoWarning =
@@ -51,20 +56,22 @@ function normalizeNumeroNf(numeroNf: string | null | undefined): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-export class CreateLoteIbcUseCase {
-  private readonly repository: IIbcCadastroRepository;
-  private readonly produtoRepository: IIbcProdutoRepository;
-  private readonly saldoPort: ISaldoIbcErp | null;
+function comPlaca(item: IbcCadastroRecord, produto: ProdutoCadastroResolvido): IbcCadastroRecord {
+  return {
+    ...item,
+    corHex: produto.corHex,
+    universal: produto.universal,
+    homologado: produto.homologado,
+  };
+}
 
+export class CreateLoteIbcUseCase {
   constructor(
-    repository: IIbcCadastroRepository,
-    produtoRepository: IIbcProdutoRepository,
-    saldoPort: ISaldoIbcErp | null = null,
-  ) {
-    this.repository = repository;
-    this.produtoRepository = produtoRepository;
-    this.saldoPort = saldoPort;
-  }
+    private readonly repository: IIbcCadastroRepository,
+    private readonly produtos: ProdutoCadastroLookup,
+    private readonly catalogo: CatalogoCadastroLookup,
+    private readonly saldoPort: ISaldoIbcErp | null = null,
+  ) {}
 
   async execute(input: CreateLoteIbcInput): Promise<CreateLoteIbcResult> {
     const { quantidade, dataLimite } = input;
@@ -95,34 +102,29 @@ export class CreateLoteIbcUseCase {
     }
 
     const warning = await this.buildWarning(quantidade);
-    const produto = await this.produtoRepository.findById(input.produtoId);
-    if (!produto) {
-      throw new AppError({
-        message: "Produto de container não encontrado",
-        statusCode: 404,
-        code: "IBC_PRODUTO_NOT_FOUND",
-      });
-    }
+    const produto = await resolverProdutoCadastroIbc(input, this.produtos, this.catalogo);
 
     const lote = await this.repository.createIbcLote({
       numeroNf,
       dataLimite,
     });
 
-    const items = await this.repository.createNovoIbcs(
-      {
-        prefixo: getIbcIdentifierPrefix(produto.abreviacao),
-        tipoCadastro: "NOVO",
-        aptidao: "APTO",
-        motivoInaptidao: null,
-        custodia: "PATIO",
-        dataLimite,
-        primeiraInspecaoEm: null,
-        loteId: lote.id,
-        produtoId: produto.id,
-      },
-      quantidade,
-    );
+    const items = (
+      await this.repository.createNovoIbcs(
+        {
+          prefixo: produto.prefixo,
+          tipoCadastro: "NOVO",
+          aptidao: "APTO",
+          motivoInaptidao: null,
+          custodia: "PATIO",
+          dataLimite,
+          primeiraInspecaoEm: null,
+          loteId: lote.id,
+          produtoId: produto.produtoId,
+        },
+        quantidade,
+      )
+    ).map((item) => comPlaca(item, produto));
 
     return warning ? { items, lote, warning } : { items, lote };
   }

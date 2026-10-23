@@ -13,6 +13,8 @@ export type SaveIbcProdutoConfig =
 
 export interface IIbcProdutoConfigRepository {
   list(): Promise<IbcProdutoConfigRecord[]>;
+  findByGrupoCodigo(grupoCodigo: string): Promise<IbcProdutoConfigRecord | null>;
+  findUniversal(): Promise<IbcProdutoConfigRecord | null>;
   save(input: SaveIbcProdutoConfig): Promise<IbcProdutoConfigRecord>;
 }
 
@@ -41,6 +43,16 @@ export class IbcProdutoRepository implements IIbcProdutoRepository, IIbcProdutoC
 
   list(): Promise<IbcProdutoConfigRecord[]> {
     return this.prisma.ibcProduto.findMany({ include: configInclude }).then((rows) => rows.map(toConfig));
+  }
+
+  async findByGrupoCodigo(grupoCodigo: string): Promise<IbcProdutoConfigRecord | null> {
+    const row = await this.prisma.ibcProduto.findUnique({ where: { grupoCodigo }, include: configInclude });
+    return row && !row.universal ? toConfig(row) : null;
+  }
+
+  async findUniversal(): Promise<IbcProdutoConfigRecord | null> {
+    const row = await this.prisma.ibcProduto.findFirst({ where: { universal: true }, include: configInclude });
+    return row ? toConfig(row) : null;
   }
 
   async save(input: SaveIbcProdutoConfig): Promise<IbcProdutoConfigRecord> {
