@@ -25,6 +25,10 @@ export type IbcCadastroRecord = {
   loteId?: string | null;
   produtoId?: string | null;
   convertedToContainerId?: string | null;
+  /** Cor da placa da configuração. Nula no legado sem produto. */
+  corHex?: string | null;
+  universal?: boolean;
+  homologado?: boolean;
 };
 
 export type IbcLoteRecord = {
