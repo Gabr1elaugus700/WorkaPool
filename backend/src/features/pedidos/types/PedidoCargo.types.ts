@@ -9,6 +9,10 @@ export interface ProdutoPedido {
   derivacao: string;
   quantidade: number;
   peso: number;
+  /** grp.codgrp da linha. Ausente nas queries que não trazem o grupo. */
+  grupoCodigo?: string | null;
+  /** der.usu_codemb. 251001 é a linha de embalagem e não entra em gruposCodigo. */
+  codigoEmbalagem?: number | string | null;
 }
 
 /**

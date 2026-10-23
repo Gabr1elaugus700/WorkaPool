@@ -82,6 +82,7 @@ export const QUERY_GET_PEDIDOS_BY_CARGA = `
       ,ped.pedblo          AS [BLOQUEADO]
       ,sum(ipd.qtdped * der.pesbru) AS [PESO]
       ,ISNULL(grp.desgrp,'OUTROS PRODUTOS') AS [PRODUTOS]
+      ,grp.codgrp          AS [COD_GRP]
       ,ipd.codder          AS [DERIVACAO]
       ,ipd.qtdped          AS [QUANTIDADE]
       ,der.usu_codemb      AS [CODIGO_EMBALAGEM]
@@ -107,8 +108,26 @@ export const QUERY_GET_PEDIDOS_BY_CARGA = `
   GROUP BY ped.numped, ped.codcli, cli.nomcli, cli.cidcli, cli.sigufs,
            rep.aperep, rep.codrep, ped.pedblo, ipd.codder, ipd.qtdped,
            der.usu_codemb, der.usu_qtdmve, ipd.usu_embinc,
-           grp.desgrp, ped.usu_codcar, ped.usu_poscar, ped.usu_sitcar, ped.qtdori
+           grp.desgrp, grp.codgrp, ped.usu_codcar, ped.usu_poscar, ped.usu_sitcar, ped.qtdori
 `;
+
+/**
+ * Itens do pedido no Sapiens, sem filtro de sitped.
+ * O backfill da foto IBC lê pedidos que já podem ter sido faturados (#419).
+ */
+export const QUERY_ITENS_PEDIDO_POR_NUMERO = (placeholders: string): string => `
+  SELECT
+       ipd.numped        AS [NUM_PED]
+      ,RTRIM(ipd.codpro) AS [COD_PRO]
+      ,der.usu_codemb    AS [CODIGO_EMBALAGEM]
+  FROM E120IPD ipd
+  LEFT JOIN e075der der ON der.codemp = ipd.codemp
+                       AND der.codpro = ipd.codpro
+                       AND der.codder = ipd.codder
+  WHERE ipd.numped IN (${placeholders})
+  ORDER BY ipd.numped, ipd.seqipd
+`;
+
 /**
  * Query para buscar situação de pedido no Sapiens.
  */

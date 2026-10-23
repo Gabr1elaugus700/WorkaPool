@@ -174,6 +174,7 @@ describe("IbcExpedicaoRepository.listCargasPendentesExpedicao (#296)", () => {
       quantidadeEsperadaEmprestimo: 1,
       ibcInvalido: false,
       posCar: 2,
+      gruposCodigo: [],
     });
     assert.equal(pedidos[1].posCar, null);
   });

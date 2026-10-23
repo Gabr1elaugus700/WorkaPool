@@ -1,10 +1,12 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { buildCargaPedidoIbcSnapshot } from "../../../../../src/features/ibc/services/buildCargaPedidoIbcSnapshot";
+import { mapRawToPedidos } from "../../../../../src/features/pedidos/mappers/PedidoMapper";
 import {
   PedidoCargo,
   PedidoCargoProps,
 } from "../../../../../src/features/pedidos/types/PedidoCargo.types";
+import { PedidoRaw } from "../../../../../src/features/pedidos/types/PedidoRaw";
 
 const buildPedido = (
   numPed: string,
@@ -43,6 +45,7 @@ describe("buildCargaPedidoIbcSnapshot (#295)", () => {
         quantidadeEsperadaEmprestimo: 2,
         ibcInvalido: false,
         posCar: null,
+        gruposCodigo: [],
       },
     ]);
   });
@@ -62,6 +65,7 @@ describe("buildCargaPedidoIbcSnapshot (#295)", () => {
         quantidadeEsperadaEmprestimo: 0,
         ibcInvalido: true,
         posCar: null,
+        gruposCodigo: [],
       },
     ]);
   });
@@ -139,5 +143,44 @@ describe("buildCargaPedidoIbcSnapshot (#295)", () => {
     ]);
 
     assert.equal(snapshot[0]?.posCar, null);
+  });
+
+  it("records each product group and skips the 251001 line (#419)", () => {
+    const linha = (
+      derivacao: string,
+      grupo: string | null,
+      embalagem: number | null,
+    ): PedidoRaw => ({
+      NUM_PED: "1011",
+      COD_CLI: "C-1011",
+      CLIENTE: "Cliente 1011",
+      CIDADE: "Blumenau",
+      ESTADO: "SC",
+      VENDEDOR: "Vendedor",
+      CODREP: 1,
+      BLOQUEADO: "N",
+      PESO: 10,
+      PRODUTOS: derivacao,
+      DERIVACAO: derivacao,
+      QUANTIDADE: embalagem === 251001 ? 1000 : 1,
+      CODCAR: 1,
+      POSCAR: 1,
+      SITCAR: "A",
+      QTD_ORI_PED: 1,
+      COD_GRP: grupo,
+      CODIGO_EMBALAGEM: embalagem,
+      VOLUME_EMBALAGEM: 1000,
+      INCLUSO: "S",
+    });
+
+    const snapshot = buildCargaPedidoIbcSnapshot(mapRawToPedidos([
+      linha("001", "SODA", 10),
+      linha("002", "CLORO", 20),
+      linha("003", "EMB", 251001),
+      linha("004", "SODA", 10),
+      linha("005", "  ", 30),
+    ]));
+
+    assert.deepEqual(snapshot[0]?.gruposCodigo, ["SODA", "CLORO"]);
   });
 });

@@ -157,6 +157,10 @@ export async function ensureIbcExpedicaoSchema(
   );
 
   await prisma.$executeRawUnsafe(
+    `ALTER TABLE "CargaPedidoIbc" ADD COLUMN IF NOT EXISTS "gruposCodigo" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[]`,
+  );
+
+  await prisma.$executeRawUnsafe(
     `CREATE INDEX IF NOT EXISTS "CargaPedidoIbc_cargaId_idx" ON "CargaPedidoIbc"("cargaId")`,
   );
 
