@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
@@ -15,8 +16,8 @@ import IbcHistoricoDrawer from "../components/IbcHistoricoDrawer";
 import IbcChecklistsVinculoDrawer from "../components/IbcChecklistsVinculoDrawer";
 import IbcInspecaoDrawer from "../components/IbcInspecaoDrawer";
 import IbcInspecoesDrawer from "../components/IbcInspecoesDrawer";
-import IbcProdutosDrawer from "../components/IbcProdutosDrawer";
 import NovoIbcDrawer from "../components/NovoIbcDrawer";
+import { gestaoIbcSections } from "../utils/gestaoIbcSections";
 import { useIbcAlerts, useIbcPool, useIbcProdutos } from "../hooks/useIbcCadastro";
 import { useIbcConversao, useIbcHistorico } from "../hooks/useIbcConversao";
 import { useIbcChecklistVinculos } from "../hooks/useIbcChecklistVinculos";
@@ -28,9 +29,10 @@ import {
 } from "../utils/ibcCadastroPermissions";
 import { toError } from "../utils/toError";
 
-type Painel = "novo" | "produtos" | null;
+type Painel = "novo" | null;
 
 export default function CadastroIbcView() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const allowed = canViewIbcCadastro(user?.role);
   const canWrite = canWriteIbcCadastro(user?.role);
@@ -53,7 +55,7 @@ export default function CadastroIbcView() {
     return <ExpedicaoIbcAccessDeniedAlert targetPhrase="o Cadastro IBC" requiredRoles={IBC_CADASTRO_VIEW_ROLES} />;
   }
 
-  const produtos = produtosQuery.data ?? [];
+  const produtos = Array.isArray(produtosQuery.data) ? produtosQuery.data : [];
 
   return (
     <DefaultLayout>
@@ -61,13 +63,6 @@ export default function CadastroIbcView() {
         <GestaoIbcHeader
           activeSection="containers"
           userRole={user?.role}
-          secondaryActions={
-            canWrite ? (
-              <Button type="button" variant="outline" onClick={() => setPainel("produtos")}>
-                Produtos
-              </Button>
-            ) : null
-          }
           primaryAction={
             canWrite ? (
               <Button type="button" onClick={() => setPainel("novo")}>
@@ -126,12 +121,10 @@ export default function CadastroIbcView() {
             produtos={produtos}
             produtosCarregando={produtosQuery.isLoading}
             onOpenChange={(open) => setPainel(open ? "novo" : null)}
-            onAbrirProdutos={() => setPainel("produtos")}
-          />
-          <IbcProdutosDrawer
-            open={painel === "produtos"}
-            produtos={produtos}
-            onOpenChange={(open) => setPainel(open ? "produtos" : null)}
+            onAbrirProdutos={() => {
+              setPainel(null);
+              navigate(gestaoIbcSections.path("produtos"));
+            }}
           />
         </>
       ) : null}
