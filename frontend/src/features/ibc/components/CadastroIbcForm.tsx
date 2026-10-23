@@ -4,38 +4,43 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SheetBody, SheetFooter } from "@/components/ui/sheet";
 import { todayLocalIsoDate } from "@/utils/formatDate";
-import type { IbcProdutoDTO } from "../types/ibcCadastro.types";
-import IbcProdutoSelect from "./IbcProdutoSelect";
+import type { CreateNovoIbcInput } from "../types/ibcCadastro.types";
+import { ibcPlacaCadastro, type GrupoPlacaOpcao } from "../utils/ibcPlacaCadastro";
+import CadastroIbcPlacaFields from "./CadastroIbcPlacaFields";
 
 type Props = {
   disabled?: boolean;
   submitting?: boolean;
-  produtos: IbcProdutoDTO[];
+  grupos: readonly GrupoPlacaOpcao[];
+  universalCorHex: string | null;
   notice?: ReactNode;
-  onSubmit: (payload: { dataLimite: string; produtoId: string }) => Promise<void> | void;
+  onSubmit: (payload: CreateNovoIbcInput) => Promise<void> | void;
 };
 
 export default function CadastroIbcForm({
   disabled = false,
   submitting = false,
-  produtos,
+  grupos,
+  universalCorHex,
   notice,
   onSubmit,
 }: Props) {
   const [dataLimite, setDataLimite] = useState("");
-  const [produtoId, setProdutoId] = useState("");
+  const [homologado, setHomologado] = useState(true);
+  const [grupoCodigo, setGrupoCodigo] = useState("");
   const minDate = todayLocalIsoDate();
   const isPastDate = Boolean(dataLimite && dataLimite < minDate);
-  const canSubmit =
-    Boolean(dataLimite) && Boolean(produtoId) && !isPastDate && !disabled && !submitting;
+  const placaPronta = ibcPlacaCadastro.aviso(homologado, grupoCodigo, grupos, universalCorHex) == null;
+  const canSubmit = Boolean(dataLimite) && placaPronta && !isPastDate && !disabled && !submitting;
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!canSubmit) return;
     try {
-      await onSubmit({ dataLimite, produtoId });
+      await onSubmit({ dataLimite, homologado, grupoCodigo: grupoCodigo || null });
       setDataLimite("");
-      setProdutoId("");
+      setHomologado(true);
+      setGrupoCodigo("");
     } catch {
       // Erro de API: toast no caller; mantém a data preenchida.
     }
@@ -45,12 +50,15 @@ export default function CadastroIbcForm({
     <form onSubmit={handleSubmit} className="contents">
       <SheetBody className="space-y-4">
         {notice}
-        <IbcProdutoSelect
-          id="ibc-produto"
-          produtos={produtos}
-          value={produtoId}
+        <CadastroIbcPlacaFields
+          id="ibc-grupo"
+          grupos={grupos}
+          universalCorHex={universalCorHex}
+          homologado={homologado}
+          grupoCodigo={grupoCodigo}
           disabled={disabled || submitting}
-          onChange={setProdutoId}
+          onHomologado={setHomologado}
+          onGrupo={setGrupoCodigo}
         />
         <div className="space-y-1.5">
           <Label htmlFor="ibc-data-limite" className="text-xs">
