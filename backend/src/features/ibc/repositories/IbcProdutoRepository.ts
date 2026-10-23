@@ -37,7 +37,11 @@ export class IbcProdutoRepository implements IIbcProdutoRepository, IIbcProdutoC
     if (!row) return null;
     return {
       id: row.id, nome: row.universal ? "Universal" : (row.grupoCodigo ?? ""),
-      abreviacao: row.sigla?.toUpperCase() ?? "", createdAt: row.createdAt, updatedAt: row.updatedAt,
+      abreviacao: row.sigla?.toUpperCase() ?? "",
+      sigla: row.sigla?.toUpperCase() ?? null,
+      corHex: row.corHex.toUpperCase(),
+      universal: row.universal,
+      createdAt: row.createdAt, updatedAt: row.updatedAt,
     };
   }
 
