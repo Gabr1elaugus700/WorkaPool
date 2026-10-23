@@ -1,10 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ibcCadastroService } from "../services/ibcCadastroService";
-import type {
-  ChangeIbcProdutoInput,
-  IbcMudancaConfirmacaoInput,
-} from "../types/ibcCadastro.types";
+import type { ChangeIbcProdutoInput, ConvertIbcInput } from "../types/ibcCadastro.types";
 import { toError } from "../utils/toError";
 
 const HISTORICO_KEY = ["ibc", "historico"] as const;
@@ -21,7 +18,7 @@ export function useIbcConversao() {
   };
 
   const converterMutation = useMutation({
-    mutationFn: ({ id, input }: { id: string; input: IbcMudancaConfirmacaoInput }) =>
+    mutationFn: ({ id, input }: { id: string; input: ConvertIbcInput }) =>
       ibcCadastroService.convertToNaoHomologado(id, input),
     onSuccess: async (created) => {
       toast.success(`IBC convertido: novo identificador ${created.identificador}`);
@@ -45,7 +42,7 @@ export function useIbcConversao() {
   });
 
   return {
-    converter: (id: string, input: IbcMudancaConfirmacaoInput) =>
+    converter: (id: string, input: ConvertIbcInput) =>
       converterMutation.mutateAsync({ id, input }),
     mudarProduto: (id: string, input: ChangeIbcProdutoInput) =>
       mudarProdutoMutation.mutateAsync({ id, input }),

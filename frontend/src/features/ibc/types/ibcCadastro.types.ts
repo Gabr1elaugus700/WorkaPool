@@ -35,11 +35,22 @@ export type IbcHistoricoDTO = {
   createdAt: string;
   from: { id: string; identificador: string };
   to: { id: string; identificador: string };
+  identificadorAnterior: string | null;
+  corAnterior: string | null;
+  identificadorNovo: string | null;
+  corNova: string | null;
 };
+
+export type IbcConversaoDestino = "manter_grupo" | "universal";
 
 export type IbcMudancaConfirmacaoInput = {
   confirmado: true;
   observacao: string | null;
+};
+
+export type ConvertIbcInput = IbcMudancaConfirmacaoInput & {
+  destino: IbcConversaoDestino;
+  grupoCodigo?: string | null;
 };
 
 export type ChangeIbcProdutoInput = IbcMudancaConfirmacaoInput & {
