@@ -11,6 +11,10 @@ export type IbcRecord = {
   createdAt: Date;
   /** Preenchido quando este IBC já foi origem de conversão ou mudança de produto. */
   convertedToContainerId: string | null;
+  /** Container universal: atende qualquer grupo da carga. */
+  universal: boolean;
+  /** Grupo da configuração. Nulo no universal e no legado sem produto. */
+  grupoCodigo: string | null;
 };
 
 export type AlocacaoIbcRecord = {
