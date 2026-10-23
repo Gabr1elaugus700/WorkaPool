@@ -89,20 +89,73 @@ export async function ensureIbcCadastroSchema(
   );
 
   await prisma.$executeRawUnsafe(`
-    DO $$ BEGIN
-      CREATE TABLE "IbcProduto" (
-        "id" TEXT NOT NULL,
-        "nome" TEXT NOT NULL,
-        "abreviacao" TEXT NOT NULL,
-        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        "updatedAt" TIMESTAMP(3) NOT NULL,
-        CONSTRAINT "IbcProduto_pkey" PRIMARY KEY ("id")
-      );
-    EXCEPTION WHEN duplicate_table OR duplicate_object THEN NULL;
+    CREATE TABLE IF NOT EXISTS "IbcProduto" (
+      "id" TEXT NOT NULL,
+      "grupo_codigo" VARCHAR(10),
+      "sigla" VARCHAR(2),
+      "cor_hex" VARCHAR(7) NOT NULL,
+      "universal" BOOLEAN NOT NULL DEFAULT false,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMP(3) NOT NULL,
+      CONSTRAINT "IbcProduto_pkey" PRIMARY KEY ("id")
+    )
+  `);
+  await prisma.$executeRawUnsafe(`
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'IbcProduto' AND column_name = 'nome'
+      ) THEN
+        UPDATE "Ibc" SET "produtoId" = NULL
+        WHERE "produtoId" IN (SELECT id FROM "IbcProduto");
+        DELETE FROM "IbcProduto";
+        ALTER TABLE "IbcProduto" DROP COLUMN "nome";
+        ALTER TABLE "IbcProduto" DROP COLUMN "abreviacao";
+      END IF;
     END $$
   `);
+  await prisma.$executeRawUnsafe(`ALTER TABLE "IbcProduto" ADD COLUMN IF NOT EXISTS "grupo_codigo" VARCHAR(10)`);
+  await prisma.$executeRawUnsafe(`ALTER TABLE "IbcProduto" ADD COLUMN IF NOT EXISTS "sigla" VARCHAR(2)`);
+  await prisma.$executeRawUnsafe(`ALTER TABLE "IbcProduto" ADD COLUMN IF NOT EXISTS "cor_hex" VARCHAR(7)`);
   await prisma.$executeRawUnsafe(
-    `CREATE UNIQUE INDEX IF NOT EXISTS "IbcProduto_abreviacao_key" ON "IbcProduto"("abreviacao")`,
+    `ALTER TABLE "IbcProduto" ADD COLUMN IF NOT EXISTS "universal" BOOLEAN NOT NULL DEFAULT false`,
+  );
+  await prisma.$executeRawUnsafe(`UPDATE "IbcProduto" SET "cor_hex" = '#000000' WHERE "cor_hex" IS NULL`);
+  await prisma.$executeRawUnsafe(`ALTER TABLE "IbcProduto" ALTER COLUMN "cor_hex" SET NOT NULL`);
+  await prisma.$executeRawUnsafe(`DROP INDEX IF EXISTS "IbcProduto_abreviacao_key"`);
+  await prisma.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "IbcProduto_grupoCodigo_key" ON "IbcProduto"("grupo_codigo")`,
+  );
+  await prisma.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "IbcProduto_sigla_key" ON "IbcProduto"("sigla")`,
+  );
+  await prisma.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "IbcProduto_corHex_key" ON "IbcProduto"("cor_hex")`,
+  );
+  await prisma.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "IbcProduto_universal_key" ON "IbcProduto"("universal") WHERE "universal" = true`,
+  );
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      ALTER TABLE "IbcProduto" ADD CONSTRAINT "IbcProduto_forma_check" CHECK (
+        ("universal" = true AND "grupo_codigo" IS NULL AND "sigla" IS NULL)
+        OR ("universal" = false AND "grupo_codigo" IS NOT NULL AND "sigla" IS NOT NULL)
+      );
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "produto_grupo_map" (
+      "grupo_codigo" VARCHAR(10) NOT NULL,
+      "grupo_descricao" VARCHAR(100) NOT NULL,
+      "produto_codigo" VARCHAR(10) NOT NULL,
+      "synced_at" TIMESTAMP(3) NOT NULL,
+      CONSTRAINT "produto_grupo_map_pkey" PRIMARY KEY ("produto_codigo")
+    )
+  `);
+  await prisma.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "produto_grupo_map_grupo_codigo_idx" ON "produto_grupo_map"("grupo_codigo")`,
   );
   await prisma.$executeRawUnsafe(`
     DO $$ BEGIN

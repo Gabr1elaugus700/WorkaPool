@@ -43,12 +43,12 @@ async function cleanupFixtures(): Promise<void> {
       SELECT i.id FROM "Ibc" i
       LEFT JOIN "IbcProduto" p ON p.id = i."produtoId"
       WHERE i."identificador" LIKE '${FIXTURE_PREFIX}%'
-         OR p.nome LIKE '${FIXTURE_PREFIX}%'
+         OR p.grupo_codigo LIKE 't91%'
     ) OR "toContainerId" IN (
       SELECT i.id FROM "Ibc" i
       LEFT JOIN "IbcProduto" p ON p.id = i."produtoId"
       WHERE i."identificador" LIKE '${FIXTURE_PREFIX}%'
-         OR p.nome LIKE '${FIXTURE_PREFIX}%'
+         OR p.grupo_codigo LIKE 't91%'
     )
   `).catch(() => undefined);
   await prisma.$executeRawUnsafe(`
@@ -58,7 +58,7 @@ async function cleanupFixtures(): Promise<void> {
       LEFT JOIN "IbcProduto" p ON p.id = i."produtoId"
       WHERE i."identificador" LIKE '${FIXTURE_PREFIX}%'
          OR i."identificador" LIKE 'TCA%'
-         OR p.nome LIKE '${FIXTURE_PREFIX}%'
+         OR p.grupo_codigo LIKE 't91%'
     )
   `).catch(() => undefined);
   await prisma.$executeRawUnsafe(`
@@ -68,7 +68,7 @@ async function cleanupFixtures(): Promise<void> {
       FROM "Ibc" i
       LEFT JOIN "IbcProduto" p ON p.id = i."produtoId"
       WHERE i."identificador" LIKE '${FIXTURE_PREFIX}%'
-         OR p.nome LIKE '${FIXTURE_PREFIX}%'
+         OR p.grupo_codigo LIKE 't91%'
     )
   `).catch(() => undefined);
   await prisma.ibc.deleteMany({
@@ -76,7 +76,7 @@ async function cleanupFixtures(): Promise<void> {
       OR: [
         { identificador: { startsWith: FIXTURE_PREFIX } },
         { identificador: { startsWith: "TCA" } },
-        { produto: { is: { nome: { startsWith: FIXTURE_PREFIX } } } },
+        { produto: { is: { grupoCodigo: { startsWith: "t91" } } } },
       ],
     },
   });
@@ -87,12 +87,10 @@ async function cleanupFixtures(): Promise<void> {
     where: { id: REPLACED_CARGA_ID },
   }).catch(() => undefined);
   await prisma.ibcProduto.deleteMany({
-    where: {
-      OR: [
-        { nome: { startsWith: FIXTURE_PREFIX } },
-        { abreviacao: { equals: "SA" } },
-      ],
-    },
+    where: { grupoCodigo: { startsWith: "t91" } },
+  });
+  await prisma.produtoGrupoMap.deleteMany({
+    where: { grupoCodigo: { startsWith: "t91" } },
   });
   await prisma.user.deleteMany({
     where: { user: { startsWith: FIXTURE_PREFIX } },
@@ -114,15 +112,37 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     await prisma.$disconnect();
   });
 
+  function corFromSigla(sigla: string): string {
+    const normalizada = sigla.toUpperCase();
+    const n = (normalizada.charCodeAt(0) * 256 + (normalizada.charCodeAt(1) ?? 0)) & 0xffffff;
+    return `#${n.toString(16).padStart(6, "0").toUpperCase()}`;
+  }
+
   async function createProduto(
     token: string,
     input: { nome: string; abreviacao: string },
   ): Promise<string> {
+    const sigla = input.abreviacao.toUpperCase();
+    const grupoCodigo = `t91${sigla}`;
+    await prisma.produtoGrupoMap.upsert({
+      where: { produtoCodigo: grupoCodigo },
+      create: {
+        produtoCodigo: grupoCodigo,
+        grupoCodigo,
+        grupoDescricao: input.nome.slice(0, 100),
+        syncedAt: new Date(),
+      },
+      update: {
+        grupoCodigo,
+        grupoDescricao: input.nome.slice(0, 100),
+        syncedAt: new Date(),
+      },
+    });
     const created = await request(createIbcTestApp())
-      .post("/api/ibc/produtos")
+      .put(`/api/ibc/produtos/grupos/${grupoCodigo}`)
       .set("Authorization", `Bearer ${token}`)
-      .send(input);
-    assert.equal(created.status, 201);
+      .send({ sigla, corHex: corFromSigla(sigla) });
+    assert.equal(created.status, 200);
     return String(created.body.id);
   }
 
@@ -158,37 +178,51 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     assert.equal(row.produtoId, produtoId);
   });
 
-  it("produto endpoints create, list and edit", async () => {
+  it("PUT grava, lista e atualiza a configuração do grupo", async () => {
     const app = createIbcTestApp();
     const token = createToken(Role.ALMOX);
+    const grupoCodigo = "t91A";
+    await prisma.produtoGrupoMap.create({
+      data: {
+        produtoCodigo: grupoCodigo,
+        grupoCodigo,
+        grupoDescricao: `${FIXTURE_PREFIX}Acido`,
+        syncedAt: new Date(),
+      },
+    });
 
     const created = await request(app)
-      .post("/api/ibc/produtos")
+      .put(`/api/ibc/produtos/grupos/${grupoCodigo}`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ nome: `${FIXTURE_PREFIX}Acido`, abreviacao: "a" });
-    assert.equal(created.status, 201);
-    assert.equal(created.body.abreviacao, "A");
+      .send({ sigla: "a", corHex: "#aa0000" });
+    assert.equal(created.status, 200);
+    assert.equal(created.body.sigla, "A");
+    assert.equal(created.body.corHex, "#AA0000");
+    assert.equal(created.body.configurado, true);
+    assert.equal(created.body.emUso, false);
+    assert.equal(created.body.encontradoNoSapiens, true);
 
     const list = await request(app)
       .get("/api/ibc/produtos")
       .set("Authorization", `Bearer ${token}`);
     assert.equal(list.status, 200);
-    assert.ok(
-      list.body.some(
-        (row: { id: string; abreviacao: string; possuiIbcs: boolean }) =>
-          row.id === created.body.id && row.abreviacao === "A" && row.possuiIbcs === false,
-      ),
+    assert.equal(list.body.universal.configurado, false);
+    const listed = list.body.grupos.find(
+      (row: { grupoCodigo: string }) => row.grupoCodigo === grupoCodigo,
     );
+    assert.equal(listed?.sigla, "A");
+    assert.equal(listed?.emUso, false);
 
     const updated = await request(app)
-      .patch(`/api/ibc/produtos/${created.body.id}`)
+      .put(`/api/ibc/produtos/grupos/${grupoCodigo}`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ nome: `${FIXTURE_PREFIX}Acido Novo`, abreviacao: "SO" });
+      .send({ sigla: "SO", corHex: "#00aa00" });
     assert.equal(updated.status, 200);
-    assert.equal(updated.body.abreviacao, "SO");
+    assert.equal(updated.body.sigla, "SO");
+    assert.equal(updated.body.corHex, "#00AA00");
   });
 
-  it("PATCH produto blocks abreviacao change once it has IBCs, even baixados", async () => {
+  it("PUT bloqueia sigla e cor quando a configuração tem IBC, inclusive baixado", async () => {
     const app = createIbcTestApp();
     const token = createToken(Role.ALMOX);
     const produtoId = await createProduto(token, {
@@ -205,37 +239,36 @@ describe("IBC cadastro HTTP persistence (#91)", () => {
     const list = await request(app)
       .get("/api/ibc/produtos")
       .set("Authorization", `Bearer ${token}`);
-    const listed = list.body.find((row: { id: string }) => row.id === produtoId);
-    assert.equal(listed?.possuiIbcs, true);
+    const listed = list.body.grupos.find((row: { id: string }) => row.id === produtoId);
+    assert.equal(listed?.emUso, true);
 
     const blocked = await request(app)
-      .patch(`/api/ibc/produtos/${produtoId}`)
+      .put(`/api/ibc/produtos/grupos/${listed.grupoCodigo}`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ nome: `${FIXTURE_PREFIX}Bloqueado`, abreviacao: "BY" });
+      .send({ sigla: "BY", corHex: listed.corHex });
     assert.equal(blocked.status, 409);
-    assert.equal(blocked.body.code, "IBC_PRODUTO_ABREVIACAO_EM_USO");
+    assert.equal(blocked.body.code, "IBC_PRODUTO_CONFIG_EM_USO");
 
     await prisma.ibc.update({
       where: { identificador: ibc.body.identificador },
       data: { baixadoEm: new Date() },
     });
     const blockedBaixado = await request(app)
-      .patch(`/api/ibc/produtos/${produtoId}`)
+      .put(`/api/ibc/produtos/grupos/${listed.grupoCodigo}`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ nome: `${FIXTURE_PREFIX}Bloqueado`, abreviacao: "BY" });
+      .send({ sigla: "BX", corHex: "#010203" });
     assert.equal(blockedBaixado.status, 409);
-    assert.equal(blockedBaixado.body.code, "IBC_PRODUTO_ABREVIACAO_EM_USO");
+    assert.equal(blockedBaixado.body.code, "IBC_PRODUTO_CONFIG_EM_USO");
 
-    const renamed = await request(app)
-      .patch(`/api/ibc/produtos/${produtoId}`)
+    const same = await request(app)
+      .put(`/api/ibc/produtos/grupos/${listed.grupoCodigo}`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ nome: `${FIXTURE_PREFIX}Bloqueado Novo`, abreviacao: "bx" });
-    assert.equal(renamed.status, 200);
-    assert.equal(renamed.body.nome, `${FIXTURE_PREFIX}Bloqueado Novo`);
-    assert.equal(renamed.body.abreviacao, "BX");
+      .send({ sigla: "bx", corHex: String(listed.corHex).toLowerCase() });
+    assert.equal(same.status, 200);
+    assert.equal(same.body.sigla, "BX");
 
     const row = await prisma.ibcProduto.findUnique({ where: { id: produtoId } });
-    assert.equal(row?.abreviacao, "BX");
+    assert.equal(row?.sigla, "BX");
   });
 
   it("prefix allocation is exact: HMQ is not polluted by HMQZ", async () => {
