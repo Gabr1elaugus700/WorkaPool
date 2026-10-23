@@ -2,6 +2,7 @@ import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { SubstituidoNotice } from "../hooks/useCargaExpedicaoDetalhe";
 import type { AlocacaoIbcDTO, CargaExpedicaoDetalheDTO, PedidoIbcPreparacaoDTO } from "../types/ibcExpedicao.types";
+import { ibcProdutoCompatibilidade } from "../utils/ibcProdutoCompatibilidade";
 import { separarPedidosForaDaSoma } from "../utils/pedidosForaDaSoma";
 import AllocateIbcForm from "./AllocateIbcForm";
 import DeallocateIbcButton from "./DeallocateIbcButton";
@@ -44,6 +45,7 @@ export default function CargaIbcPreparacaoEtapa({
   onDeallocate,
 }: Props) {
   const { mistos, invalidos } = separarPedidosForaDaSoma(detalhe.pedidos);
+  const avisosGrupo = ibcProdutoCompatibilidade.avisosDe(detalhe.avisos);
   const alocado = detalhe.quantidadeAlocada;
   const esperado = detalhe.quantidadeEsperadaTotal;
   const percentual = percentualVinculado(alocado, esperado);
@@ -67,6 +69,20 @@ export default function CargaIbcPreparacaoEtapa({
             <ul className="mt-2 space-y-1">
               {mistos.map((pedido) => (
                 <li key={pedido.numPed}>{rotuloPedido(pedido)}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {avisosGrupo.length > 0 ? (
+        <Alert className="border-amber-700/30 bg-amber-500/10 text-foreground [&>svg]:text-amber-700 dark:[&>svg]:text-amber-400">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Grupo sem configuração de placa e cor</AlertTitle>
+          <AlertDescription>
+            <ul className="space-y-1">
+              {avisosGrupo.map((aviso) => (
+                <li key={aviso.numPed}>{ibcProdutoCompatibilidade.textoAviso(aviso)}</li>
               ))}
             </ul>
           </AlertDescription>
