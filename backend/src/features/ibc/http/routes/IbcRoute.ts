@@ -4,6 +4,8 @@ import {
   authMiddleware,
   requireRoles,
 } from "../../../../middlewares/authMiddleware";
+import { validate } from "../../../../middlewares/validate";
+import { ibcProdutoConfigSchemas } from "../schemas/IbcProdutoSchema";
 import { IbcController } from "../controllers/IbcController";
 import { IbcChecklistController } from "../controllers/IbcChecklistController";
 import { IbcInspecaoController } from "../controllers/IbcInspecaoController";
@@ -45,25 +47,18 @@ router.post(
   IbcController.createNovoIbc,
 );
 
-router.post(
-  "/produtos",
-  authMiddleware,
-  requireRoles(ibcWriteRoles),
-  IbcController.createProduto,
+router.get("/produtos", readAuth, IbcController.listProdutoConfig);
+router.put(
+  "/produtos/universal",
+  writeAuth,
+  validate(ibcProdutoConfigSchemas.salvarUniversal),
+  IbcController.saveProdutoUniversal,
 );
-
-router.get(
-  "/produtos",
-  authMiddleware,
-  requireRoles(ibcReadRoles),
-  IbcController.listProdutos,
-);
-
-router.patch(
-  "/produtos/:id",
-  authMiddleware,
-  requireRoles(ibcWriteRoles),
-  IbcController.updateProduto,
+router.put(
+  "/produtos/grupos/:grupoCodigo",
+  writeAuth,
+  validate(ibcProdutoConfigSchemas.salvarGrupo),
+  IbcController.saveProdutoGrupo,
 );
 
 router.post(

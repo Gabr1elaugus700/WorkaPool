@@ -213,12 +213,14 @@ model Ibc {
 }
 
 model IbcProduto {
-  id         String   @id @default(uuid())
-  nome       String
-  abreviacao String   @unique
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  ibcs       Ibc[]
+  id          String   @id @default(uuid())
+  grupoCodigo String?  @unique @map("grupo_codigo") @db.VarChar(10)
+  sigla       String?  @unique @db.VarChar(2)
+  corHex      String   @unique @map("cor_hex") @db.VarChar(7)
+  universal   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  ibcs        Ibc[]
 }
 
 model IbcConversionHistory {
