@@ -57,6 +57,17 @@ describe("filterCadastroIbcPool", () => {
       ["3"],
     );
     assert.deepEqual(
+      filterCadastroIbcPool(
+        [
+          ibc({ id: "6", identificador: "NHS00001", prefixo: "NHS", homologado: false }),
+          ibc({ id: "7", identificador: "NH00002", prefixo: "NH", homologado: false, universal: true }),
+          ibc({ id: "8", identificador: "HMS00008", prefixo: "HMS", homologado: true }),
+        ],
+        { ...base, situacao: "nao_homologado" },
+      ).map((item) => item.id),
+      ["6", "7"],
+    );
+    assert.deepEqual(
       filterCadastroIbcPool(parque, { ...base, situacao: "baixado" }).map((item) => item.id),
       ["4"],
     );

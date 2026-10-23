@@ -8,7 +8,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useCadastrarIbc } from "../hooks/useIbcCadastro";
-import type { IbcProdutoDTO } from "../types/ibcCadastro.types";
+import type { ListaIbcProdutoConfig } from "../services/ibcProdutoConfigService";
+import { ibcPlacaCadastro } from "../utils/ibcPlacaCadastro";
 import CadastroIbcForm from "./CadastroIbcForm";
 import CadastroIbcLoteForm from "./CadastroIbcLoteForm";
 import CadastroIbcResultado from "./CadastroIbcResultado";
@@ -23,28 +24,35 @@ const MODOS: readonly { id: Modo; label: string }[] = [
 
 type Props = {
   open: boolean;
-  produtos: IbcProdutoDTO[];
-  produtosCarregando: boolean;
+  config: ListaIbcProdutoConfig | null;
+  configCarregando: boolean;
+  configErro: string | null;
   onOpenChange: (open: boolean) => void;
   onAbrirProdutos: () => void;
 };
 
 export default function NovoIbcDrawer({
   open,
-  produtos,
-  produtosCarregando,
+  config,
+  configCarregando,
+  configErro,
   onOpenChange,
   onAbrirProdutos,
 }: Props) {
   const [modo, setModo] = useState<Modo>("unitario");
   const cadastro = useCadastrarIbc();
-  const semProdutos = !produtosCarregando && produtos.length === 0;
+  const grupos = ibcPlacaCadastro.grupos(config);
+  const universalCor = ibcPlacaCadastro.universalCor(config);
+  const semPlaca = !configCarregando && !configErro && grupos.length === 0 && universalCor == null;
+  const falha = modo === "unitario" ? cadastro.unitario.error : cadastro.lote.error;
 
   let notice: ReactNode = null;
-  if (semProdutos) {
+  if (configErro || falha) {
+    notice = <p role="alert" className="text-sm text-destructive">{configErro ?? (falha instanceof Error ? falha.message : "Falha ao cadastrar IBC")}</p>;
+  } else if (semPlaca) {
     notice = (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-muted/40 px-3 py-2.5 text-sm">
-        <p className="text-muted-foreground">Cadastre ao menos um produto para liberar o cadastro de IBC.</p>
+        <p className="text-muted-foreground">Configure sigla e cor de um grupo, ou a placa universal, para cadastrar um IBC.</p>
         <Button type="button" variant="outline" size="sm" onClick={onAbrirProdutos}>
           Abrir produtos
         </Button>
@@ -63,7 +71,7 @@ export default function NovoIbcDrawer({
           <div className="space-y-1.5">
             <SheetTitle>Novo IBC</SheetTitle>
             <SheetDescription>
-              Nasce Apto, com alerta Sem inspeção até a primeira inspeção. O identificador é HM + letra do produto.
+              Nasce Apto, com alerta Sem inspeção até a primeira inspeção. O prefixo é HM ou NH mais a sigla; o universal é só NH.
             </SheetDescription>
           </div>
           <div>
@@ -78,8 +86,9 @@ export default function NovoIbcDrawer({
         </SheetHeader>
         {modo === "unitario" ? (
           <CadastroIbcForm
-            produtos={produtos}
-            disabled={semProdutos}
+            grupos={grupos}
+            universalCorHex={universalCor}
+            disabled={semPlaca || configCarregando || Boolean(configErro)}
             submitting={cadastro.unitario.isPending}
             notice={notice}
             onSubmit={async (input) => {
@@ -88,8 +97,9 @@ export default function NovoIbcDrawer({
           />
         ) : (
           <CadastroIbcLoteForm
-            produtos={produtos}
-            disabled={semProdutos}
+            grupos={grupos}
+            universalCorHex={universalCor}
+            disabled={semPlaca || configCarregando || Boolean(configErro)}
             submitting={cadastro.lote.isPending}
             notice={notice}
             onSubmit={async (input) => {
