@@ -27,6 +27,7 @@ const pedido = (): CargaPedidoIbcSnapshot => ({
   quantidadeEsperadaEmprestimo: 1,
   ibcInvalido: false,
   posCar: 1,
+  gruposCodigo: [],
 });
 
 const alocacao = (): AlocacaoIbcRecord => ({

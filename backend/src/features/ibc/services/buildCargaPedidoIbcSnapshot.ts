@@ -1,5 +1,6 @@
 import { PedidoCargo } from "../../pedidos/types/PedidoCargo.types";
 import { CargaPedidoIbcSnapshot } from "../types/IbcExpedicao.types";
+import { coletarGruposCodigo } from "./coletarGruposCodigo";
 
 export function buildCargaPedidoIbcSnapshot(
   pedidos: PedidoCargo[],
@@ -21,6 +22,7 @@ export function buildCargaPedidoIbcSnapshot(
       quantidadeEsperadaEmprestimo: pedido.quantidadeEsperadaEmprestimo,
       ibcInvalido: pedido.ibcInvalido,
       posCar: pedido.poscar ? pedido.poscar : null,
+      gruposCodigo: coletarGruposCodigo(pedido.produtos ?? []),
     });
   }
 

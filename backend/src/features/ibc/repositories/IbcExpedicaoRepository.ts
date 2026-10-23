@@ -296,6 +296,7 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
       quantidadeEsperadaEmprestimo: row.quantidadeEsperadaEmprestimo,
       ibcInvalido: row.ibcInvalido,
       posCar: row.posCar,
+      gruposCodigo: row.gruposCodigo,
     };
   }
 

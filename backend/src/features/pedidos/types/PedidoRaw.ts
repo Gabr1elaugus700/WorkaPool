@@ -17,6 +17,8 @@ export type PedidoRaw = {
   BLOQUEADO: string;
   PESO: number;
   PRODUTOS: string;
+  /** grp.codgrp — só em QUERY_GET_PEDIDOS_BY_CARGA */
+  COD_GRP?: string | number | null;
   DERIVACAO: string;
   QUANTIDADE: number;
   CODCAR: number;
