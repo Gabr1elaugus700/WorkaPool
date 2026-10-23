@@ -4,6 +4,8 @@ import { Plus } from "lucide-react";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
 import CadastroIbcPoolList from "../components/CadastroIbcPoolList";
@@ -20,6 +22,7 @@ import NovoIbcDrawer from "../components/NovoIbcDrawer";
 import { gestaoIbcSections } from "../utils/gestaoIbcSections";
 import { useIbcAlerts, useIbcPool, useIbcProdutos } from "../hooks/useIbcCadastro";
 import { useIbcConversao, useIbcHistorico } from "../hooks/useIbcConversao";
+import { useIbcProdutoConfig } from "../hooks/useIbcProdutoConfig";
 import { useIbcChecklistVinculos } from "../hooks/useIbcChecklistVinculos";
 import type { IbcCadastroDTO } from "../types/ibcCadastro.types";
 import {
@@ -48,6 +51,7 @@ export default function CadastroIbcView() {
   const alertsQuery = useIbcAlerts(allowed);
   const produtosQuery = useIbcProdutos(allowed);
   const conversao = useIbcConversao();
+  const { query: produtoConfig } = useIbcProdutoConfig(allowed && mudanca != null);
   const historicoQuery = useIbcHistorico(historicoIbc?.id ?? null);
   const vinculos = useIbcChecklistVinculos(checklistsIbc?.id ?? null);
 
@@ -129,32 +133,38 @@ export default function CadastroIbcView() {
         </>
       ) : null}
       {canWrite && mudanca ? (
-        <ConfirmarMudancaIbcModal
-          key={`${mudanca.ibc.id}-${mudanca.modo}`}
-          ibc={mudanca.ibc}
-          modo={mudanca.modo}
-          produtos={produtos}
-          submitting={conversao.isPending}
-          onClose={() => setMudanca(null)}
-          onConfirm={async ({ confirmacao, produtoId }) => {
-            if (mudanca.modo === "product_change" && produtoId) {
-              await conversao.mudarProduto(mudanca.ibc.id, { ...confirmacao, produtoId });
-            } else {
-              await conversao.converter(mudanca.ibc.id, confirmacao);
-            }
-            setMudanca(null);
-          }}
-        />
+        <Dialog open onOpenChange={(open) => { if (!open && !conversao.isPending) setMudanca(null); }}>
+          <DialogContent className="max-w-lg gap-5" aria-labelledby="ibc-mudanca-titulo" aria-describedby="ibc-mudanca-descricao">
+            <ConfirmarMudancaIbcModal
+              key={`${mudanca.ibc.id}-${mudanca.modo}`}
+              ibc={mudanca.ibc}
+              modo={mudanca.modo}
+              config={produtoConfig.data ?? null}
+              configCarregando={produtoConfig.isLoading}
+              configErro={produtoConfig.error ? toError(produtoConfig.error).message : null}
+              submitting={conversao.isPending}
+              onClose={() => setMudanca(null)}
+              onConfirm={async (acao) => {
+                if (acao.tipo === "product_change") await conversao.mudarProduto(mudanca.ibc.id, acao.input);
+                else await conversao.converter(mudanca.ibc.id, acao.input);
+                setMudanca(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       ) : null}
       {historicoIbc ? (
-        <IbcHistoricoDrawer
-          identificador={historicoIbc.identificador}
-          eventos={historicoQuery.data ?? []}
-          isLoading={historicoQuery.isLoading}
-          errorMessage={historicoQuery.error ? toError(historicoQuery.error).message : null}
-          onRetry={() => void historicoQuery.refetch()}
-          onClose={() => setHistoricoIbc(null)}
-        />
+        <Sheet open onOpenChange={(open) => { if (!open) setHistoricoIbc(null); }}>
+          <SheetContent aria-labelledby="ibc-historico-titulo" aria-describedby="ibc-historico-descricao">
+            <IbcHistoricoDrawer
+              identificador={historicoIbc.identificador}
+              eventos={historicoQuery.data ?? []}
+              isLoading={historicoQuery.isLoading}
+              errorMessage={historicoQuery.error ? toError(historicoQuery.error).message : null}
+              onRetry={() => void historicoQuery.refetch()}
+            />
+          </SheetContent>
+        </Sheet>
       ) : null}
       {canWrite && checklistsIbc ? (
         <IbcChecklistsVinculoDrawer

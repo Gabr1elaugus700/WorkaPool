@@ -6,8 +6,8 @@ import type {
   CreateNovoIbcInput,
   IbcAlertDTO,
   IbcCadastroDTO,
+  ConvertIbcInput,
   IbcHistoricoDTO,
-  IbcMudancaConfirmacaoInput,
   IbcProdutoListItemDTO,
 } from "../types/ibcCadastro.types";
 
@@ -37,7 +37,7 @@ export const ibcCadastroService = {
 
   convertToNaoHomologado: (
     id: string,
-    input: IbcMudancaConfirmacaoInput,
+    input: ConvertIbcInput,
   ): Promise<IbcCadastroDTO> =>
     apiFetchJson<IbcCadastroDTO>(`/api/ibc/${id}/converter-nao-homologado`, {
       method: "PATCH",

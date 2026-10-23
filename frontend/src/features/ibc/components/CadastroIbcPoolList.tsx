@@ -19,7 +19,7 @@ import type { IbcCadastroDTO, IbcProdutoDTO } from "../types/ibcCadastro.types";
 import { filterCadastroIbcPool, type IbcPoolSituacao } from "../utils/filterCadastroIbcPool";
 import { ibcCadastroLabels } from "../utils/ibcCadastroLabels";
 import { podeInspecionarIbc } from "../utils/ibcInspecao.utils";
-import { isIbcNaoHomologado, isIbcSubstituido } from "../utils/ibcMudanca.utils";
+import { acaoMudancaDisponivel, isIbcNaoHomologado, isIbcSubstituido } from "../utils/ibcMudanca.utils";
 import IbcStatusContent from "./IbcStatusContent";
 
 const SITUACOES: readonly { id: IbcPoolSituacao; label: string }[] = [
@@ -84,10 +84,13 @@ function marcas(ibc: IbcCadastroDTO): string[] {
 function acoesDeEscrita(ibc: IbcCadastroDTO, props: Props): Acao[] {
   if (!props.canWrite || isIbcSubstituido(ibc)) return [];
   const acoes: Acao[] = [];
-  if (!isIbcNaoHomologado(ibc)) {
+  const mudanca = acaoMudancaDisponivel(ibc);
+  if (mudanca === "converter") {
     acoes.push({ label: "Converter para não homologado", disabled: props.actionsDisabled, run: () => props.onConverter(ibc) });
   }
-  acoes.push({ label: "Mudar produto", disabled: props.actionsDisabled, run: () => props.onMudarProduto(ibc) });
+  if (mudanca === "mudar_produto") {
+    acoes.push({ label: "Mudar produto", disabled: props.actionsDisabled, run: () => props.onMudarProduto(ibc) });
+  }
   acoes.push({ label: "Checklists", run: () => props.onGerenciarChecklists(ibc) });
   return acoes;
 }
