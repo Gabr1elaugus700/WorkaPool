@@ -38,6 +38,8 @@ export const IbcCadastroHttpSchemas = {
   }),
   convertToNaoHomologado: z.object({
     confirmado: z.literal(true),
+    destino: z.enum(["manter_grupo", "universal"]),
+    grupoCodigo: z.string().trim().min(1).max(10).optional().nullable(),
     observacao: z.string().trim().min(1).max(500).optional().nullable(),
   }),
   changeProduto: z.object({
@@ -46,3 +48,18 @@ export const IbcCadastroHttpSchemas = {
     observacao: z.string().trim().min(1).max(500).optional().nullable(),
   }),
 } as const;
+
+export const ibcHistoricoEventoSchema = z.object({
+  id: z.string(),
+  changeType: z.enum(["conversion", "product_change", "status_change"]),
+  observation: z.string().nullable(),
+  actorId: z.string(),
+  actorName: z.string().nullable(),
+  createdAt: z.string(),
+  from: z.object({ id: z.string(), identificador: z.string() }),
+  to: z.object({ id: z.string(), identificador: z.string() }),
+  identificadorAnterior: z.string().nullable(),
+  corAnterior: z.string().nullable(),
+  identificadorNovo: z.string().nullable(),
+  corNova: z.string().nullable(),
+});

@@ -306,6 +306,7 @@ export class IbcController {
         alocacao: result.alocacao,
         quantidadeAlocada: result.quantidadeAlocada,
         quantidadeEsperadaTotal: result.quantidadeEsperadaTotal,
+        avisos: result.avisos,
       });
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao alocar IBC");
@@ -436,11 +437,17 @@ export class IbcController {
         });
       }
 
-      const useCase = new ConvertIbcHomologacaoUseCase(cadastroRepository());
+      const useCase = new ConvertIbcHomologacaoUseCase(
+        cadastroRepository(),
+        produtoRepository(),
+        new ProdutoGrupoCatalogoRepository(),
+      );
       const converted = await useCase.execute({
         sourceIbcId: id,
         actorId,
         observation: parsed.data.observacao ?? null,
+        destino: parsed.data.destino,
+        grupoCodigo: parsed.data.grupoCodigo ?? null,
       });
       return res.status(201).json(converted);
     } catch (err: unknown) {

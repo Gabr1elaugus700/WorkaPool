@@ -1,6 +1,7 @@
 import { describe, it, mock, after } from "node:test";
 import assert from "node:assert/strict";
 import { CreateAlocacaoIbcSchema } from "../../../../../src/features/ibc/http/schemas/CreateAlocacaoIbcSchema";
+import { GruposConfiguradosLookup } from "../../../../../src/features/ibc/services/carregarCompatibilidadeDePedidos";
 import { CreateAlocacaoIbcUseCase } from "../../../../../src/features/ibc/useCases/CreateAlocacaoIbc.use-case";
 import { IIbcExpedicaoRepository } from "../../../../../src/features/ibc/repositories/IIbcExpedicaoRepository";
 import { AppError } from "../../../../../src/utils/AppError";
@@ -42,16 +43,21 @@ const buildPedidoIbc = (
   ...overrides,
 });
 
-const buildIbc = (overrides: Partial<IbcRecord> = {}): IbcRecord => ({
-  id: "ibc-1",
-  identificador: "H0045",
-  aptidao: "APTO",
-  custodia: "PATIO",
-  dataLimite: new Date("2099-12-31T00:00:00.000Z"),
-  createdAt: new Date("2026-01-01T00:00:00.000Z"),
-  convertedToContainerId: null,
-  ...overrides,
-});
+const buildIbc = (overrides: Partial<IbcRecord> = {}): IbcRecord => {
+  const grupoCodigo = overrides.grupoCodigo ?? null;
+  return {
+    id: "ibc-1",
+    identificador: "H0045",
+    aptidao: "APTO",
+    custodia: "PATIO",
+    dataLimite: new Date("2099-12-31T00:00:00.000Z"),
+    createdAt: new Date("2026-01-01T00:00:00.000Z"),
+    convertedToContainerId: null,
+    ...overrides,
+    grupoCodigo,
+    universal: overrides.universal ?? grupoCodigo == null,
+  };
+};
 
 const buildAlocacao = (
   overrides: Partial<AlocacaoIbcRecord> = {},
@@ -131,6 +137,7 @@ describe("CreateAlocacaoIbcUseCase", () => {
     assert.strictEqual(result.alocacao.numPed, null);
     assert.strictEqual(result.quantidadeAlocada, 1);
     assert.strictEqual(result.quantidadeEsperadaTotal, 3);
+    assert.deepEqual(result.avisos, []);
     const gravado = (
       repo.createAlocacao as ReturnType<typeof mock.fn>
     ).mock.calls[0]?.arguments[0] as { numPed: string | null };
@@ -596,6 +603,208 @@ describe("CreateAlocacaoIbcUseCase", () => {
     );
     assert.strictEqual(markIbcDataLimite.mock.calls.length, 1);
     assert.deepEqual(markIbcDataLimite.mock.calls[0].arguments, ["ibc-due"]);
+    assert.strictEqual(createAlocacao.mock.calls.length, 0);
+  });
+
+  const gruposConfigurados = (
+    configurados: readonly string[],
+  ): GruposConfiguradosLookup => ({
+    listGruposConfigurados: async () => configurados,
+  });
+
+  const alocar = (
+    repo: RepoMock,
+    identificador: string,
+    configurados: readonly string[],
+    ibc: Partial<IbcRecord>,
+  ) => {
+    const comIbc = buildHappyRepo({
+      ...repo,
+      findIbcByIdentificador: mock.fn(async () =>
+        buildIbc({ identificador, ...ibc }),
+      ),
+    });
+    return new CreateAlocacaoIbcUseCase(
+      comIbc as IIbcExpedicaoRepository,
+      gruposConfigurados(configurados),
+    ).execute(vincular(identificador));
+  };
+
+  it("carga de soda recusa container de cloro", async () => {
+    const createAlocacao = mock.fn(async () => {
+      throw new Error("não deve criar");
+    });
+    const repo = buildHappyRepo({
+      listPedidosIbcByCargaId: mock.fn(async () => [
+        buildPedidoIbc("1120", { gruposCodigo: ["SODA"] }),
+      ]),
+      createAlocacao,
+    });
+
+    await assert.rejects(
+      () =>
+        alocar(repo, "NHC00001", ["SODA"], {
+          universal: false,
+          grupoCodigo: "CLORO",
+        }),
+      (error: unknown) => {
+        assert.ok(error instanceof AppError);
+        assert.strictEqual(error.code, "IBC_PRODUTO_INCOMPATIVEL");
+        assert.strictEqual(error.statusCode, 409);
+        assert.deepEqual(error.details, {
+          identificador: "NHC00001",
+          grupoContainer: "CLORO",
+          gruposPermitidos: ["SODA"],
+        });
+        return true;
+      },
+    );
+    assert.strictEqual(createAlocacao.mock.calls.length, 0);
+  });
+
+  it("carga de soda aceita HM de soda, NH de soda e NH universal", async () => {
+    const pedidos = [buildPedidoIbc("1120", { gruposCodigo: ["SODA"] })];
+    const casos = [
+      { identificador: "HMS00001", universal: false, grupoCodigo: "SODA" },
+      { identificador: "NHS00001", universal: false, grupoCodigo: "SODA" },
+      { identificador: "NH00001", universal: true, grupoCodigo: null },
+    ];
+
+    for (const caso of casos) {
+      const createAlocacao = mock.fn(async () =>
+        buildAlocacao({ identificador: caso.identificador, numPed: null }),
+      );
+      const repo = buildHappyRepo({
+        listPedidosIbcByCargaId: mock.fn(async () => pedidos),
+        createAlocacao,
+      });
+      const result = await alocar(repo, caso.identificador, ["SODA"], caso);
+      assert.strictEqual(result.alocacao.identificador, caso.identificador);
+      assert.strictEqual(createAlocacao.mock.calls.length, 1);
+    }
+  });
+
+  it("carga com soda e ácido aceita container dos dois grupos", async () => {
+    const pedidos = [
+      buildPedidoIbc("1120", { gruposCodigo: ["SODA"] }),
+      buildPedidoIbc("1121", {
+        gruposCodigo: ["ACIDO"],
+        quantidadeEsperadaTotal: 1,
+        quantidadeEsperadaVenda: 1,
+      }),
+    ];
+    for (const grupo of ["SODA", "ACIDO"]) {
+      const createAlocacao = mock.fn(async () =>
+        buildAlocacao({ identificador: `NH${grupo}00001`, numPed: null }),
+      );
+      const repo = buildHappyRepo({
+        listPedidosIbcByCargaId: mock.fn(async () => pedidos),
+        createAlocacao,
+      });
+      const result = await alocar(repo, `NH${grupo}00001`, ["SODA", "ACIDO"], {
+        universal: false,
+        grupoCodigo: grupo,
+      });
+      assert.strictEqual(result.quantidadeAlocada, 1);
+      assert.deepEqual(result.avisos, []);
+    }
+  });
+
+  it("legado sem produto é recusado na saída", async () => {
+    const createAlocacao = mock.fn(async () => {
+      throw new Error("não deve criar");
+    });
+    const repo = buildHappyRepo({
+      listPedidosIbcByCargaId: mock.fn(async () => [
+        buildPedidoIbc("1120", { gruposCodigo: ["SODA"] }),
+      ]),
+      createAlocacao,
+    });
+
+    await assert.rejects(
+      () => alocar(repo, "HM0007", ["SODA"], { universal: false, grupoCodigo: null }),
+      (error: unknown) => {
+        assert.ok(error instanceof AppError);
+        assert.strictEqual(error.code, "IBC_PRODUTO_INCOMPATIVEL");
+        assert.deepEqual(error.details, {
+          identificador: "HM0007",
+          grupoContainer: null,
+          gruposPermitidos: ["SODA"],
+        });
+        return true;
+      },
+    );
+    assert.strictEqual(createAlocacao.mock.calls.length, 0);
+  });
+
+  it("pedido com grupo sem configuração só aceita universal e devolve aviso", async () => {
+    const pedidos = [
+      buildPedidoIbc("1120", { gruposCodigo: ["SODA"] }),
+      buildPedidoIbc("1121", {
+        gruposCodigo: ["SEM"],
+        quantidadeEsperadaTotal: 1,
+        quantidadeEsperadaVenda: 1,
+      }),
+      buildPedidoIbc("9000", {
+        gruposCodigo: ["CLORO"],
+        quantidadeEsperadaTotal: 4,
+        quantidadeEsperadaVenda: 2,
+        quantidadeEsperadaEmprestimo: 2,
+      }),
+    ];
+    const aviso = {
+      code: "IBC_PEDIDO_GRUPO_SEM_CONFIG",
+      numPed: "1121",
+      gruposCodigo: ["SEM"],
+      message:
+        "Pedido 1121: grupo SEM não tem configuração de placa. Só o container universal atende.",
+    };
+
+    const universal = await alocar(
+      buildHappyRepo({
+        listPedidosIbcByCargaId: mock.fn(async () => pedidos),
+      }),
+      "NH00001",
+      ["SODA"],
+      { universal: true, grupoCodigo: null },
+    );
+    assert.deepEqual(universal.avisos, [aviso]);
+
+    const soda = await alocar(
+      buildHappyRepo({
+        listPedidosIbcByCargaId: mock.fn(async () => pedidos),
+      }),
+      "HMS00001",
+      ["SODA"],
+      { universal: false, grupoCodigo: "SODA" },
+    );
+    assert.deepEqual(soda.avisos, [aviso]);
+
+    const createAlocacao = mock.fn(async () => {
+      throw new Error("não deve criar");
+    });
+    await assert.rejects(
+      () =>
+        alocar(
+          buildHappyRepo({
+            listPedidosIbcByCargaId: mock.fn(async () => pedidos),
+            createAlocacao,
+          }),
+          "NHSEM0001",
+          ["SODA"],
+          { universal: false, grupoCodigo: "SEM" },
+        ),
+      (error: unknown) => {
+        assert.ok(error instanceof AppError);
+        assert.strictEqual(error.code, "IBC_PRODUTO_INCOMPATIVEL");
+        assert.deepEqual(error.details, {
+          identificador: "NHSEM0001",
+          grupoContainer: "SEM",
+          gruposPermitidos: ["SODA"],
+        });
+        return true;
+      },
+    );
     assert.strictEqual(createAlocacao.mock.calls.length, 0);
   });
 });

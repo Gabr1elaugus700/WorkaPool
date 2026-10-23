@@ -191,6 +191,10 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
             changeType: data.changeType,
             actorId: data.actorId,
             observation: data.observation,
+            identificadorAnterior: data.placa.identificadorAnterior,
+            corAnterior: data.placa.corAnterior,
+            identificadorNovo: created.identificador,
+            corNova: data.placa.corNova,
           },
         });
 
@@ -233,6 +237,10 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
       createdAt: row.createdAt,
       from: row.fromContainer,
       to: row.toContainer,
+      identificadorAnterior: row.identificadorAnterior,
+      corAnterior: row.corAnterior,
+      identificadorNovo: row.identificadorNovo,
+      corNova: row.corNova,
     }));
   }
 

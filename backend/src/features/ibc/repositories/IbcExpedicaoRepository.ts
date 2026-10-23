@@ -15,6 +15,10 @@ import {
   IbcRecord,
 } from "../types/IbcExpedicao.types";
 
+const produtoCompatInclude = {
+  produto: { select: { universal: true, grupoCodigo: true } },
+} as const;
+
 type AlocacaoRow = {
   id: string;
   ibcId: string;
@@ -118,6 +122,7 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
   ): Promise<IbcRecord | null> {
     const ibc = await this.prisma.ibc.findUnique({
       where: { identificador },
+      include: produtoCompatInclude,
     });
     if (!ibc) {
       return null;
@@ -132,6 +137,7 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
         aptidao: "INAPTO",
         motivoInaptidao: "DATA_LIMITE",
       },
+      include: produtoCompatInclude,
     });
     return this.toIbcRecord(updated);
   }
@@ -274,6 +280,7 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
     dataLimite: Date | null;
     createdAt: Date;
     convertedToContainerId: string | null;
+    produto: { universal: boolean; grupoCodigo: string | null } | null;
   }): IbcRecord {
     return {
       id: ibc.id,
@@ -283,6 +290,8 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
       dataLimite: ibc.dataLimite,
       createdAt: ibc.createdAt,
       convertedToContainerId: ibc.convertedToContainerId,
+      universal: ibc.produto?.universal === true,
+      grupoCodigo: ibc.produto?.universal ? null : (ibc.produto?.grupoCodigo ?? null),
     };
   }
 

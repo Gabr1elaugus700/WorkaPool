@@ -37,7 +37,11 @@ export class IbcProdutoRepository implements IIbcProdutoRepository, IIbcProdutoC
     if (!row) return null;
     return {
       id: row.id, nome: row.universal ? "Universal" : (row.grupoCodigo ?? ""),
-      abreviacao: row.sigla?.toUpperCase() ?? "", createdAt: row.createdAt, updatedAt: row.updatedAt,
+      abreviacao: row.sigla?.toUpperCase() ?? "",
+      sigla: row.sigla?.toUpperCase() ?? null,
+      corHex: row.corHex.toUpperCase(),
+      universal: row.universal,
+      createdAt: row.createdAt, updatedAt: row.updatedAt,
     };
   }
 
@@ -48,6 +52,16 @@ export class IbcProdutoRepository implements IIbcProdutoRepository, IIbcProdutoC
   async findByGrupoCodigo(grupoCodigo: string): Promise<IbcProdutoConfigRecord | null> {
     const row = await this.prisma.ibcProduto.findUnique({ where: { grupoCodigo }, include: configInclude });
     return row && !row.universal ? toConfig(row) : null;
+  }
+
+  async listGruposConfigurados(grupos: readonly string[]): Promise<string[]> {
+    const codigos = [...new Set(grupos.map((grupo) => grupo.trim()).filter((grupo) => grupo.length > 0))];
+    if (codigos.length === 0) return [];
+    const rows = await this.prisma.ibcProduto.findMany({
+      where: { universal: false, grupoCodigo: { in: codigos }, sigla: { not: null } },
+      select: { grupoCodigo: true },
+    });
+    return rows.flatMap((row) => (row.grupoCodigo ? [row.grupoCodigo] : []));
   }
 
   async findUniversal(): Promise<IbcProdutoConfigRecord | null> {
