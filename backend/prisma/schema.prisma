@@ -213,12 +213,14 @@ model Ibc {
 }
 
 model IbcProduto {
-  id         String   @id @default(uuid())
-  nome       String
-  abreviacao String   @unique
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  ibcs       Ibc[]
+  id          String   @id @default(uuid())
+  grupoCodigo String?  @unique @map("grupo_codigo") @db.VarChar(10)
+  sigla       String?  @unique @db.VarChar(2)
+  corHex      String   @unique @map("cor_hex") @db.VarChar(7)
+  universal   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  ibcs        Ibc[]
 }
 
 model IbcConversionHistory {
@@ -228,6 +230,10 @@ model IbcConversionHistory {
   changeType      String
   observation     String?
   actorId         String
+  identificadorAnterior String?
+  corAnterior           String?
+  identificadorNovo     String?
+  corNova               String?
   createdAt       DateTime @default(now())
 
   fromContainer Ibc @relation("IbcConversionFrom", fields: [fromContainerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
@@ -339,6 +345,7 @@ model CargaPedidoIbc {
   quantidadeEsperadaEmprestimo Int
   ibcInvalido                  Boolean  @default(false)
   posCar                       Int?
+  gruposCodigo                 String[] @default([])
   createdAt                    DateTime @default(now())
 
   carga Cargas @relation(fields: [cargaId], references: [id])

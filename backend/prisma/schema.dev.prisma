@@ -320,6 +320,7 @@ model CargaPedidoIbc {
   quantidadeEsperadaEmprestimo Int
   ibcInvalido                  Boolean  @default(false)
   posCar                       Int?
+  gruposCodigo                 String[] @default([])
   createdAt                    DateTime @default(now())
 
   carga Cargas @relation(fields: [cargaId], references: [id])

@@ -87,7 +87,7 @@ services:
       [
         "sh",
         "-c",
-        "npx prisma generate --schema=${PRISMA_SCHEMA:-prisma/schema.dev.prisma} && npx prisma migrate deploy --schema=${PRISMA_SCHEMA:-prisma/schema.dev.prisma} && npx tsx src/server.ts",
+        "npx prisma generate --schema=${PRISMA_SCHEMA:-prisma/schema.dev.prisma} && npx prisma migrate deploy --schema=${PRISMA_SCHEMA:-prisma/schema.dev.prisma} && npx tsx src/features/ibc/scripts/runBackfillCargaPedidoIbcGrupos.ts && npx tsx src/server.ts",
       ]
     networks:
       - workapool-network

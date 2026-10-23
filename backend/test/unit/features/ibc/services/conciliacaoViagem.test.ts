@@ -13,6 +13,7 @@ const pedido = (
   quantidadeEsperadaEmprestimo: 0,
   ibcInvalido: false,
   posCar: null,
+  gruposCodigo: [],
   ...overrides,
 });
 

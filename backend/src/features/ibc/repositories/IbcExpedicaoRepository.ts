@@ -12,8 +12,13 @@ import {
   ExpedicaoIbcRecord,
   FecharExpedicaoIbcData,
   IbcCustodiaValue,
+  IbcParaCompatibilidade,
   IbcRecord,
 } from "../types/IbcExpedicao.types";
+
+const produtoCompatInclude = {
+  produto: { select: { universal: true, grupoCodigo: true } },
+} as const;
 
 type AlocacaoRow = {
   id: string;
@@ -118,6 +123,7 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
   ): Promise<IbcRecord | null> {
     const ibc = await this.prisma.ibc.findUnique({
       where: { identificador },
+      include: produtoCompatInclude,
     });
     if (!ibc) {
       return null;
@@ -132,6 +138,7 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
         aptidao: "INAPTO",
         motivoInaptidao: "DATA_LIMITE",
       },
+      include: produtoCompatInclude,
     });
     return this.toIbcRecord(updated);
   }
@@ -169,6 +176,24 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
       orderBy: { alocadoEm: "asc" },
     });
     return alocacoes.map((row) => this.toAlocacaoRecord(row));
+  }
+
+  async listCompatibilidadePorIds(ids: readonly string[]): Promise<IbcParaCompatibilidade[]> {
+    if (ids.length === 0) return [];
+    const rows = await this.prisma.ibc.findMany({
+      where: { id: { in: [...ids] } },
+      select: {
+        id: true,
+        identificador: true,
+        produto: { select: { universal: true, grupoCodigo: true } },
+      },
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      identificador: row.identificador,
+      universal: row.produto?.universal === true,
+      grupoCodigo: row.produto?.universal ? null : (row.produto?.grupoCodigo ?? null),
+    }));
   }
 
   async findExpedicaoByCargaId(
@@ -274,6 +299,7 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
     dataLimite: Date | null;
     createdAt: Date;
     convertedToContainerId: string | null;
+    produto: { universal: boolean; grupoCodigo: string | null } | null;
   }): IbcRecord {
     return {
       id: ibc.id,
@@ -283,6 +309,8 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
       dataLimite: ibc.dataLimite,
       createdAt: ibc.createdAt,
       convertedToContainerId: ibc.convertedToContainerId,
+      universal: ibc.produto?.universal === true,
+      grupoCodigo: ibc.produto?.universal ? null : (ibc.produto?.grupoCodigo ?? null),
     };
   }
 
@@ -296,6 +324,7 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
       quantidadeEsperadaEmprestimo: row.quantidadeEsperadaEmprestimo,
       ibcInvalido: row.ibcInvalido,
       posCar: row.posCar,
+      gruposCodigo: row.gruposCodigo,
     };
   }
 

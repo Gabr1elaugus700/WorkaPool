@@ -48,6 +48,7 @@ function detalhe(overrides: Partial<CargaExpedicaoDetalheDTO> = {}): CargaExpedi
     podeFecharExpedicao: false,
     pedidos: [pedido("1120")],
     alocacoes: [alocacao("a2", "H10"), alocacao("a1", "H2")],
+    avisos: [],
     ...overrides,
   };
 }
@@ -144,5 +145,23 @@ describe("CargaIbcPreparacaoEtapa", () => {
     assert.doesNotMatch(markup, /Desvincular/);
     assert.doesNotMatch(markup, /ibc-identificador-carga/);
     assert.match(markup, /H2/);
+  });
+
+  it("mostra o grupo sem configuração e deixa claro que a carga segue", () => {
+    const markup = html(
+      detalhe({
+        avisos: [{
+          code: "IBC_PEDIDO_GRUPO_SEM_CONFIG",
+          numPed: "1120",
+          gruposCodigo: ["SODA"],
+          message: "Pedido 1120: grupo SODA não tem configuração de placa. Só o container universal atende.",
+        }],
+      }),
+    );
+
+    assert.match(markup, /Grupo sem configuração de placa e cor/);
+    assert.match(markup, /Pedido 1120: grupo SODA não tem configuração de placa/);
+    assert.match(markup, /A carga segue/);
+    assert.match(markup, /Vincular/);
   });
 });

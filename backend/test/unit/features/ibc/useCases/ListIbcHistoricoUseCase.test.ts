@@ -17,7 +17,11 @@ const EVENTO: IbcConversionHistoryRecord = {
   actorName: "Operador",
   createdAt: new Date("2026-10-01T10:00:00.000Z"),
   from: { id: "ibc-source-1", identificador: "HMSA00015" },
-  to: { id: "ibc-target-1", identificador: "NHMSA00001" },
+  to: { id: "ibc-target-1", identificador: "NHSA00001" },
+  identificadorAnterior: "HMSA00015",
+  corAnterior: "#AA0000",
+  identificadorNovo: "NHSA00001",
+  corNova: "#AA0000",
 };
 
 function buildRepo(ibc: IbcCadastroRecord | null) {

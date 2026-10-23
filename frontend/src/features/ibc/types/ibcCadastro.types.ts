@@ -19,6 +19,9 @@ export type IbcCadastroDTO = {
   prefixo?: string | null;
   sequencial?: number | null;
   convertedToContainerId?: string | null;
+  corHex?: string | null;
+  universal?: boolean;
+  homologado?: boolean;
 };
 
 export type IbcMudancaTipo = "conversion" | "product_change" | "status_change";
@@ -32,11 +35,22 @@ export type IbcHistoricoDTO = {
   createdAt: string;
   from: { id: string; identificador: string };
   to: { id: string; identificador: string };
+  identificadorAnterior: string | null;
+  corAnterior: string | null;
+  identificadorNovo: string | null;
+  corNova: string | null;
 };
+
+export type IbcConversaoDestino = "manter_grupo" | "universal";
 
 export type IbcMudancaConfirmacaoInput = {
   confirmado: true;
   observacao: string | null;
+};
+
+export type ConvertIbcInput = IbcMudancaConfirmacaoInput & {
+  destino: IbcConversaoDestino;
+  grupoCodigo?: string | null;
 };
 
 export type ChangeIbcProdutoInput = IbcMudancaConfirmacaoInput & {
@@ -70,14 +84,16 @@ export type IbcAlertDTO = {
 
 export type CreateNovoIbcInput = {
   dataLimite: string;
-  produtoId: string;
+  homologado: boolean;
+  grupoCodigo?: string | null;
 };
 
 export type CreateLoteIbcInput = {
   quantidade: number;
   dataLimite: string;
   numeroNf?: string | null;
-  produtoId: string;
+  homologado: boolean;
+  grupoCodigo?: string | null;
 };
 
 export type IbcLoteDTO = {
@@ -116,9 +132,4 @@ export type IbcProdutoDTO = {
 
 export type IbcProdutoListItemDTO = IbcProdutoDTO & {
   possuiIbcs: boolean;
-};
-
-export type CreateIbcProdutoInput = {
-  nome: string;
-  abreviacao: string;
 };

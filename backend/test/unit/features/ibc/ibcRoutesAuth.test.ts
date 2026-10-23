@@ -195,12 +195,12 @@ test("IBC Routes - autenticação e autorização", async (t) => {
       .send({ dataLimite: "2099-12-31" });
     const softDelete = await request(app).delete("/api/ibc/ibc-1");
     const createProduto = await request(app)
-      .post("/api/ibc/produtos")
-      .send({ nome: "Soda", abreviacao: "S" });
+      .put("/api/ibc/produtos/grupos/01")
+      .send({ sigla: "S", corHex: "#AA0000" });
     const listProdutos = await request(app).get("/api/ibc/produtos");
     const updateProduto = await request(app)
-      .patch("/api/ibc/produtos/prod-1")
-      .send({ nome: "Soda A", abreviacao: "SA" });
+      .put("/api/ibc/produtos/universal")
+      .send({ corHex: "#00AA00" });
     const convertStatus = await request(app)
       .patch("/api/ibc/ibc-1/converter-nao-homologado")
       .send({ confirmado: true });
@@ -240,13 +240,13 @@ test("IBC Routes - autenticação e autorização", async (t) => {
         .delete("/api/ibc/ibc-1")
         .set("Authorization", `Bearer ${token}`);
       const createProduto = await request(app)
-        .post("/api/ibc/produtos")
+        .put("/api/ibc/produtos/grupos/01")
         .set("Authorization", `Bearer ${token}`)
-        .send({ nome: "Soda", abreviacao: "S" });
+        .send({ sigla: "S", corHex: "#AA0000" });
       const updateProduto = await request(app)
-        .patch("/api/ibc/produtos/prod-1")
+        .put("/api/ibc/produtos/universal")
         .set("Authorization", `Bearer ${token}`)
-        .send({ nome: "Soda A", abreviacao: "SA" });
+        .send({ corHex: "#00AA00" });
       const convertStatus = await request(app)
         .patch("/api/ibc/ibc-1/converter-nao-homologado")
         .set("Authorization", `Bearer ${token}`)
@@ -439,6 +439,32 @@ test("IBC Routes - autenticação e autorização", async (t) => {
         });
       assert.strictEqual(response.status, 403, role);
     }
+  });
+
+  await t.test("PUT conciliação e POST fechar-viagem: 401 sem token, 403 para LOGISTICA, 400 com corpo inválido", async () => {
+    const put = "/api/ibc/expedicoes/202/conciliacao";
+    const fechar = "/api/ibc/expedicoes/202/fechar-viagem";
+    assert.strictEqual((await request(app).put(put).send({})).status, 401);
+    assert.strictEqual((await request(app).post(fechar).send({})).status, 401);
+
+    const logistica = createToken("LOGISTICA");
+    assert.strictEqual((await request(app).put(put).set("Authorization", `Bearer ${logistica}`).send({})).status, 403);
+    assert.strictEqual((await request(app).post(fechar).set("Authorization", `Bearer ${logistica}`).send({})).status, 403);
+
+    const almox = createToken("ALMOX");
+    const conciliacao = await request(app)
+      .put(put)
+      .set("Authorization", `Bearer ${almox}`)
+      .send({ itens: [{ alocacaoIbcId: "nao-uuid", destino: "FICOU" }] });
+    assert.strictEqual(conciliacao.status, 400);
+    assert.strictEqual(conciliacao.body.code, "IBC_CONCILIACAO_INVALID_BODY");
+
+    const fechamento = await request(app)
+      .post(fechar)
+      .set("Authorization", `Bearer ${almox}`)
+      .send({ confirmacoes: [{ numPed: "" }] });
+    assert.strictEqual(fechamento.status, 400);
+    assert.strictEqual(fechamento.body.code, "IBC_FECHAR_VIAGEM_INVALID_BODY");
   });
 
   await t.test("POST /:id/inspecoes com body inválido (ALMOX) retorna 400 antes de tocar o banco", async () => {

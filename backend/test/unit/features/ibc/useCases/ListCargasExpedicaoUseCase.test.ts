@@ -20,6 +20,7 @@ const buildPedidoIbc = (
   quantidadeEsperadaEmprestimo: 0,
   ibcInvalido: false,
   posCar: null,
+  gruposCodigo: [],
   ...overrides,
 });
 

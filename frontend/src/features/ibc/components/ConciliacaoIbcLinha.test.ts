@@ -61,8 +61,12 @@ describe("ConciliacaoIbcLinha", () => {
     assert.doesNotMatch(vazio, /Incluso/);
   });
 
-  it("retornou não escolhe pedido", () => {
+  it("retornou não escolhe pedido nem checa produto", () => {
     const html = markup({ destino: "RETORNOU", numPed: "10" });
     assert.doesNotMatch(html, /<select|Incluso|10/);
+    assert.match(html, /não checa compatibilidade de produto/);
+
+    const ficou = markup({ destino: "FICOU", numPed: "10" });
+    assert.doesNotMatch(ficou, /não checa compatibilidade/);
   });
 });

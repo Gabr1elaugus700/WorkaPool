@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
 import CadastroIbcPoolList from "../components/CadastroIbcPoolList";
@@ -15,9 +18,11 @@ import IbcHistoricoDrawer from "../components/IbcHistoricoDrawer";
 import IbcChecklistsVinculoDrawer from "../components/IbcChecklistsVinculoDrawer";
 import IbcInspecaoDrawer from "../components/IbcInspecaoDrawer";
 import IbcInspecoesDrawer from "../components/IbcInspecoesDrawer";
-import IbcProdutosDrawer from "../components/IbcProdutosDrawer";
 import NovoIbcDrawer from "../components/NovoIbcDrawer";
-import { useIbcAlerts, useIbcPool, useIbcProdutos } from "../hooks/useIbcCadastro";
+import { gestaoIbcSections } from "../utils/gestaoIbcSections";
+import { useIbcAlerts, useIbcPool } from "../hooks/useIbcCadastro";
+import { useIbcProdutoConfig } from "../hooks/useIbcProdutoConfig";
+import { ibcPlacaCadastro } from "../utils/ibcPlacaCadastro";
 import { useIbcConversao, useIbcHistorico } from "../hooks/useIbcConversao";
 import { useIbcChecklistVinculos } from "../hooks/useIbcChecklistVinculos";
 import type { IbcCadastroDTO } from "../types/ibcCadastro.types";
@@ -28,9 +33,10 @@ import {
 } from "../utils/ibcCadastroPermissions";
 import { toError } from "../utils/toError";
 
-type Painel = "novo" | "produtos" | null;
+type Painel = "novo" | null;
 
 export default function CadastroIbcView() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const allowed = canViewIbcCadastro(user?.role);
   const canWrite = canWriteIbcCadastro(user?.role);
@@ -44,7 +50,7 @@ export default function CadastroIbcView() {
 
   const poolQuery = useIbcPool(allowed, incluirHistorico);
   const alertsQuery = useIbcAlerts(allowed);
-  const produtosQuery = useIbcProdutos(allowed);
+  const configQuery = useIbcProdutoConfig(allowed);
   const conversao = useIbcConversao();
   const historicoQuery = useIbcHistorico(historicoIbc?.id ?? null);
   const vinculos = useIbcChecklistVinculos(checklistsIbc?.id ?? null);
@@ -53,7 +59,7 @@ export default function CadastroIbcView() {
     return <ExpedicaoIbcAccessDeniedAlert targetPhrase="o Cadastro IBC" requiredRoles={IBC_CADASTRO_VIEW_ROLES} />;
   }
 
-  const produtos = produtosQuery.data ?? [];
+  const produtos = ibcPlacaCadastro.nomes(configQuery.query.data);
 
   return (
     <DefaultLayout>
@@ -61,13 +67,6 @@ export default function CadastroIbcView() {
         <GestaoIbcHeader
           activeSection="containers"
           userRole={user?.role}
-          secondaryActions={
-            canWrite ? (
-              <Button type="button" variant="outline" onClick={() => setPainel("produtos")}>
-                Produtos
-              </Button>
-            ) : null
-          }
           primaryAction={
             canWrite ? (
               <Button type="button" onClick={() => setPainel("novo")}>
@@ -123,45 +122,50 @@ export default function CadastroIbcView() {
         <>
           <NovoIbcDrawer
             open={painel === "novo"}
-            produtos={produtos}
-            produtosCarregando={produtosQuery.isLoading}
+            config={configQuery.query.data ?? null}
+            configCarregando={configQuery.query.isLoading}
+            configErro={configQuery.query.error ? toError(configQuery.query.error).message : null}
             onOpenChange={(open) => setPainel(open ? "novo" : null)}
-            onAbrirProdutos={() => setPainel("produtos")}
-          />
-          <IbcProdutosDrawer
-            open={painel === "produtos"}
-            produtos={produtos}
-            onOpenChange={(open) => setPainel(open ? "produtos" : null)}
+            onAbrirProdutos={() => {
+              setPainel(null);
+              navigate(gestaoIbcSections.path("produtos"));
+            }}
           />
         </>
       ) : null}
       {canWrite && mudanca ? (
-        <ConfirmarMudancaIbcModal
-          key={`${mudanca.ibc.id}-${mudanca.modo}`}
-          ibc={mudanca.ibc}
-          modo={mudanca.modo}
-          produtos={produtos}
-          submitting={conversao.isPending}
-          onClose={() => setMudanca(null)}
-          onConfirm={async ({ confirmacao, produtoId }) => {
-            if (mudanca.modo === "product_change" && produtoId) {
-              await conversao.mudarProduto(mudanca.ibc.id, { ...confirmacao, produtoId });
-            } else {
-              await conversao.converter(mudanca.ibc.id, confirmacao);
-            }
-            setMudanca(null);
-          }}
-        />
+        <Dialog open onOpenChange={(open) => { if (!open && !conversao.isPending) setMudanca(null); }}>
+          <DialogContent className="max-w-lg gap-5" aria-labelledby="ibc-mudanca-titulo" aria-describedby="ibc-mudanca-descricao">
+            <ConfirmarMudancaIbcModal
+              key={`${mudanca.ibc.id}-${mudanca.modo}`}
+              ibc={mudanca.ibc}
+              modo={mudanca.modo}
+              config={configQuery.query.data ?? null}
+              configCarregando={configQuery.query.isLoading}
+              configErro={configQuery.query.error ? toError(configQuery.query.error).message : null}
+              submitting={conversao.isPending}
+              onClose={() => setMudanca(null)}
+              onConfirm={async (acao) => {
+                if (acao.tipo === "product_change") await conversao.mudarProduto(mudanca.ibc.id, acao.input);
+                else await conversao.converter(mudanca.ibc.id, acao.input);
+                setMudanca(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       ) : null}
       {historicoIbc ? (
-        <IbcHistoricoDrawer
-          identificador={historicoIbc.identificador}
-          eventos={historicoQuery.data ?? []}
-          isLoading={historicoQuery.isLoading}
-          errorMessage={historicoQuery.error ? toError(historicoQuery.error).message : null}
-          onRetry={() => void historicoQuery.refetch()}
-          onClose={() => setHistoricoIbc(null)}
-        />
+        <Sheet open onOpenChange={(open) => { if (!open) setHistoricoIbc(null); }}>
+          <SheetContent aria-labelledby="ibc-historico-titulo" aria-describedby="ibc-historico-descricao">
+            <IbcHistoricoDrawer
+              identificador={historicoIbc.identificador}
+              eventos={historicoQuery.data ?? []}
+              isLoading={historicoQuery.isLoading}
+              errorMessage={historicoQuery.error ? toError(historicoQuery.error).message : null}
+              onRetry={() => void historicoQuery.refetch()}
+            />
+          </SheetContent>
+        </Sheet>
       ) : null}
       {canWrite && checklistsIbc ? (
         <IbcChecklistsVinculoDrawer

@@ -1,5 +1,6 @@
 import type { IbcCadastroDTO } from "../types/ibcCadastro.types";
-import { isIbcNaoHomologado, isIbcSubstituido } from "./ibcMudanca.utils";
+import { ibcPlacaCadastro } from "./ibcPlacaCadastro";
+import { isIbcSubstituido } from "./ibcMudanca.utils";
 
 export type IbcPoolSituacao =
   | "todas"
@@ -16,7 +17,7 @@ const SITUACAO: Record<Exclude<IbcPoolSituacao, "todas">, (ibc: IbcCadastroDTO) 
   apto: (ibc) => ibc.aptidao === "APTO" && !ibc.baixadoEm && !isIbcSubstituido(ibc),
   inapto: (ibc) => ibc.aptidao === "INAPTO",
   sem_inspecao: (ibc) => ibc.primeiraInspecaoEm == null,
-  nao_homologado: isIbcNaoHomologado,
+  nao_homologado: (ibc) => ibcPlacaCadastro.naoHomologado(ibc),
   baixado: (ibc) => Boolean(ibc.baixadoEm),
   substituido: isIbcSubstituido,
 };

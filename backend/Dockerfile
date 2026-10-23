@@ -15,4 +15,4 @@ RUN npm run build
 
 EXPOSE 3001
 # Projeto é ESM sem extensão .js nos imports — `node .build/...` quebra; tsx resolve como no dev
-CMD ["sh", "-c", "npx prisma migrate deploy && npx tsx src/server.ts"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npx tsx src/features/ibc/scripts/runBackfillCargaPedidoIbcGrupos.ts && npx tsx src/server.ts"]

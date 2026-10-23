@@ -12,14 +12,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { formatIsoDateLabel } from "@/utils/formatDate";
-import type { IbcCadastroDTO, IbcProdutoDTO } from "../types/ibcCadastro.types";
+import type { IbcCadastroDTO } from "../types/ibcCadastro.types";
 import { filterCadastroIbcPool, type IbcPoolSituacao } from "../utils/filterCadastroIbcPool";
 import { ibcCadastroLabels } from "../utils/ibcCadastroLabels";
 import { podeInspecionarIbc } from "../utils/ibcInspecao.utils";
-import { isIbcNaoHomologado, isIbcSubstituido } from "../utils/ibcMudanca.utils";
+import { acaoMudancaDisponivel, isIbcSubstituido } from "../utils/ibcMudanca.utils";
+import { ibcPlacaCadastro, type NomeProdutoIbc } from "../utils/ibcPlacaCadastro";
+import CadastroIbcDetalhe from "./CadastroIbcDetalhe";
+import IbcPlacaAmostra from "./IbcPlacaAmostra";
 import IbcStatusContent from "./IbcStatusContent";
 
 const SITUACOES: readonly { id: IbcPoolSituacao; label: string }[] = [
@@ -52,7 +56,7 @@ type Acao = { label: string; disabled?: boolean; run: () => void };
 
 type Props = {
   items: IbcCadastroDTO[];
-  produtos: IbcProdutoDTO[];
+  produtos: readonly NomeProdutoIbc[];
   canWrite: boolean;
   incluirHistorico: boolean;
   onIncluirHistoricoChange: (value: boolean) => void;
@@ -75,7 +79,7 @@ function marcas(ibc: IbcCadastroDTO): string[] {
   return [
     ibc.motivoInaptidao ? ibcCadastroLabels.motivoInaptidao[ibc.motivoInaptidao] : null,
     ibc.primeiraInspecaoEm == null ? ibcCadastroLabels.alertaMotivo.SEM_INSPECAO : null,
-    isIbcNaoHomologado(ibc) ? "Não homologado" : null,
+    ibcPlacaCadastro.naoHomologado(ibc) ? "Não homologado" : null,
     ibc.baixadoEm ? "Baixado" : null,
     isIbcSubstituido(ibc) ? "Substituído" : null,
   ].filter((label): label is string => label !== null);
@@ -84,10 +88,13 @@ function marcas(ibc: IbcCadastroDTO): string[] {
 function acoesDeEscrita(ibc: IbcCadastroDTO, props: Props): Acao[] {
   if (!props.canWrite || isIbcSubstituido(ibc)) return [];
   const acoes: Acao[] = [];
-  if (!isIbcNaoHomologado(ibc)) {
+  const mudanca = acaoMudancaDisponivel(ibc);
+  if (mudanca === "converter") {
     acoes.push({ label: "Converter para não homologado", disabled: props.actionsDisabled, run: () => props.onConverter(ibc) });
   }
-  acoes.push({ label: "Mudar produto", disabled: props.actionsDisabled, run: () => props.onMudarProduto(ibc) });
+  if (mudanca === "mudar_produto") {
+    acoes.push({ label: "Mudar produto", disabled: props.actionsDisabled, run: () => props.onMudarProduto(ibc) });
+  }
   acoes.push({ label: "Checklists", run: () => props.onGerenciarChecklists(ibc) });
   return acoes;
 }
@@ -112,6 +119,7 @@ export default function CadastroIbcPoolList(props: Props) {
   const [busca, setBusca] = useState("");
   const [situacao, setSituacao] = useState<IbcPoolSituacao>("todas");
   const [produtoId, setProdutoId] = useState(TODOS_PRODUTOS);
+  const [detalhe, setDetalhe] = useState<IbcCadastroDTO | null>(null);
   const filtrados = filterCadastroIbcPool(items, {
     busca,
     situacao,
@@ -210,8 +218,18 @@ export default function CadastroIbcPoolList(props: Props) {
                 const escrita = acoesDeEscrita(ibc, props);
                 return (
                   <TableRow key={ibc.id}>
-                    <TableCell className="px-3 py-2 font-medium tabular-nums">{ibc.identificador}</TableCell>
-                    <TableCell className="px-3 py-2">{produtoNome.get(ibc.produtoId ?? "") ?? "—"}</TableCell>
+                    <TableCell className="px-3 py-2">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 rounded-sm font-medium tabular-nums text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        aria-label={`Detalhe de ${ibc.identificador}`}
+                        onClick={() => setDetalhe(ibc)}
+                      >
+                        <IbcPlacaAmostra corHex={ibc.corHex} />
+                        {ibc.identificador}
+                      </button>
+                    </TableCell>
+                    <TableCell className="px-3 py-2">{ibc.universal ? "Universal" : (produtoNome.get(ibc.produtoId ?? "") ?? "—")}</TableCell>
                     <TableCell className="px-3 py-2">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span
@@ -263,6 +281,13 @@ export default function CadastroIbcPoolList(props: Props) {
           </Table>
         </div>
       )}
+      {detalhe ? (
+        <Sheet open onOpenChange={(open) => !open && setDetalhe(null)}>
+          <SheetContent>
+            <CadastroIbcDetalhe ibc={detalhe} produto={produtoNome.get(detalhe.produtoId ?? "") ?? null} />
+          </SheetContent>
+        </Sheet>
+      ) : null}
     </div>
   );
 }

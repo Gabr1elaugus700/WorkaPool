@@ -1,91 +1,81 @@
 import { PrismaClient } from "@prisma/client";
 import prismaInstance from "../../../config/prisma";
-import { AppError } from "../../../utils/AppError";
-import {
-  CreateIbcProdutoData,
-  IIbcProdutoRepository,
-  UpdateIbcProdutoData,
-} from "./IIbcProdutoRepository";
-import { IbcProdutoListItem, IbcProdutoRecord } from "../types/IbcCadastro.types";
+import { IbcProdutoRecord } from "../types/IbcCadastro.types";
+import { IIbcProdutoRepository } from "./IIbcProdutoRepository";
 
-export class IbcProdutoRepository implements IIbcProdutoRepository {
-  private readonly prisma: PrismaClient;
+export type IbcProdutoConfigRecord = {
+  id: string; grupoCodigo: string | null; sigla: string | null; corHex: string; universal: boolean; emUso: boolean;
+};
 
-  constructor(prismaClient: PrismaClient = prismaInstance) {
-    this.prisma = prismaClient;
-  }
+export type SaveIbcProdutoConfig =
+  | { id?: string; universal: true; corHex: string }
+  | { id?: string; universal: false; grupoCodigo: string; sigla: string; corHex: string };
 
-  async create(data: CreateIbcProdutoData): Promise<IbcProdutoRecord> {
-    try {
-      const created = await this.prisma.ibcProduto.create({ data });
-      return this.toRecord(created);
-    } catch (error: unknown) {
-      this.handlePersistenceError(error);
-      throw error;
-    }
-  }
+export interface IIbcProdutoConfigRepository {
+  list(): Promise<IbcProdutoConfigRecord[]>;
+  findByGrupoCodigo(grupoCodigo: string): Promise<IbcProdutoConfigRecord | null>;
+  findUniversal(): Promise<IbcProdutoConfigRecord | null>;
+  save(input: SaveIbcProdutoConfig): Promise<IbcProdutoConfigRecord>;
+}
 
-  async list(): Promise<IbcProdutoListItem[]> {
-    const rows = await this.prisma.ibcProduto.findMany({
-      orderBy: [{ nome: "asc" }, { abreviacao: "asc" }],
-      include: { _count: { select: { ibcs: true } } },
-    });
-    return rows.map((row) => ({
-      ...this.toRecord(row),
-      possuiIbcs: row._count.ibcs > 0,
-    }));
-  }
+const configInclude = { _count: { select: { ibcs: true } } } as const;
+
+function toConfig(row: {
+  id: string; grupoCodigo: string | null; sigla: string | null; corHex: string; universal: boolean; _count: { ibcs: number };
+}): IbcProdutoConfigRecord {
+  return {
+    id: row.id, grupoCodigo: row.grupoCodigo, sigla: row.sigla?.toUpperCase() ?? null,
+    corHex: row.corHex.toUpperCase(), universal: row.universal, emUso: row._count.ibcs > 0,
+  };
+}
+
+export class IbcProdutoRepository implements IIbcProdutoRepository, IIbcProdutoConfigRepository {
+  constructor(private readonly prisma: PrismaClient = prismaInstance) {}
 
   async findById(id: string): Promise<IbcProdutoRecord | null> {
     const row = await this.prisma.ibcProduto.findUnique({ where: { id } });
-    return row ? this.toRecord(row) : null;
-  }
-
-  async hasIbcs(produtoId: string): Promise<boolean> {
-    const total = await this.prisma.ibc.count({ where: { produtoId } });
-    return total > 0;
-  }
-
-  async updateById(
-    id: string,
-    data: UpdateIbcProdutoData,
-  ): Promise<IbcProdutoRecord> {
-    try {
-      const updated = await this.prisma.ibcProduto.update({
-        where: { id },
-        data,
-      });
-      return this.toRecord(updated);
-    } catch (error: unknown) {
-      this.handlePersistenceError(error);
-      throw error;
-    }
-  }
-
-  private handlePersistenceError(error: unknown): never | void {
-    const message = error instanceof Error ? error.message : String(error);
-    if (message.includes("IbcProduto_abreviacao_key")) {
-      throw new AppError({
-        message: "Abreviação já cadastrada para outro produto",
-        statusCode: 409,
-        code: "IBC_PRODUTO_ABREVIACAO_DUPLICADA",
-      });
-    }
-  }
-
-  private toRecord(row: {
-    id: string;
-    nome: string;
-    abreviacao: string;
-    createdAt: Date;
-    updatedAt: Date;
-  }): IbcProdutoRecord {
+    if (!row) return null;
     return {
-      id: row.id,
-      nome: row.nome,
-      abreviacao: row.abreviacao,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
+      id: row.id, nome: row.universal ? "Universal" : (row.grupoCodigo ?? ""),
+      abreviacao: row.sigla?.toUpperCase() ?? "",
+      sigla: row.sigla?.toUpperCase() ?? null,
+      corHex: row.corHex.toUpperCase(),
+      universal: row.universal,
+      createdAt: row.createdAt, updatedAt: row.updatedAt,
     };
+  }
+
+  list(): Promise<IbcProdutoConfigRecord[]> {
+    return this.prisma.ibcProduto.findMany({ include: configInclude }).then((rows) => rows.map(toConfig));
+  }
+
+  async findByGrupoCodigo(grupoCodigo: string): Promise<IbcProdutoConfigRecord | null> {
+    const row = await this.prisma.ibcProduto.findUnique({ where: { grupoCodigo }, include: configInclude });
+    return row && !row.universal ? toConfig(row) : null;
+  }
+
+  async listGruposConfigurados(grupos: readonly string[]): Promise<string[]> {
+    const codigos = [...new Set(grupos.map((grupo) => grupo.trim()).filter((grupo) => grupo.length > 0))];
+    if (codigos.length === 0) return [];
+    const rows = await this.prisma.ibcProduto.findMany({
+      where: { universal: false, grupoCodigo: { in: codigos }, sigla: { not: null } },
+      select: { grupoCodigo: true },
+    });
+    return rows.flatMap((row) => (row.grupoCodigo ? [row.grupoCodigo] : []));
+  }
+
+  async findUniversal(): Promise<IbcProdutoConfigRecord | null> {
+    const row = await this.prisma.ibcProduto.findFirst({ where: { universal: true }, include: configInclude });
+    return row ? toConfig(row) : null;
+  }
+
+  async save(input: SaveIbcProdutoConfig): Promise<IbcProdutoConfigRecord> {
+    const data = input.universal
+      ? { grupoCodigo: null, sigla: null, corHex: input.corHex, universal: true }
+      : { grupoCodigo: input.grupoCodigo, sigla: input.sigla, corHex: input.corHex, universal: false };
+    const row = input.id
+      ? await this.prisma.ibcProduto.update({ where: { id: input.id }, data, include: configInclude })
+      : await this.prisma.ibcProduto.create({ data, include: configInclude });
+    return toConfig(row);
   }
 }

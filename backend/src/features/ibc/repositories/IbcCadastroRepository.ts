@@ -3,6 +3,7 @@ import prismaInstance from "../../../config/prisma";
 import { AppError } from "../../../utils/AppError";
 import { ibcJaSubstituidoError } from "../services/assertIbcNotReplaced";
 import { formatIbcIdentifier } from "../services/formatIbcIdentifier";
+import { isHomologadoPrefixo, resolveIbcPrefixo } from "../services/getIbcIdentifierPrefix";
 import {
   CreateDerivedIbcData,
   CreateIbcLoteData,
@@ -35,7 +36,19 @@ type IbcRow = {
   loteId?: string | null;
   produtoId?: string | null;
   convertedToContainerId?: string | null;
+  produto?: { corHex: string; universal: boolean } | null;
 };
+
+const placaInclude = { produto: { select: { corHex: true, universal: true } } } as const;
+
+function placaDe(row: IbcRow): Pick<IbcCadastroRecord, "corHex" | "universal" | "homologado"> {
+  const prefixo = resolveIbcPrefixo(row);
+  return {
+    corHex: row.produto?.corHex ?? null,
+    universal: row.produto?.universal ?? false,
+    homologado: prefixo != null && isHomologadoPrefixo(prefixo),
+  };
+}
 
 const STRUCTURAL_CHANGE_TYPES: readonly IbcStructuralChangeType[] = [
   "conversion",
@@ -120,6 +133,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
             prefixo: data.prefixo,
             sequencial: { gte: first, lte: last },
           },
+          include: placaInclude,
           orderBy: { sequencial: "asc" },
         });
         return rows.map((row) => this.toRecord(row));
@@ -160,6 +174,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
             primeiraInspecaoEm: source.primeiraInspecaoEm,
             produtoId: data.produtoId,
           },
+          include: placaInclude,
         });
 
         const linked = await tx.ibc.updateMany({
@@ -176,6 +191,10 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
             changeType: data.changeType,
             actorId: data.actorId,
             observation: data.observation,
+            identificadorAnterior: data.placa.identificadorAnterior,
+            corAnterior: data.placa.corAnterior,
+            identificadorNovo: created.identificador,
+            corNova: data.placa.corNova,
           },
         });
 
@@ -218,6 +237,10 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
       createdAt: row.createdAt,
       from: row.fromContainer,
       to: row.toContainer,
+      identificadorAnterior: row.identificadorAnterior,
+      corAnterior: row.corAnterior,
+      identificadorNovo: row.identificadorNovo,
+      corNova: row.corNova,
     }));
   }
 
@@ -228,6 +251,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
   async listIbcs(options: ListIbcsOptions): Promise<IbcCadastroRecord[]> {
     const rows = await this.prisma.ibc.findMany({
       where: options.incluirBaixados ? undefined : ACTIVE_IBC_WHERE,
+      include: placaInclude,
       orderBy: { identificador: "asc" },
     });
     return rows.map((row) => this.toRecord(row));
@@ -246,12 +270,13 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
         aptidao: "INAPTO",
         motivoInaptidao: "DATA_LIMITE",
       },
+      include: placaInclude,
     });
     return this.toRecord(updated);
   }
 
   async findById(id: string): Promise<IbcCadastroRecord | null> {
-    const row = await this.prisma.ibc.findUnique({ where: { id } });
+    const row = await this.prisma.ibc.findUnique({ where: { id }, include: placaInclude });
     return row ? this.toRecord(row) : null;
   }
 
@@ -262,6 +287,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
     const updated = await this.prisma.ibc.update({
       where: { id },
       data: { dataLimite },
+      include: placaInclude,
     });
     return this.toRecord(updated);
   }
@@ -278,6 +304,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
     const updated = await this.prisma.ibc.update({
       where: { id },
       data: { baixadoEm: new Date() },
+      include: placaInclude,
     });
     return this.toRecord(updated);
   }
@@ -335,6 +362,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
       loteId: row.loteId ?? null,
       produtoId: row.produtoId ?? null,
       convertedToContainerId: row.convertedToContainerId ?? null,
+      ...placaDe(row),
     };
   }
 }

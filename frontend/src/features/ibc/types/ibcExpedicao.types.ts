@@ -45,12 +45,24 @@ export type PedidoIbcPreparacaoDTO = {
   alocacoes: AlocacaoIbcDTO[];
 };
 
+/**
+ * Pedido cujo grupo não tem configuração de placa. A carga segue; só o universal atende.
+ * GET do detalhe e 201 da alocação.
+ */
+export type AvisoPedidoGrupoSemConfigDTO = {
+  code: "IBC_PEDIDO_GRUPO_SEM_CONFIG";
+  numPed: string;
+  gruposCodigo: string[];
+  message: string;
+};
+
 /** GET /api/ibc/cargas-expedicao/:codCar — só carga FECHADA com foto de pedidos IBC. */
 export type CargaExpedicaoDetalheDTO = CargaExpedicaoResumoDTO & {
   situacao: "FECHADA";
   pedidos: PedidoIbcPreparacaoDTO[];
   /** Vínculos da carga, com ou sem pedido. A lista da preparação lê daqui. */
   alocacoes: AlocacaoIbcDTO[];
+  avisos: AvisoPedidoGrupoSemConfigDTO[];
 };
 
 /** Envelope opcional de GET /cargas-expedicao */
@@ -67,6 +79,7 @@ export type CreateAlocacaoIbcResultDTO = {
   alocacao: AlocacaoIbcDTO;
   quantidadeAlocada: number;
   quantidadeEsperadaTotal: number;
+  avisos: AvisoPedidoGrupoSemConfigDTO[];
 };
 
 export type FecharExpedicaoIbcInput = {

@@ -5,7 +5,6 @@ import { FecharExpedicaoIbcSchema } from "../schemas/FecharExpedicaoIbcSchema";
 import {
   IbcCadastroHttpSchemas,
 } from "../schemas/IbcCadastroSchema";
-import { IbcProdutoHttpSchemas } from "../schemas/IbcProdutoSchema";
 import { CreateAlocacaoIbcUseCase } from "../../useCases/CreateAlocacaoIbc.use-case";
 import { RemoveAlocacaoIbcUseCase } from "../../useCases/RemoveAlocacaoIbc.use-case";
 import { FecharExpedicaoIbcUseCase } from "../../useCases/FecharExpedicaoIbc.use-case";
@@ -22,11 +21,10 @@ import { SoftDeleteIbcUseCase } from "../../useCases/SoftDeleteIbc.use-case";
 import { IbcCadastroRepository } from "../../repositories/IbcCadastroRepository";
 import { IbcInspecaoRepository } from "../../repositories/IbcInspecaoRepository";
 import { IbcProdutoRepository } from "../../repositories/IbcProdutoRepository";
+import { ProdutoGrupoCatalogoRepository } from "../../repositories/ProdutoGrupoCatalogoRepository";
 import { createSapiensSaldoIbcErpPort } from "../../adapters/createSapiensSaldoIbcErpPort";
 import { ibcSseGateway } from "../../realtime/ibcSseGateway";
-import { CreateIbcProdutoUseCase } from "../../useCases/CreateIbcProduto.use-case";
-import { ListIbcProdutosUseCase } from "../../useCases/ListIbcProdutos.use-case";
-import { UpdateIbcProdutoUseCase } from "../../useCases/UpdateIbcProduto.use-case";
+import { IbcProdutoConfiguracaoUseCase } from "../../useCases/IbcProdutoConfiguracao.use-case";
 import { ConvertIbcHomologacaoUseCase } from "../../useCases/ConvertIbcHomologacao.use-case";
 import { ChangeIbcProdutoUseCase } from "../../useCases/ChangeIbcProduto.use-case";
 import { ListIbcHistoricoUseCase } from "../../useCases/ListIbcHistorico.use-case";
@@ -51,25 +49,30 @@ function produtoRepository(): IbcProdutoRepository {
   return new IbcProdutoRepository();
 }
 
+function configUseCase(): IbcProdutoConfiguracaoUseCase {
+  return new IbcProdutoConfiguracaoUseCase(produtoRepository(), new ProdutoGrupoCatalogoRepository());
+}
+
+function requireActor(req: Request): NonNullable<Request["user"]> {
+  if (!req.user) {
+    throw new AppError({ message: "Usuário não autenticado", statusCode: 401, code: "IBC_ACTOR_REQUIRED" });
+  }
+  return req.user;
+}
+
 export class IbcController {
   static async createNovoIbc(req: Request, res: Response): Promise<Response> {
     try {
-      const parsed = IbcCadastroHttpSchemas.createNovo.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json({
-          error: "Dados inválidos para cadastro de IBC",
-          code: "IBC_CADASTRO_INVALID_BODY",
-          details: parsed.error.format(),
-        });
-      }
-
+      const body = IbcCadastroHttpSchemas.createNovo.shape.body.parse(req.body);
       const useCase = new CreateNovoIbcUseCase(
         cadastroRepository(),
         produtoRepository(),
+        new ProdutoGrupoCatalogoRepository(),
       );
       const ibc = await useCase.execute({
-        dataLimite: parsed.data.dataLimite,
-        produtoId: parsed.data.produtoId,
+        dataLimite: body.dataLimite,
+        homologado: body.homologado,
+        grupoCodigo: body.grupoCodigo,
       });
       return res.status(201).json(ibc);
     } catch (err: unknown) {
@@ -79,25 +82,19 @@ export class IbcController {
 
   static async createLoteIbc(req: Request, res: Response): Promise<Response> {
     try {
-      const parsed = IbcCadastroHttpSchemas.createLote.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json({
-          error: "Dados inválidos para cadastro em lote de IBC",
-          code: "IBC_LOTE_INVALID_BODY",
-          details: parsed.error.format(),
-        });
-      }
-
+      const body = IbcCadastroHttpSchemas.createLote.shape.body.parse(req.body);
       const useCase = new CreateLoteIbcUseCase(
         cadastroRepository(),
         produtoRepository(),
+        new ProdutoGrupoCatalogoRepository(),
         createSapiensSaldoIbcErpPort(),
       );
       const result = await useCase.execute({
-        quantidade: parsed.data.quantidade,
-        dataLimite: parsed.data.dataLimite,
-        numeroNf: parsed.data.numeroNf,
-        produtoId: parsed.data.produtoId,
+        quantidade: body.quantidade,
+        dataLimite: body.dataLimite,
+        numeroNf: body.numeroNf,
+        homologado: body.homologado,
+        grupoCodigo: body.grupoCodigo,
       });
       return res.status(201).json(result);
     } catch (err: unknown) {
@@ -309,6 +306,7 @@ export class IbcController {
         alocacao: result.alocacao,
         quantidadeAlocada: result.quantidadeAlocada,
         quantidadeEsperadaTotal: result.quantidadeEsperadaTotal,
+        avisos: result.avisos,
       });
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao alocar IBC");
@@ -372,59 +370,40 @@ export class IbcController {
     }
   }
 
-  static async createProduto(req: Request, res: Response): Promise<Response> {
+  static async listProdutoConfig(req: Request, res: Response): Promise<Response> {
     try {
-      const parsed = IbcProdutoHttpSchemas.create.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json({
-          error: "Dados inválidos para cadastro de produto",
-          code: "IBC_PRODUTO_INVALID_BODY",
-          details: parsed.error.format(),
-        });
-      }
-
-      const useCase = new CreateIbcProdutoUseCase(produtoRepository());
-      const produto = await useCase.execute(parsed.data);
-      return res.status(201).json(produto);
+      const lista = await configUseCase().list(requireActor(req).role);
+      return res.status(200).json(lista);
     } catch (err: unknown) {
-      return respondAppError(res, err, "Erro ao cadastrar produto de container");
+      return respondAppError(res, err, "Erro ao listar configuração de produto");
     }
   }
 
-  static async listProdutos(_req: Request, res: Response): Promise<Response> {
+  static async saveProdutoGrupo(req: Request, res: Response): Promise<Response> {
     try {
-      const useCase = new ListIbcProdutosUseCase(produtoRepository());
-      const produtos = await useCase.execute();
-      return res.status(200).json(produtos);
+      const body = req.body as { sigla?: string; corHex?: string };
+      const grupo = await configUseCase().saveGrupo({
+        role: requireActor(req).role,
+        grupoCodigo: String(req.params.grupoCodigo ?? ""),
+        sigla: String(body?.sigla ?? ""),
+        corHex: String(body?.corHex ?? ""),
+      });
+      return res.status(200).json(grupo);
     } catch (err: unknown) {
-      return respondAppError(res, err, "Erro ao listar produtos de container");
+      return respondAppError(res, err, "Erro ao gravar configuração de produto");
     }
   }
 
-  static async updateProduto(req: Request, res: Response): Promise<Response> {
+  static async saveProdutoUniversal(req: Request, res: Response): Promise<Response> {
     try {
-      const id = String(req.params.id ?? "").trim();
-      if (!id) {
-        return res.status(400).json({
-          error: "ID do produto é obrigatório",
-          code: "IBC_PRODUTO_ID_REQUIRED",
-        });
-      }
-
-      const parsed = IbcProdutoHttpSchemas.update.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json({
-          error: "Dados inválidos para edição de produto",
-          code: "IBC_PRODUTO_INVALID_BODY",
-          details: parsed.error.format(),
-        });
-      }
-
-      const useCase = new UpdateIbcProdutoUseCase(produtoRepository());
-      const produto = await useCase.execute({ id, ...parsed.data });
-      return res.status(200).json(produto);
+      const body = req.body as { corHex?: string };
+      const universal = await configUseCase().saveUniversal({
+        role: requireActor(req).role,
+        corHex: String(body?.corHex ?? ""),
+      });
+      return res.status(200).json(universal);
     } catch (err: unknown) {
-      return respondAppError(res, err, "Erro ao editar produto de container");
+      return respondAppError(res, err, "Erro ao gravar configuração universal");
     }
   }
 
@@ -458,11 +437,17 @@ export class IbcController {
         });
       }
 
-      const useCase = new ConvertIbcHomologacaoUseCase(cadastroRepository());
+      const useCase = new ConvertIbcHomologacaoUseCase(
+        cadastroRepository(),
+        produtoRepository(),
+        new ProdutoGrupoCatalogoRepository(),
+      );
       const converted = await useCase.execute({
         sourceIbcId: id,
         actorId,
         observation: parsed.data.observacao ?? null,
+        destino: parsed.data.destino,
+        grupoCodigo: parsed.data.grupoCodigo ?? null,
       });
       return res.status(201).json(converted);
     } catch (err: unknown) {

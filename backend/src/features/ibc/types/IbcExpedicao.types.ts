@@ -11,6 +11,18 @@ export type IbcRecord = {
   createdAt: Date;
   /** Preenchido quando este IBC já foi origem de conversão ou mudança de produto. */
   convertedToContainerId: string | null;
+  /** Container universal: atende qualquer grupo da carga. */
+  universal: boolean;
+  /** Grupo da configuração. Nulo no universal e no legado sem produto. */
+  grupoCodigo: string | null;
+};
+
+/** Produto do container já em viagem, para a compatibilidade na volta. */
+export type IbcParaCompatibilidade = {
+  id: string;
+  identificador: string;
+  universal: boolean;
+  grupoCodigo: string | null;
 };
 
 export type AlocacaoIbcRecord = {
@@ -50,6 +62,8 @@ export type CargaPedidoIbcSnapshot = {
   ibcInvalido: boolean;
   /** Ordem de entrega na Carga (Sapiens `usu_poscar`); null quando o Sapiens não tem posição (nulo ou 0) e em fotos gravadas antes da coluna existir. */
   posCar: number | null;
+  /** Grupos de produto do pedido, sem a linha de embalagem 251001. */
+  gruposCodigo: string[];
 };
 
 /** Carga FECHADA com foto de pedidos IBC e sem ExpedicaoIbc, com alocações já carregadas. */

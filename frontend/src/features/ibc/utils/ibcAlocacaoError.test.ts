@@ -21,6 +21,28 @@ describe("IbcAlocacaoRequestError", () => {
     assert.equal(error.message, RECOVERY);
   });
 
+  it("explica o 409 de produto incompatível com os grupos da carga", () => {
+    const error = IbcAlocacaoRequestError.fromBody(
+      {
+        code: "IBC_PRODUTO_INCOMPATIVEL",
+        error: "IBC NHCL1 não é compatível com o produto da carga",
+        details: {
+          identificador: "NHCL1",
+          grupoContainer: "CLORO",
+          gruposPermitidos: ["SODA", "ACIDO"],
+        },
+      },
+      "fallback",
+    );
+
+    assert.equal(error.code, "IBC_PRODUTO_INCOMPATIVEL");
+    assert.equal(error.title, "Container de outro produto");
+    assert.equal(
+      error.message,
+      "O container NHCL1 é de outro produto (grupo CLORO). Esta carga aceita SODA e ACIDO.",
+    );
+  });
+
   it("preserva a mensagem da API nos demais conflitos", () => {
     const error = IbcAlocacaoRequestError.fromBody(
       { code: "IBC_INAPTO", error: "IBC H0099 está Inapto e não pode ser alocado" },

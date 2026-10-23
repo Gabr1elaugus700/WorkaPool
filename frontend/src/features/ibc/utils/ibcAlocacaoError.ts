@@ -1,3 +1,5 @@
+import { ibcProdutoCompatibilidade } from "./ibcProdutoCompatibilidade";
+
 const IBC_SUBSTITUIDO_CODE = "IBC_SUBSTITUIDO";
 const IBC_SUBSTITUIDO_TITLE = "IBC substituído";
 const IBC_SUBSTITUIDO_MESSAGE =
@@ -8,8 +10,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Falha de vinculação de IBC. `IBC_SUBSTITUIDO` vira orientação de recuperação;
- * os demais códigos preservam a mensagem da API.
+ * Falha de vinculação de IBC. `IBC_SUBSTITUIDO` e `IBC_PRODUTO_INCOMPATIVEL`
+ * viram orientação na tela; os demais códigos preservam a mensagem da API.
  */
 export class IbcAlocacaoRequestError extends Error {
   readonly code: string | null;
@@ -35,6 +37,10 @@ export class IbcAlocacaoRequestError extends Error {
         code,
         IBC_SUBSTITUIDO_TITLE,
       );
+    }
+    const conflito = ibcProdutoCompatibilidade.mensagemConflito(record, "carga");
+    if (conflito) {
+      return new IbcAlocacaoRequestError(conflito, code, ibcProdutoCompatibilidade.tituloIncompativel);
     }
     const message =
       typeof record.error === "string"

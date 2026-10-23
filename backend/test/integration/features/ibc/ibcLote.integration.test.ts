@@ -41,14 +41,14 @@ async function cleanupFixtures(): Promise<void> {
       FROM "Ibc" i
       LEFT JOIN "IbcProduto" p ON p.id = i."produtoId"
       WHERE i."identificador" LIKE '${FIXTURE_PREFIX}%'
-         OR p.nome LIKE '${FIXTURE_PREFIX}%'
+         OR p.grupo_codigo LIKE 't17%'
     )
   `).catch(() => undefined);
   await prisma.ibc.deleteMany({
     where: {
       OR: [
         { identificador: { startsWith: FIXTURE_PREFIX } },
-        { produto: { is: { nome: { startsWith: FIXTURE_PREFIX } } } },
+        { produto: { is: { grupoCodigo: { startsWith: "t17" } } } },
       ],
     },
   });
@@ -59,12 +59,10 @@ async function cleanupFixtures(): Promise<void> {
   }
   try {
     await prisma.ibcProduto.deleteMany({
-      where: {
-        OR: [
-          { nome: { startsWith: FIXTURE_PREFIX } },
-          { abreviacao: { in: ["LO", "LX"] } },
-        ],
-      },
+      where: { grupoCodigo: { startsWith: "t17" } },
+    });
+    await prisma.produtoGrupoMap.deleteMany({
+      where: { grupoCodigo: { startsWith: "t17" } },
     });
   } catch {
     // table may not exist until ensure schema runs
@@ -89,14 +87,28 @@ describe("IBC lote HTTP persistence (#117 / #121)", () => {
     await prisma.$disconnect();
   });
 
-  async function createProduto(token: string): Promise<string> {
+  async function createProduto(token: string): Promise<{ id: string; grupoCodigo: string }> {
     const app = createIbcTestApp();
+    const grupoCodigo = "t17LO";
+    await prisma.produtoGrupoMap.upsert({
+      where: { produtoCodigo: grupoCodigo },
+      create: {
+        produtoCodigo: grupoCodigo,
+        grupoCodigo,
+        grupoDescricao: `${FIXTURE_PREFIX}Soda`,
+        syncedAt: new Date(),
+      },
+      update: {
+        grupoDescricao: `${FIXTURE_PREFIX}Soda`,
+        syncedAt: new Date(),
+      },
+    });
     const created = await request(app)
-      .post("/api/ibc/produtos")
+      .put(`/api/ibc/produtos/grupos/${grupoCodigo}`)
       .set("Authorization", `Bearer ${token}`)
-      .send({ nome: `${FIXTURE_PREFIX}Soda`, abreviacao: "LO" });
-    assert.equal(created.status, 201);
-    return String(created.body.id);
+      .send({ sigla: "LO", corHex: "#004C4F" });
+    assert.equal(created.status, 200);
+    return { id: String(created.body.id), grupoCodigo };
   }
 
   it("POST lote persists N rows and returns identifiers", async () => {
@@ -107,7 +119,12 @@ describe("IBC lote HTTP persistence (#117 / #121)", () => {
     const response = await request(app)
       .post("/api/ibc/lote")
       .set("Authorization", `Bearer ${token}`)
-      .send({ quantidade: 5, dataLimite: FUTURE_DATA_LIMITE, produtoId });
+      .send({
+        quantidade: 5,
+        dataLimite: FUTURE_DATA_LIMITE,
+        homologado: true,
+        grupoCodigo: produtoId.grupoCodigo,
+      });
 
     assert.equal(response.status, 201);
     assert.equal(response.body.items.length, 5);
@@ -121,7 +138,10 @@ describe("IBC lote HTTP persistence (#117 / #121)", () => {
       assert.equal(item.primeiraInspecaoEm, null);
       assert.equal(item.custodia, "PATIO");
       assert.equal(item.loteId, response.body.lote.id);
-      assert.equal(item.produtoId, produtoId);
+      assert.equal(item.produtoId, produtoId.id);
+      assert.equal(item.homologado, true);
+      assert.equal(item.universal, false);
+      assert.equal(item.corHex, "#004C4F");
     }
 
     const pool = await request(app)
@@ -149,7 +169,8 @@ describe("IBC lote HTTP persistence (#117 / #121)", () => {
         quantidade: 2,
         dataLimite: FUTURE_DATA_LIMITE,
         numeroNf: "998877",
-        produtoId,
+        homologado: true,
+        grupoCodigo: produtoId.grupoCodigo,
       });
 
     assert.equal(response.status, 201);

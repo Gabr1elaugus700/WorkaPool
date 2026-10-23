@@ -1,5 +1,6 @@
 import { describe, it, mock, after } from "node:test";
 import assert from "node:assert/strict";
+import { GruposConfiguradosLookup } from "../../../../../src/features/ibc/services/carregarCompatibilidadeDePedidos";
 import { GetCargaExpedicaoDetailUseCase } from "../../../../../src/features/ibc/useCases/GetCargaExpedicaoDetail.use-case";
 import { IIbcExpedicaoRepository } from "../../../../../src/features/ibc/repositories/IIbcExpedicaoRepository";
 import { AppError } from "../../../../../src/utils/AppError";
@@ -32,6 +33,7 @@ const buildPedidoIbc = (
   quantidadeEsperadaEmprestimo: 0,
   ibcInvalido: false,
   posCar: null,
+  gruposCodigo: [],
   ...overrides,
 });
 
@@ -102,6 +104,7 @@ describe("GetCargaExpedicaoDetailUseCase", () => {
     assert.strictEqual(detail.quantidadeAlocada, 2);
     assert.strictEqual(detail.alocacoes.length, 2);
     assert.strictEqual(detail.podeFecharExpedicao, false);
+    assert.deepEqual(detail.avisos, []);
     assert.deepEqual(listPedidosIbcByCargaId.mock.calls[0].arguments, [
       "carga-1",
     ]);
@@ -196,5 +199,47 @@ describe("GetCargaExpedicaoDetailUseCase", () => {
         ).execute({ codCar: 101 }),
       assertAppError("IBC_CARGA_SEM_FOTO_EXPEDICAO"),
     );
+  });
+
+  it("avisa o pedido elegível cujo grupo não tem configuração", async () => {
+    const listGruposConfigurados = mock.fn(async () => ["SODA"]);
+    const grupos: GruposConfiguradosLookup = { listGruposConfigurados };
+    const repo = buildRepo({
+      listPedidosIbcByCargaId: mock.fn(async () => [
+        buildPedidoIbc("1120", { gruposCodigo: ["SODA"] }),
+        buildPedidoIbc("1121", {
+          gruposCodigo: ["SEM", "OUTRO"],
+          quantidadeEsperadaTotal: 1,
+          quantidadeEsperadaVenda: 1,
+        }),
+        buildPedidoIbc("1122", {
+          ibcInvalido: true,
+          quantidadeEsperadaTotal: 0,
+          quantidadeEsperadaVenda: 0,
+          quantidadeEsperadaEmprestimo: 0,
+          gruposCodigo: ["NUNCA"],
+        }),
+      ]),
+    });
+
+    const detail = await new GetCargaExpedicaoDetailUseCase(
+      repo as IIbcExpedicaoRepository,
+      grupos,
+    ).execute({ codCar: 101 });
+
+    assert.deepEqual(detail.avisos, [
+      {
+        code: "IBC_PEDIDO_GRUPO_SEM_CONFIG",
+        numPed: "1121",
+        gruposCodigo: ["SEM", "OUTRO"],
+        message:
+          "Pedido 1121: grupos SEM, OUTRO não têm configuração de placa. Só o container universal atende.",
+      },
+    ]);
+    assert.deepEqual(listGruposConfigurados.mock.calls[0]?.arguments[0], [
+      "SODA",
+      "SEM",
+      "OUTRO",
+    ]);
   });
 });

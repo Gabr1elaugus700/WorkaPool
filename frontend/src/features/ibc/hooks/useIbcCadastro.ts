@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ibcCadastroService } from "../services/ibcCadastroService";
-import type { CreateIbcProdutoInput } from "../types/ibcCadastro.types";
 import { toError } from "../utils/toError";
 
 const POOL_KEY = ["ibc", "pool"] as const;
@@ -61,37 +60,4 @@ export function useCadastrarIbc() {
   });
 
   return { unitario, lote, isPending: unitario.isPending || lote.isPending };
-}
-
-export function useIbcProdutoMutations() {
-  const invalidate = useInvalidateCadastro();
-
-  const create = useMutation({
-    mutationFn: ibcCadastroService.createProduto,
-    onSuccess: async (created) => {
-      toast.success(`Produto ${created.nome} (${created.abreviacao}) cadastrado`);
-      await invalidate();
-    },
-    onError: (err) => {
-      toast.error(toError(err).message || "Falha ao cadastrar produto");
-    },
-  });
-
-  const update = useMutation({
-    mutationFn: ({ id, input }: { id: string; input: CreateIbcProdutoInput }) =>
-      ibcCadastroService.updateProduto(id, input),
-    onSuccess: async () => {
-      toast.success("Produto atualizado");
-      await invalidate();
-    },
-    onError: (err) => {
-      toast.error(toError(err).message || "Falha ao atualizar produto");
-    },
-  });
-
-  return {
-    criar: (input: CreateIbcProdutoInput) => create.mutateAsync(input),
-    atualizar: (id: string, input: CreateIbcProdutoInput) => update.mutateAsync({ id, input }),
-    isPending: create.isPending || update.isPending,
-  };
 }

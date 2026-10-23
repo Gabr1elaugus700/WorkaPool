@@ -24,18 +24,24 @@ describe("formatIbcIdentifier", () => {
 });
 
 describe("getIbcIdentifierPrefix", () => {
-  it("homologated prefix is HM + product abbreviation", () => {
-    assert.equal(getIbcIdentifierPrefix("s"), "HMS");
-    assert.equal(getIbcIdentifierPrefix("SO", true), "HMSO");
+  it("homologated prefix is HM + sigla", () => {
+    assert.equal(getIbcIdentifierPrefix({ homologado: true, sigla: "s" }), "HMS");
+    assert.equal(getIbcIdentifierPrefix({ homologado: true, sigla: "SO" }), "HMSO");
   });
 
-  it("non-homologated prefix is NHM + product abbreviation", () => {
-    assert.equal(getIbcIdentifierPrefix("S", false), "NHMS");
+  it("non-homologated prefix is NH + sigla, or NH when universal", () => {
+    assert.equal(getIbcIdentifierPrefix({ homologado: false, sigla: "S" }), "NHS");
+    assert.equal(getIbcIdentifierPrefix({ homologado: false, sigla: null }), "NH");
+    assert.equal(getIbcIdentifierPrefix({ homologado: false }), "NH");
   });
 
-  it("converts and detects non-homologated prefixes", () => {
+  it("detects NH and legacy NHM without recalculating stored identifiers", () => {
     assert.equal(toNaoHomologadoPrefixo("HMS"), "NHMS");
+    assert.equal(isNaoHomologadoPrefixo("NH"), true);
+    assert.equal(isNaoHomologadoPrefixo("NHS"), true);
     assert.equal(isNaoHomologadoPrefixo("NHMS"), true);
+    assert.equal(isNaoHomologadoPrefixo("NHM"), true);
     assert.equal(isNaoHomologadoPrefixo("HMS"), false);
+    assert.equal(isNaoHomologadoPrefixo("HM"), false);
   });
 });

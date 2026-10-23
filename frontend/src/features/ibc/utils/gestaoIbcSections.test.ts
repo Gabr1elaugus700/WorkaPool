@@ -7,14 +7,14 @@ describe("gestaoIbcSections", () => {
   it("mostra Containers, Checklists e Conciliação ERP para quem escreve", () => {
     for (const role of ["ADMIN", "ALMOX"]) {
       const labels = filterIbcPageTabs(gestaoIbcSections.tabs, role).map((tab) => tab.label);
-      assert.deepEqual(labels, ["Containers", "Checklists", "Conciliação ERP"], role);
+      assert.deepEqual(labels, ["Containers", "Produtos", "Checklists", "Conciliação ERP"], role);
     }
   });
 
   it("esconde Checklists de quem só consulta o parque", () => {
     for (const role of ["LOGISTICA", "GERENTE_DPTO"]) {
       const ids = filterIbcPageTabs(gestaoIbcSections.tabs, role).map((tab) => tab.id);
-      assert.deepEqual(ids, ["containers", "conciliacao"], role);
+      assert.deepEqual(ids, ["containers", "produtos", "conciliacao"], role);
     }
   });
 

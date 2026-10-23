@@ -2,6 +2,12 @@ import { PedidoCargo } from '../types/PedidoCargo.types';
 import { PedidoRaw } from '../types/PedidoRaw';
 import { computePedidoIbcEligibility } from './computePedidoIbcEligibility';
 
+function textoGrupo(value: PedidoRaw['COD_GRP']): string | null {
+  if (value == null) return null;
+  const grupo = String(value).trim();
+  return grupo.length > 0 ? grupo : null;
+}
+
 /**
  * Converte linhas brutas do SQL (uma por produto/derivação)
  * em entidades Pedido agregadas (um por número de pedido).
@@ -51,6 +57,8 @@ export function mapRawToPedidos(rows: PedidoRaw[]): PedidoCargo[] {
       derivacao: row.DERIVACAO,
       quantidade: row.QUANTIDADE,
       peso: row.PESO,
+      grupoCodigo: textoGrupo(row.COD_GRP),
+      codigoEmbalagem: row.CODIGO_EMBALAGEM ?? null,
     });
   }
 

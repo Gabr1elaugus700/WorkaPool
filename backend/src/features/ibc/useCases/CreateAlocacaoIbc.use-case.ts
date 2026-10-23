@@ -1,5 +1,12 @@
 import { IIbcExpedicaoRepository } from "../repositories/IIbcExpedicaoRepository";
 import { assertIbcNotReplaced } from "../services/assertIbcNotReplaced";
+import {
+  AvisoPedidoGrupoSemConfig,
+  carregarCompatibilidadeDePedidos,
+  GruposConfiguradosLookup,
+} from "../services/carregarCompatibilidadeDePedidos";
+import { createGruposConfiguradosLookup } from "../services/createGruposConfiguradosLookup";
+import { isIbcCompativelComGrupos } from "../services/isIbcCompativelComGrupos";
 import { pedidosNaSomaDaCarga } from "../services/pedidosNaSomaDaCarga";
 import { AlocacaoIbcRecord } from "../types/IbcExpedicao.types";
 import { AppError } from "../../../utils/AppError";
@@ -16,13 +23,29 @@ export type CreateAlocacaoIbcResult = {
   alocacao: AlocacaoIbcRecord;
   quantidadeAlocada: number;
   quantidadeEsperadaTotal: number;
+  avisos: AvisoPedidoGrupoSemConfig[];
 };
 
 export class CreateAlocacaoIbcUseCase {
   private readonly repository: IIbcExpedicaoRepository;
+  private grupos?: GruposConfiguradosLookup;
 
-  constructor(repository?: IIbcExpedicaoRepository) {
+  constructor(
+    repository?: IIbcExpedicaoRepository,
+    grupos?: GruposConfiguradosLookup,
+  ) {
     this.repository = repository ?? this.createDefaultRepository();
+    this.grupos = grupos;
+  }
+
+  private resolveGrupos(): GruposConfiguradosLookup {
+    return {
+      listGruposConfigurados: (codigos) => {
+        const source = this.grupos ?? createGruposConfiguradosLookup();
+        this.grupos = source;
+        return source.listGruposConfigurados(codigos);
+      },
+    };
   }
 
   private createDefaultRepository(): IIbcExpedicaoRepository {
@@ -175,6 +198,23 @@ export class CreateAlocacaoIbcUseCase {
       });
     }
 
+    const compat = await carregarCompatibilidadeDePedidos(
+      pedidosIbc,
+      this.resolveGrupos(),
+    );
+    if (!isIbcCompativelComGrupos(ibc, compat.gruposPermitidos)) {
+      throw new AppError({
+        message: `IBC ${ibc.identificador} não é compatível com o produto da carga`,
+        statusCode: 409,
+        code: "IBC_PRODUTO_INCOMPATIVEL",
+        details: {
+          identificador: ibc.identificador,
+          grupoContainer: ibc.grupoCodigo,
+          gruposPermitidos: compat.gruposPermitidos,
+        },
+      });
+    }
+
     const alocacao = await this.repository.createAlocacao({
       ibcId: ibc.id,
       cargaId: carga.id,
@@ -186,6 +226,7 @@ export class CreateAlocacaoIbcUseCase {
       alocacao,
       quantidadeAlocada: alocacoes.length + 1,
       quantidadeEsperadaTotal,
+      avisos: compat.avisos,
     };
   }
 }

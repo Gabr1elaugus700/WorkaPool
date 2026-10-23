@@ -8,7 +8,8 @@ import { FecharViagemComando, IIbcConciliacaoRepository } from "../../../../../s
 import { AbrirEntradaPatioUseCase } from "../../../../../src/features/ibc/useCases/AbrirEntradaPatio.use-case";
 import { AppError } from "../../../../../src/utils/AppError";
 import { MarcaConciliacaoSalva } from "../../../../../src/features/ibc/repositories/IbcConciliacaoRepository";
-import { AlocacaoIbcRecord, CargaExpedicaoRef, CargaPedidoIbcSnapshot } from "../../../../../src/features/ibc/types/IbcExpedicao.types";
+import { GruposConfiguradosLookup } from "../../../../../src/features/ibc/services/carregarCompatibilidadeDePedidos";
+import { AlocacaoIbcRecord, CargaExpedicaoRef, CargaPedidoIbcSnapshot, IbcParaCompatibilidade } from "../../../../../src/features/ibc/types/IbcExpedicao.types";
 import { IbcConciliacaoHttpSchemas } from "../../../../../src/features/ibc/http/schemas/IbcConciliacaoSchema";
 
 const NOW = new Date("2026-10-13T15:00:00.000Z");
@@ -23,6 +24,7 @@ const pedido = (over: Partial<CargaPedidoIbcSnapshot> = {}): CargaPedidoIbcSnaps
   quantidadeEsperadaEmprestimo: 0,
   ibcInvalido: false,
   posCar: 1,
+  gruposCodigo: [],
   ...over,
 });
 
@@ -257,23 +259,34 @@ describe("planejarFechamentoViagem", () => {
   });
 });
 
+const carga = {
+  id: "carga-1",
+  codCar: 202,
+  destino: "Blumenau",
+  situacao: "FECHADA",
+  previsaoSaida: NOW,
+} satisfies CargaExpedicaoRef;
+
+function expedicoes(
+  pedidos: CargaPedidoIbcSnapshot[],
+  alocacoes: AlocacaoIbcRecord[],
+  ibcs?: IbcParaCompatibilidade[],
+): IIbcExpedicaoRepository {
+  return {
+    getCargaByCodCar: async () => carga,
+    listPedidosIbcByCargaId: async () => pedidos,
+    listAlocacoesByCargaId: async () => alocacoes,
+    listCompatibilidadePorIds: async (ids: readonly string[]) =>
+      [...ids].map((id) => {
+        const informado = ibcs?.find((ibc) => ibc.id === id);
+        if (informado) return informado;
+        const item = alocacoes.find((row) => row.ibcId === id);
+        return { id, identificador: item?.identificador ?? id, universal: true, grupoCodigo: null };
+      }),
+  } as unknown as IIbcExpedicaoRepository;
+}
+
 describe("FecharViagemIbcUseCase", () => {
-  const carga = {
-    id: "carga-1",
-    codCar: 202,
-    destino: "Blumenau",
-    situacao: "FECHADA",
-    previsaoSaida: NOW,
-  } satisfies CargaExpedicaoRef;
-
-  function expedicoes(pedidos: CargaPedidoIbcSnapshot[], alocacoes: AlocacaoIbcRecord[]): IIbcExpedicaoRepository {
-    return {
-      getCargaByCodCar: async () => carga,
-      listPedidosIbcByCargaId: async () => pedidos,
-      listAlocacoesByCargaId: async () => alocacoes,
-    } as unknown as IIbcExpedicaoRepository;
-  }
-
   it("abre a entrada do retorno na mesma transação", async () => {
     const marcaRetorno = marca({ alocacaoIbcId: "ret", destino: "RETORNOU", numPed: null });
     let abriu = false;
@@ -364,6 +377,181 @@ describe("FecharViagemIbcUseCase", () => {
       hasCode("IBC_VIAGEM_FORBIDDEN"),
     );
     assert.equal(fecharViagem.mock.callCount(), 0);
+  });
+});
+
+const produtoNaVolta = (
+  id: string,
+  identificador: string,
+  grupoCodigo: string | null,
+  universal = false,
+): IbcParaCompatibilidade => ({ id: `ibc-${id}`, identificador, universal, grupoCodigo });
+
+const gruposDe = (configurados: readonly string[]): GruposConfiguradosLookup => ({
+  listGruposConfigurados: async () => [...configurados],
+});
+
+describe("FecharViagemIbcUseCase compatibilidade", () => {
+  const soda = pedido({ quantidadeEsperadaTotal: 1, quantidadeEsperadaVenda: 1, gruposCodigo: ["SODA"] });
+
+  function cenario(options: {
+    pedidos?: CargaPedidoIbcSnapshot[];
+    alocacoes: AlocacaoIbcRecord[];
+    marcas: MarcaConciliacaoSalva[];
+    ibcs?: IbcParaCompatibilidade[];
+    grupos?: readonly string[];
+    confirmacoes?: string[];
+  }) {
+    const fecharViagem = mock.fn(async (_cmd: unknown, abrir?: () => Promise<void>) => {
+      await abrir?.();
+    });
+    const execute = mock.fn(async () => ({ id: "entrada" }));
+    const conciliacoes = {
+      findPorCarga: async () => ({ id: "exp-1", viagemFechadaEm: null, viagemFechadaPorId: null }),
+      listMarcas: async () => options.marcas,
+      fecharViagem,
+    } as unknown as IIbcConciliacaoRepository;
+    const useCase = new FecharViagemIbcUseCase(
+      expedicoes(options.pedidos ?? [soda], options.alocacoes, options.ibcs),
+      conciliacoes,
+      { execute } as unknown as AbrirEntradaPatioUseCase,
+      () => NOW,
+      options.grupos ? gruposDe(options.grupos) : undefined,
+    );
+    const run = () => useCase.execute({
+      codCar: 202,
+      actorRole: Role.ALMOX,
+      actorId: "almox-1",
+      confirmacoes: options.confirmacoes,
+    });
+    return { run, fecharViagem, execute };
+  }
+
+  it("recusa cloro, ácido no pedido de soda e legado antes de gravar", async () => {
+    const cloro = cenario({
+      alocacoes: [alocacao("a1", "NHC00001")],
+      marcas: [marca({ alocacaoIbcId: "a1", destino: "FICOU" })],
+      ibcs: [produtoNaVolta("a1", "NHC00001", "CLORO")],
+      grupos: ["SODA"],
+    });
+    await assert.rejects(cloro.run, (error: unknown) => {
+      assert.ok(error instanceof AppError);
+      assert.equal(error.code, "IBC_PRODUTO_INCOMPATIVEL");
+      assert.equal(error.statusCode, 409);
+      assert.deepEqual(error.details, {
+        identificador: "NHC00001",
+        grupoContainer: "CLORO",
+        gruposPermitidos: ["SODA"],
+      });
+      return true;
+    });
+    assert.equal(cloro.fecharViagem.mock.callCount(), 0);
+    assert.equal(cloro.execute.mock.callCount(), 0);
+
+    const acido = cenario({
+      pedidos: [
+        soda,
+        pedido({
+          numPed: "20",
+          codCli: "C",
+          cliente: "Gama",
+          quantidadeEsperadaTotal: 1,
+          quantidadeEsperadaVenda: 1,
+          gruposCodigo: ["ACIDO"],
+          posCar: 2,
+        }),
+      ],
+      alocacoes: [alocacao("a1", "NHA00001")],
+      marcas: [marca({ alocacaoIbcId: "a1", destino: "FICOU" })],
+      ibcs: [produtoNaVolta("a1", "NHA00001", "ACIDO")],
+      grupos: ["SODA", "ACIDO"],
+      confirmacoes: ["20"],
+    });
+    await assert.rejects(acido.run, (error: unknown) => {
+      assert.ok(error instanceof AppError);
+      assert.deepEqual(error.details, {
+        identificador: "NHA00001",
+        grupoContainer: "ACIDO",
+        gruposPermitidos: ["SODA"],
+      });
+      return true;
+    });
+    assert.equal(acido.fecharViagem.mock.callCount(), 0);
+
+    const troca = cenario({
+      alocacoes: [alocacao("a1", "NHC00001")],
+      marcas: [marca({ alocacaoIbcId: "a1", destino: "TROCA", ibcEntradaId: "ibc-in" })],
+      ibcs: [produtoNaVolta("a1", "NHC00001", "CLORO")],
+      grupos: ["SODA"],
+    });
+    await assert.rejects(troca.run, (error: unknown) => {
+      assert.ok(error instanceof AppError);
+      assert.equal(error.code, "IBC_PRODUTO_INCOMPATIVEL");
+      return true;
+    });
+    assert.equal(troca.fecharViagem.mock.callCount(), 0);
+
+    const legado = cenario({
+      alocacoes: [alocacao("a1", "HM0007")],
+      marcas: [marca({ alocacaoIbcId: "a1", destino: "FICOU" })],
+      grupos: ["SODA"],
+    });
+    await assert.rejects(legado.run, (error: unknown) => {
+      assert.ok(error instanceof AppError);
+      assert.deepEqual(error.details, {
+        identificador: "HM0007",
+        grupoContainer: null,
+        gruposPermitidos: ["SODA"],
+      });
+      return true;
+    });
+    assert.equal(legado.fecharViagem.mock.callCount(), 0);
+  });
+
+  it("fecha soda compatível e legado que só retornou", async () => {
+    const fechado = cenario({
+      alocacoes: [alocacao("ret", "HM0007"), alocacao("fica", "HMS00001")],
+      marcas: [
+        marca({ alocacaoIbcId: "ret", destino: "RETORNOU", numPed: null }),
+        marca({ alocacaoIbcId: "fica", destino: "FICOU" }),
+      ],
+      ibcs: [produtoNaVolta("fica", "HMS00001", "SODA")],
+      grupos: ["SODA"],
+    });
+    await fechado.run();
+    assert.equal(fechado.fecharViagem.mock.callCount(), 1);
+    assert.equal(fechado.execute.mock.callCount(), 1);
+  });
+
+  it("grupo sem configuração só fecha com universal", async () => {
+    const sem = [pedido({ quantidadeEsperadaTotal: 1, quantidadeEsperadaVenda: 1, gruposCodigo: ["SEM"] })];
+    const recusado = cenario({
+      pedidos: sem,
+      alocacoes: [alocacao("a1", "NHSEM0001")],
+      marcas: [marca({ alocacaoIbcId: "a1", destino: "FICOU" })],
+      ibcs: [produtoNaVolta("a1", "NHSEM0001", "SEM")],
+      grupos: [],
+    });
+    await assert.rejects(recusado.run, (error: unknown) => {
+      assert.ok(error instanceof AppError);
+      assert.deepEqual(error.details, {
+        identificador: "NHSEM0001",
+        grupoContainer: "SEM",
+        gruposPermitidos: [],
+      });
+      return true;
+    });
+    assert.equal(recusado.fecharViagem.mock.callCount(), 0);
+
+    const universal = cenario({
+      pedidos: sem,
+      alocacoes: [alocacao("a1", "NH00001")],
+      marcas: [marca({ alocacaoIbcId: "a1", destino: "TROCA", ibcEntradaId: "ibc-in" })],
+      ibcs: [produtoNaVolta("a1", "NH00001", null, true)],
+      grupos: [],
+    });
+    await universal.run();
+    assert.equal(universal.fecharViagem.mock.callCount(), 1);
   });
 });
 

@@ -10,6 +10,12 @@ const tabs = [
     allowedRoles: IBC_CADASTRO_VIEW_ROLES,
   },
   {
+    id: "produtos",
+    to: "/gestao-ibc/produtos",
+    label: "Produtos",
+    allowedRoles: IBC_CADASTRO_VIEW_ROLES,
+  },
+  {
     id: "checklists",
     to: "/gestao-ibc/checklists",
     label: "Checklists",
@@ -23,7 +29,7 @@ const tabs = [
     legacyPath: "/conciliacao-ibc",
     allowedRoles: IBC_CADASTRO_VIEW_ROLES,
   },
-] as const satisfies readonly (IbcPageTab & { readonly legacyPath: string })[];
+] as const satisfies readonly (IbcPageTab & { readonly legacyPath?: string })[];
 
 export type GestaoIbcSectionId = (typeof tabs)[number]["id"];
 
@@ -36,7 +42,7 @@ function path(id: GestaoIbcSectionId): string {
 
 function legacyTarget(pathname: string, search: string): string | null {
   for (const tab of tabs) {
-    if (tab.legacyPath === pathname) return `${tab.to}${search}`;
+    if ("legacyPath" in tab && tab.legacyPath === pathname) return `${tab.to}${search}`;
   }
   return null;
 }
