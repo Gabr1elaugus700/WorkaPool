@@ -46,11 +46,12 @@ export function siglaDoPrefixoHomologado(ibc: Pick<IbcCadastroDTO, "identificado
 }
 
 export function acaoMudancaDisponivel(
-  ibc: Pick<IbcCadastroDTO, "identificador" | "prefixo" | "convertedToContainerId">,
+  ibc: Pick<IbcCadastroDTO, "identificador" | "prefixo" | "convertedToContainerId" | "homologado">,
 ): IbcAcaoMudanca | null {
   if (isIbcSubstituido(ibc)) return null;
-  if (isIbcNaoHomologado(ibc)) return "mudar_produto";
-  return isIbcHomologado(ibc) ? "converter" : null;
+  const nh = typeof ibc.homologado === "boolean" ? !ibc.homologado : isIbcNaoHomologado(ibc);
+  if (nh) return "mudar_produto";
+  return typeof ibc.homologado === "boolean" || isIbcHomologado(ibc) ? "converter" : null;
 }
 
 export function isIbcSubstituido(

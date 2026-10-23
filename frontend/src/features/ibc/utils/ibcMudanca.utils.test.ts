@@ -108,6 +108,8 @@ describe("acaoMudancaDisponivel", () => {
       acaoMudancaDisponivel({ identificador: "HMS00001", prefixo: "HMS", convertedToContainerId: "novo" }),
       null,
     );
+    assert.equal(acaoMudancaDisponivel({ identificador: "HMS00001", prefixo: "HMS", homologado: false }), "mudar_produto");
+    assert.equal(acaoMudancaDisponivel({ identificador: "NHS00001", prefixo: "NHS", homologado: true }), "converter");
   });
 });
 

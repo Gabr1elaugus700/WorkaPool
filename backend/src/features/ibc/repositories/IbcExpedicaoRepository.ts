@@ -12,6 +12,7 @@ import {
   ExpedicaoIbcRecord,
   FecharExpedicaoIbcData,
   IbcCustodiaValue,
+  IbcParaCompatibilidade,
   IbcRecord,
 } from "../types/IbcExpedicao.types";
 
@@ -175,6 +176,24 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
       orderBy: { alocadoEm: "asc" },
     });
     return alocacoes.map((row) => this.toAlocacaoRecord(row));
+  }
+
+  async listCompatibilidadePorIds(ids: readonly string[]): Promise<IbcParaCompatibilidade[]> {
+    if (ids.length === 0) return [];
+    const rows = await this.prisma.ibc.findMany({
+      where: { id: { in: [...ids] } },
+      select: {
+        id: true,
+        identificador: true,
+        produto: { select: { universal: true, grupoCodigo: true } },
+      },
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      identificador: row.identificador,
+      universal: row.produto?.universal === true,
+      grupoCodigo: row.produto?.universal ? null : (row.produto?.grupoCodigo ?? null),
+    }));
   }
 
   async findExpedicaoByCargaId(

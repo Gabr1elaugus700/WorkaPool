@@ -19,6 +19,9 @@ export type IbcCadastroDTO = {
   prefixo?: string | null;
   sequencial?: number | null;
   convertedToContainerId?: string | null;
+  corHex?: string | null;
+  universal?: boolean;
+  homologado?: boolean;
 };
 
 export type IbcMudancaTipo = "conversion" | "product_change" | "status_change";
@@ -81,14 +84,16 @@ export type IbcAlertDTO = {
 
 export type CreateNovoIbcInput = {
   dataLimite: string;
-  produtoId: string;
+  homologado: boolean;
+  grupoCodigo?: string | null;
 };
 
 export type CreateLoteIbcInput = {
   quantidade: number;
   dataLimite: string;
   numeroNf?: string | null;
-  produtoId: string;
+  homologado: boolean;
+  grupoCodigo?: string | null;
 };
 
 export type IbcLoteDTO = {

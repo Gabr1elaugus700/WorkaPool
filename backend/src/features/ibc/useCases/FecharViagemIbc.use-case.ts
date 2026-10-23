@@ -4,6 +4,8 @@ import { IIbcConciliacaoRepository } from "../repositories/IbcConciliacaoReposit
 import { IIbcExpedicaoRepository } from "../repositories/IIbcExpedicaoRepository";
 import { AbrirEntradaPatioUseCase } from "./AbrirEntradaPatio.use-case";
 import { loadCargaFotoExpedicao } from "./loadCargaFotoExpedicao";
+import { assertIbcCompativelNaVolta } from "../services/assertIbcCompativelNaVolta";
+import { GruposConfiguradosLookup } from "../services/carregarCompatibilidadeDePedidos";
 import { planejarFechamentoViagem } from "../services/planejarFechamentoViagem";
 import { AppError } from "../../../utils/AppError";
 
@@ -19,6 +21,7 @@ export class FecharViagemIbcUseCase {
     private readonly conciliacoes: IIbcConciliacaoRepository,
     private readonly abrirEntrada: AbrirEntradaPatioUseCase,
     private readonly now: () => Date = () => new Date(),
+    private readonly grupos?: GruposConfiguradosLookup,
   ) {}
 
   async execute(input: {
@@ -47,6 +50,13 @@ export class FecharViagemIbcUseCase {
       pedidos: pedidosIbc,
       marcas,
       confirmacoes: input.confirmacoes,
+    });
+    await assertIbcCompativelNaVolta({
+      alocacoes,
+      marcas,
+      pedidos: pedidosIbc,
+      carregarIbcs: (ids) => this.expedicoes.listCompatibilidadePorIds(ids),
+      lookup: this.grupos,
     });
     await this.conciliacoes.fecharViagem(
       {

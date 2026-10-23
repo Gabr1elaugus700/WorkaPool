@@ -4,15 +4,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SheetBody, SheetFooter } from "@/components/ui/sheet";
 import { todayLocalIsoDate } from "@/utils/formatDate";
-import type { CreateLoteIbcInput, IbcProdutoDTO } from "../types/ibcCadastro.types";
-import IbcProdutoSelect from "./IbcProdutoSelect";
+import type { CreateLoteIbcInput } from "../types/ibcCadastro.types";
+import { ibcPlacaCadastro, type GrupoPlacaOpcao } from "../utils/ibcPlacaCadastro";
+import CadastroIbcPlacaFields from "./CadastroIbcPlacaFields";
 
 const QUANTIDADE_MAX = 200;
 
 type Props = {
   disabled?: boolean;
   submitting?: boolean;
-  produtos: IbcProdutoDTO[];
+  grupos: readonly GrupoPlacaOpcao[];
+  universalCorHex: string | null;
   notice?: ReactNode;
   onSubmit: (input: CreateLoteIbcInput) => Promise<void> | void;
 };
@@ -20,22 +22,25 @@ type Props = {
 export default function CadastroIbcLoteForm({
   disabled = false,
   submitting = false,
-  produtos,
+  grupos,
+  universalCorHex,
   notice,
   onSubmit,
 }: Props) {
   const [quantidade, setQuantidade] = useState("1");
   const [dataLimite, setDataLimite] = useState("");
   const [numeroNf, setNumeroNf] = useState("");
-  const [produtoId, setProdutoId] = useState("");
+  const [homologado, setHomologado] = useState(true);
+  const [grupoCodigo, setGrupoCodigo] = useState("");
   const minDate = todayLocalIsoDate();
   const quantidadeNum = Number(quantidade);
   const isPastDate = Boolean(dataLimite && dataLimite < minDate);
   const isInvalidN =
     !Number.isInteger(quantidadeNum) || quantidadeNum < 1 || quantidadeNum > QUANTIDADE_MAX;
+  const placaPronta = ibcPlacaCadastro.aviso(homologado, grupoCodigo, grupos, universalCorHex) == null;
   const canSubmit =
     Boolean(dataLimite) &&
-    Boolean(produtoId) &&
+    placaPronta &&
     !isPastDate &&
     !isInvalidN &&
     !disabled &&
@@ -50,12 +55,14 @@ export default function CadastroIbcLoteForm({
         quantidade: quantidadeNum,
         dataLimite,
         numeroNf: numeroNf.trim() || null,
-        produtoId,
+        homologado,
+        grupoCodigo: grupoCodigo || null,
       });
       setQuantidade("1");
       setDataLimite("");
       setNumeroNf("");
-      setProdutoId("");
+      setHomologado(true);
+      setGrupoCodigo("");
     } catch {
       // Erro de API: toast no caller; mantém o formulário.
     }
@@ -65,12 +72,15 @@ export default function CadastroIbcLoteForm({
     <form onSubmit={handleSubmit} className="contents">
       <SheetBody className="space-y-4">
         {notice}
-        <IbcProdutoSelect
-          id="ibc-lote-produto"
-          produtos={produtos}
-          value={produtoId}
+        <CadastroIbcPlacaFields
+          id="ibc-lote-grupo"
+          grupos={grupos}
+          universalCorHex={universalCorHex}
+          homologado={homologado}
+          grupoCodigo={grupoCodigo}
           disabled={fieldDisabled}
-          onChange={setProdutoId}
+          onHomologado={setHomologado}
+          onGrupo={setGrupoCodigo}
         />
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">

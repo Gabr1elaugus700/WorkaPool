@@ -20,9 +20,10 @@ import IbcInspecaoDrawer from "../components/IbcInspecaoDrawer";
 import IbcInspecoesDrawer from "../components/IbcInspecoesDrawer";
 import NovoIbcDrawer from "../components/NovoIbcDrawer";
 import { gestaoIbcSections } from "../utils/gestaoIbcSections";
-import { useIbcAlerts, useIbcPool, useIbcProdutos } from "../hooks/useIbcCadastro";
-import { useIbcConversao, useIbcHistorico } from "../hooks/useIbcConversao";
+import { useIbcAlerts, useIbcPool } from "../hooks/useIbcCadastro";
 import { useIbcProdutoConfig } from "../hooks/useIbcProdutoConfig";
+import { ibcPlacaCadastro } from "../utils/ibcPlacaCadastro";
+import { useIbcConversao, useIbcHistorico } from "../hooks/useIbcConversao";
 import { useIbcChecklistVinculos } from "../hooks/useIbcChecklistVinculos";
 import type { IbcCadastroDTO } from "../types/ibcCadastro.types";
 import {
@@ -49,9 +50,8 @@ export default function CadastroIbcView() {
 
   const poolQuery = useIbcPool(allowed, incluirHistorico);
   const alertsQuery = useIbcAlerts(allowed);
-  const produtosQuery = useIbcProdutos(allowed);
+  const configQuery = useIbcProdutoConfig(allowed);
   const conversao = useIbcConversao();
-  const { query: produtoConfig } = useIbcProdutoConfig(allowed && mudanca != null);
   const historicoQuery = useIbcHistorico(historicoIbc?.id ?? null);
   const vinculos = useIbcChecklistVinculos(checklistsIbc?.id ?? null);
 
@@ -59,7 +59,7 @@ export default function CadastroIbcView() {
     return <ExpedicaoIbcAccessDeniedAlert targetPhrase="o Cadastro IBC" requiredRoles={IBC_CADASTRO_VIEW_ROLES} />;
   }
 
-  const produtos = Array.isArray(produtosQuery.data) ? produtosQuery.data : [];
+  const produtos = ibcPlacaCadastro.nomes(configQuery.query.data);
 
   return (
     <DefaultLayout>
@@ -122,8 +122,9 @@ export default function CadastroIbcView() {
         <>
           <NovoIbcDrawer
             open={painel === "novo"}
-            produtos={produtos}
-            produtosCarregando={produtosQuery.isLoading}
+            config={configQuery.query.data ?? null}
+            configCarregando={configQuery.query.isLoading}
+            configErro={configQuery.query.error ? toError(configQuery.query.error).message : null}
             onOpenChange={(open) => setPainel(open ? "novo" : null)}
             onAbrirProdutos={() => {
               setPainel(null);
@@ -139,9 +140,9 @@ export default function CadastroIbcView() {
               key={`${mudanca.ibc.id}-${mudanca.modo}`}
               ibc={mudanca.ibc}
               modo={mudanca.modo}
-              config={produtoConfig.data ?? null}
-              configCarregando={produtoConfig.isLoading}
-              configErro={produtoConfig.error ? toError(produtoConfig.error).message : null}
+              config={configQuery.query.data ?? null}
+              configCarregando={configQuery.query.isLoading}
+              configErro={configQuery.query.error ? toError(configQuery.query.error).message : null}
               submitting={conversao.isPending}
               onClose={() => setMudanca(null)}
               onConfirm={async (acao) => {
