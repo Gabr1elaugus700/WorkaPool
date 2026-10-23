@@ -306,6 +306,7 @@ export class IbcController {
         alocacao: result.alocacao,
         quantidadeAlocada: result.quantidadeAlocada,
         quantidadeEsperadaTotal: result.quantidadeEsperadaTotal,
+        avisos: result.avisos,
       });
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao alocar IBC");

@@ -1,5 +1,11 @@
 import { IIbcExpedicaoRepository } from "../repositories/IIbcExpedicaoRepository";
 import { AlocacaoIbcRecord } from "../types/IbcExpedicao.types";
+import {
+  AvisoPedidoGrupoSemConfig,
+  carregarCompatibilidadeDePedidos,
+  GruposConfiguradosLookup,
+} from "../services/carregarCompatibilidadeDePedidos";
+import { createGruposConfiguradosLookup } from "../services/createGruposConfiguradosLookup";
 import { isPedidoIbcElegivel } from "../services/isPedidoIbcElegivel";
 import { summarizeCargaExpedicao } from "../services/summarizeCargaExpedicao";
 import { AppError } from "../../../utils/AppError";
@@ -32,13 +38,29 @@ export type CargaExpedicaoDetail = {
   podeFecharExpedicao: boolean;
   pedidos: PedidoExpedicaoDetail[];
   alocacoes: AlocacaoIbcRecord[];
+  avisos: AvisoPedidoGrupoSemConfig[];
 };
 
 export class GetCargaExpedicaoDetailUseCase {
   private readonly repository: IIbcExpedicaoRepository;
+  private grupos?: GruposConfiguradosLookup;
 
-  constructor(repository?: IIbcExpedicaoRepository) {
+  constructor(
+    repository?: IIbcExpedicaoRepository,
+    grupos?: GruposConfiguradosLookup,
+  ) {
     this.repository = repository ?? this.createDefaultRepository();
+    this.grupos = grupos;
+  }
+
+  private resolveGrupos(): GruposConfiguradosLookup {
+    return {
+      listGruposConfigurados: (codigos) => {
+        const source = this.grupos ?? createGruposConfiguradosLookup();
+        this.grupos = source;
+        return source.listGruposConfigurados(codigos);
+      },
+    };
   }
 
   private createDefaultRepository(): IIbcExpedicaoRepository {
@@ -67,9 +89,10 @@ export class GetCargaExpedicaoDetailUseCase {
       Number(codCar),
     );
 
-    const [alocacoes, expedicao] = await Promise.all([
+    const [alocacoes, expedicao, compat] = await Promise.all([
       this.repository.listAlocacoesByCargaId(carga.id),
       this.repository.findExpedicaoByCargaId(carga.id),
+      carregarCompatibilidadeDePedidos(pedidosIbc, this.resolveGrupos()),
     ]);
 
     const summary = summarizeCargaExpedicao({
@@ -97,6 +120,6 @@ export class GetCargaExpedicaoDetailUseCase {
         };
       });
 
-    return { ...summary, pedidos, alocacoes };
+    return { ...summary, pedidos, alocacoes, avisos: compat.avisos };
   }
 }
