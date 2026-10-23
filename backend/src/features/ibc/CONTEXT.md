@@ -97,7 +97,7 @@ Expected return date for an Empréstimo. The loan starts at **Fechar Viagem**, n
 _Avoid_: Data limite de uso, 30 days from Fechar expedição, closing or deleting the AlocacaoIbc of a loan
 
 **Preparação de expedição**:
-ALMOX links Apto IBCs to the **Carga**, with no Pedido. One list of the Carga: linked containers against the expected total. Allowed only while cargo is **FECHADA** and has a **Foto de pedidos IBC**; the foto is the only source of which Pedidos are eligible and of quantidade esperada (Sapiens is not read). ABERTA → 409 `IBC_CARGA_NAO_FECHADA`; FECHADA without foto → 409 `IBC_CARGA_SEM_FOTO_EXPEDICAO`. An **IBC substituído** → 409 `IBC_SUBSTITUIDO` (there is no scan endpoint yet; the same guard is the allocation gate). Also refused: Inapto, Em viagem, Custódia no Cliente, Entrada pendente, already allocated, above the cargo total. A **Pedido misto** is an alert and stays outside the total; the other Pedidos of the Carga still count. Unlink is allowed until expedição closes. Physical placement on the truck does not assign a numbered IBC to a client.
+ALMOX links Apto IBCs to the **Carga**, with no Pedido. One list of the Carga: linked containers against the expected total. Allowed only while cargo is **FECHADA** and has a **Foto de pedidos IBC**; the foto is the only source of which Pedidos are eligible and of quantidade esperada (Sapiens is not read). ABERTA → 409 `IBC_CARGA_NAO_FECHADA`; FECHADA without foto → 409 `IBC_CARGA_SEM_FOTO_EXPEDICAO`. An **IBC substituído** → 409 `IBC_SUBSTITUIDO` (there is no scan endpoint yet; the same guard is the allocation gate). Also refused: Inapto, Em viagem, Custódia no Cliente, Entrada pendente, already allocated, above the cargo total, and an IBC that fails **Compatibilidade de produto** with the Carga's eligible Pedidos. A **Pedido misto** is an alert and stays outside the total; the other Pedidos of the Carga still count. Unlink is allowed until expedição closes. Physical placement on the truck does not assign a numbered IBC to a client.
 _Avoid_: a card per Pedido, choosing the Pedido on the way out, item-level linking, Custódia no Cliente, preparing on ABERTA cargo, re-reading pedidos from Sapiens after close, dropping the rest of the Carga because one Pedido is misto
 
 **Em viagem**:
@@ -137,7 +137,7 @@ A Pedido on the foto whose container lines carry both an incluso quota and an em
 _Avoid_: splitting one Pedido across both modalities, failing the whole Carga, treating it as Pedido IBC inválido
 
 **Foto de pedidos IBC (CargaPedidoIbc)**:
-Frozen record, one row per Pedido with the 251001 signal (valid or **Pedido IBC inválido**), written in the **same transaction** as Fechar Carga from the pedidos that close already reads from Sapiens. Stores `numPed`, `codCli`, `cliente`, quantidade esperada (total, venda, empréstimo), `ibcInvalido` (quantities 0) and `posCar` (delivery order of the Pedido in the Carga, from Sapiens `usu_poscar`; null when Sapiens has none (NULL or 0) and in fotos recorded before the column existed — used by the Relatório de Viagem to order the blocks, one per Pedido). Unique per Carga + Pedido. Pedidos without 251001 are not recorded; a Carga without IBC has no foto. No backfill for cargas closed before the table existed.
+Frozen record, one row per Pedido with the 251001 signal (valid or **Pedido IBC inválido**), written in the **same transaction** as Fechar Carga from the pedidos that close already reads from Sapiens. Stores `numPed`, `codCli`, `cliente`, quantidade esperada (total, venda, empréstimo), `ibcInvalido` (quantities 0), `gruposCodigo` (the Grupos de produto of the Pedido's product lines, the 251001 line excluded — source of **Compatibilidade de produto**) and `posCar` (delivery order of the Pedido in the Carga, from Sapiens `usu_poscar`; null when Sapiens has none (NULL or 0) and in fotos recorded before the column existed — used by the Relatório de Viagem to order the blocks, one per Pedido). Unique per Carga + Pedido. Pedidos without 251001 are not recorded; a Carga without IBC has no foto. No backfill for cargas closed before the table existed.
 _Avoid_: re-reading Sapiens after close to decide IBC eligibility (sitped changes on invoicing), blocking Fechar Carga because of a Pedido IBC inválido, one row per item line
 
 **Quantidade realizada de IBC**:
@@ -156,22 +156,41 @@ _Avoid_: leaving pool origin blank, calling every inbound empty an Empréstimo r
 An IBC from this Carga/trip that was confirmed in Custódia no Cliente and has not returned with a company QR. Default pick-list when linking a Troca de IBC (#out → #in). Older Empréstimos at the same Cliente are a secondary path, not the default.
 _Avoid_: free search across the whole pool as the primary Troca UI, linking a return to an IBC still in the yard
 
-**Produto para Container**:
-Cadastrable product (`IbcProduto`: nome + abreviação of 1–2 letters A–Z, unique) that composes the IBC identifier. Every new IBC must have one.
-Nome is always editable. Abreviação (sigla) is frozen once any IBC is linked to the product — baixados included, since baixa does not free a sequencial and the stored prefixo is never recalculated (409 `IBC_PRODUTO_ABREVIACAO_EM_USO`; sending the same sigla after normalization is not a change). To use another sigla, register a new product and apply a Mudança de produto. The product list exposes `possuiIbcs` so the UI can lock the field.
-_Avoid_: hardcoding product prefixes (fixed HMS/NHS list), product shelf life, renaming the sigla of a product in use (one product with two prefixos, or one prefixo meaning two products)
+**Grupo de produto**:
+The product of a container is a Sapiens **grupo** (`poolbi.dbo.grppro`: `codpro` → `codgrp`/`desgrp`), read from the nightly-synced `produto_grupo_map` (03:00, atomic swap — never a FK target). All `codPro` of a grupo share its container. WorkaPool never creates or renames a grupo.
+_Avoid_: a free-typed product list, one config per `codPro`, a second sync just for IBC
+
+**Configuração de produto (Produto para Container)**:
+`IbcProduto` is the local config of one Grupo de produto: `grupoCodigo` (unique, no FK), **sigla** (1–2 letters A–Z, unique) and **cor da placa** (`corHex`), plus one `universal` row with only a cor. Each cor is unique across configs, universal included (409 `IBC_PRODUTO_COR_EM_USO`). A grupo is configured when it has sigla and cor; only configured grupos are offered when registering a container. Sigla and cor are frozen once any IBC uses the config, baixados and substituídos included (409 `IBC_PRODUTO_CONFIG_EM_USO`). Edited by ADMIN/ALMOX. A config whose grupo left the catalog stays, with its IBCs, flagged `encontradoNoSapiens: false` and hidden from new cadastros.
+_Avoid_: recoloring or re-lettering a config in use, deleting a config because the grupo left Sapiens, hardcoding product prefixes
+
+**Placa**:
+The physical identification plate on the container: the **Identificador do IBC** printed in the **cor da placa** of its configuração (universal cor for the Container universal, neutral for legacy without product). It is not a separate record. A new identificador means a new plate.
+_Avoid_: a plate table or plate stock with its own numbering, a plate color that differs from the configuração
+
+**Homologado (HM) / Não homologado (NH)**:
+HM serves exactly one Grupo de produto for its whole life: grupo required, product never changed. NH may have a grupo or be a **Container universal**. NH never becomes HM again.
+_Avoid_: changing the product of an HM, re-homologating an NH
+
+**Container universal**:
+An NH with no grupo, washed between uses; compatible with any Pedido. Identificador prefixo `NH` with no sigla (`NH00001`); plate in the universal cor.
+_Avoid_: an HM without product (that is legacy only), treating universal as "sem produto" legacy
 
 **Identificador do IBC (prefixo + sequencial)**:
-`prefixo` + 5-digit zero-padded `sequencial`. Prefixo = `HM` + abreviação (homologado) or `NHM` + abreviação (não homologado); e.g. Soda (S) → `HMS00001` / `NHMS00001`. `(prefixo, sequencial)` and `identificador` are unique; the next sequencial is the max of that exact prefixo + 1, allocated under a per-prefix lock. Baixa does not free a sequencial. Legacy `HM####` (4 digits, no product) keeps its identifier with prefixo `HM`.
-_Avoid_: deriving the next code by `startsWith` on the identifier (HMS ≠ HMSO), reusing sequenciais
+`prefixo` + 5-digit zero-padded `sequencial`. Prefixo = `HM` + sigla (homologado), `NH` + sigla (não homologado with grupo) or `NH` (universal); e.g. Soda (S) → `HMS00001` / `NHS00001`, universal → `NH00001`. `(prefixo, sequencial)` and `identificador` are unique; the next sequencial is the max of that exact prefixo + 1, allocated under a per-prefix lock. Baixa does not free a sequencial. Legacy `HM####` (4 digits, no product) and already stored `NHM…` keep their identifiers.
+_Avoid_: deriving the next code by `startsWith` on the identifier (HMS ≠ HMSO, NH ≠ NHS), reusing sequenciais, generating new `NHM` prefixos
 
 **Conversão para não homologado**:
-Manual, confirmed action that never edits the source IBC: creates a new IBC in `N` + source prefixo (HMS → NHMS) with the next sequencial, links the source via `convertedToContainerId` and records an `IbcConversionHistory` event (`conversion`) with actor and optional observação.
-_Avoid_: editing homologação in place, automatic expiry-driven conversion (out of scope)
+Manual, confirmed action that never edits the source IBC. The operator chooses the destination: keep the grupo (HMS → NHS) or universal (NH). Creates a new IBC with the next sequencial of the destination prefixo (so a new Placa), links the source via `convertedToContainerId` and records an `IbcConversionHistory` event (`conversion`) with actor, optional observação and a plate snapshot (`identificadorAnterior`, `corAnterior`, `identificadorNovo`, `corNova`). Legacy `HM####` converts the same way.
+_Avoid_: editing homologação in place, keeping the source sequencial, automatic expiry-driven conversion (out of scope)
 
 **Mudança de produto**:
-Same lineage mechanics as Conversão, but the new IBC takes the target product prefixo in the same homologação family (HMS → HMSO, NHMS → NHMSO); history event `product_change`.
-_Avoid_: patching `produtoId` on the existing IBC
+NH only (an HM is refused with 409 `IBC_HOMOLOGADO_PRODUTO_FIXO`). Same lineage mechanics and plate snapshot as Conversão: universal → grupo, grupo → grupo (NHS → NHA) or grupo → universal; history event `product_change`. Never produces an HM.
+_Avoid_: patching `produtoId` on the existing IBC, changing the product of an HM
+
+**Compatibilidade de produto**:
+An IBC is compatible with a set of grupos when it is a Container universal or its grupo is in the set. Legacy `HM####` without product is never compatible until converted to NH. Blocking (409 `IBC_PRODUTO_INCOMPATIVEL`) in two places: on the way out, against the union of the grupos of the eligible Pedidos on the Foto de pedidos IBC; on the return, for ficou or troca, against the grupos of the Pedido pointed. A Pedido whose grupo has no configuração can only be served by a universal and raises an aviso. Fechar expedição still counts only the Carga total, not per grupo.
+_Avoid_: checking only on one side, counting per grupo at Fechar expedição, letting a cloro container into a soda Carga
 
 A source with `convertedToContainerId` already set cannot be converted nor have its product changed again (409 `IBC_JA_SUBSTITUIDO`); further changes start from the replacement IBC. The link is set only while the source is still free, so concurrent requests produce a single replacement.
 
