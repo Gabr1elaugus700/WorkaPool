@@ -16,6 +16,7 @@ import CadastroIbcPage from "../pages/CadastroIbcPage";
 import ConciliacaoErpPage from "../pages/ConciliacaoErpPage";
 import EmprestimosAtrasadosPage from "../pages/EmprestimosAtrasadosPage";
 import ChecklistsIbcView from "@/features/ibc/views/ChecklistsIbcView";
+import IbcProdutoConfigView from "@/features/ibc/views/IbcProdutoConfigView";
 import LegacyIbcTabRedirect from "@/features/ibc/components/LegacyIbcTabRedirect";
 import { IBC_CADASTRO_VIEW_ROLES, IBC_CADASTRO_WRITE_ROLES } from "@/features/ibc/utils/ibcCadastroPermissions";
 import { IBC_EXPEDICAO_ROLES } from "@/features/ibc/utils/canAccessExpedicaoIbc";
@@ -229,6 +230,7 @@ const AppRoutes = () => {
               </PrivateRoute>
             }
           />
+          <Route path="/gestao-ibc/produtos" element={<PrivateRoute allowedRoles={IBC_CADASTRO_VIEW_ROLES}><IbcProdutoConfigView /></PrivateRoute>} />
           <Route
             path="/gestao-ibc/conciliacao"
             element={

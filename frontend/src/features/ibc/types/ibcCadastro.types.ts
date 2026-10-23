@@ -117,8 +117,3 @@ export type IbcProdutoDTO = {
 export type IbcProdutoListItemDTO = IbcProdutoDTO & {
   possuiIbcs: boolean;
 };
-
-export type CreateIbcProdutoInput = {
-  nome: string;
-  abreviacao: string;
-};
