@@ -10,7 +10,8 @@ import {
   SalvarConciliacaoData,
 } from "../../../../../src/features/ibc/repositories/IbcConciliacaoRepository";
 import { AppError } from "../../../../../src/utils/AppError";
-import { AlocacaoIbcRecord, CargaExpedicaoRef, CargaPedidoIbcSnapshot } from "../../../../../src/features/ibc/types/IbcExpedicao.types";
+import { AlocacaoIbcRecord, CargaExpedicaoRef, CargaPedidoIbcSnapshot, IbcParaCompatibilidade } from "../../../../../src/features/ibc/types/IbcExpedicao.types";
+import { GruposConfiguradosLookup } from "../../../../../src/features/ibc/services/carregarCompatibilidadeDePedidos";
 import { conciliacaoViagem } from "../../../../../src/features/ibc/services/conciliacaoViagem";
 
 const carga = (): CargaExpedicaoRef => ({
@@ -46,7 +47,14 @@ const alocacao = (): AlocacaoIbcRecord => ({
 
 const chave = conciliacaoViagem.chaveCliente("B", "Beta");
 
-function harness(options: { fechada?: boolean; marcas?: MarcaConciliacaoSalva[]; pedidos?: CargaPedidoIbcSnapshot[] } = {}) {
+function harness(options: {
+  fechada?: boolean;
+  marcas?: MarcaConciliacaoSalva[];
+  pedidos?: CargaPedidoIbcSnapshot[];
+  alocacoes?: AlocacaoIbcRecord[];
+  ibcs?: IbcParaCompatibilidade[];
+  grupos?: GruposConfiguradosLookup;
+} = {}) {
   let marcas = options.marcas ?? [];
   let retornos: RetornoSemIdSalvo[] = [];
   const save = mock.fn(async (data: SalvarConciliacaoData) => {
@@ -63,12 +71,26 @@ function harness(options: { fechada?: boolean; marcas?: MarcaConciliacaoSalva[];
     listRetornos: mock.fn(async () => retornos),
     save,
   };
+  const alocacoes = options.alocacoes ?? [alocacao()];
   const expedicoes = {
     getCargaByCodCar: mock.fn(async () => carga()),
     listPedidosIbcByCargaId: mock.fn(async () => options.pedidos ?? [pedido()]),
-    listAlocacoesByCargaId: mock.fn(async () => [alocacao()]),
+    listAlocacoesByCargaId: mock.fn(async () => alocacoes),
+    listCompatibilidadePorIds: mock.fn(async (ids: readonly string[]) =>
+      [...ids].map((id) => {
+        const informado = options.ibcs?.find((ibc) => ibc.id === id);
+        if (informado) return informado;
+        const item = alocacoes.find((row) => row.ibcId === id);
+        return {
+          id,
+          identificador: item?.identificador ?? id,
+          universal: true,
+          grupoCodigo: null,
+        };
+      }),
+    ),
   } as unknown as IIbcExpedicaoRepository;
-  return { useCase: new SaveConciliacaoViagemUseCase(expedicoes, conciliacoes), save };
+  return { useCase: new SaveConciliacaoViagemUseCase(expedicoes, conciliacoes, options.grupos), save };
 }
 
 const hasCode = (code: string, statusCode: number) => (error: unknown) => {
@@ -203,5 +225,159 @@ describe("SaveConciliacaoViagemUseCase", () => {
       hasCode("IBC_VIAGEM_FORBIDDEN", 403),
     );
     assert.equal(save.mock.callCount(), 0);
+  });
+});
+
+const gruposDe = (configurados: readonly string[]): GruposConfiguradosLookup => ({
+  listGruposConfigurados: async () => [...configurados],
+});
+
+const container = (
+  id: string,
+  identificador: string,
+  grupoCodigo: string | null,
+  universal = false,
+): IbcParaCompatibilidade => ({ id: `ibc-${id}`, identificador, universal, grupoCodigo });
+
+const linha = (id: string, identificador: string): AlocacaoIbcRecord => ({
+  ...alocacao(),
+  id,
+  ibcId: `ibc-${id}`,
+  identificador,
+});
+
+const comGrupos = (numPed: string, gruposCodigo: string[], cliente = "Beta"): CargaPedidoIbcSnapshot => ({
+  ...pedido(),
+  numPed,
+  cliente,
+  codCli: cliente === "Beta" ? "B" : "C",
+  posCar: numPed === "10" ? 1 : 2,
+  gruposCodigo,
+});
+
+const produtoIncompativel = (
+  identificador: string,
+  grupoContainer: string | null,
+  gruposPermitidos: string[],
+) => (error: unknown) => {
+  assert.ok(error instanceof AppError);
+  assert.equal(error.code, "IBC_PRODUTO_INCOMPATIVEL");
+  assert.equal(error.statusCode, 409);
+  assert.deepEqual(error.details, { identificador, grupoContainer, gruposPermitidos });
+  return true;
+};
+
+describe("SaveConciliacaoViagemUseCase compatibilidade", () => {
+  const soda = [comGrupos("10", ["SODA"])];
+
+  it("recusa cloro como ficou ou troca em pedido de soda", async () => {
+    for (const destino of ["FICOU", "TROCA"] as const) {
+      const { useCase, save } = harness({
+        pedidos: soda,
+        alocacoes: [linha("a1", "NHC00001")],
+        ibcs: [container("a1", "NHC00001", "CLORO")],
+        grupos: gruposDe(["SODA"]),
+      });
+      await assert.rejects(
+        () => useCase.execute({ ...input, itens: [{ alocacaoIbcId: "a1", destino, numPed: "10" }], retornosSemId: [] }),
+        produtoIncompativel("NHC00001", "CLORO", ["SODA"]),
+      );
+      assert.equal(save.mock.callCount(), 0);
+    }
+  });
+
+  it("recusa ácido no pedido de soda mesmo com ácido na carga", async () => {
+    const { useCase, save } = harness({
+      pedidos: [comGrupos("10", ["SODA"]), comGrupos("20", ["ACIDO"], "Gama")],
+      alocacoes: [linha("a1", "NHA00001")],
+      ibcs: [container("a1", "NHA00001", "ACIDO")],
+      grupos: gruposDe(["SODA", "ACIDO"]),
+    });
+    await assert.rejects(
+      () => useCase.execute({ ...input, itens: [{ alocacaoIbcId: "a1", destino: "FICOU", numPed: "10" }], retornosSemId: [] }),
+      produtoIncompativel("NHA00001", "ACIDO", ["SODA"]),
+    );
+    assert.equal(save.mock.callCount(), 0);
+  });
+
+  it("aceita HM e NH de soda, universal, e ácido no pedido de ácido", async () => {
+    const casos = [
+      { identificador: "HMS00001", grupoCodigo: "SODA" as string | null, universal: false },
+      { identificador: "NHS00001", grupoCodigo: "SODA" as string | null, universal: false },
+      { identificador: "NH00001", grupoCodigo: null, universal: true },
+    ];
+    for (const caso of casos) {
+      const { useCase, save } = harness({
+        pedidos: soda,
+        alocacoes: [linha("a1", caso.identificador)],
+        ibcs: [container("a1", caso.identificador, caso.grupoCodigo, caso.universal)],
+        grupos: gruposDe(["SODA"]),
+      });
+      await useCase.execute({ ...input, itens: [{ alocacaoIbcId: "a1", destino: "FICOU", numPed: "10" }], retornosSemId: [] });
+      assert.equal(save.mock.callCount(), 1);
+    }
+
+    const dois = harness({
+      pedidos: [comGrupos("10", ["SODA"]), comGrupos("20", ["ACIDO"], "Gama")],
+      alocacoes: [linha("soda", "HMS00001"), linha("acido", "NHA00001")],
+      ibcs: [container("soda", "HMS00001", "SODA"), container("acido", "NHA00001", "ACIDO")],
+      grupos: gruposDe(["SODA", "ACIDO"]),
+    });
+    await dois.useCase.execute({
+      ...input,
+      itens: [
+        { alocacaoIbcId: "soda", destino: "FICOU", numPed: "10" },
+        { alocacaoIbcId: "acido", destino: "TROCA", numPed: "20" },
+      ],
+      retornosSemId: [],
+    });
+    const gravado = dois.save.mock.calls[0]?.arguments[0] as SalvarConciliacaoData;
+    assert.deepEqual(gravado.marcas.map((marca) => marca.numPed), ["10", "20"]);
+  });
+
+  it("recusa legado sem produto na volta e aceita o mesmo container como retornou", async () => {
+    const legado = harness({
+      pedidos: soda,
+      alocacoes: [linha("a1", "HM0007")],
+      grupos: gruposDe(["SODA"]),
+    });
+    await assert.rejects(
+      () => legado.useCase.execute({ ...input, itens: [{ alocacaoIbcId: "a1", destino: "FICOU", numPed: "10" }], retornosSemId: [] }),
+      produtoIncompativel("HM0007", null, ["SODA"]),
+    );
+    assert.equal(legado.save.mock.callCount(), 0);
+
+    const voltou = harness({
+      pedidos: soda,
+      alocacoes: [linha("a1", "HM0007")],
+      grupos: gruposDe(["SODA"]),
+    });
+    await voltou.useCase.execute({ ...input, itens: [{ alocacaoIbcId: "a1", destino: "RETORNOU" }], retornosSemId: [] });
+    const gravado = voltou.save.mock.calls[0]?.arguments[0] as SalvarConciliacaoData;
+    assert.deepEqual(gravado.marcas, [{ alocacaoIbcId: "a1", destino: "RETORNOU", modalidade: null, numPed: null }]);
+  });
+
+  it("pedido com grupo sem configuração só aceita universal", async () => {
+    const sem = [comGrupos("10", ["SEM"])];
+    const recusado = harness({
+      pedidos: sem,
+      alocacoes: [linha("a1", "NHSEM0001")],
+      ibcs: [container("a1", "NHSEM0001", "SEM")],
+      grupos: gruposDe([]),
+    });
+    await assert.rejects(
+      () => recusado.useCase.execute({ ...input, itens: [{ alocacaoIbcId: "a1", destino: "FICOU", numPed: "10" }], retornosSemId: [] }),
+      produtoIncompativel("NHSEM0001", "SEM", []),
+    );
+    assert.equal(recusado.save.mock.callCount(), 0);
+
+    const universal = harness({
+      pedidos: sem,
+      alocacoes: [linha("a1", "NH00001")],
+      ibcs: [container("a1", "NH00001", null, true)],
+      grupos: gruposDe([]),
+    });
+    await universal.useCase.execute({ ...input, itens: [{ alocacaoIbcId: "a1", destino: "TROCA", numPed: "10" }], retornosSemId: [] });
+    assert.equal(universal.save.mock.callCount(), 1);
   });
 });

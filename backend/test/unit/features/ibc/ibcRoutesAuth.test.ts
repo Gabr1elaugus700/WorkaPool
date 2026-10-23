@@ -441,6 +441,32 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     }
   });
 
+  await t.test("PUT conciliação e POST fechar-viagem: 401 sem token, 403 para LOGISTICA, 400 com corpo inválido", async () => {
+    const put = "/api/ibc/expedicoes/202/conciliacao";
+    const fechar = "/api/ibc/expedicoes/202/fechar-viagem";
+    assert.strictEqual((await request(app).put(put).send({})).status, 401);
+    assert.strictEqual((await request(app).post(fechar).send({})).status, 401);
+
+    const logistica = createToken("LOGISTICA");
+    assert.strictEqual((await request(app).put(put).set("Authorization", `Bearer ${logistica}`).send({})).status, 403);
+    assert.strictEqual((await request(app).post(fechar).set("Authorization", `Bearer ${logistica}`).send({})).status, 403);
+
+    const almox = createToken("ALMOX");
+    const conciliacao = await request(app)
+      .put(put)
+      .set("Authorization", `Bearer ${almox}`)
+      .send({ itens: [{ alocacaoIbcId: "nao-uuid", destino: "FICOU" }] });
+    assert.strictEqual(conciliacao.status, 400);
+    assert.strictEqual(conciliacao.body.code, "IBC_CONCILIACAO_INVALID_BODY");
+
+    const fechamento = await request(app)
+      .post(fechar)
+      .set("Authorization", `Bearer ${almox}`)
+      .send({ confirmacoes: [{ numPed: "" }] });
+    assert.strictEqual(fechamento.status, 400);
+    assert.strictEqual(fechamento.body.code, "IBC_FECHAR_VIAGEM_INVALID_BODY");
+  });
+
   await t.test("POST /:id/inspecoes com body inválido (ALMOX) retorna 400 antes de tocar o banco", async () => {
     const response = await request(app)
       .post("/api/ibc/ibc-1/inspecoes")

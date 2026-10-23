@@ -17,6 +17,14 @@ export type IbcRecord = {
   grupoCodigo: string | null;
 };
 
+/** Produto do container já em viagem, para a compatibilidade na volta. */
+export type IbcParaCompatibilidade = {
+  id: string;
+  identificador: string;
+  universal: boolean;
+  grupoCodigo: string | null;
+};
+
 export type AlocacaoIbcRecord = {
   id: string;
   ibcId: string;

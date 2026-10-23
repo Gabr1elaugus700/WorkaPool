@@ -3,6 +3,8 @@ import { AppError } from "../../../utils/AppError";
 import { assertCanFecharViagemIbc } from "../permissions/assertCanFecharViagemIbc";
 import { IIbcExpedicaoRepository } from "../repositories/IIbcExpedicaoRepository";
 import { IIbcConciliacaoRepository, SalvarConciliacaoData } from "../repositories/IbcConciliacaoRepository";
+import { assertIbcCompativelNaVolta } from "../services/assertIbcCompativelNaVolta";
+import { GruposConfiguradosLookup } from "../services/carregarCompatibilidadeDePedidos";
 import { conciliacaoViagem, DestinoConciliacaoIbc, ModalidadeConciliacaoIbc, RecusaApontamento } from "../services/conciliacaoViagem";
 import { CargaPedidoIbcSnapshot } from "../types/IbcExpedicao.types";
 import { loadCargaFotoExpedicao } from "./loadCargaFotoExpedicao";
@@ -31,6 +33,7 @@ export class SaveConciliacaoViagemUseCase {
   constructor(
     private readonly expedicoes: IIbcExpedicaoRepository,
     private readonly conciliacoes: IIbcConciliacaoRepository,
+    private readonly grupos?: GruposConfiguradosLookup,
   ) {
     this.consultar = new GetConciliacaoViagemUseCase(expedicoes, conciliacoes);
   }
@@ -50,6 +53,13 @@ export class SaveConciliacaoViagemUseCase {
     const entradas = new Map(marcas.map((marca) => [marca.alocacaoIbcId, marca.ibcEntradaId]));
     const pedidos = new Map(pedidosIbc.map((pedido) => [pedido.numPed, pedido]));
     const normalizado = normalizar(input, new Set(alocacoes.map((alocacao) => alocacao.id)), entradas, chaves, pedidos);
+    await assertIbcCompativelNaVolta({
+      alocacoes,
+      marcas: normalizado.marcas,
+      pedidos: pedidosIbc,
+      carregarIbcs: (ids) => this.expedicoes.listCompatibilidadePorIds(ids),
+      lookup: this.grupos,
+    });
     await this.conciliacoes.save({
       expedicaoIbcId: expedicao.id,
       lancadoPorId: input.actorId,
