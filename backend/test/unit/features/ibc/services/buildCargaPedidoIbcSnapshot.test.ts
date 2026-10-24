@@ -145,7 +145,7 @@ describe("buildCargaPedidoIbcSnapshot (#295)", () => {
     assert.equal(snapshot[0]?.posCar, null);
   });
 
-  it("records each product group and skips the 251001 line (#419)", () => {
+  it("records the groups of the 251001 product lines only (#437)", () => {
     const linha = (
       derivacao: string,
       grupo: string | null,
@@ -174,11 +174,11 @@ describe("buildCargaPedidoIbcSnapshot (#295)", () => {
     });
 
     const snapshot = buildCargaPedidoIbcSnapshot(mapRawToPedidos([
-      linha("001", "SODA", 10),
-      linha("002", "CLORO", 20),
-      linha("003", "EMB", 251001),
-      linha("004", "SODA", 10),
-      linha("005", "  ", 30),
+      linha("001", "SODA", 251001),
+      linha("002", "CLORO", 251001),
+      linha("003", "BOMBONA", 20),
+      linha("004", "SODA", 251001),
+      linha("005", "  ", 251001),
     ]));
 
     assert.deepEqual(snapshot[0]?.gruposCodigo, ["SODA", "CLORO"]);
