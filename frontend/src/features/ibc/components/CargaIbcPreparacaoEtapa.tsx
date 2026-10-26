@@ -1,11 +1,11 @@
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { SubstituidoNotice } from "../hooks/useCargaExpedicaoDetalhe";
+import { useContainersCarga } from "../hooks/useContainersCarga";
 import type { AlocacaoIbcDTO, CargaExpedicaoDetalheDTO, PedidoIbcPreparacaoDTO } from "../types/ibcExpedicao.types";
 import { ibcProdutoCompatibilidade } from "../utils/ibcProdutoCompatibilidade";
 import { separarPedidosForaDaSoma } from "../utils/pedidosForaDaSoma";
-import AllocateIbcForm from "./AllocateIbcForm";
-import DeallocateIbcButton from "./DeallocateIbcButton";
+import CargaIbcContainersPaleta from "./CargaIbcContainersPaleta";
 import PedidoIbcProgress from "./PedidoIbcProgress";
 
 type Props = {
@@ -17,8 +17,6 @@ type Props = {
   onAllocate: (identificador: string) => Promise<boolean>;
   onDeallocate: (alocacaoId: string) => Promise<void>;
 };
-
-const NOTICE_ID = "ibc-alocacao-aviso-carga";
 
 function percentualVinculado(alocado: number, esperado: number): number {
   if (esperado <= 0) return 0;
@@ -51,8 +49,13 @@ export default function CargaIbcPreparacaoEtapa({
   const percentual = percentualVinculado(alocado, esperado);
   const noTeto = esperado > 0 && alocado >= esperado;
   const semEsperado = esperado <= 0;
-  const formDisabled = semEsperado || noTeto;
+  const motivoBloqueio = semEsperado
+    ? "Não há quantidade esperada para vincular nesta carga."
+    : noTeto
+      ? "A quantidade esperada já está vinculada. Desvincule um container para trocar."
+      : null;
   const vinculados = ordenarVinculos(detalhe.alocacoes);
+  const containers = useContainersCarga(detalhe.codCar, detalhe);
 
   return (
     <section aria-label="Containers da carga" className="space-y-4">
@@ -107,7 +110,7 @@ export default function CargaIbcPreparacaoEtapa({
       <div className="space-y-4 rounded-lg border border-border bg-card p-4 shadow-sm">
         <div className="space-y-2">
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <h2 className="text-lg font-semibold leading-snug text-foreground">Containers vinculados</h2>
+            <h2 className="text-lg font-semibold leading-snug text-foreground">Containers da carga</h2>
             <p className="text-sm text-muted-foreground">
               <PedidoIbcProgress alocado={alocado} esperado={esperado} />
               <span className="sr-only">
@@ -131,61 +134,33 @@ export default function CargaIbcPreparacaoEtapa({
           </div>
           {mutationsLocked ? (
             <p className="text-sm text-muted-foreground">Expedição fechada. Os vínculos são só consulta.</p>
-          ) : semEsperado ? (
-            <p className="text-sm text-muted-foreground">Não há quantidade esperada para vincular nesta carga.</p>
-          ) : noTeto ? (
-            <p className="text-sm font-medium text-foreground">
-              A quantidade esperada da carga já está vinculada.
-            </p>
+          ) : motivoBloqueio ? (
+            <p className="text-sm font-medium text-foreground">{motivoBloqueio}</p>
           ) : null}
         </div>
 
-        {vinculados.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {mutationsLocked
-              ? "Nenhum container vinculado."
-              : "Nenhum container vinculado. Informe o identificador para incluir na carga."}
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {vinculados.map((alocacao) => (
-              <li key={alocacao.id}>
-                {mutationsLocked ? (
-                  <span className="inline-flex rounded-md border border-border bg-muted/30 px-3 py-1.5 font-mono text-sm font-medium text-foreground">
-                    {alocacao.identificador}
-                  </span>
-                ) : (
-                  <DeallocateIbcButton
-                    identificador={alocacao.identificador}
-                    loading={deallocatingId === alocacao.id}
-                    onDeallocate={() => {
-                      void onDeallocate(alocacao.id);
-                    }}
-                  />
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {mutationsLocked ? null : (
-          <AllocateIbcForm
-            inputId="ibc-identificador-carga"
-            disabled={formDisabled}
-            submitting={allocating}
-            invalid={substituidoNotice != null}
-            describedBy={substituidoNotice ? NOTICE_ID : undefined}
-            onSubmit={onAllocate}
-          />
-        )}
-
-        {substituidoNotice ? (
-          <Alert variant="destructive" id={NOTICE_ID}>
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>{substituidoNotice.title}</AlertTitle>
-            <AlertDescription>{substituidoNotice.message}</AlertDescription>
-          </Alert>
-        ) : null}
+        <CargaIbcContainersPaleta
+          paleta={containers.paleta}
+          erro={containers.error}
+          onRecarregar={containers.recarregar}
+          alocacoes={vinculados}
+          descricaoBusca={`Carga ${detalhe.codCar} · ${alocado} de ${esperado} vinculados`}
+          mutationsLocked={mutationsLocked}
+          motivoBloqueio={motivoBloqueio}
+          allocating={allocating}
+          deallocatingId={deallocatingId}
+          aviso={
+            substituidoNotice ? (
+              <Alert variant="destructive" role="alert">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>{substituidoNotice.title}</AlertTitle>
+                <AlertDescription>{substituidoNotice.message}</AlertDescription>
+              </Alert>
+            ) : null
+          }
+          onAllocate={onAllocate}
+          onDeallocate={onDeallocate}
+        />
       </div>
     </section>
   );

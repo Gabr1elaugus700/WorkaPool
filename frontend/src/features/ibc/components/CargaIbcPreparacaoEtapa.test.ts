@@ -74,7 +74,7 @@ describe("CargaIbcPreparacaoEtapa", () => {
   it("lista a carga, a barra contra o total e o vínculo sem pedido", () => {
     const markup = html(detalhe());
 
-    assert.match(markup, /Containers vinculados/);
+    assert.match(markup, /Containers da carga/);
     assert.match(markup, /1\/2/);
     assert.match(markup, /aria-valuenow="1"/);
     assert.match(markup, /aria-valuemax="2"/);
@@ -82,9 +82,8 @@ describe("CargaIbcPreparacaoEtapa", () => {
     assert.match(markup, /H2/);
     assert.match(markup, /H10/);
     assert.ok(markup.indexOf("H2") < markup.indexOf("H10"));
-    assert.match(markup, /Desvincular/);
-    assert.match(markup, /id="ibc-identificador-carga"/);
-    assert.match(markup, /Vincular/);
+    assert.match(markup, /Carregando containers disponíveis/);
+    assert.match(markup, /Buscar mais containers/);
     assert.doesNotMatch(markup, /Pedido 1120/);
     assert.doesNotMatch(markup, /Venda:/);
     assert.doesNotMatch(markup, /<select/);
@@ -114,11 +113,10 @@ describe("CargaIbcPreparacaoEtapa", () => {
     assert.doesNotMatch(markup, /Empréstimo:/);
   });
 
-  it("desabilita o identificador quando a soma da carga já foi vinculada", () => {
+  it("avisa o teto quando a soma da carga já foi vinculada", () => {
     const markup = html(detalhe({ quantidadeAlocada: 2, quantidadeEsperadaTotal: 2 }));
 
-    assert.match(markup, /já está vinculada/);
-    assert.match(markup, /id="ibc-identificador-carga"[^>]*disabled/);
+    assert.match(markup, /já está vinculada\. Desvincule um container para trocar/);
   });
 
   it("alerta o pedido inválido e esconde vincular e desvincular com a expedição fechada", () => {
@@ -143,7 +141,7 @@ describe("CargaIbcPreparacaoEtapa", () => {
     assert.match(markup, /Pedido 1121/);
     assert.match(markup, /Os vínculos são só consulta/);
     assert.doesNotMatch(markup, /Desvincular/);
-    assert.doesNotMatch(markup, /ibc-identificador-carga/);
+    assert.doesNotMatch(markup, /Buscar mais containers/);
     assert.match(markup, /H2/);
   });
 
@@ -162,6 +160,6 @@ describe("CargaIbcPreparacaoEtapa", () => {
     assert.match(markup, /Grupo sem configuração de placa e cor/);
     assert.match(markup, /Pedido 1120: grupo SODA não tem configuração de placa/);
     assert.match(markup, /A carga segue/);
-    assert.match(markup, /Vincular/);
+    assert.match(markup, /Buscar mais containers/);
   });
 });
