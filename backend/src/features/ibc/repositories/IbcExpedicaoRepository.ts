@@ -13,12 +13,34 @@ import {
   FecharExpedicaoIbcData,
   IbcCustodiaValue,
   IbcParaCompatibilidade,
+  IbcPlacaRecord,
   IbcRecord,
 } from "../types/IbcExpedicao.types";
 
 const produtoCompatInclude = {
   produto: { select: { universal: true, grupoCodigo: true } },
 } as const;
+
+const placaSelect = {
+  id: true,
+  identificador: true,
+  prefixo: true,
+  dataLimite: true,
+  produto: { select: { universal: true, grupoCodigo: true, sigla: true, corHex: true } },
+} as const;
+
+type PlacaRow = {
+  id: string;
+  identificador: string;
+  prefixo: string | null;
+  dataLimite: Date | null;
+  produto: {
+    universal: boolean;
+    grupoCodigo: string | null;
+    sigla: string | null;
+    corHex: string;
+  } | null;
+};
 
 type AlocacaoRow = {
   id: string;
@@ -196,6 +218,36 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
     }));
   }
 
+  async listIbcsLivresPorGrupos(grupos: readonly string[]): Promise<IbcPlacaRecord[]> {
+    const rows = await this.prisma.ibc.findMany({
+      where: {
+        baixadoEm: null,
+        convertedToContainerId: null,
+        motivoBaixa: null,
+        aptidao: "APTO",
+        custodia: "PATIO",
+        alocacoes: { none: { encerradaEm: null } },
+        produto: {
+          is: {
+            OR: [{ universal: true }, { grupoCodigo: { in: [...grupos] } }],
+          },
+        },
+      },
+      select: placaSelect,
+      orderBy: { identificador: "asc" },
+    });
+    return rows.map((row) => this.toPlacaRecord(row));
+  }
+
+  async listPlacasPorIds(ids: readonly string[]): Promise<IbcPlacaRecord[]> {
+    if (ids.length === 0) return [];
+    const rows = await this.prisma.ibc.findMany({
+      where: { id: { in: [...ids] } },
+      select: placaSelect,
+    });
+    return rows.map((row) => this.toPlacaRecord(row));
+  }
+
   async findExpedicaoByCargaId(
     cargaId: string,
   ): Promise<ExpedicaoIbcRecord | null> {
@@ -311,6 +363,20 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
       convertedToContainerId: ibc.convertedToContainerId,
       universal: ibc.produto?.universal === true,
       grupoCodigo: ibc.produto?.universal ? null : (ibc.produto?.grupoCodigo ?? null),
+    };
+  }
+
+  private toPlacaRecord(row: PlacaRow): IbcPlacaRecord {
+    const universal = row.produto?.universal === true;
+    return {
+      id: row.id,
+      identificador: row.identificador,
+      prefixo: row.prefixo,
+      dataLimite: row.dataLimite,
+      universal,
+      grupoCodigo: universal ? null : (row.produto?.grupoCodigo ?? null),
+      sigla: row.produto?.sigla ?? null,
+      corHex: row.produto?.corHex ?? null,
     };
   }
 

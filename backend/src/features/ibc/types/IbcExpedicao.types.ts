@@ -25,6 +25,19 @@ export type IbcParaCompatibilidade = {
   grupoCodigo: string | null;
 };
 
+/** Container com a placa do produto, para a paleta de Preparação. */
+export type IbcPlacaRecord = {
+  id: string;
+  identificador: string;
+  prefixo: string | null;
+  dataLimite: Date | null;
+  universal: boolean;
+  /** Nulo no universal e no legado sem produto. */
+  grupoCodigo: string | null;
+  sigla: string | null;
+  corHex: string | null;
+};
+
 export type AlocacaoIbcRecord = {
   id: string;
   ibcId: string;
