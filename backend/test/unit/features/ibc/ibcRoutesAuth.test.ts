@@ -156,6 +156,23 @@ test("IBC Routes - autenticação e autorização", async (t) => {
     },
   );
 
+  await t.test("GET /cargas-expedicao/:codCar/containers sem token deve retornar 401", async () => {
+    const response = await request(app).get("/api/ibc/cargas-expedicao/383/containers");
+    assert.strictEqual(response.status, 401);
+  });
+
+  await t.test(
+    "GET /cargas-expedicao/:codCar/containers com codCar inválido deve retornar 400",
+    async () => {
+      const token = createToken("ALMOX");
+      const response = await request(app)
+        .get("/api/ibc/cargas-expedicao/abc/containers")
+        .set("Authorization", `Bearer ${token}`);
+      assert.strictEqual(response.status, 400);
+      assert.strictEqual(response.body.code, "IBC_COD_CAR_INVALID");
+    },
+  );
+
   await t.test(
     "GET /cargas-expedicao/:codCar com codCar inválido deve retornar 400",
     async () => {
