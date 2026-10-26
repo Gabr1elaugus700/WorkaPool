@@ -65,6 +65,24 @@ export type CargaExpedicaoDetalheDTO = CargaExpedicaoResumoDTO & {
   avisos: AvisoPedidoGrupoSemConfigDTO[];
 };
 
+/** Item de GET /api/ibc/cargas-expedicao/:codCar/containers. */
+export type ContainerCargaDTO = {
+  ibcId: string;
+  identificador: string;
+  grupoCodigo: string | null;
+  sigla: string | null;
+  corHex: string | null;
+  universal: boolean;
+  homologado: boolean;
+  /** Preenchido quando o container já está vinculado a esta carga. */
+  alocacaoId: string | null;
+};
+
+export type ContainersCargaDTO = {
+  gruposPermitidos: { grupoCodigo: string; sigla: string | null; corHex: string | null }[];
+  itens: ContainerCargaDTO[];
+};
+
 /** Envelope opcional de GET /cargas-expedicao */
 export type ListCargasExpedicaoResponseDTO = {
   cargas: CargaExpedicaoListItemDTO[];
