@@ -1,13 +1,16 @@
+import { useEffect, useRef, useState } from "react";
 import DefaultLayout from "@/layout/DefaultLayout";
 import { useAuth } from "@/auth/AuthContext";
 import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDeniedAlert";
 import GestaoIbcHeader from "../components/GestaoIbcHeader";
 import CadastroIbcSectionError from "../components/CadastroIbcSectionError";
 import CadastroIbcSectionSkeleton from "../components/CadastroIbcSectionSkeleton";
-import IbcChecklistItensSection from "../components/IbcChecklistItensSection";
+import IbcChecklistItemForm from "../components/IbcChecklistItemForm";
+import IbcChecklistItensTabela from "../components/IbcChecklistItensTabela";
 import IbcChecklistsSection from "../components/IbcChecklistsSection";
 import { useIbcChecklistItens } from "../hooks/useIbcChecklistItens";
 import { useIbcChecklists } from "../hooks/useIbcChecklists";
+import type { IbcChecklistItemDTO } from "../types/ibcChecklist.types";
 import {
   IBC_CADASTRO_WRITE_ROLES,
   canWriteIbcCadastro,
@@ -19,6 +22,14 @@ export default function ChecklistsIbcView() {
   const allowed = canWriteIbcCadastro(user?.role);
   const itens = useIbcChecklistItens(allowed);
   const checklists = useIbcChecklists(allowed);
+  const [editingItem, setEditingItem] = useState<IbcChecklistItemDTO | null>(null);
+  const itemInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!editingItem) return;
+    itemInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    itemInputRef.current?.focus({ preventScroll: true });
+  }, [editingItem]);
 
   if (!allowed) {
     return (
@@ -40,23 +51,15 @@ export default function ChecklistsIbcView() {
 
         <section className="rounded-lg border border-border bg-card p-4 shadow-sm sm:p-6">
           <h2 className="mb-3 text-base font-semibold tracking-tight">Catálogo de itens</h2>
-          {itens.query.isLoading ? (
-            <CadastroIbcSectionSkeleton rows={3} />
-          ) : itens.query.error ? (
-            <CadastroIbcSectionError
-              message={toError(itens.query.error).message}
-              onRetry={() => {
-                void itens.query.refetch();
-              }}
-            />
-          ) : (
-            <IbcChecklistItensSection
-              itens={itens.query.data ?? []}
-              saving={itens.isSaving}
-              onCreate={itens.createItem}
-              onUpdate={itens.updateItem}
-            />
-          )}
+          <IbcChecklistItemForm
+            key={editingItem?.id ?? "novo"}
+            editing={editingItem}
+            saving={itens.isSaving}
+            inputRef={itemInputRef}
+            onCreate={itens.createItem}
+            onUpdate={itens.updateItem}
+            onCancelEdit={() => setEditingItem(null)}
+          />
         </section>
 
         <section className="rounded-lg border border-border bg-card p-4 shadow-sm sm:p-6">
@@ -78,6 +81,29 @@ export default function ChecklistsIbcView() {
               onLoad={checklists.loadChecklist}
               onCreate={checklists.createChecklist}
               onUpdate={checklists.updateChecklist}
+            />
+          )}
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="text-base font-semibold tracking-tight">Itens cadastrados</h2>
+          {itens.query.isLoading ? (
+            <CadastroIbcSectionSkeleton rows={3} />
+          ) : itens.query.error ? (
+            <CadastroIbcSectionError
+              message={toError(itens.query.error).message}
+              onRetry={() => {
+                void itens.query.refetch();
+              }}
+            />
+          ) : (
+            <IbcChecklistItensTabela
+              itens={itens.query.data ?? []}
+              saving={itens.isSaving}
+              onEdit={setEditingItem}
+              onToggleAtivo={(item) => {
+                void itens.updateItem(item.id, { ativo: !item.ativo }).catch(() => undefined);
+              }}
             />
           )}
         </section>
