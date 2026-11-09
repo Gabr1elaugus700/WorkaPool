@@ -177,5 +177,4 @@ Do **not** run `npm run build` in the agent flow.
 - Agent entry: [AGENTS.md](../AGENTS.md)
 - Ports: [.cursor/rules/local-dev-ports.mdc](../.cursor/rules/local-dev-ports.mdc)
 - Specs: [.specs/features/](../.specs/features/)
-- UI skill: [.cursor/skills/impeccable/SKILL.md](../.cursor/skills/impeccable/SKILL.md)
 - Domain language (backend): [cargo](../backend/src/features/cargo/CONTEXT.md), [orderLoss](../backend/src/features/orderLoss/CONTEXT.md), [workOrder](../backend/src/features/workOrder/CONTEXT.md), [users](../backend/src/features/users/CONTEXT.md), [goals](../backend/src/features/goals/CONTEXT.md), [pedidos](../backend/src/features/pedidos/CONTEXT.md)
