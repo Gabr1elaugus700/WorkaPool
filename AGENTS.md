@@ -58,7 +58,7 @@ Backend ubiquitous language (read before naming):
 5. Spec under [.specs/features/](./.specs/features/) if one exists; API contract-first: [.specs/codebase/OPENAPI_CONTRACT_FIRST.md](./.specs/codebase/OPENAPI_CONTRACT_FIRST.md).
 6. [.agents/skills/writing-typescript/SKILL.md](./.agents/skills/writing-typescript/SKILL.md).
 7. [.cursor/rules/backend-role.md](./.cursor/rules/backend-role.md) and [.cursor/rules/local-dev-ports.mdc](./.cursor/rules/local-dev-ports.mdc).
-8. UI work: [DESIGN.md](./DESIGN.md) and [.cursor/skills/impeccable/SKILL.md](./.cursor/skills/impeccable/SKILL.md).
+8. UI work: [DESIGN.md](./DESIGN.md).
 
 ## 6. Hard rules
 
@@ -75,7 +75,7 @@ Backend ubiquitous language (read before naming):
 | Path | What |
 | --- | --- |
 | [.cursor/rules/](./.cursor/rules/) | [backend-role.md](./.cursor/rules/backend-role.md), [local-dev-ports.mdc](./.cursor/rules/local-dev-ports.mdc), [task-intake.mdc](./.cursor/rules/task-intake.mdc), [github-issue-branch-pr.mdc](./.cursor/rules/github-issue-branch-pr.mdc) (issue → branch → PR; padrão só branch, worktree via `scripts/worktree.ps1` só com pedido explícito) |
-| [.cursor/skills/](./.cursor/skills/) | [tlc-spec-driven](./.cursor/skills/tlc-spec-driven/SKILL.md), [impeccable](./.cursor/skills/impeccable/SKILL.md), [create-github-issue](./.cursor/skills/create-github-issue/SKILL.md), [wt](./.cursor/skills/wt/SKILL.md) (`/wt <issue>` cria a worktree pelo script; só quando o usuário pedir) |
+| [.cursor/skills/](./.cursor/skills/) | [tlc-spec-driven](./.cursor/skills/tlc-spec-driven/SKILL.md), [create-github-issue](./.cursor/skills/create-github-issue/SKILL.md), [wt](./.cursor/skills/wt/SKILL.md) (`/wt <issue>` cria a worktree pelo script; só quando o usuário pedir) |
 | [.agents/skills/](./.agents/skills/) | [writing-typescript](./.agents/skills/writing-typescript/SKILL.md), [tdd](./.agents/skills/tdd/SKILL.md), [code-review](./.agents/skills/code-review/SKILL.md), [diagnosing-bugs](./.agents/skills/diagnosing-bugs/SKILL.md) |
 | [.cursor/agents/](./.cursor/agents/) | [task-intake](./.cursor/agents/task-intake.md) — capture ideas/bugs; do not implement |
 | [.specs/](./.specs/) | Feature specs under `features/`; [OPENAPI_CONTRACT_FIRST.md](./.specs/codebase/OPENAPI_CONTRACT_FIRST.md) |
