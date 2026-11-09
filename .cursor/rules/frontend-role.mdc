@@ -1,0 +1,15 @@
+---
+description: Padrões de frontend do projeto
+globs: ["**/*.tsx", "**/*.css"]
+alwaysApply: false
+---
+
+- Utilize React, TypeScript e Tailwind.
+- Priorize componentes reutilizáveis.
+- Respeite os componentes existentes do shadcn/ui.
+- Mantenha consistência visual entre módulos.
+- Evite criar componentes desnecessários.
+- Não refatore telas fora do escopo solicitado.
+- Preserve a responsividade.
+- Prefira alterações incrementais.
+- Não redesenhe a interface sem solicitação explícita.
