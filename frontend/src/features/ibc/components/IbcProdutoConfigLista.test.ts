@@ -33,7 +33,12 @@ const lista: ListaIbcProdutoConfig = {
 
 function html(canWrite: boolean): string {
   return renderToStaticMarkup(
-    React.createElement(IbcProdutoConfigLista, { lista, canWrite, onEditar: () => undefined }),
+    React.createElement(IbcProdutoConfigLista, {
+      lista,
+      canWrite,
+      onEditar: () => undefined,
+      onPadrao: () => undefined,
+    }),
   );
 }
 
@@ -55,9 +60,10 @@ describe("IbcProdutoConfigLista", () => {
     assert.match(markup, /aria-label="Editar Soda"/);
   });
 
-  it("esconde a edição de quem só consulta", () => {
+  it("esconde a edição de quem só consulta e mantém o padrão", () => {
     const markup = html(false);
     assert.doesNotMatch(markup, /Editar/);
+    assert.match(markup, /aria-label="Padrão de Soda"/);
     assert.match(markup, /Soda/);
   });
 });
