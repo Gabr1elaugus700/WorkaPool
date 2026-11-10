@@ -284,7 +284,11 @@ export default function CadastroIbcPoolList(props: Props) {
       {detalhe ? (
         <Sheet open onOpenChange={(open) => !open && setDetalhe(null)}>
           <SheetContent>
-            <CadastroIbcDetalhe ibc={detalhe} produto={produtoNome.get(detalhe.produtoId ?? "") ?? null} />
+            <CadastroIbcDetalhe
+              ibc={detalhe}
+              produto={produtoNome.get(detalhe.produtoId ?? "") ?? null}
+              canWrite={canWrite}
+            />
           </SheetContent>
         </Sheet>
       ) : null}

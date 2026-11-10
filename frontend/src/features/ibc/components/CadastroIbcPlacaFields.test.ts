@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { IbcCadastroDTO } from "../types/ibcCadastro.types";
@@ -22,6 +23,11 @@ function campos(homologado: boolean, grupoCodigo: string, universalCorHex: strin
       onGrupo: () => undefined,
     }),
   );
+}
+
+function detalhe(node: React.ReactElement): string {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return renderToStaticMarkup(React.createElement(QueryClientProvider, { client }, node));
 }
 
 function ibc(overrides: Partial<IbcCadastroDTO> = {}): IbcCadastroDTO {
@@ -67,8 +73,8 @@ describe("cadastro de placa no modal, na lista e no detalhe", () => {
 
   it("legado sem produto usa placa neutra no detalhe", () => {
     assert.match(renderToStaticMarkup(React.createElement(IbcPlacaAmostra, { corHex: null })), /Placa neutra/);
-    const html = renderToStaticMarkup(
-      React.createElement(Sheet, { open: true }, React.createElement(CadastroIbcDetalhe, { ibc: ibc(), produto: null })),
+    const html = detalhe(
+      React.createElement(Sheet, { open: true }, React.createElement(CadastroIbcDetalhe, { ibc: ibc(), produto: null, canWrite: false })),
     );
     assert.match(html, /HM0007/);
     assert.match(html, /Placa neutra/);
@@ -77,13 +83,14 @@ describe("cadastro de placa no modal, na lista e no detalhe", () => {
   });
 
   it("detalhe com produto mostra a cor ao lado do identificador", () => {
-    const html = renderToStaticMarkup(
+    const html = detalhe(
       React.createElement(
         Sheet,
         { open: true },
         React.createElement(CadastroIbcDetalhe, {
           ibc: ibc({ identificador: "HMS00001", prefixo: "HMS", corHex: "#AA0000", produtoId: "cfg-s" }),
           produto: "Soda cáustica",
+          canWrite: false,
         }),
       ),
     );
