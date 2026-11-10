@@ -175,7 +175,7 @@ describe("CreateNovoIbcUseCase", () => {
     const error = await codigoDe(() =>
       buildUseCase({ createNovoIbcs }).execute({
         dataLimite: FUTURE_DATA_LIMITE,
-      autorId: "user-ana",
+        autorId: "user-ana",
         homologado: true,
       }),
     );
@@ -244,7 +244,7 @@ describe("CreateNovoIbcUseCase", () => {
       const error = await codigoDe(() =>
         buildUseCase({ createNovoIbcs }, deps).execute({
           dataLimite: FUTURE_DATA_LIMITE,
-      autorId: "user-ana",
+          autorId: "user-ana",
           homologado: true,
           grupoCodigo: "01",
         }),
@@ -260,7 +260,7 @@ describe("CreateNovoIbcUseCase", () => {
     const error = await codigoDe(() =>
       buildUseCase({ createNovoIbcs }, lookups({ universal: null })).execute({
         dataLimite: FUTURE_DATA_LIMITE,
-      autorId: "user-ana",
+        autorId: "user-ana",
         homologado: false,
       }),
     );
