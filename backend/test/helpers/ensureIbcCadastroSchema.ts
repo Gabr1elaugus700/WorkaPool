@@ -42,8 +42,23 @@ export async function ensureIbcCadastroSchema(
   await prisma.$executeRawUnsafe(
     `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "dataLimite" TIMESTAMP(3)`,
   );
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      CREATE TYPE "IbcMotivoBaixa" AS ENUM ('VENDA', 'TROCA');
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$
+  `);
   await prisma.$executeRawUnsafe(
     `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "baixadoEm" TIMESTAMP(3)`,
+  );
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "motivoBaixa" "IbcMotivoBaixa"`,
+  );
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "baixaViagemEm" TIMESTAMP(3)`,
+  );
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "trocaEntradaId" TEXT`,
   );
   await prisma.$executeRawUnsafe(
     `ALTER TABLE "Ibc" ADD COLUMN IF NOT EXISTS "primeiraInspecaoEm" TIMESTAMP(3)`,

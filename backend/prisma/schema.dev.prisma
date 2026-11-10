@@ -56,6 +56,7 @@ model User {
   alocacoesIbc                AlocacaoIbc[]   @relation("AlocacaoIbcAlocadoPor")
   expedicoesIbcFechadasPor    ExpedicaoIbc[]  @relation("ExpedicaoIbcFechadoPor")
   ibcChecklistVinculos        IbcChecklistVinculo[] @relation("IbcChecklistVinculoVinculadoPor")
+  ibcChecklistPadroes         IbcChecklistPadrao[]  @relation("IbcChecklistPadraoVinculadoPor")
   ibcInspecoes                IbcInspecao[]         @relation("IbcInspecaoInspetor")
   entradasPatioAbertas        EntradaPatioIbc[]     @relation("EntradaPatioAbertaPor")
   entradasPatioConcluidas     EntradaPatioIbc[]     @relation("EntradaPatioConcluidaPor")
@@ -653,22 +654,42 @@ model ChecklistModelo {
   vistorias            ChecklistVistoria[]
   checklistInspections ChecklistInspection[]
   ibcVinculos          IbcChecklistVinculo[]
+  ibcPadroes           IbcChecklistPadrao[]
   ibcInspecoes         IbcInspecao[]
 
   @@index([tipo])
 }
 
+enum IbcChecklistSituacao {
+  ENTRADA_PATIO
+}
+
 model IbcChecklistVinculo {
-  id                String          @id @default(uuid())
+  id                String               @id @default(uuid())
   ibcId             String
   checklistModeloId String
+  situacao          IbcChecklistSituacao @default(ENTRADA_PATIO)
   vinculadoPorId    String
-  vinculadoEm       DateTime        @default(now())
-  ibc               Ibc             @relation(fields: [ibcId], references: [id])
-  checklistModelo   ChecklistModelo @relation(fields: [checklistModeloId], references: [id])
-  vinculadoPor      User            @relation("IbcChecklistVinculoVinculadoPor", fields: [vinculadoPorId], references: [id], onDelete: Restrict)
+  vinculadoEm       DateTime             @default(now())
+  ibc               Ibc                  @relation(fields: [ibcId], references: [id])
+  checklistModelo   ChecklistModelo      @relation(fields: [checklistModeloId], references: [id])
+  vinculadoPor      User                 @relation("IbcChecklistVinculoVinculadoPor", fields: [vinculadoPorId], references: [id], onDelete: Restrict)
 
   @@unique([ibcId, checklistModeloId])
+  @@index([checklistModeloId])
+}
+
+model IbcChecklistPadrao {
+  id                String               @id @default(uuid())
+  produtoId         String
+  checklistModeloId String
+  situacao          IbcChecklistSituacao @default(ENTRADA_PATIO)
+  vinculadoPorId    String
+  vinculadoEm       DateTime             @default(now())
+  checklistModelo   ChecklistModelo      @relation(fields: [checklistModeloId], references: [id])
+  vinculadoPor      User                 @relation("IbcChecklistPadraoVinculadoPor", fields: [vinculadoPorId], references: [id], onDelete: Restrict)
+
+  @@unique([produtoId, checklistModeloId, situacao])
   @@index([checklistModeloId])
 }
 

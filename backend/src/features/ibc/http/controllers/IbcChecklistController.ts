@@ -17,6 +17,11 @@ import { IbcChecklistVinculoRepository } from "../../repositories/IbcChecklistVi
 import { ListIbcChecklistVinculosUseCase } from "../../useCases/ListIbcChecklistVinculos.use-case";
 import { VincularIbcChecklistUseCase } from "../../useCases/VincularIbcChecklist.use-case";
 import { DesvincularIbcChecklistUseCase } from "../../useCases/DesvincularIbcChecklist.use-case";
+import { IbcProdutoRepository } from "../../repositories/IbcProdutoRepository";
+import { IbcChecklistPadraoRepository } from "../../repositories/IbcChecklistPadraoRepository";
+import { ListIbcChecklistPadroesUseCase } from "../../useCases/ListIbcChecklistPadroes.use-case";
+import { VincularIbcChecklistPadraoUseCase } from "../../useCases/VincularIbcChecklistPadrao.use-case";
+import { DesvincularIbcChecklistPadraoUseCase } from "../../useCases/DesvincularIbcChecklistPadrao.use-case";
 
 function actorRole(req: Request): Role {
   return actor(req).actorRole;
@@ -158,6 +163,50 @@ export class IbcChecklistController {
       return res.status(204).send();
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao desvincular checklist do IBC");
+    }
+  }
+
+  static async listPadroes(req: Request, res: Response): Promise<Response> {
+    try {
+      const padroes = await new ListIbcChecklistPadroesUseCase(
+        new IbcProdutoRepository(),
+        new IbcChecklistPadraoRepository(),
+      ).execute(String(req.params.produtoId));
+      return res.status(200).json(padroes);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao listar o padrão de checklist do produto");
+    }
+  }
+
+  static async vincularPadrao(req: Request, res: Response): Promise<Response> {
+    try {
+      const parsed = IbcChecklistHttpSchemas.vincularChecklist.safeParse(req.body);
+      if (!parsed.success) throw invalidBody("IBC_CHECKLIST_PADRAO_INVALID_BODY", parsed.error.format());
+
+      const padrao = await new VincularIbcChecklistPadraoUseCase(
+        new IbcProdutoRepository(),
+        new IbcChecklistRepository(),
+        new IbcChecklistPadraoRepository(),
+      ).execute({ ...actor(req), produtoId: String(req.params.produtoId), ...parsed.data });
+      return res.status(201).json(padrao);
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao vincular checklist padrão do produto");
+    }
+  }
+
+  static async desvincularPadrao(req: Request, res: Response): Promise<Response> {
+    try {
+      await new DesvincularIbcChecklistPadraoUseCase(
+        new IbcProdutoRepository(),
+        new IbcChecklistPadraoRepository(),
+      ).execute({
+        actorRole: actorRole(req),
+        produtoId: String(req.params.produtoId),
+        checklistModeloId: String(req.params.checklistModeloId),
+      });
+      return res.status(204).send();
+    } catch (err: unknown) {
+      return respondAppError(res, err, "Erro ao remover checklist padrão do produto");
     }
   }
 }

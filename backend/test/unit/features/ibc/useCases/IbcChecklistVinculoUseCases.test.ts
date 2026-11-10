@@ -31,6 +31,7 @@ const ibc: IbcCadastroRecord = {
 function vinculo(checklistModeloId: string, vinculadoPorId = "user-1"): IbcChecklistVinculoDto {
   return {
     checklistModeloId,
+    situacao: "ENTRADA_PATIO",
     nome: `Checklist ${checklistModeloId}`,
     ativo: true,
     vinculadoEm: "2026-10-06T00:00:00.000Z",
@@ -124,8 +125,11 @@ describe("VincularIbcChecklistUseCase", () => {
     const { vincular, creates } = setup();
     const criado = await vincular.execute(vincularInput);
 
-    assert.deepEqual(creates, [{ ibcId: "ibc-1", checklistModeloId: "soda", vinculadoPorId: "user-9" }]);
+    assert.deepEqual(creates, [
+      { ibcId: "ibc-1", checklistModeloId: "soda", situacao: "ENTRADA_PATIO", vinculadoPorId: "user-9" },
+    ]);
     assert.equal(criado.checklistModeloId, "soda");
+    assert.equal(criado.situacao, "ENTRADA_PATIO");
     assert.equal(criado.vinculadoPor.id, "user-9");
   });
 
