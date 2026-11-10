@@ -1,36 +1,15 @@
 /**
- * Arquivo centralizador do Prisma Client
- * Usa o client correto baseado no NODE_ENV
- *
- * - development: usa src/generated/prisma-dev
- * - production: usa @prisma/client
+ * Prisma Client único, gerado a partir de prisma/schema.prisma.
  */
 
-const isDevelopment = process.env.NODE_ENV === 'development';
+import { Prisma, PrismaClient } from '@prisma/client';
 
-// Importa o client correto baseado no ambiente
-let PrismaClient: any;
-let Prisma: any;
+let prismaInstance: PrismaClient | null = null;
 
-if (isDevelopment) {
-  // DEV: usa schema.dev.prisma
-  const devPrisma = require('../generated/prisma-dev');
-  PrismaClient = devPrisma.PrismaClient;
-  Prisma = devPrisma.Prisma;
-} else {
-  // PROD: usa client padrão gerado em node_modules/@prisma/client
-  const prodPrisma = require('@prisma/client');
-  PrismaClient = prodPrisma.PrismaClient;
-  Prisma = prodPrisma.Prisma;
-}
-
-// Singleton instance
-let prismaInstance: any = null;
-
-export function getPrismaClient() {
+export function getPrismaClient(): PrismaClient {
   if (!prismaInstance) {
     prismaInstance = new PrismaClient({
-      log: ['error'], // Apenas erros (sem queries)
+      log: ['error'],
     });
   }
   return prismaInstance;

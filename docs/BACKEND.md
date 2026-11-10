@@ -39,7 +39,7 @@ Hard rules (do not contradict [AGENTS.md](../AGENTS.md)):
 - Auth: JWT (`jsonwebtoken`) + bcrypt
 - Validation: Zod
 - DB:
-  - PostgreSQL via Prisma (`prisma/schema.dev.prisma` for local/test, `prisma/schema.prisma` for production)
+  - PostgreSQL via Prisma (`prisma/schema.prisma` for local, test, and production)
   - SQL Server via `mssql` (`src/database/sqlServer.ts`) for Sapiens
 - SOAP: `soap` (ERP integrations)
 - Scheduling: `node-cron` (`src/schedulers/watchdog/`)
@@ -103,7 +103,7 @@ Path-level detail for cargo/orders used by the SPA: [FRONTEND_CARGO_PEDIDOS_API.
 
 ## Data model
 
-`prisma/schema.prisma` (and the dev twin `schema.dev.prisma`) mix Portuguese and English names. Major models:
+`prisma/schema.prisma` mixes Portuguese and English names. Major models:
 
 - Identity: `User` (+ Role enum)
 - Cargo: `Cargas`, `CargasFechadas`, `HistoricoPesoPedidos`, truck/route leftovers (`Trucks`, `Caminhao`, `Rota_base`, `CaminhaoRota`, `ParametrosGlobaisViagem`, `SolicitacaoRota`)
