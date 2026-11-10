@@ -54,6 +54,8 @@ export type CreateNovoIbcData = {
   primeiraInspecaoEm: null;
   loteId?: string | null;
   produtoId: string;
+  /** Autor dos vínculos copiados do checklist padrão do produto. */
+  autorId: string;
 };
 
 export type IbcProdutoRecord = {

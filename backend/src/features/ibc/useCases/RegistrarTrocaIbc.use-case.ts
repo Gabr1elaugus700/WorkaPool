@@ -11,6 +11,7 @@ import { loadCargaFotoExpedicao } from "./loadCargaFotoExpedicao";
 export type RegistrarTrocaIbcInput = {
   codCar: number;
   actorRole: Role;
+  actorId: string;
   alocacaoIbcId: string;
   produtoId: string;
   dataLimite: Date;
@@ -74,6 +75,7 @@ export class RegistrarTrocaIbcUseCase {
       dataLimite: input.dataLimite,
       primeiraInspecaoEm: null,
       produtoId: produto.id,
+      autorId: input.actorId,
     }, 1);
     if (!entrada) falha(500, "IBC_TROCA_SEM_ENTRADA", "Não foi possível registrar o IBC de entrada");
     const vinculado = await this.conciliacoes.vincularEntradaTroca(input.alocacaoIbcId, entrada.id);
