@@ -91,6 +91,7 @@ function harness(options: { destino?: "TROCA" | "FICOU"; ibcEntradaId?: string |
 const input = {
   codCar: 202,
   actorRole: Role.ALMOX,
+  actorId: "almox-1",
   alocacaoIbcId: "aloc-1",
   produtoId: "prod-1",
   dataLimite: new Date("2027-01-01T00:00:00.000Z"),
@@ -113,6 +114,7 @@ describe("RegistrarTrocaIbcUseCase", () => {
     assert.equal(data.aptidao, "INAPTO");
     assert.equal(data.motivoInaptidao, "AGUARDANDO_INSPECAO");
     assert.equal(data.custodia, "PATIO");
+    assert.equal(data.autorId, "almox-1");
     assert.deepEqual(vincularEntradaTroca.mock.calls[0]?.arguments, ["aloc-1", "ibc-in"]);
     assert.equal(softDelete.mock.callCount(), 0);
     assert.deepEqual(troca, { alocacaoIbcId: "aloc-1", ibcEntradaId: "ibc-in", identificador: "HM0009" });

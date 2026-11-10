@@ -12,6 +12,7 @@ export type CreateNovoIbcInput = {
   dataLimite: Date;
   homologado: boolean;
   grupoCodigo?: string | null;
+  autorId: string;
 };
 
 function startOfUtcDay(date: Date): Date {
@@ -57,6 +58,7 @@ export class CreateNovoIbcUseCase {
         dataLimite: input.dataLimite,
         primeiraInspecaoEm: null,
         produtoId: produto.produtoId,
+        autorId: input.autorId,
       },
       1,
     );

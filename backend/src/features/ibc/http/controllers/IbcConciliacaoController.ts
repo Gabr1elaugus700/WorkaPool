@@ -68,7 +68,7 @@ export class IbcConciliacaoController {
         new IbcConciliacaoRepository(),
         new IbcCadastroRepository(),
         new IbcProdutoRepository(),
-      ).execute({ codCar, actorRole: actor(req).actorRole, ...parsed.data });
+      ).execute({ codCar, ...actor(req), ...parsed.data });
       return res.status(201).json(troca);
     } catch (err: unknown) {
       return respondAppError(res, err, "Erro ao registrar a troca");

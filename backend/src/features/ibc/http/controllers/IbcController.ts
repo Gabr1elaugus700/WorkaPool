@@ -73,6 +73,7 @@ export class IbcController {
         dataLimite: body.dataLimite,
         homologado: body.homologado,
         grupoCodigo: body.grupoCodigo,
+        autorId: requireActor(req).id,
       });
       return res.status(201).json(ibc);
     } catch (err: unknown) {
@@ -95,6 +96,7 @@ export class IbcController {
         numeroNf: body.numeroNf,
         homologado: body.homologado,
         grupoCodigo: body.grupoCodigo,
+        autorId: requireActor(req).id,
       });
       return res.status(201).json(result);
     } catch (err: unknown) {

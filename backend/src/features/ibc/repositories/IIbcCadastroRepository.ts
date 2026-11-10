@@ -14,7 +14,8 @@ export type ListIbcsOptions = {
 export interface IIbcCadastroRepository {
   /**
    * Aloca `quantidade` sequenciais livres de `data.prefixo` e persiste os IBCs
-   * numa única transação serializada por prefixo.
+   * numa única transação serializada por prefixo. Na mesma transação, cada IBC
+   * recebe a cópia dos checklists ativos do padrão de `data.produtoId`.
    */
   createNovoIbcs(
     data: CreateNovoIbcData,
@@ -22,7 +23,8 @@ export interface IIbcCadastroRepository {
   ): Promise<IbcCadastroRecord[]>;
   /**
    * Cria o IBC destino no próximo sequencial de `data.prefixo`, vincula a origem
-   * (`convertedToContainerId`) e grava o histórico, tudo na mesma transação.
+   * (`convertedToContainerId`), grava o histórico e copia o padrão ativo do produto
+   * destino (nunca os vínculos da origem), tudo na mesma transação.
    * A origem só é vinculada se ainda estiver livre; caso contrário a transação
    * é desfeita com 409 `IBC_JA_SUBSTITUIDO`.
    */

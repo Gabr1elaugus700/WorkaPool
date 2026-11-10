@@ -107,7 +107,7 @@ function buildUseCase(repo: RepoMock, saldo: ISaldoIbcErp | null = null, deps = 
   );
 }
 
-const hm = { homologado: true, grupoCodigo: "01" } as const;
+const hm = { homologado: true, grupoCodigo: "01", autorId: "user-ana" } as const;
 
 describe("CreateLoteIbcUseCase core (#117 / #121 slice 2)", () => {
   it("batch creates N IBCs with shared dataLimite and COMPRA defaults", async () => {
@@ -136,6 +136,7 @@ describe("CreateLoteIbcUseCase core (#117 / #121 slice 2)", () => {
     assert.equal(createNovoIbcs.mock.callCount(), 1);
     const [data, quantidade] = createNovoIbcs.mock.calls[0].arguments;
     assert.equal(data.prefixo, "HMS");
+    assert.equal(data.autorId, "user-ana");
     assert.equal(quantidade, 3);
   });
 
@@ -309,6 +310,7 @@ describe("CreateLoteIbcUseCase NF optional (#117 / #121 slice 4)", () => {
           dataLimite: FUTURE_DATA_LIMITE,
           homologado: true,
           grupoCodigo: "99",
+          autorId: "user-ana",
         }),
       (error: unknown) => {
         assert.ok(error instanceof AppError);
@@ -336,11 +338,13 @@ describe("CreateLoteIbcUseCase NF optional (#117 / #121 slice 4)", () => {
       dataLimite: FUTURE_DATA_LIMITE,
       homologado: false,
       grupoCodigo: "01",
+      autorId: "user-ana",
     });
     const semGrupo = await useCase.execute({
       quantidade: 2,
       dataLimite: FUTURE_DATA_LIMITE,
       homologado: false,
+      autorId: "user-ana",
     });
 
     assert.deepEqual(
@@ -363,7 +367,7 @@ describe("CreateLoteIbcUseCase NF optional (#117 / #121 slice 4)", () => {
     const createIbcLote = mock.fn(async (data: CreateIbcLoteData) => buildLote(data));
     const useCase = buildUseCase(buildRepo({ createNovoIbcs, createIbcLote }));
     await assert.rejects(
-      () => useCase.execute({ quantidade: 2, dataLimite: FUTURE_DATA_LIMITE, homologado: true }),
+      () => useCase.execute({ quantidade: 2, dataLimite: FUTURE_DATA_LIMITE, homologado: true, autorId: "user-ana" }),
       (error: unknown) => error instanceof AppError && error.code === "IBC_PRODUTO_OBRIGATORIO",
     );
     assert.equal(createIbcLote.mock.callCount(), 0);
