@@ -34,6 +34,21 @@ export async function ensureIbcChecklistSchema(
     )`,
     `CREATE UNIQUE INDEX IF NOT EXISTS "IbcChecklistVinculo_ibcId_checklistModeloId_key" ON "IbcChecklistVinculo"("ibcId", "checklistModeloId")`,
     `CREATE INDEX IF NOT EXISTS "IbcChecklistVinculo_checklistModeloId_idx" ON "IbcChecklistVinculo"("checklistModeloId")`,
+    `DO $$ BEGIN
+      CREATE TYPE "IbcChecklistSituacao" AS ENUM ('ENTRADA_PATIO');
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$`,
+    `ALTER TABLE "IbcChecklistVinculo" ADD COLUMN IF NOT EXISTS "situacao" "IbcChecklistSituacao" NOT NULL DEFAULT 'ENTRADA_PATIO'`,
+    `CREATE TABLE IF NOT EXISTS "IbcChecklistPadrao" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "produtoId" TEXT NOT NULL REFERENCES "IbcProduto"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+      "checklistModeloId" TEXT NOT NULL REFERENCES "ChecklistModelo"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+      "situacao" "IbcChecklistSituacao" NOT NULL DEFAULT 'ENTRADA_PATIO',
+      "vinculadoPorId" TEXT NOT NULL REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+      "vinculadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS "IbcChecklistPadrao_produtoId_checklistModeloId_situacao_key" ON "IbcChecklistPadrao"("produtoId", "checklistModeloId", "situacao")`,
+    `CREATE INDEX IF NOT EXISTS "IbcChecklistPadrao_checklistModeloId_idx" ON "IbcChecklistPadrao"("checklistModeloId")`,
   ];
   for (const sql of statements) {
     await prisma.$executeRawUnsafe(sql);

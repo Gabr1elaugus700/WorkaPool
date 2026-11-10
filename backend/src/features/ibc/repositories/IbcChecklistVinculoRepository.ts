@@ -48,6 +48,7 @@ export class IbcChecklistVinculoRepository implements IIbcChecklistVinculoReposi
 function toVinculoDto(row: VinculoComRelacoes): IbcChecklistVinculoDto {
   return {
     checklistModeloId: row.checklistModeloId,
+    situacao: "ENTRADA_PATIO",
     nome: row.checklistModelo.nome,
     ativo: row.checklistModelo.ativo,
     vinculadoEm: row.vinculadoEm.toISOString(),

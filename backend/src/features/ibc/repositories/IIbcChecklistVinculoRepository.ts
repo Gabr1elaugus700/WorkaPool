@@ -3,6 +3,7 @@ import { IbcChecklistVinculoDto } from "../types/IbcChecklist.types";
 export type CreateIbcChecklistVinculoData = {
   ibcId: string;
   checklistModeloId: string;
+  situacao: "ENTRADA_PATIO";
   vinculadoPorId: string;
 };
 

@@ -79,6 +79,7 @@ async function createChecklist(nome: string, ativo = true) {
 
 type VinculoBody = {
   checklistModeloId: string;
+  situacao: "ENTRADA_PATIO";
   nome: string;
   ativo: boolean;
   vinculadoEm: string;
@@ -122,6 +123,7 @@ describe("IBC checklist vínculos HTTP persistence (#277)", () => {
     assert.deepEqual(response.body as VinculoBody[], [
       {
         checklistModeloId: estrutural.id,
+        situacao: "ENTRADA_PATIO",
         nome: `${FIXTURE_PREFIX}A Estrutural`,
         ativo: false,
         vinculadoEm: vinculadoEm.toISOString(),
@@ -129,6 +131,7 @@ describe("IBC checklist vínculos HTTP persistence (#277)", () => {
       },
       {
         checklistModeloId: soda.id,
+        situacao: "ENTRADA_PATIO",
         nome: `${FIXTURE_PREFIX}B Soda`,
         ativo: true,
         vinculadoEm: vinculadoEm.toISOString(),
@@ -190,6 +193,7 @@ describe("IBC checklist vínculos HTTP persistence (#277)", () => {
 
     assert.equal(created.status, 201);
     assert.equal(created.body.checklistModeloId, soda.id);
+    assert.equal(created.body.situacao, "ENTRADA_PATIO");
     assert.equal(created.body.nome, `${FIXTURE_PREFIX}Soda`);
     assert.equal(created.body.ativo, true);
     assert.deepEqual(created.body.vinculadoPor, { id: ana.id, nome: "Ana Almox" });

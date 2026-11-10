@@ -34,10 +34,14 @@ export type IbcChecklistElegibilidade = {
   ativo: boolean;
 };
 
-export type IbcChecklistVinculoDto = {
+export type IbcChecklistPadraoDto = {
   checklistModeloId: string;
   nome: string;
   ativo: boolean;
   vinculadoEm: string;
   vinculadoPor: { id: string; nome: string };
+};
+
+export type IbcChecklistVinculoDto = IbcChecklistPadraoDto & {
+  situacao: "ENTRADA_PATIO";
 };

@@ -34,6 +34,7 @@ model User {
   alocacoesIbc                AlocacaoIbc[]   @relation("AlocacaoIbcAlocadoPor")
   expedicoesIbcFechadasPor    ExpedicaoIbc[]  @relation("ExpedicaoIbcFechadoPor")
   ibcChecklistVinculos        IbcChecklistVinculo[] @relation("IbcChecklistVinculoVinculadoPor")
+  ibcChecklistPadroes         IbcChecklistPadrao[]  @relation("IbcChecklistPadraoVinculadoPor")
   ibcInspecoes                IbcInspecao[]         @relation("IbcInspecaoInspetor")
   entradasPatioAbertas        EntradaPatioIbc[]     @relation("EntradaPatioAbertaPor")
   entradasPatioConcluidas     EntradaPatioIbc[]     @relation("EntradaPatioConcluidaPor")
@@ -220,7 +221,8 @@ model IbcProduto {
   universal   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  ibcs        Ibc[]
+  ibcs            Ibc[]
+  checklistPadroes IbcChecklistPadrao[]
 }
 
 model IbcConversionHistory {
@@ -597,6 +599,10 @@ enum ChecklistTipo {
   IBC
 }
 
+enum IbcChecklistSituacao {
+  ENTRADA_PATIO
+}
+
 model ChecklistModelo {
   id                   String                @id @default(uuid())
   nome                 String
@@ -611,22 +617,39 @@ model ChecklistModelo {
   itens                ChecklistModeloItem[]
   vistorias            ChecklistVistoria[]
   ibcVinculos          IbcChecklistVinculo[]
+  ibcPadroes           IbcChecklistPadrao[]
   ibcInspecoes         IbcInspecao[]
 
   @@index([tipo])
 }
 
 model IbcChecklistVinculo {
-  id                String          @id @default(uuid())
+  id                String               @id @default(uuid())
   ibcId             String
   checklistModeloId String
+  situacao          IbcChecklistSituacao @default(ENTRADA_PATIO)
   vinculadoPorId    String
-  vinculadoEm       DateTime        @default(now())
-  ibc               Ibc             @relation(fields: [ibcId], references: [id])
-  checklistModelo   ChecklistModelo @relation(fields: [checklistModeloId], references: [id])
-  vinculadoPor      User            @relation("IbcChecklistVinculoVinculadoPor", fields: [vinculadoPorId], references: [id], onDelete: Restrict)
+  vinculadoEm       DateTime             @default(now())
+  ibc               Ibc                  @relation(fields: [ibcId], references: [id])
+  checklistModelo   ChecklistModelo      @relation(fields: [checklistModeloId], references: [id])
+  vinculadoPor      User                 @relation("IbcChecklistVinculoVinculadoPor", fields: [vinculadoPorId], references: [id], onDelete: Restrict)
 
   @@unique([ibcId, checklistModeloId])
+  @@index([checklistModeloId])
+}
+
+model IbcChecklistPadrao {
+  id                String               @id @default(uuid())
+  produtoId         String
+  checklistModeloId String
+  situacao          IbcChecklistSituacao @default(ENTRADA_PATIO)
+  vinculadoPorId    String
+  vinculadoEm       DateTime             @default(now())
+  produto           IbcProduto           @relation(fields: [produtoId], references: [id])
+  checklistModelo   ChecklistModelo      @relation(fields: [checklistModeloId], references: [id])
+  vinculadoPor      User                 @relation("IbcChecklistPadraoVinculadoPor", fields: [vinculadoPorId], references: [id], onDelete: Restrict)
+
+  @@unique([produtoId, checklistModeloId, situacao])
   @@index([checklistModeloId])
 }
 
