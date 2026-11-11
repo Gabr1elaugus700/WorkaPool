@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import prismaInstance from "../../../config/prisma";
 import { IbcProdutoRecord } from "../types/IbcCadastro.types";
+import { PlacaGrupoPaleta } from "../types/IbcExpedicao.types";
 import { IIbcProdutoRepository } from "./IIbcProdutoRepository";
 
 export type IbcProdutoConfigRecord = {
@@ -52,6 +53,25 @@ export class IbcProdutoRepository implements IIbcProdutoRepository, IIbcProdutoC
   async findByGrupoCodigo(grupoCodigo: string): Promise<IbcProdutoConfigRecord | null> {
     const row = await this.prisma.ibcProduto.findUnique({ where: { grupoCodigo }, include: configInclude });
     return row && !row.universal ? toConfig(row) : null;
+  }
+
+  async listPlacasGrupos(
+    grupos: readonly string[],
+  ): Promise<PlacaGrupoPaleta[]> {
+    const codigos = [...new Set(grupos.map((grupo) => grupo.trim()).filter((grupo) => grupo.length > 0))];
+    if (codigos.length === 0) return [];
+    const rows = await this.prisma.ibcProduto.findMany({
+      where: { universal: false, grupoCodigo: { in: codigos }, sigla: { not: null } },
+      select: { grupoCodigo: true, sigla: true, corHex: true },
+    });
+    return rows.flatMap((row) => {
+      if (!row.grupoCodigo || !row.sigla) return [];
+      return [{
+        grupoCodigo: row.grupoCodigo,
+        sigla: row.sigla.toUpperCase(),
+        corHex: row.corHex.toUpperCase(),
+      }];
+    });
   }
 
   async listGruposConfigurados(grupos: readonly string[]): Promise<string[]> {

@@ -17,6 +17,34 @@ export type IbcRecord = {
   grupoCodigo: string | null;
 };
 
+/** Leitura de placa para a paleta da Preparação. */
+export type IbcPlacaPaleta = {
+  identificador: string;
+  prefixo: string | null;
+  universal: boolean;
+  grupoCodigo: string | null;
+  corHex: string | null;
+};
+
+export type IbcVinculadoPaleta = IbcPlacaPaleta & {
+  alocacaoId: string;
+};
+
+/** Candidato ainda não filtrado pela compatibilidade e pela data limite. */
+export type IbcCandidatoPaleta = IbcPlacaPaleta & {
+  aptidao: IbcAptidaoValue;
+  custodia: IbcCustodiaValue;
+  dataLimite: Date | null;
+  baixadoEm: Date | null;
+  convertedToContainerId: string | null;
+};
+
+export type PlacaGrupoPaleta = {
+  grupoCodigo: string;
+  sigla: string;
+  corHex: string;
+};
+
 /** Produto do container já em viagem, para a compatibilidade na volta. */
 export type IbcParaCompatibilidade = {
   id: string;
