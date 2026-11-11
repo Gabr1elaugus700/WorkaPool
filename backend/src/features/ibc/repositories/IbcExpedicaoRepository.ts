@@ -12,13 +12,37 @@ import {
   ExpedicaoIbcRecord,
   FecharExpedicaoIbcData,
   IbcCustodiaValue,
+  IbcCandidatoPaleta,
   IbcParaCompatibilidade,
+  IbcPlacaPaleta,
   IbcRecord,
+  IbcVinculadoPaleta,
 } from "../types/IbcExpedicao.types";
 
 const produtoCompatInclude = {
   produto: { select: { universal: true, grupoCodigo: true } },
 } as const;
+
+const ibcPlacaSelect = {
+  identificador: true,
+  prefixo: true,
+  produto: { select: { universal: true, grupoCodigo: true, corHex: true } },
+} as const;
+
+function toPlacaPaleta(ibc: {
+  identificador: string;
+  prefixo: string | null;
+  produto: { universal: boolean; grupoCodigo: string | null; corHex: string } | null;
+}): IbcPlacaPaleta {
+  const universal = ibc.produto?.universal === true;
+  return {
+    identificador: ibc.identificador,
+    prefixo: ibc.prefixo,
+    universal,
+    grupoCodigo: universal ? null : (ibc.produto?.grupoCodigo ?? null),
+    corHex: ibc.produto?.corHex.toUpperCase() ?? null,
+  };
+}
 
 type AlocacaoRow = {
   id: string;
@@ -176,6 +200,47 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
       orderBy: { alocadoEm: "asc" },
     });
     return alocacoes.map((row) => this.toAlocacaoRecord(row));
+  }
+
+  async listVinculadosPaleta(cargaId: string): Promise<IbcVinculadoPaleta[]> {
+    const alocacoes = await this.prisma.alocacaoIbc.findMany({
+      where: { cargaId, encerradaEm: null },
+      orderBy: { alocadoEm: "asc" },
+      include: { ibc: { select: ibcPlacaSelect } },
+    });
+    return alocacoes.map((row) => ({
+      alocacaoId: row.id,
+      ...toPlacaPaleta(row.ibc),
+    }));
+  }
+
+  async listCandidatosPaleta(): Promise<IbcCandidatoPaleta[]> {
+    const rows = await this.prisma.ibc.findMany({
+      where: {
+        baixadoEm: null,
+        aptidao: "APTO",
+        custodia: "PATIO",
+        convertedToContainerId: null,
+        alocacoes: { none: { encerradaEm: null } },
+      },
+      select: {
+        ...ibcPlacaSelect,
+        aptidao: true,
+        custodia: true,
+        dataLimite: true,
+        baixadoEm: true,
+        convertedToContainerId: true,
+      },
+      orderBy: { identificador: "asc" },
+    });
+    return rows.map((row) => ({
+      ...toPlacaPaleta(row),
+      aptidao: row.aptidao,
+      custodia: row.custodia,
+      dataLimite: row.dataLimite,
+      baixadoEm: row.baixadoEm,
+      convertedToContainerId: row.convertedToContainerId,
+    }));
   }
 
   async listCompatibilidadePorIds(ids: readonly string[]): Promise<IbcParaCompatibilidade[]> {
