@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ibcExpedicaoService } from "../services/ibcExpedicaoService";
+import { containersCargaQueryKey } from "./useContainersCarga";
 import type { CargaExpedicaoDetalheDTO } from "../types/ibcExpedicao.types";
 import { IbcAlocacaoRequestError } from "../utils/ibcAlocacaoError";
 import { ibcProdutoCompatibilidade } from "../utils/ibcProdutoCompatibilidade";
@@ -19,6 +21,8 @@ export function useCargaExpedicaoDetalhe(codCar: number | null, enabled: boolean
   const [substituidoNotice, setSubstituidoNotice] = useState<SubstituidoNotice | null>(null);
   const [deallocatingId, setDeallocatingId] = useState<string | null>(null);
   const [fechando, setFechando] = useState(false);
+  const [anuncio, setAnuncio] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const carregar = useCallback(async () => {
     if (codCar == null) {
@@ -57,6 +61,8 @@ export function useCargaExpedicaoDetalhe(codCar: number | null, enabled: boolean
         toast.warning(ibcProdutoCompatibilidade.textoAvisos(avisos), { duration: 8000 });
       }
       await carregar();
+      await queryClient.invalidateQueries({ queryKey: containersCargaQueryKey(codCar) });
+      setAnuncio(`${identificador} vinculado à carga`);
       return true;
     } catch (err) {
       if (err instanceof IbcAlocacaoRequestError && err.title) {
@@ -73,9 +79,14 @@ export function useCargaExpedicaoDetalhe(codCar: number | null, enabled: boolean
   const desvincular = async (alocacaoId: string) => {
     setDeallocatingId(alocacaoId);
     try {
+      const identificador = detalhe?.alocacoes.find((item) => item.id === alocacaoId)?.identificador;
       await ibcExpedicaoService.removeAlocacao(alocacaoId);
       toast.success("IBC desvinculado");
       await carregar();
+      if (codCar != null) {
+        await queryClient.invalidateQueries({ queryKey: containersCargaQueryKey(codCar) });
+      }
+      setAnuncio(`${identificador ?? "Container"} desvinculado da carga`);
     } catch (err) {
       toast.error(toError(err).message);
     } finally {
@@ -105,6 +116,7 @@ export function useCargaExpedicaoDetalhe(codCar: number | null, enabled: boolean
     substituidoNotice,
     deallocatingId,
     fechando,
+    anuncio,
     vincular,
     desvincular,
     fecharExpedicao,

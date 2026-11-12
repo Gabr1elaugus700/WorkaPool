@@ -13,6 +13,19 @@ type Props = {
   onSelect?: () => void;
 };
 
+function rotuloAcessivel(
+  container: ContainerPaletaDTO,
+  estado: EstadoChipContainer,
+  desabilitado: boolean,
+  motivoBloqueio: string | undefined,
+): string {
+  const partes = [container.identificador];
+  if (estado === "vinculado" || estado === "estatico") partes.push("Vinculado");
+  if (!container.homologado) partes.push("Não homologado");
+  if (desabilitado && motivoBloqueio) partes.push(motivoBloqueio);
+  return partes.join(", ");
+}
+
 export default function IbcContainerChip({
   container,
   estado,
@@ -21,6 +34,7 @@ export default function IbcContainerChip({
   onSelect,
 }: Props) {
   const cor = ibcPlacaCadastro.cor(container.corHex);
+  const rotulo = rotuloAcessivel(container, estado, desabilitado, motivoBloqueio);
   const classe = cn(
     "inline-flex max-w-full items-center gap-1.5 rounded-md border border-border px-2 py-1 text-left text-sm font-medium text-foreground",
     estado === "disponivel" && "opacity-50",
@@ -43,7 +57,7 @@ export default function IbcContainerChip({
 
   if (estado === "estatico") {
     return (
-      <span className={classe} style={estilo}>
+      <span className={classe} style={estilo} aria-label={rotulo}>
         {conteudo}
       </span>
     );
@@ -56,6 +70,7 @@ export default function IbcContainerChip({
       style={estilo}
       disabled={desabilitado}
       aria-disabled={desabilitado || undefined}
+      aria-label={rotulo}
       onClick={onSelect}
     >
       {conteudo}

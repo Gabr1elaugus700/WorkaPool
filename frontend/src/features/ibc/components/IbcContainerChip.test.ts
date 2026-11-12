@@ -39,6 +39,7 @@ describe("IbcContainerChip", () => {
     });
 
     assert.match(markup, /Vinculado/);
+    assert.match(markup, /aria-label="HMCL1, Vinculado"/);
     assert.doesNotMatch(markup, /opacity-50/);
   });
 
@@ -70,6 +71,7 @@ describe("IbcContainerChip", () => {
     });
 
     assert.match(markup, /Não homologado/);
+    assert.match(markup, /aria-label="NHCL1, Não homologado"/);
     assert.match(markup, /bg-muted/);
   });
 });
