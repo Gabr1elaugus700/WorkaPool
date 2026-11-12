@@ -1,19 +1,21 @@
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { SubstituidoNotice } from "../hooks/useCargaExpedicaoDetalhe";
-import type { AlocacaoIbcDTO, CargaExpedicaoDetalheDTO, PedidoIbcPreparacaoDTO } from "../types/ibcExpedicao.types";
+import type { CargaExpedicaoDetalheDTO, ContainersCargaDTO, PedidoIbcPreparacaoDTO } from "../types/ibcExpedicao.types";
 import { ibcProdutoCompatibilidade } from "../utils/ibcProdutoCompatibilidade";
 import { separarPedidosForaDaSoma } from "../utils/pedidosForaDaSoma";
-import AllocateIbcForm from "./AllocateIbcForm";
-import DeallocateIbcButton from "./DeallocateIbcButton";
+import CargaIbcContainersPaleta from "./CargaIbcContainersPaleta";
 import PedidoIbcProgress from "./PedidoIbcProgress";
 
 type Props = {
   detalhe: CargaExpedicaoDetalheDTO;
   mutationsLocked: boolean;
-  allocating: boolean;
-  deallocatingId: string | null;
   substituidoNotice: SubstituidoNotice | null;
+  paleta: ContainersCargaDTO | null;
+  paletaCarregando: boolean;
+  paletaErro: string | null;
+  anuncio: string | null;
+  onRecarregarPaleta: () => void;
   onAllocate: (identificador: string) => Promise<boolean>;
   onDeallocate: (alocacaoId: string) => Promise<void>;
 };
@@ -25,12 +27,6 @@ function percentualVinculado(alocado: number, esperado: number): number {
   return Math.min(100, Math.round((alocado / esperado) * 100));
 }
 
-function ordenarVinculos(alocacoes: readonly AlocacaoIbcDTO[]): AlocacaoIbcDTO[] {
-  return [...alocacoes].sort((a, b) =>
-    a.identificador.localeCompare(b.identificador, "pt-BR", { numeric: true }),
-  );
-}
-
 function rotuloPedido(pedido: PedidoIbcPreparacaoDTO): string {
   return pedido.cliente ? `Pedido ${pedido.numPed} · ${pedido.cliente}` : `Pedido ${pedido.numPed}`;
 }
@@ -38,9 +34,12 @@ function rotuloPedido(pedido: PedidoIbcPreparacaoDTO): string {
 export default function CargaIbcPreparacaoEtapa({
   detalhe,
   mutationsLocked,
-  allocating,
-  deallocatingId,
   substituidoNotice,
+  paleta,
+  paletaCarregando,
+  paletaErro,
+  anuncio,
+  onRecarregarPaleta,
   onAllocate,
   onDeallocate,
 }: Props) {
@@ -51,9 +50,6 @@ export default function CargaIbcPreparacaoEtapa({
   const percentual = percentualVinculado(alocado, esperado);
   const noTeto = esperado > 0 && alocado >= esperado;
   const semEsperado = esperado <= 0;
-  const formDisabled = semEsperado || noTeto;
-  const vinculados = ordenarVinculos(detalhe.alocacoes);
-
   return (
     <section aria-label="Containers da carga" className="space-y-4">
       {mistos.length > 0 ? (
@@ -133,51 +129,24 @@ export default function CargaIbcPreparacaoEtapa({
             <p className="text-sm text-muted-foreground">Expedição fechada. Os vínculos são só consulta.</p>
           ) : semEsperado ? (
             <p className="text-sm text-muted-foreground">Não há quantidade esperada para vincular nesta carga.</p>
-          ) : noTeto ? (
-            <p className="text-sm font-medium text-foreground">
-              A quantidade esperada da carga já está vinculada.
-            </p>
           ) : null}
         </div>
 
-        {vinculados.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {mutationsLocked
-              ? "Nenhum container vinculado."
-              : "Nenhum container vinculado. Informe o identificador para incluir na carga."}
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {vinculados.map((alocacao) => (
-              <li key={alocacao.id}>
-                {mutationsLocked ? (
-                  <span className="inline-flex rounded-md border border-border bg-muted/30 px-3 py-1.5 font-mono text-sm font-medium text-foreground">
-                    {alocacao.identificador}
-                  </span>
-                ) : (
-                  <DeallocateIbcButton
-                    identificador={alocacao.identificador}
-                    loading={deallocatingId === alocacao.id}
-                    onDeallocate={() => {
-                      void onDeallocate(alocacao.id);
-                    }}
-                  />
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {mutationsLocked ? null : (
-          <AllocateIbcForm
-            inputId="ibc-identificador-carga"
-            disabled={formDisabled}
-            submitting={allocating}
-            invalid={substituidoNotice != null}
-            describedBy={substituidoNotice ? NOTICE_ID : undefined}
-            onSubmit={onAllocate}
-          />
-        )}
+        <CargaIbcContainersPaleta
+          paleta={paleta}
+          carregando={paletaCarregando}
+          erro={paletaErro}
+          mutationsLocked={mutationsLocked}
+          noTeto={noTeto}
+          anuncio={anuncio}
+          onRecarregar={onRecarregarPaleta}
+          onVincular={(identificador) => {
+            void onAllocate(identificador);
+          }}
+          onDesvincular={(alocacaoId) => {
+            void onDeallocate(alocacaoId);
+          }}
+        />
 
         {substituidoNotice ? (
           <Alert variant="destructive" id={NOTICE_ID}>
