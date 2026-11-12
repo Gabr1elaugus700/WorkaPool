@@ -22,24 +22,28 @@ function html(props: React.ComponentProps<typeof IbcContainerChip>): string {
 }
 
 describe("IbcContainerChip", () => {
-  it("mostra o disponível opaco como botão na cor da placa", () => {
+  it("mostra o disponível com fundo claro e borda forte na cor da placa", () => {
     const markup = html({ container: container(), estado: "disponivel", onSelect: () => undefined });
 
     assert.match(markup, /<button/);
-    assert.match(markup, /opacity-50/);
+    assert.match(markup, /rounded-md/);
+    assert.doesNotMatch(markup, /rounded-full/);
+    assert.match(markup, /background-color:#00AA002E/);
+    assert.match(markup, /border-color:#00AA00E6/);
     assert.match(markup, /HMCL1/);
-    assert.match(markup, /#00AA00/);
+    assert.doesNotMatch(markup, /opacity-50/);
+    assert.doesNotMatch(markup, /bg-background\/90/);
   });
 
-  it("marca o vinculado com texto acessível e cor cheia", () => {
+  it("marca o vinculado com o check antes do código", () => {
     const markup = html({
       container: container({ alocacaoId: "aloc-1" }),
       estado: "vinculado",
       onSelect: () => undefined,
     });
 
-    assert.match(markup, /Vinculado/);
     assert.match(markup, /aria-label="HMCL1, Vinculado"/);
+    assert.ok(markup.indexOf("<svg") < markup.indexOf(">HMCL1<"));
     assert.doesNotMatch(markup, /opacity-50/);
   });
 
@@ -63,15 +67,31 @@ describe("IbcContainerChip", () => {
     assert.match(markup, /A carga já está no teto/);
   });
 
-  it("rotula o container não homologado", () => {
+  it("pinta o não homologado com a cor da placa NH e borda tracejada", () => {
+    const markup = html({
+      container: container({ identificador: "NH00001", homologado: false, universal: true, grupoCodigo: null, corHex: "#FF5F11" }),
+      estado: "disponivel",
+      onSelect: () => undefined,
+    });
+
+    assert.match(markup, /Não homologado/);
+    assert.match(markup, /aria-label="NH00001, Não homologado"/);
+    assert.match(markup, /border-dashed/);
+    assert.match(markup, /background-color:#FF5F112E/);
+    assert.match(markup, /border-color:#FF5F11E6/);
+    assert.match(markup, /background-color:#FF5F1138/);
+    assert.doesNotMatch(markup, /bg-muted/);
+  });
+
+  it("deixa o não homologado sem placa com borda tracejada neutra", () => {
     const markup = html({
       container: container({ identificador: "NHCL1", homologado: false, corHex: null }),
       estado: "disponivel",
       onSelect: () => undefined,
     });
 
-    assert.match(markup, /Não homologado/);
-    assert.match(markup, /aria-label="NHCL1, Não homologado"/);
-    assert.match(markup, /bg-muted/);
+    assert.match(markup, /border-dashed/);
+    assert.match(markup, /border-border/);
+    assert.doesNotMatch(markup, /border-color:/);
   });
 });

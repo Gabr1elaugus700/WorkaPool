@@ -55,7 +55,7 @@ function detalhe(overrides: Partial<CargaExpedicaoDetalheDTO> = {}): CargaExpedi
 
 function paletaDaCarga(item: CargaExpedicaoDetalheDTO): ContainersCargaDTO {
   return {
-    grupos: [{ grupoCodigo: "CLORO", sigla: "CL", corHex: "#00aa00" }],
+    grupos: [{ grupoCodigo: "CLORO", sigla: "CL", corHex: "#00aa00", grupoDescricao: "Hipoclorito" }],
     vinculados: item.alocacoes.map((alocacao) => ({
       identificador: alocacao.identificador,
       alocacaoId: alocacao.id,
@@ -113,7 +113,14 @@ describe("CargaIbcPreparacaoEtapa", () => {
     assert.match(markup, /Na carga/);
     assert.match(markup, /aria-label="H2, Vinculado"/);
     assert.match(markup, /Buscar mais containers/);
-    assert.match(markup, /CLORO/);
+    assert.match(markup, /w-full/);
+    assert.match(markup, /border-dashed/);
+    assert.match(markup, /hover:border-primary/);
+    assert.match(markup, /hover:bg-primary\/10/);
+    assert.match(markup, /hover:text-primary/);
+    assert.match(markup, /focus-visible:border-primary/);
+    assert.match(markup, /tabular-nums text-foreground/);
+    assert.match(markup, /CLORO · CL Hipoclorito/);
     assert.doesNotMatch(markup, /ibc-identificador-carga/);
     assert.doesNotMatch(markup, /Pedido 1120/);
     assert.doesNotMatch(markup, /Venda:/);
@@ -144,12 +151,37 @@ describe("CargaIbcPreparacaoEtapa", () => {
     assert.doesNotMatch(markup, /Empréstimo:/);
   });
 
-  it("desabilita os disponíveis quando a soma da carga já foi vinculada", () => {
-    const markup = html(detalhe({ quantidadeAlocada: 2, quantidadeEsperadaTotal: 2 }));
+  it("recolhe a paleta quando a quantidade esperada está completa", () => {
+    const um = html(detalhe({
+      quantidadeAlocada: 1,
+      quantidadeEsperadaTotal: 1,
+      alocacoes: [alocacao("a1", "H2")],
+    }));
 
-    assert.match(markup, /já está vinculada/);
-    assert.match(markup, /disabled/);
-    assert.match(markup, /A quantidade esperada da carga já está vinculada/);
+    assert.match(um, /A quantidade esperada da carga está completa\. Toque no container vinculado para trocá-lo\./);
+    assert.match(um, /<button[^>]*aria-label="H2, Vinculado"/);
+    assert.match(um, /width:100%/);
+    assert.match(um, /tabular-nums text-foreground/);
+    assert.doesNotMatch(um, /já está vinculada/);
+    assert.doesNotMatch(um, /Buscar mais containers/);
+    assert.doesNotMatch(um, /H20/);
+    assert.doesNotMatch(um, /text-emerald-700/);
+
+    const varios = html(detalhe({ quantidadeAlocada: 2, quantidadeEsperadaTotal: 2 }));
+    assert.match(varios, /Toque em um container vinculado para trocá-lo\./);
+  });
+
+  it("deixa a barra vazia e o contador muted quando nada está vinculado", () => {
+    const markup = html(detalhe({
+      quantidadeAlocada: 0,
+      quantidadeEsperadaTotal: 1,
+      alocacoes: [],
+    }));
+
+    assert.match(markup, /0\/1/);
+    assert.match(markup, /width:0%/);
+    assert.match(markup, /tabular-nums text-muted-foreground/);
+    assert.match(markup, /bg-primary/);
   });
 
   it("alerta o pedido inválido e esconde vincular e desvincular com a expedição fechada", () => {
@@ -173,6 +205,7 @@ describe("CargaIbcPreparacaoEtapa", () => {
     assert.match(markup, /Pedido IBC inválido fora do total/);
     assert.match(markup, /Pedido 1121/);
     assert.match(markup, /Os vínculos são só consulta/);
+    assert.doesNotMatch(markup, /está completa/);
     assert.doesNotMatch(markup, /Buscar mais containers/);
     assert.doesNotMatch(markup, /H20/);
     assert.match(markup, /<span[^>]*aria-label="H2, Vinculado"/);

@@ -1,15 +1,14 @@
 import { useState } from "react";
+import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ContainerPaletaDTO, ContainersCargaDTO } from "../types/ibcExpedicao.types";
-import { containersCarga, type SecaoContainersCarga } from "../utils/containersCarga";
+import { containersCarga } from "../utils/containersCarga";
 import BuscarContainersDialog from "./BuscarContainersDialog";
 import CargaIbcSecaoContainers from "./CargaIbcSecaoContainers";
 import IbcContainerChip from "./IbcContainerChip";
 
 /** Duas linhas de chips por seção antes de abrir a busca. */
 const CHIPS_VISIVEIS_POR_SECAO = 8;
-
-const MOTIVO_TETO = "A quantidade esperada da carga já está vinculada.";
 
 type Props = {
   paleta: ContainersCargaDTO | null;
@@ -22,13 +21,6 @@ type Props = {
   onVincular: (identificador: string) => void;
   onDesvincular: (alocacaoId: string) => void;
 };
-
-function secaoVisivel(secao: SecaoContainersCarga): SecaoContainersCarga {
-  return {
-    ...secao,
-    containers: containersCarga.limitarVisiveis(secao.containers, CHIPS_VISIVEIS_POR_SECAO).visiveis,
-  };
-}
 
 function FaixaVinculados({
   vinculados,
@@ -81,8 +73,8 @@ export default function CargaIbcContainersPaleta({
 }: Props) {
   const [buscaAberta, setBuscaAberta] = useState(false);
   const [termo, setTermo] = useState("");
-  const motivoTeto = noTeto ? MOTIVO_TETO : undefined;
   const secoes = paleta == null ? [] : containersCarga.agruparDisponiveis(paleta);
+  const mostrarDisponiveis = !mutationsLocked && !noTeto;
 
   return (
     <div className="space-y-4">
@@ -105,7 +97,7 @@ export default function CargaIbcContainersPaleta({
             estatico={mutationsLocked}
             onDesvincular={onDesvincular}
           />
-          {mutationsLocked ? null : (
+          {mostrarDisponiveis ? (
             <>
               {secoes.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nenhum container disponível para esta carga.</p>
@@ -113,16 +105,20 @@ export default function CargaIbcContainersPaleta({
                 secoes.map((secao) => (
                   <CargaIbcSecaoContainers
                     key={secao.tipo === "grupo" ? secao.grupoCodigo : secao.tipo}
-                    secao={secaoVisivel(secao)}
+                    secao={secao}
+                    limite={CHIPS_VISIVEIS_POR_SECAO}
                     estado="disponivel"
-                    desabilitado={noTeto}
-                    motivoBloqueio={motivoTeto}
                     onSelect={(container) => onVincular(container.identificador)}
                   />
                 ))
               )}
-              {noTeto ? <p className="text-sm font-medium text-foreground">{MOTIVO_TETO}</p> : null}
-              <Button type="button" variant="outline" size="sm" onClick={() => setBuscaAberta(true)}>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full border-dashed border-border bg-transparent text-foreground hover:border-primary hover:bg-primary/10 hover:text-primary focus-visible:border-primary focus-visible:bg-primary/10 focus-visible:text-primary"
+                onClick={() => setBuscaAberta(true)}
+              >
+                <Search aria-hidden />
                 Buscar mais containers
               </Button>
               <BuscarContainersDialog
@@ -131,13 +127,12 @@ export default function CargaIbcContainersPaleta({
                 paleta={paleta}
                 termo={termo}
                 onTermoChange={setTermo}
-                noTeto={noTeto}
-                motivoTeto={motivoTeto}
+                noTeto={false}
                 onVincular={onVincular}
                 onVincularCodigo={onVincular}
               />
             </>
-          )}
+          ) : null}
         </>
       )}
     </div>
