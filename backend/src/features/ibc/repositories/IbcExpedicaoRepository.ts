@@ -12,9 +12,11 @@ import {
   ExpedicaoIbcRecord,
   FecharExpedicaoIbcData,
   IbcCustodiaValue,
+  IbcPaletaFonte,
   IbcParaCompatibilidade,
   IbcRecord,
 } from "../types/IbcExpedicao.types";
+import { isHomologadoPrefixo, resolveIbcPrefixo } from "../services/getIbcIdentifierPrefix";
 
 const produtoCompatInclude = {
   produto: { select: { universal: true, grupoCodigo: true } },
@@ -176,6 +178,38 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
       orderBy: { alocadoEm: "asc" },
     });
     return alocacoes.map((row) => this.toAlocacaoRecord(row));
+  }
+
+  async listIbcsParaPaleta(): Promise<IbcPaletaFonte[]> {
+    const rows = await this.prisma.ibc.findMany({
+      where: { baixadoEm: null },
+      include: {
+        produto: { select: { universal: true, grupoCodigo: true, corHex: true } },
+        alocacoes: {
+          where: { encerradaEm: null },
+          select: { id: true, cargaId: true },
+          take: 1,
+        },
+      },
+      orderBy: { identificador: "asc" },
+    });
+    return rows.map((row) => {
+      const prefixo = resolveIbcPrefixo(row);
+      const aberta = row.alocacoes[0];
+      return {
+        id: row.id,
+        identificador: row.identificador,
+        aptidao: row.aptidao,
+        custodia: row.custodia,
+        dataLimite: row.dataLimite,
+        convertedToContainerId: row.convertedToContainerId,
+        universal: row.produto?.universal === true,
+        grupoCodigo: row.produto?.universal ? null : (row.produto?.grupoCodigo ?? null),
+        corHex: row.produto?.corHex ?? null,
+        homologado: prefixo != null && isHomologadoPrefixo(prefixo),
+        alocacaoAberta: aberta ? { id: aberta.id, cargaId: aberta.cargaId } : null,
+      };
+    });
   }
 
   async listCompatibilidadePorIds(ids: readonly string[]): Promise<IbcParaCompatibilidade[]> {
