@@ -44,6 +44,7 @@ export type PlacaGrupoPaleta = {
   grupoCodigo: string;
   sigla: string;
   corHex: string;
+  grupoDescricao: string | null;
 };
 
 export type AlocacaoIbcRecord = {

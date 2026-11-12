@@ -26,9 +26,19 @@ export type ContainersCargaDTO = {
   disponiveis: ContainerPaletaDTO[];
 };
 
+type PlacaConfigurada = Omit<PlacaGrupoPaleta, "grupoDescricao">;
+
 export type PlacasDaCargaLookup = GruposConfiguradosLookup & {
-  listPlacas(grupos: readonly string[]): Promise<readonly PlacaGrupoPaleta[]>;
+  listPlacas(grupos: readonly string[]): Promise<readonly PlacaConfigurada[]>;
+  listDescricoes(
+    grupos: readonly string[],
+  ): Promise<readonly { grupoCodigo: string; grupoDescricao: string | null }[]>;
 };
+
+function descricaoDoCatalogo(valor: string | null | undefined): string | null {
+  const nome = valor?.trim() ?? "";
+  return nome.length > 0 ? nome : null;
+}
 
 function paraDto(ibc: IbcPaletaFonte, alocacaoId: string | null): ContainerPaletaDTO {
   return {
@@ -78,13 +88,23 @@ export class ListContainersCargaUseCase {
     const { IbcProdutoRepository } = require("../repositories/IbcProdutoRepository") as {
       IbcProdutoRepository: new () => {
         listGruposConfigurados(grupos: readonly string[]): Promise<string[]>;
-        listPlacasDeGrupos(grupos: readonly string[]): Promise<PlacaGrupoPaleta[]>;
+        listPlacasDeGrupos(grupos: readonly string[]): Promise<PlacaConfigurada[]>;
+      };
+    };
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { ProdutoGrupoCatalogoRepository } = require("../repositories/ProdutoGrupoCatalogoRepository") as {
+      ProdutoGrupoCatalogoRepository: new () => {
+        listDescricoes(
+          grupos: readonly string[],
+        ): Promise<{ grupoCodigo: string; grupoDescricao: string }[]>;
       };
     };
     const repo = new IbcProdutoRepository();
+    const catalogo = new ProdutoGrupoCatalogoRepository();
     return {
       listGruposConfigurados: (grupos) => repo.listGruposConfigurados(grupos),
       listPlacas: (grupos) => repo.listPlacasDeGrupos(grupos),
+      listDescricoes: (grupos) => catalogo.listDescricoes(grupos),
     };
   }
 
@@ -107,11 +127,23 @@ export class ListContainersCargaUseCase {
       }
     }
 
-    const placasDosGrupos = await placas.listPlacas(compat.gruposPermitidos);
+    const [placasDosGrupos, descricoes] = await Promise.all([
+      placas.listPlacas(compat.gruposPermitidos),
+      placas.listDescricoes(compat.gruposPermitidos),
+    ]);
     const porCodigo = new Map(placasDosGrupos.map((placa) => [placa.grupoCodigo, placa]));
+    const nomePorCodigo = new Map(
+      descricoes.map((item) => [item.grupoCodigo, descricaoDoCatalogo(item.grupoDescricao)]),
+    );
     const grupos = compat.gruposPermitidos.flatMap((codigo) => {
       const placa = porCodigo.get(codigo);
-      return placa ? [placa] : [];
+      if (!placa) return [];
+      return [{
+        grupoCodigo: placa.grupoCodigo,
+        sigla: placa.sigla,
+        corHex: placa.corHex,
+        grupoDescricao: nomePorCodigo.get(codigo) ?? null,
+      }];
     });
 
     return { grupos, vinculados, disponiveis };
