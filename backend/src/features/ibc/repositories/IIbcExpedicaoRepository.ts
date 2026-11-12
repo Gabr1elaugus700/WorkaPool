@@ -7,6 +7,7 @@ import {
   CreateAlocacaoIbcData,
   ExpedicaoIbcRecord,
   FecharExpedicaoIbcData,
+  IbcPaletaFonte,
   IbcParaCompatibilidade,
   IbcRecord,
 } from "../types/IbcExpedicao.types";
@@ -21,6 +22,7 @@ export interface IIbcExpedicaoRepository {
   findAlocacaoByIbcId(ibcId: string): Promise<AlocacaoIbcRecord | null>;
   findAlocacaoById(id: string): Promise<AlocacaoIbcRecord | null>;
   listAlocacoesByCargaId(cargaId: string): Promise<AlocacaoIbcRecord[]>;
+  listIbcsParaPaleta(): Promise<IbcPaletaFonte[]>;
   listCompatibilidadePorIds(ids: readonly string[]): Promise<IbcParaCompatibilidade[]>;
   findExpedicaoByCargaId(cargaId: string): Promise<ExpedicaoIbcRecord | null>;
   findPlacaByCargaId(cargaId: string): Promise<string | null>;
