@@ -8,6 +8,7 @@ import {
   PlacaGrupoPaleta,
 } from "../../../../../src/features/ibc/types/IbcExpedicao.types";
 import {
+  DescricoesGrupoLookup,
   ListContainersCargaUseCase,
   PlacasGrupoLookup,
 } from "../../../../../src/features/ibc/useCases/ListContainersCarga.use-case";
@@ -73,6 +74,7 @@ function executar(input: {
   candidatos?: IbcCandidatoPaleta[];
   configurados?: string[];
   placas?: PlacaGrupoPaleta[];
+  descricoes?: { grupoCodigo: string; grupoDescricao: string | null }[];
 }) {
   const repo = {
     getCargaByCodCar: async () => carga(),
@@ -90,7 +92,10 @@ function executar(input: {
       corHex: "#112233",
     }],
   };
-  return new ListContainersCargaUseCase(repo, grupos, placas, () => AGORA).execute({
+  const descricoes: DescricoesGrupoLookup = {
+    listDescricoes: async () => input.descricoes ?? [{ grupoCodigo: "G1", grupoDescricao: "Hipoclorito" }],
+  };
+  return new ListContainersCargaUseCase(repo, grupos, placas, () => AGORA, descricoes).execute({
     codCar: COD_CAR,
   });
 }
@@ -111,7 +116,12 @@ describe("ListContainersCargaUseCase", () => {
       ],
     });
 
-    assert.deepEqual(paleta.grupos, [{ grupoCodigo: "G1", sigla: "AB", corHex: "#112233" }]);
+    assert.deepEqual(paleta.grupos, [{
+      grupoCodigo: "G1",
+      sigla: "AB",
+      corHex: "#112233",
+      grupoDescricao: "Hipoclorito",
+    }]);
     assert.deepEqual(paleta.vinculados, [{
       identificador: "HMAB0009",
       alocacaoId: "aloc-1",
@@ -159,5 +169,13 @@ describe("ListContainersCargaUseCase", () => {
     });
 
     assert.deepEqual(paleta.disponiveis, []);
+  });
+
+  it("omite o nome do grupo quando o catálogo não tem descrição", async () => {
+    const emBranco = await executar({ descricoes: [{ grupoCodigo: "G1", grupoDescricao: "   " }] });
+    assert.equal(emBranco.grupos[0]?.grupoDescricao, null);
+
+    const ausente = await executar({ descricoes: [] });
+    assert.equal(ausente.grupos[0]?.grupoDescricao, null);
   });
 });

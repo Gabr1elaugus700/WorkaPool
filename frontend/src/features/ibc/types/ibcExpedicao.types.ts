@@ -65,6 +65,31 @@ export type CargaExpedicaoDetalheDTO = CargaExpedicaoResumoDTO & {
   avisos: AvisoPedidoGrupoSemConfigDTO[];
 };
 
+/** Container da paleta. GET /api/ibc/cargas-expedicao/:codCar/containers */
+export type ContainerPaletaDTO = {
+  identificador: string;
+  alocacaoId: string | null;
+  grupoCodigo: string | null;
+  corHex: string | null;
+  universal: boolean;
+  homologado: boolean;
+};
+
+/** Placa configurada para um grupo da carga. */
+export type PlacaGrupoPaletaDTO = {
+  grupoCodigo: string;
+  sigla: string;
+  corHex: string;
+  grupoDescricao: string | null;
+};
+
+/** GET /api/ibc/cargas-expedicao/:codCar/containers */
+export type ContainersCargaDTO = {
+  grupos: PlacaGrupoPaletaDTO[];
+  vinculados: ContainerPaletaDTO[];
+  disponiveis: ContainerPaletaDTO[];
+};
+
 /** Envelope opcional de GET /cargas-expedicao */
 export type ListCargasExpedicaoResponseDTO = {
   cargas: CargaExpedicaoListItemDTO[];

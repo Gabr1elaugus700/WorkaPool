@@ -12,19 +12,26 @@ import { isIbcCompativelComGrupos } from "../services/isIbcCompativelComGrupos";
 import { AppError } from "../../../utils/AppError";
 import { isDataLimiteDue } from "../utils/ibcDataLimite";
 import {
+  GrupoPaleta,
   IbcCandidatoPaleta,
   PlacaGrupoPaleta,
 } from "../types/IbcExpedicao.types";
 import { loadCargaFotoExpedicao } from "./loadCargaFotoExpedicao";
 
 export type ContainersCargaPaleta = {
-  grupos: PlacaGrupoPaleta[];
+  grupos: GrupoPaleta[];
   vinculados: ContainerPaletaDto[];
   disponiveis: ContainerPaletaDto[];
 };
 
 export type PlacasGrupoLookup = {
   listPlacasGrupos(grupos: readonly string[]): Promise<readonly PlacaGrupoPaleta[]>;
+};
+
+export type DescricoesGrupoLookup = {
+  listDescricoes(
+    grupos: readonly string[],
+  ): Promise<readonly { grupoCodigo: string; grupoDescricao: string | null }[]>;
 };
 
 export type ListContainersCargaInput = {
@@ -44,22 +51,30 @@ function candidatoDisponivel(
   return isIbcCompativelComGrupos(ibc, gruposPermitidos);
 }
 
+function descricaoDoCatalogo(valor: string | null | undefined): string | null {
+  const nome = valor?.trim() ?? "";
+  return nome.length > 0 ? nome : null;
+}
+
 export class ListContainersCargaUseCase {
   private readonly repository: IIbcExpedicaoRepository;
   private grupos?: GruposConfiguradosLookup;
   private readonly placas: PlacasGrupoLookup;
   private readonly now: () => Date;
+  private readonly descricoes: DescricoesGrupoLookup;
 
   constructor(
     repository?: IIbcExpedicaoRepository,
     grupos?: GruposConfiguradosLookup,
     placas?: PlacasGrupoLookup,
     now?: () => Date,
+    descricoes?: DescricoesGrupoLookup,
   ) {
     this.repository = repository ?? this.createDefaultRepository();
     this.grupos = grupos;
     this.placas = placas ?? this.createDefaultPlacas();
     this.now = now ?? (() => new Date());
+    this.descricoes = descricoes ?? this.createDefaultDescricoes();
   }
 
   private resolveGrupos(): GruposConfiguradosLookup {
@@ -84,6 +99,12 @@ export class ListContainersCargaUseCase {
     return new IbcProdutoRepository();
   }
 
+  private createDefaultDescricoes(): DescricoesGrupoLookup {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { ProdutoGrupoCatalogoRepository } = require("../repositories/ProdutoGrupoCatalogoRepository");
+    return new ProdutoGrupoCatalogoRepository();
+  }
+
   async execute(input: ListContainersCargaInput): Promise<ContainersCargaPaleta> {
     const { codCar } = input;
     if (codCar == null || Number.isNaN(Number(codCar))) {
@@ -106,11 +127,18 @@ export class ListContainersCargaUseCase {
       carregarCompatibilidadeDePedidos(pedidosIbc, this.resolveGrupos()),
     ]);
 
-    const placas = await this.placas.listPlacasGrupos(compat.gruposPermitidos);
+    const [placas, descricoes] = await Promise.all([
+      this.placas.listPlacasGrupos(compat.gruposPermitidos),
+      this.descricoes.listDescricoes(compat.gruposPermitidos),
+    ]);
     const porCodigo = new Map(placas.map((placa) => [placa.grupoCodigo, placa]));
-    const grupos = compat.gruposPermitidos.flatMap((codigo) => {
+    const nomePorCodigo = new Map(
+      descricoes.map((item) => [item.grupoCodigo, descricaoDoCatalogo(item.grupoDescricao)]),
+    );
+    const grupos = compat.gruposPermitidos.flatMap((codigo): GrupoPaleta[] => {
       const placa = porCodigo.get(codigo);
-      return placa ? [placa] : [];
+      if (!placa) return [];
+      return [{ ...placa, grupoDescricao: nomePorCodigo.get(codigo) ?? null }];
     });
 
     const agora = this.now();

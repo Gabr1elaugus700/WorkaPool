@@ -45,6 +45,11 @@ export type PlacaGrupoPaleta = {
   corHex: string;
 };
 
+/** Cabeçalho do grupo na paleta. Sem descrição no catálogo, fica nulo. */
+export type GrupoPaleta = PlacaGrupoPaleta & {
+  grupoDescricao: string | null;
+};
+
 /** Produto do container já em viagem, para a compatibilidade na volta. */
 export type IbcParaCompatibilidade = {
   id: string;

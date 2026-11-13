@@ -5,6 +5,7 @@ import type {
   CargaEmViagemListItemDTO,
   CargaExpedicaoDetalheDTO,
   CargaExpedicaoListItemDTO,
+  ContainersCargaDTO,
   CreateAlocacaoIbcInput,
   CreateAlocacaoIbcResultDTO,
   FecharExpedicaoIbcInput,
@@ -42,6 +43,12 @@ export const ibcExpedicaoService = {
   ): Promise<CargaExpedicaoDetalheDTO> => {
     return apiFetchJson<CargaExpedicaoDetalheDTO>(
       `/api/ibc/cargas-expedicao/${encodeURIComponent(String(codCar))}`,
+    );
+  },
+
+  getContainersCarga: async (codCar: number): Promise<ContainersCargaDTO> => {
+    return apiFetchJson<ContainersCargaDTO>(
+      `/api/ibc/cargas-expedicao/${encodeURIComponent(String(codCar))}/containers`,
     );
   },
 

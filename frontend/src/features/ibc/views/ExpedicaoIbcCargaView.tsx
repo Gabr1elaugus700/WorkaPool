@@ -14,6 +14,7 @@ import IbcPageHeader from "../components/IbcPageHeader";
 import IbcPageStatus from "../components/IbcPageStatus";
 import IbcStatusContent from "../components/IbcStatusContent";
 import { useCargaExpedicaoDetalhe } from "../hooks/useCargaExpedicaoDetalhe";
+import { useContainersCarga } from "../hooks/useContainersCarga";
 import { useConciliacaoViagem } from "../hooks/useConciliacaoViagem";
 import { canAccessExpedicaoIbc } from "../utils/canAccessExpedicaoIbc";
 import { cargaIbcEtapa } from "../utils/cargaIbcEtapa";
@@ -38,6 +39,7 @@ export default function ExpedicaoIbcCargaView() {
   const [expedicaoFechadaNaCarga, setExpedicaoFechadaNaCarga] = useState<number | null>(null);
 
   const carga = useCargaExpedicaoDetalhe(codCar, allowed);
+  const paleta = useContainersCarga(codCar);
   const temExpedicao = carga.detalhe?.temExpedicao ?? false;
   const conciliacao = useConciliacaoViagem(codCar, allowed && temExpedicao, () =>
     navigate("/expedicao-ibc/em-viagem"),
@@ -149,9 +151,14 @@ export default function ExpedicaoIbcCargaView() {
         <CargaIbcPreparacaoEtapa
           detalhe={detalhe}
           mutationsLocked={temExpedicao}
-          allocating={carga.allocating}
-          deallocatingId={carga.deallocatingId}
           substituidoNotice={carga.substituidoNotice}
+          paleta={paleta.data ?? null}
+          paletaCarregando={paleta.isLoading}
+          paletaErro={paleta.error instanceof Error ? paleta.error.message : null}
+          anuncio={carga.anuncio}
+          onRecarregarPaleta={() => {
+            void paleta.refetch();
+          }}
           onAllocate={carga.vincular}
           onDeallocate={carga.desvincular}
         />
