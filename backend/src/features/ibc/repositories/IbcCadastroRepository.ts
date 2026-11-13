@@ -136,6 +136,12 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
           include: placaInclude,
           orderBy: { sequencial: "asc" },
         });
+        await this.copiarChecklistPadrao(
+          tx,
+          rows.map((row) => row.id),
+          data.produtoId,
+          data.autorId,
+        );
         return rows.map((row) => this.toRecord(row));
       }),
     );
@@ -197,6 +203,7 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
             corNova: data.placa.corNova,
           },
         });
+        await this.copiarChecklistPadrao(tx, [created.id], data.produtoId, data.actorId);
 
         return this.toRecord(created);
       }),
@@ -323,6 +330,31 @@ export class IbcCadastroRepository implements IIbcCadastroRepository {
       _max: { sequencial: true },
     });
     return (result._max.sequencial ?? 0) + 1;
+  }
+
+  /** Snapshot do padrão ativo da Entrada no pátio: mudar o padrão depois não reescreve estas linhas. */
+  private async copiarChecklistPadrao(
+    tx: Prisma.TransactionClient,
+    ibcIds: string[],
+    produtoId: string | null,
+    autorId: string,
+  ): Promise<void> {
+    if (!produtoId || ibcIds.length === 0) return;
+    const padroes = await tx.ibcChecklistPadrao.findMany({
+      where: { produtoId, situacao: "ENTRADA_PATIO", checklistModelo: { ativo: true } },
+      select: { checklistModeloId: true },
+    });
+    if (padroes.length === 0) return;
+    await tx.ibcChecklistVinculo.createMany({
+      data: ibcIds.flatMap((ibcId) =>
+        padroes.map(({ checklistModeloId }) => ({
+          ibcId,
+          checklistModeloId,
+          situacao: "ENTRADA_PATIO" as const,
+          vinculadoPorId: autorId,
+        })),
+      ),
+    });
   }
 
   private async withUniqueGuard<T>(

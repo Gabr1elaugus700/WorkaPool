@@ -1,40 +1,19 @@
 /**
- * Arquivo centralizador do Prisma Client
- * Usa o client correto baseado no NODE_ENV
- *
- * - development: usa src/generated/prisma-dev
- * - production: usa @prisma/client
+ * Prisma Client único, gerado a partir de prisma/schema.prisma.
  */
 
-import { PrismaClient as ProductionPrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from '@prisma/client';
 
-const isDevelopment = process.env.NODE_ENV === "development";
+let prismaInstance: PrismaClient | null = null;
 
-type PrismaClientConstructor = new (
-  ...args: ConstructorParameters<typeof ProductionPrismaClient>
-) => ProductionPrismaClient;
-
-const loadPrismaClientConstructor = (): PrismaClientConstructor => {
-  if (isDevelopment) {
-    const devPrisma = require("../generated/prisma-dev") as {
-      PrismaClient: PrismaClientConstructor;
-    };
-    return devPrisma.PrismaClient;
-  }
-
-  return ProductionPrismaClient;
-};
-
-let prismaInstance: ProductionPrismaClient | null = null;
-
-export function getPrismaClient(): ProductionPrismaClient {
+export function getPrismaClient(): PrismaClient {
   if (!prismaInstance) {
-    const PrismaClient = loadPrismaClientConstructor();
     prismaInstance = new PrismaClient({
-      log: ["error"],
+      log: ['error'],
     });
   }
   return prismaInstance;
 }
 
+export { PrismaClient, Prisma };
 export default getPrismaClient();

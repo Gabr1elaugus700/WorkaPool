@@ -54,6 +54,7 @@ export type CreateNovoIbcData = {
   primeiraInspecaoEm: null;
   loteId?: string | null;
   produtoId: string;
+  autorId: string;
 };
 
 export type IbcProdutoRecord = {

@@ -17,34 +17,45 @@ export type IbcRecord = {
   grupoCodigo: string | null;
 };
 
-/** Produto do container já em viagem, para a compatibilidade na volta. */
-export type IbcParaCompatibilidade = {
-  id: string;
+/** Leitura de placa para a paleta da Preparação. */
+export type IbcPlacaPaleta = {
   identificador: string;
-  universal: boolean;
-  grupoCodigo: string | null;
-};
-
-/** IBC ativo com a alocação aberta, se houver, para a paleta da preparação. */
-export type IbcPaletaFonte = {
-  id: string;
-  identificador: string;
-  aptidao: IbcAptidaoValue;
-  custodia: IbcCustodiaValue;
-  dataLimite: Date | null;
-  convertedToContainerId: string | null;
+  prefixo: string | null;
   universal: boolean;
   grupoCodigo: string | null;
   corHex: string | null;
-  homologado: boolean;
-  alocacaoAberta: { id: string; cargaId: string } | null;
+};
+
+export type IbcVinculadoPaleta = IbcPlacaPaleta & {
+  alocacaoId: string;
+};
+
+/** Candidato ainda não filtrado pela compatibilidade e pela data limite. */
+export type IbcCandidatoPaleta = IbcPlacaPaleta & {
+  aptidao: IbcAptidaoValue;
+  custodia: IbcCustodiaValue;
+  dataLimite: Date | null;
+  baixadoEm: Date | null;
+  convertedToContainerId: string | null;
 };
 
 export type PlacaGrupoPaleta = {
   grupoCodigo: string;
   sigla: string;
   corHex: string;
+};
+
+/** Cabeçalho do grupo na paleta. Sem descrição no catálogo, fica nulo. */
+export type GrupoPaleta = PlacaGrupoPaleta & {
   grupoDescricao: string | null;
+};
+
+/** Produto do container já em viagem, para a compatibilidade na volta. */
+export type IbcParaCompatibilidade = {
+  id: string;
+  identificador: string;
+  universal: boolean;
+  grupoCodigo: string | null;
 };
 
 export type AlocacaoIbcRecord = {

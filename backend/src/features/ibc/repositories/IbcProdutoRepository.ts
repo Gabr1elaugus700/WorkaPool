@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import prismaInstance from "../../../config/prisma";
 import { IbcProdutoRecord } from "../types/IbcCadastro.types";
+import { PlacaGrupoPaleta } from "../types/IbcExpedicao.types";
 import { IIbcProdutoRepository } from "./IIbcProdutoRepository";
 
 export type IbcProdutoConfigRecord = {
@@ -54,19 +55,9 @@ export class IbcProdutoRepository implements IIbcProdutoRepository, IIbcProdutoC
     return row && !row.universal ? toConfig(row) : null;
   }
 
-  async listGruposConfigurados(grupos: readonly string[]): Promise<string[]> {
-    const codigos = [...new Set(grupos.map((grupo) => grupo.trim()).filter((grupo) => grupo.length > 0))];
-    if (codigos.length === 0) return [];
-    const rows = await this.prisma.ibcProduto.findMany({
-      where: { universal: false, grupoCodigo: { in: codigos }, sigla: { not: null } },
-      select: { grupoCodigo: true },
-    });
-    return rows.flatMap((row) => (row.grupoCodigo ? [row.grupoCodigo] : []));
-  }
-
-  async listPlacasDeGrupos(
+  async listPlacasGrupos(
     grupos: readonly string[],
-  ): Promise<{ grupoCodigo: string; sigla: string; corHex: string }[]> {
+  ): Promise<PlacaGrupoPaleta[]> {
     const codigos = [...new Set(grupos.map((grupo) => grupo.trim()).filter((grupo) => grupo.length > 0))];
     if (codigos.length === 0) return [];
     const rows = await this.prisma.ibcProduto.findMany({
@@ -81,6 +72,16 @@ export class IbcProdutoRepository implements IIbcProdutoRepository, IIbcProdutoC
         corHex: row.corHex.toUpperCase(),
       }];
     });
+  }
+
+  async listGruposConfigurados(grupos: readonly string[]): Promise<string[]> {
+    const codigos = [...new Set(grupos.map((grupo) => grupo.trim()).filter((grupo) => grupo.length > 0))];
+    if (codigos.length === 0) return [];
+    const rows = await this.prisma.ibcProduto.findMany({
+      where: { universal: false, grupoCodigo: { in: codigos }, sigla: { not: null } },
+      select: { grupoCodigo: true },
+    });
+    return rows.flatMap((row) => (row.grupoCodigo ? [row.grupoCodigo] : []));
   }
 
   async findUniversal(): Promise<IbcProdutoConfigRecord | null> {

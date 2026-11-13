@@ -1,0 +1,76 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { IbcChecklistSummaryDTO } from "../types/ibcChecklist.types";
+import { gestaoIbcSections } from "../utils/gestaoIbcSections";
+
+type Props = {
+  disponiveis: IbcChecklistSummaryDTO[];
+  hasChecklistAtivo: boolean;
+  submitting: boolean;
+  onIncluir: (checklistModeloId: string) => Promise<boolean>;
+};
+
+const SELECT_ID = "ibc-checklist-padrao-select";
+
+export default function IbcChecklistPadraoAdicionar({
+  disponiveis,
+  hasChecklistAtivo,
+  submitting,
+  onIncluir,
+}: Props) {
+  const [selecionado, setSelecionado] = useState("");
+
+  if (!hasChecklistAtivo || disponiveis.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        {hasChecklistAtivo ? (
+          "Todos os checklists ativos já estão no padrão."
+        ) : (
+          <>
+            Nenhum checklist de IBC ativo.{" "}
+            <Link to={gestaoIbcSections.path("checklists")} className="font-medium text-primary underline-offset-4 hover:underline">
+              Cadastre um checklist
+            </Link>
+            .
+          </>
+        )}
+      </p>
+    );
+  }
+
+  const valorAtual = disponiveis.some((checklist) => checklist.id === selecionado) ? selecionado : "";
+
+  return (
+    <form
+      className="flex flex-col gap-2 sm:flex-row sm:items-end"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        if (valorAtual && (await onIncluir(valorAtual))) setSelecionado("");
+      }}
+    >
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <Label htmlFor={SELECT_ID} className="text-xs">
+          Incluir checklist
+        </Label>
+        <Select value={valorAtual} onValueChange={setSelecionado} disabled={submitting}>
+          <SelectTrigger id={SELECT_ID}>
+            <SelectValue placeholder="Selecione um checklist" />
+          </SelectTrigger>
+          <SelectContent>
+            {disponiveis.map((checklist) => (
+              <SelectItem key={checklist.id} value={checklist.id}>
+                {checklist.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <Button type="submit" disabled={!valorAtual || submitting}>
+        {submitting ? "Incluindo…" : "Incluir"}
+      </Button>
+    </form>
+  );
+}

@@ -23,6 +23,7 @@ export type CreateLoteIbcInput = {
   numeroNf?: string | null;
   homologado: boolean;
   grupoCodigo?: string | null;
+  autorId: string;
 };
 
 export type LoteSaldoWarning =
@@ -121,6 +122,7 @@ export class CreateLoteIbcUseCase {
           primeiraInspecaoEm: null,
           loteId: lote.id,
           produtoId: produto.produtoId,
+          autorId: input.autorId,
         },
         quantidade,
       )

@@ -111,6 +111,7 @@ describe("CreateNovoIbcUseCase", () => {
     const repo: RepoMock = { createNovoIbcs: createNovoIbcsFrom(8) };
     const result = await buildUseCase(repo).execute({
       dataLimite: FUTURE_DATA_LIMITE,
+      autorId: "user-ana",
       homologado: true,
       grupoCodigo: "01",
     });
@@ -132,6 +133,7 @@ describe("CreateNovoIbcUseCase", () => {
     const createNovoIbcs = createNovoIbcsFrom(1);
     await buildUseCase({ createNovoIbcs }, lookups({ grupo: sodaLonga })).execute({
       dataLimite: FUTURE_DATA_LIMITE,
+      autorId: "user-ana",
       homologado: true,
       grupoCodigo: "02",
     });
@@ -141,11 +143,24 @@ describe("CreateNovoIbcUseCase", () => {
     assert.equal(quantidade, 1);
   });
 
+  it("passes the author of the cadastro to the repository, for the checklist copy", async () => {
+    const createNovoIbcs = createNovoIbcsFrom(1);
+    await buildUseCase({ createNovoIbcs }).execute({
+      dataLimite: FUTURE_DATA_LIMITE,
+      autorId: "user-ana",
+      homologado: true,
+      grupoCodigo: "01",
+    });
+
+    assert.equal(createNovoIbcs.mock.calls[0].arguments[0].autorId, "user-ana");
+  });
+
   it("create rejects a past data limite", async () => {
     const createNovoIbcs = createNovoIbcsFrom(1);
     const error = await codigoDe(() =>
       buildUseCase({ createNovoIbcs }).execute({
         dataLimite: PAST_DATA_LIMITE,
+        autorId: "user-ana",
         homologado: true,
         grupoCodigo: "01",
       }),
@@ -160,6 +175,7 @@ describe("CreateNovoIbcUseCase", () => {
     const error = await codigoDe(() =>
       buildUseCase({ createNovoIbcs }).execute({
         dataLimite: FUTURE_DATA_LIMITE,
+        autorId: "user-ana",
         homologado: true,
       }),
     );
@@ -172,6 +188,7 @@ describe("CreateNovoIbcUseCase", () => {
     const createNovoIbcs = createNovoIbcsFrom(1);
     const result = await buildUseCase({ createNovoIbcs }).execute({
       dataLimite: FUTURE_DATA_LIMITE,
+      autorId: "user-ana",
       homologado: false,
     });
 
@@ -190,16 +207,19 @@ describe("CreateNovoIbcUseCase", () => {
     const useCase = buildUseCase({ createNovoIbcs });
     const nhs = await useCase.execute({
       dataLimite: FUTURE_DATA_LIMITE,
+      autorId: "user-ana",
       homologado: false,
       grupoCodigo: "01",
     });
     const nh = await useCase.execute({
       dataLimite: FUTURE_DATA_LIMITE,
+      autorId: "user-ana",
       homologado: false,
       grupoCodigo: null,
     });
     const nhsDeNovo = await useCase.execute({
       dataLimite: FUTURE_DATA_LIMITE,
+      autorId: "user-ana",
       homologado: false,
       grupoCodigo: " 01 ",
     });
@@ -224,6 +244,7 @@ describe("CreateNovoIbcUseCase", () => {
       const error = await codigoDe(() =>
         buildUseCase({ createNovoIbcs }, deps).execute({
           dataLimite: FUTURE_DATA_LIMITE,
+          autorId: "user-ana",
           homologado: true,
           grupoCodigo: "01",
         }),
@@ -239,6 +260,7 @@ describe("CreateNovoIbcUseCase", () => {
     const error = await codigoDe(() =>
       buildUseCase({ createNovoIbcs }, lookups({ universal: null })).execute({
         dataLimite: FUTURE_DATA_LIMITE,
+        autorId: "user-ana",
         homologado: false,
       }),
     );

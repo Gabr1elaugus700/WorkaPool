@@ -6,6 +6,7 @@ import ExpedicaoIbcAccessDeniedAlert from "../components/ExpedicaoIbcAccessDenie
 import CadastroIbcSectionError from "../components/CadastroIbcSectionError";
 import CadastroIbcSectionSkeleton from "../components/CadastroIbcSectionSkeleton";
 import GestaoIbcHeader from "../components/GestaoIbcHeader";
+import IbcChecklistPadraoDialog, { type IbcChecklistPadraoAlvo } from "../components/IbcChecklistPadraoDialog";
 import IbcProdutoConfigLista, { type IbcProdutoConfigAlvo } from "../components/IbcProdutoConfigLista";
 import IbcProdutoConfigModal, { type IbcProdutoConfigEdicao } from "../components/IbcProdutoConfigModal";
 import { useIbcProdutoConfig } from "../hooks/useIbcProdutoConfig";
@@ -18,6 +19,7 @@ export default function IbcProdutoConfigView() {
   const canWrite = canWriteIbcCadastro(user?.role);
   const config = useIbcProdutoConfig(allowed);
   const [alvo, setAlvo] = useState<IbcProdutoConfigAlvo | null>(null);
+  const [padrao, setPadrao] = useState<IbcChecklistPadraoAlvo | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const lista = config.query.data;
   const fechar = () => { setAlvo(null); setErro(null); };
@@ -40,7 +42,19 @@ export default function IbcProdutoConfigView() {
         {config.query.isLoading ? <CadastroIbcSectionSkeleton rows={6} /> : config.query.error ? (
           <CadastroIbcSectionError message={toError(config.query.error).message} onRetry={() => { void config.query.refetch(); }} />
         ) : lista ? (
-          <IbcProdutoConfigLista lista={lista} canWrite={canWrite} onEditar={(next) => { setErro(null); setAlvo(next); }} />
+          <IbcProdutoConfigLista
+            lista={lista}
+            canWrite={canWrite}
+            onEditar={(next) => { setErro(null); setAlvo(next); }}
+            onPadrao={(next) => {
+              if (next.tipo === "universal") {
+                setPadrao({ nome: "Universal", produtoId: lista.universal.id });
+                return;
+              }
+              const grupo = next.grupo;
+              setPadrao({ nome: grupo.grupoDescricao?.trim() || grupo.grupoCodigo, produtoId: grupo.id });
+            }}
+          />
         ) : null}
       </div>
       {canWrite && edicao ? (
@@ -61,6 +75,13 @@ export default function IbcProdutoConfigView() {
                 }
               }}
             />
+          </DialogContent>
+        </Dialog>
+      ) : null}
+      {padrao ? (
+        <Dialog open onOpenChange={(open) => { if (!open) setPadrao(null); }}>
+          <DialogContent className="max-w-md gap-5">
+            <IbcChecklistPadraoDialog alvo={padrao} canWrite={canWrite} onClose={() => setPadrao(null)} />
           </DialogContent>
         </Dialog>
       ) : null}

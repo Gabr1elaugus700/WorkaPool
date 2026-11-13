@@ -62,6 +62,13 @@ router.put(
   validate(ibcProdutoConfigSchemas.salvarGrupo),
   IbcController.saveProdutoGrupo,
 );
+router.get("/produtos/:produtoId/checklists", readAuth, IbcChecklistController.listPadroes);
+router.post("/produtos/:produtoId/checklists", writeAuth, IbcChecklistController.vincularPadrao);
+router.delete(
+  "/produtos/:produtoId/checklists/:checklistModeloId",
+  writeAuth,
+  IbcChecklistController.desvincularPadrao,
+);
 
 router.post(
   "/lote",
@@ -153,17 +160,17 @@ router.get(
 );
 
 router.get(
-  "/cargas-expedicao/:codCar/containers",
-  authMiddleware,
-  requireRoles(ibcReadRoles),
-  IbcController.listContainersCarga,
-);
-
-router.get(
   "/cargas-expedicao/:codCar",
   authMiddleware,
   requireRoles(ibcReadRoles),
   IbcController.getCargaExpedicaoDetail,
+);
+
+router.get(
+  "/cargas-expedicao/:codCar/containers",
+  authMiddleware,
+  requireRoles(ibcReadRoles),
+  IbcController.listContainersCarga,
 );
 
 router.post(

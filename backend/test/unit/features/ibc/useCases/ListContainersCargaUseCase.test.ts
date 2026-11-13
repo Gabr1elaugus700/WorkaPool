@@ -1,162 +1,181 @@
-import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 import { IIbcExpedicaoRepository } from "../../../../../src/features/ibc/repositories/IIbcExpedicaoRepository";
-import { PlacasDaCargaLookup, ListContainersCargaUseCase } from "../../../../../src/features/ibc/useCases/ListContainersCarga.use-case";
+import { GruposConfiguradosLookup } from "../../../../../src/features/ibc/services/carregarCompatibilidadeDePedidos";
+import {
+  IbcCandidatoPaleta,
+  IbcVinculadoPaleta,
+  PlacaGrupoPaleta,
+} from "../../../../../src/features/ibc/types/IbcExpedicao.types";
+import {
+  DescricoesGrupoLookup,
+  ListContainersCargaUseCase,
+  PlacasGrupoLookup,
+} from "../../../../../src/features/ibc/useCases/ListContainersCarga.use-case";
 import {
   CargaExpedicaoRef,
   CargaPedidoIbcSnapshot,
-  IbcPaletaFonte,
 } from "../../../../../src/features/ibc/types/IbcExpedicao.types";
 
 const CARGA_ID = "carga-1";
-const AGORA = new Date("2026-11-12T12:00:00.000Z");
+const COD_CAR = 101;
+const AGORA = new Date("2026-11-11T12:00:00.000Z");
 
-function carga(): CargaExpedicaoRef {
-  return {
-    id: CARGA_ID,
-    codCar: 383,
-    destino: "Teste",
-    situacao: "FECHADA",
-    previsaoSaida: AGORA,
-  };
-}
+const carga = (): CargaExpedicaoRef => ({
+  id: CARGA_ID,
+  codCar: COD_CAR,
+  destino: "Blumenau",
+  situacao: "FECHADA",
+  previsaoSaida: new Date("2026-11-12T10:00:00.000Z"),
+});
 
-function pedido(): CargaPedidoIbcSnapshot {
-  return {
-    numPed: "10",
-    codCli: "C1",
-    cliente: "Cliente",
-    quantidadeEsperadaTotal: 2,
-    quantidadeEsperadaVenda: 2,
-    quantidadeEsperadaEmprestimo: 0,
-    ibcInvalido: false,
-    posCar: null,
-    gruposCodigo: ["CLORO"],
-  };
-}
+const pedido = (): CargaPedidoIbcSnapshot => ({
+  numPed: "1120",
+  codCli: "C1",
+  cliente: "Cliente",
+  quantidadeEsperadaTotal: 2,
+  quantidadeEsperadaVenda: 2,
+  quantidadeEsperadaEmprestimo: 0,
+  ibcInvalido: false,
+  posCar: 1,
+  gruposCodigo: ["G1"],
+});
 
-function ibc(parcial: Partial<IbcPaletaFonte> & Pick<IbcPaletaFonte, "identificador">): IbcPaletaFonte {
-  return {
-    id: parcial.identificador,
-    aptidao: "APTO",
-    custodia: "PATIO",
-    dataLimite: new Date("2099-01-01T00:00:00.000Z"),
-    convertedToContainerId: null,
-    universal: false,
-    grupoCodigo: "CLORO",
-    corHex: "#00AA00",
-    homologado: true,
-    alocacaoAberta: null,
-    ...parcial,
-  };
-}
+const candidato = (
+  overrides: Partial<IbcCandidatoPaleta> = {},
+): IbcCandidatoPaleta => ({
+  identificador: "HMAB0001",
+  prefixo: "HMAB",
+  universal: false,
+  grupoCodigo: "G1",
+  corHex: "#112233",
+  aptidao: "APTO",
+  custodia: "PATIO",
+  dataLimite: new Date("2099-01-01T00:00:00.000Z"),
+  baixadoEm: null,
+  convertedToContainerId: null,
+  ...overrides,
+});
 
-function placas(): PlacasDaCargaLookup {
-  return {
-    async listGruposConfigurados(grupos) {
-      return grupos.filter((grupo) => grupo === "CLORO");
-    },
-    async listPlacas() {
-      return [{ grupoCodigo: "CLORO", sigla: "CL", corHex: "#00AA00" }];
-    },
-    async listDescricoes() {
-      return [{ grupoCodigo: "CLORO", grupoDescricao: "Hipoclorito" }];
-    },
-  };
-}
+const vinculado = (
+  overrides: Partial<IbcVinculadoPaleta> = {},
+): IbcVinculadoPaleta => ({
+  alocacaoId: "aloc-1",
+  identificador: "HMAB0009",
+  prefixo: "HMAB",
+  universal: false,
+  grupoCodigo: "G1",
+  corHex: "#112233",
+  ...overrides,
+});
 
-function repo(fontes: IbcPaletaFonte[]): Pick<
-  IIbcExpedicaoRepository,
-  "getCargaByCodCar" | "listPedidosIbcByCargaId" | "listIbcsParaPaleta"
-> {
-  return {
-    async getCargaByCodCar() {
-      return carga();
-    },
-    async listPedidosIbcByCargaId() {
-      return [pedido()];
-    },
-    async listIbcsParaPaleta() {
-      return fontes;
-    },
+function executar(input: {
+  vinculados?: IbcVinculadoPaleta[];
+  candidatos?: IbcCandidatoPaleta[];
+  configurados?: string[];
+  placas?: PlacaGrupoPaleta[];
+  descricoes?: { grupoCodigo: string; grupoDescricao: string | null }[];
+}) {
+  const repo = {
+    getCargaByCodCar: async () => carga(),
+    listPedidosIbcByCargaId: async () => [pedido()],
+    listVinculadosPaleta: async () => input.vinculados ?? [],
+    listCandidatosPaleta: async () => input.candidatos ?? [],
+  } as unknown as IIbcExpedicaoRepository;
+  const grupos: GruposConfiguradosLookup = {
+    listGruposConfigurados: async () => input.configurados ?? ["G1"],
   };
+  const placas: PlacasGrupoLookup = {
+    listPlacasGrupos: async () => input.placas ?? [{
+      grupoCodigo: "G1",
+      sigla: "AB",
+      corHex: "#112233",
+    }],
+  };
+  const descricoes: DescricoesGrupoLookup = {
+    listDescricoes: async () => input.descricoes ?? [{ grupoCodigo: "G1", grupoDescricao: "Hipoclorito" }],
+  };
+  return new ListContainersCargaUseCase(repo, grupos, placas, () => AGORA, descricoes).execute({
+    codCar: COD_CAR,
+  });
 }
 
 describe("ListContainersCargaUseCase", () => {
-  it("separa vinculados e disponíveis compatíveis e devolve a placa do grupo", async () => {
-    const resultado = await new ListContainersCargaUseCase(
-      repo([
-        ibc({ identificador: "HMCL1" }),
-        ibc({
-          identificador: "HMCL2",
-          alocacaoAberta: { id: "aloc-1", cargaId: CARGA_ID },
+  it("devolve vinculado, compatível de grupo, universal e o cabeçalho do grupo", async () => {
+    const paleta = await executar({
+      vinculados: [vinculado()],
+      candidatos: [
+        candidato({ identificador: "HMAB0001", prefixo: "HMAB", grupoCodigo: "G1", universal: false }),
+        candidato({
+          identificador: "NH0002",
+          prefixo: "NH",
+          grupoCodigo: null,
+          universal: true,
+          corHex: "#AABBCC",
         }),
-        ibc({ identificador: "NHCL1", homologado: false }),
-        ibc({ identificador: "NH1", universal: true, grupoCodigo: null, corHex: null, homologado: false }),
-      ]),
-      placas(),
-      AGORA,
-    ).execute(383);
+      ],
+    });
 
-    assert.deepEqual(resultado.grupos, [{
-      grupoCodigo: "CLORO",
-      sigla: "CL",
-      corHex: "#00AA00",
+    assert.deepEqual(paleta.grupos, [{
+      grupoCodigo: "G1",
+      sigla: "AB",
+      corHex: "#112233",
       grupoDescricao: "Hipoclorito",
     }]);
-    assert.deepEqual(resultado.vinculados.map((item) => item.identificador), ["HMCL2"]);
-    assert.equal(resultado.vinculados[0]?.alocacaoId, "aloc-1");
-    assert.deepEqual(resultado.disponiveis.map((item) => item.identificador), ["HMCL1", "NHCL1", "NH1"]);
+    assert.deepEqual(paleta.vinculados, [{
+      identificador: "HMAB0009",
+      alocacaoId: "aloc-1",
+      grupoCodigo: "G1",
+      corHex: "#112233",
+      universal: false,
+      homologado: true,
+    }]);
+    assert.deepEqual(
+      paleta.disponiveis.map((item) => item.identificador),
+      ["HMAB0001", "NH0002"],
+    );
+    assert.equal(paleta.disponiveis[0]?.alocacaoId, null);
+    assert.equal(paleta.disponiveis[0]?.homologado, true);
+    assert.equal(paleta.disponiveis[1]?.universal, true);
+    assert.equal(paleta.disponiveis[1]?.homologado, false);
+    assert.equal(paleta.disponiveis[1]?.grupoCodigo, null);
   });
 
-  it("deixa de fora inapto, outra custódia, substituído, alocado, legado e grupo incompatível", async () => {
-    const resultado = await new ListContainersCargaUseCase(
-      repo([
-        ibc({ identificador: "INAPTO", aptidao: "INAPTO" }),
-        ibc({ identificador: "VIAGEM", custodia: "EM_VIAGEM" }),
-        ibc({ identificador: "ENTRADA", custodia: "ENTRADA" }),
-        ibc({ identificador: "CLIENTE", custodia: "CLIENTE" }),
-        ibc({ identificador: "TROCADO", convertedToContainerId: "novo" }),
-        ibc({ identificador: "OUTRA", alocacaoAberta: { id: "aloc-x", cargaId: "outra" } }),
-        ibc({ identificador: "HM0001", grupoCodigo: null, universal: false, corHex: null }),
-        ibc({ identificador: "HMSD1", grupoCodigo: "SODA" }),
-        ibc({ identificador: "VENCIDO", dataLimite: new Date("2020-01-01T00:00:00.000Z") }),
-      ]),
-      placas(),
-      AGORA,
-    ).execute(383);
+  it("exclui legado HM####, grupo incompatível, inapto, data limite, custódia, baixa e substituição", async () => {
+    const paleta = await executar({
+      candidatos: [
+        candidato({ identificador: "HM0045", prefixo: "HM", grupoCodigo: null, universal: false }),
+        candidato({ identificador: "HMZZ0001", prefixo: "HMZZ", grupoCodigo: "OUTRO" }),
+        candidato({ identificador: "HMAB0002", prefixo: "HMAB", aptidao: "INAPTO" }),
+        candidato({
+          identificador: "HMAB0003",
+          prefixo: "HMAB",
+          dataLimite: new Date("2020-01-01T00:00:00.000Z"),
+        }),
+        candidato({ identificador: "HMAB0004", prefixo: "HMAB", custodia: "EM_VIAGEM" }),
+        candidato({ identificador: "HMAB0005", prefixo: "HMAB", custodia: "ENTRADA" }),
+        candidato({ identificador: "HMAB0006", prefixo: "HMAB", custodia: "CLIENTE" }),
+        candidato({
+          identificador: "HMAB0007",
+          prefixo: "HMAB",
+          baixadoEm: new Date("2026-01-01T00:00:00.000Z"),
+        }),
+        candidato({
+          identificador: "HMAB0008",
+          prefixo: "HMAB",
+          convertedToContainerId: "novo",
+        }),
+      ],
+    });
 
-    assert.deepEqual(resultado.disponiveis, []);
-    assert.deepEqual(resultado.vinculados, []);
+    assert.deepEqual(paleta.disponiveis, []);
   });
 
-  it("omite o nome quando o catálogo não tem descrição", async () => {
-    const emBranco = placas();
-    const lookup: PlacasDaCargaLookup = {
-      listGruposConfigurados: (grupos) => emBranco.listGruposConfigurados(grupos),
-      listPlacas: (grupos) => emBranco.listPlacas(grupos),
-      async listDescricoes() {
-        return [{ grupoCodigo: "CLORO", grupoDescricao: "   " }];
-      },
-    };
-    const comEspaco = await new ListContainersCargaUseCase(
-      repo([ibc({ identificador: "HMCL1" })]),
-      lookup,
-      AGORA,
-    ).execute(383);
-    assert.equal(comEspaco.grupos[0]?.grupoDescricao, null);
+  it("omite o nome do grupo quando o catálogo não tem descrição", async () => {
+    const emBranco = await executar({ descricoes: [{ grupoCodigo: "G1", grupoDescricao: "   " }] });
+    assert.equal(emBranco.grupos[0]?.grupoDescricao, null);
 
-    const ausente = await new ListContainersCargaUseCase(
-      repo([ibc({ identificador: "HMCL1" })]),
-      {
-        listGruposConfigurados: (grupos) => emBranco.listGruposConfigurados(grupos),
-        listPlacas: (grupos) => emBranco.listPlacas(grupos),
-        async listDescricoes() {
-          return [];
-        },
-      },
-      AGORA,
-    ).execute(383);
+    const ausente = await executar({ descricoes: [] });
     assert.equal(ausente.grupos[0]?.grupoDescricao, null);
   });
 });

@@ -74,6 +74,7 @@ export class IbcController {
         dataLimite: body.dataLimite,
         homologado: body.homologado,
         grupoCodigo: body.grupoCodigo,
+        autorId: requireActor(req).id,
       });
       return res.status(201).json(ibc);
     } catch (err: unknown) {
@@ -96,6 +97,7 @@ export class IbcController {
         numeroNf: body.numeroNf,
         homologado: body.homologado,
         grupoCodigo: body.grupoCodigo,
+        autorId: requireActor(req).id,
       });
       return res.status(201).json(result);
     } catch (err: unknown) {
@@ -277,7 +279,10 @@ export class IbcController {
     }
   }
 
-  static async listContainersCarga(req: Request, res: Response): Promise<Response> {
+  static async listContainersCarga(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
     try {
       const codCar = Number(req.params.codCar);
       if (!Number.isFinite(codCar)) {
@@ -286,10 +291,16 @@ export class IbcController {
           code: "IBC_COD_CAR_INVALID",
         });
       }
-      const paleta = await new ListContainersCargaUseCase().execute(codCar);
+
+      const useCase = new ListContainersCargaUseCase();
+      const paleta = await useCase.execute({ codCar });
       return res.status(200).json(paleta);
     } catch (err: unknown) {
-      return respondAppError(res, err, "Erro ao listar containers da carga");
+      return respondAppError(
+        res,
+        err,
+        "Erro ao listar containers da preparação IBC",
+      );
     }
   }
 

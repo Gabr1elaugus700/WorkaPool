@@ -3,13 +3,22 @@ import { formatIsoDateLabel } from "@/utils/formatDate";
 import type { IbcCadastroDTO } from "../types/ibcCadastro.types";
 import { ibcCadastroLabels } from "../utils/ibcCadastroLabels";
 import { ibcPlacaCadastro } from "../utils/ibcPlacaCadastro";
+import CadastroIbcDetalheChecklists from "./CadastroIbcDetalheChecklists";
 import IbcPlacaAmostra from "./IbcPlacaAmostra";
 
 const CUSTODIA: Record<IbcCadastroDTO["custodia"], string> = {
   PATIO: "Pátio", EM_VIAGEM: "Em viagem", ENTRADA: "Entrada no pátio", CLIENTE: "No cliente",
 };
 
-export default function CadastroIbcDetalhe({ ibc, produto }: { ibc: IbcCadastroDTO; produto: string | null }) {
+export default function CadastroIbcDetalhe({
+  ibc,
+  produto,
+  canWrite,
+}: {
+  ibc: IbcCadastroDTO;
+  produto: string | null;
+  canWrite: boolean;
+}) {
   const cor = ibcPlacaCadastro.cor(ibc.corHex);
   const linhas = [
     ["Produto", ibc.universal ? "Universal" : (produto ?? "Sem produto")],
@@ -38,6 +47,7 @@ export default function CadastroIbcDetalhe({ ibc, produto }: { ibc: IbcCadastroD
             </div>
           ))}
         </dl>
+        <CadastroIbcDetalheChecklists ibcId={ibc.id} canWrite={canWrite} />
       </SheetBody>
     </>
   );
