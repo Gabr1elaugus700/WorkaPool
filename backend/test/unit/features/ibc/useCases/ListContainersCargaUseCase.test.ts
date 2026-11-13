@@ -59,6 +59,9 @@ function placas(): PlacasDaCargaLookup {
     async listPlacas() {
       return [{ grupoCodigo: "CLORO", sigla: "CL", corHex: "#00AA00" }];
     },
+    async listDescricoes() {
+      return [{ grupoCodigo: "CLORO", grupoDescricao: "Hipoclorito" }];
+    },
   };
 }
 
@@ -95,7 +98,12 @@ describe("ListContainersCargaUseCase", () => {
       AGORA,
     ).execute(383);
 
-    assert.deepEqual(resultado.grupos, [{ grupoCodigo: "CLORO", sigla: "CL", corHex: "#00AA00" }]);
+    assert.deepEqual(resultado.grupos, [{
+      grupoCodigo: "CLORO",
+      sigla: "CL",
+      corHex: "#00AA00",
+      grupoDescricao: "Hipoclorito",
+    }]);
     assert.deepEqual(resultado.vinculados.map((item) => item.identificador), ["HMCL2"]);
     assert.equal(resultado.vinculados[0]?.alocacaoId, "aloc-1");
     assert.deepEqual(resultado.disponiveis.map((item) => item.identificador), ["HMCL1", "NHCL1", "NH1"]);
@@ -120,5 +128,35 @@ describe("ListContainersCargaUseCase", () => {
 
     assert.deepEqual(resultado.disponiveis, []);
     assert.deepEqual(resultado.vinculados, []);
+  });
+
+  it("omite o nome quando o catálogo não tem descrição", async () => {
+    const emBranco = placas();
+    const lookup: PlacasDaCargaLookup = {
+      listGruposConfigurados: (grupos) => emBranco.listGruposConfigurados(grupos),
+      listPlacas: (grupos) => emBranco.listPlacas(grupos),
+      async listDescricoes() {
+        return [{ grupoCodigo: "CLORO", grupoDescricao: "   " }];
+      },
+    };
+    const comEspaco = await new ListContainersCargaUseCase(
+      repo([ibc({ identificador: "HMCL1" })]),
+      lookup,
+      AGORA,
+    ).execute(383);
+    assert.equal(comEspaco.grupos[0]?.grupoDescricao, null);
+
+    const ausente = await new ListContainersCargaUseCase(
+      repo([ibc({ identificador: "HMCL1" })]),
+      {
+        listGruposConfigurados: (grupos) => emBranco.listGruposConfigurados(grupos),
+        listPlacas: (grupos) => emBranco.listPlacas(grupos),
+        async listDescricoes() {
+          return [];
+        },
+      },
+      AGORA,
+    ).execute(383);
+    assert.equal(ausente.grupos[0]?.grupoDescricao, null);
   });
 });

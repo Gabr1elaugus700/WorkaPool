@@ -18,7 +18,7 @@ function container(identificador: string, parcial: Partial<ContainerPaletaDTO> =
 }
 
 const paleta: ContainersCargaDTO = {
-  grupos: [{ grupoCodigo: "CLORO", sigla: "CL", corHex: "#00AA00" }],
+  grupos: [{ grupoCodigo: "CLORO", sigla: "CL", corHex: "#00AA00", grupoDescricao: null }],
   vinculados: [],
   disponiveis: [
     container("HMCL1"),
