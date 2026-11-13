@@ -3,8 +3,11 @@ import { after, afterEach, before, describe, it } from "node:test";
 import { JSDOM } from "jsdom";
 import React, { useState, type ComponentType } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter } from "react-router-dom";
 import type { IbcCadastroDTO } from "../types/ibcCadastro.types";
+import { useIbcChecklistVinculos } from "../hooks/useIbcChecklistVinculos";
 import type CadastroIbcPoolListType from "./CadastroIbcPoolList";
+import type IbcChecklistsVinculoDrawerType from "./IbcChecklistsVinculoDrawer";
 import type IbcInspecaoDrawerType from "./IbcInspecaoDrawer";
 import type IbcInspecoesDrawerType from "./IbcInspecoesDrawer";
 
@@ -88,11 +91,13 @@ describe("Gestão IBC Containers — fechar e reabrir painéis", () => {
   let CadastroIbcPoolList: typeof CadastroIbcPoolListType;
   let IbcInspecaoDrawer: typeof IbcInspecaoDrawerType;
   let IbcInspecoesDrawer: typeof IbcInspecoesDrawerType;
+  let IbcChecklistsVinculoDrawer: typeof IbcChecklistsVinculoDrawerType;
 
   before(async () => {
     installDomGlobals();
     rtl = await import("@testing-library/react");
     CadastroIbcPoolList = (await import("./CadastroIbcPoolList")).default;
+    IbcChecklistsVinculoDrawer = (await import("./IbcChecklistsVinculoDrawer")).default;
     IbcInspecaoDrawer = (await import("./IbcInspecaoDrawer")).default;
     IbcInspecoesDrawer = (await import("./IbcInspecoesDrawer")).default;
   });
@@ -106,6 +111,8 @@ describe("Gestão IBC Containers — fechar e reabrir painéis", () => {
   function Tela(): React.ReactElement {
     const [inspecao, setInspecao] = useState<IbcCadastroDTO | null>(null);
     const [inspecoes, setInspecoes] = useState<IbcCadastroDTO | null>(null);
+    const [checklists, setChecklists] = useState<IbcCadastroDTO | null>(null);
+    const vinculos = useIbcChecklistVinculos(checklists?.id ?? null);
     const noop = () => undefined;
     return React.createElement(
       React.Fragment,
@@ -121,7 +128,7 @@ describe("Gestão IBC Containers — fechar e reabrir painéis", () => {
         onConverter: noop,
         onMudarProduto: noop,
         onVerHistorico: noop,
-        onGerenciarChecklists: noop,
+        onGerenciarChecklists: setChecklists,
         onInspecionar: setInspecao,
         onVerInspecoes: setInspecoes,
       }),
@@ -135,13 +142,23 @@ describe("Gestão IBC Containers — fechar e reabrir painéis", () => {
         ibc: inspecoes,
         onClose: () => setInspecoes(null),
       }),
+      React.createElement(IbcChecklistsVinculoDrawer, {
+        open: checklists != null,
+        identificador: checklists?.identificador ?? null,
+        state: vinculos,
+        onClose: () => setChecklists(null),
+      }),
     );
   }
 
   function render() {
     const Componente: ComponentType = Tela;
     return rtl.render(
-      React.createElement(QueryClientProvider, { client: seededClient() }, React.createElement(Componente)),
+      React.createElement(
+        MemoryRouter,
+        null,
+        React.createElement(QueryClientProvider, { client: seededClient() }, React.createElement(Componente)),
+      ),
     );
   }
 
@@ -190,5 +207,30 @@ describe("Gestão IBC Containers — fechar e reabrir painéis", () => {
 
     rtl.fireEvent.click(view.getAllByRole("button", { name: "Inspecionar" })[1]);
     await view.findByText(`Inspecionar ${IBC_B.identificador}`);
+  });
+
+  it("Mais ações → Checklists: fechar pelo X libera o ponteiro e reabre no IBC clicado", async () => {
+    const view = render();
+
+    await abrirMenu(view, IBC_A.identificador, "Checklists");
+    await view.findByText(`Checklists de ${IBC_A.identificador}`);
+    rtl.fireEvent.click(view.getByRole("button", { name: "Fechar" }));
+    await rtl.waitFor(() => assert.equal(document.querySelector("[role=dialog]"), null));
+    assertPonteiroLiberado();
+
+    await abrirMenu(view, IBC_B.identificador, "Checklists");
+    await view.findByText(`Checklists de ${IBC_B.identificador}`);
+  });
+
+  it("Detalhe do identificador: fechar libera o ponteiro e o menu abre em seguida", async () => {
+    const view = render();
+
+    rtl.fireEvent.click(view.getByLabelText(`Detalhe de ${IBC_A.identificador}`));
+    await rtl.waitFor(() => assert.notEqual(document.querySelector("[role=dialog]"), null));
+    await fecharComEsc();
+    assertPonteiroLiberado();
+
+    await abrirMenu(view, IBC_A.identificador, "Inspeções");
+    await view.findByText(`Inspeções de ${IBC_A.identificador}`);
   });
 });
