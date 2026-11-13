@@ -23,39 +23,48 @@ import { toError } from "../utils/toError";
 import CadastroIbcSectionError from "./CadastroIbcSectionError";
 import CadastroIbcSectionSkeleton from "./CadastroIbcSectionSkeleton";
 
+type IbcConsultado = Pick<IbcCadastroDTO, "id" | "identificador">;
+
 type Props = {
-  ibc: IbcCadastroDTO;
+  open: boolean;
+  ibc: IbcConsultado | null;
   onClose: () => void;
 };
 
-export default function IbcInspecoesDrawer({ ibc, onClose }: Props) {
+export default function IbcInspecoesDrawer({ open, ibc, onClose }: Props) {
+  return (
+    <Sheet open={open && ibc != null} onOpenChange={(next) => !next && onClose()}>
+      <SheetContent>{ibc ? <InspecoesConteudo key={ibc.id} ibc={ibc} /> : null}</SheetContent>
+    </Sheet>
+  );
+}
+
+function InspecoesConteudo({ ibc }: { ibc: IbcConsultado }) {
   const query = useIbcInspecoes(ibc.id);
   const inspecoes = query.data ?? [];
 
   return (
-    <Sheet open onOpenChange={(open) => !open && onClose()}>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle>Inspeções de {ibc.identificador}</SheetTitle>
-          <SheetDescription>Mais recente primeiro, com os limites e itens do momento da inspeção.</SheetDescription>
-        </SheetHeader>
-        <SheetBody>
-          {query.isLoading ? (
-            <CadastroIbcSectionSkeleton rows={3} />
-          ) : query.error ? (
-            <CadastroIbcSectionError message={toError(query.error).message} onRetry={() => void query.refetch()} />
-          ) : inspecoes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma inspeção registrada para este IBC.</p>
-          ) : (
-            <ol className="space-y-6">
-              {inspecoes.map((inspecao) => (
-                <InspecaoItem key={inspecao.id} inspecao={inspecao} />
-              ))}
-            </ol>
-          )}
-        </SheetBody>
-      </SheetContent>
-    </Sheet>
+    <>
+      <SheetHeader>
+        <SheetTitle>Inspeções de {ibc.identificador}</SheetTitle>
+        <SheetDescription>Mais recente primeiro, com os limites e itens do momento da inspeção.</SheetDescription>
+      </SheetHeader>
+      <SheetBody>
+        {query.isLoading ? (
+          <CadastroIbcSectionSkeleton rows={3} />
+        ) : query.error ? (
+          <CadastroIbcSectionError message={toError(query.error).message} onRetry={() => void query.refetch()} />
+        ) : inspecoes.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhuma inspeção registrada para este IBC.</p>
+        ) : (
+          <ol className="space-y-6">
+            {inspecoes.map((inspecao) => (
+              <InspecaoItem key={inspecao.id} inspecao={inspecao} />
+            ))}
+          </ol>
+        )}
+      </SheetBody>
+    </>
   );
 }
 

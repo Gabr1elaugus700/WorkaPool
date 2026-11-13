@@ -44,12 +44,11 @@ export default function EntradaPatioIbcView() {
           />
         ))}
       </ExpedicaoIbcTabShell>
-      {inspecionando ? (
-        <IbcInspecaoDrawer
-          ibc={{ id: inspecionando.ibcId, identificador: inspecionando.identificador }}
-          onClose={() => setInspecionando(null)}
-        />
-      ) : null}
+      <IbcInspecaoDrawer
+        open={inspecionando != null}
+        ibc={inspecionando ? { id: inspecionando.ibcId, identificador: inspecionando.identificador } : null}
+        onClose={() => setInspecionando(null)}
+      />
     </>
   );
 }
