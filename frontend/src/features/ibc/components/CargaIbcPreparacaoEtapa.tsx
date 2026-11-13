@@ -31,6 +31,13 @@ function rotuloPedido(pedido: PedidoIbcPreparacaoDTO): string {
   return pedido.cliente ? `Pedido ${pedido.numPed} · ${pedido.cliente}` : `Pedido ${pedido.numPed}`;
 }
 
+function textoFaixaCompleta(esperado: number): string {
+  const gesto = esperado === 1
+    ? "Toque no container vinculado para trocá-lo."
+    : "Toque em um container vinculado para trocá-lo.";
+  return `A quantidade esperada da carga está completa. ${gesto}`;
+}
+
 export default function CargaIbcPreparacaoEtapa({
   detalhe,
   mutationsLocked,
@@ -105,7 +112,7 @@ export default function CargaIbcPreparacaoEtapa({
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
             <h2 className="text-lg font-semibold leading-snug text-foreground">Containers vinculados</h2>
             <p className="text-sm text-muted-foreground">
-              <PedidoIbcProgress alocado={alocado} esperado={esperado} />
+              <PedidoIbcProgress alocado={alocado} esperado={esperado} tom="preparacao" />
               <span className="sr-only">
                 {" "}
                 de {esperado} {esperado === 1 ? "container" : "containers"}
@@ -129,6 +136,10 @@ export default function CargaIbcPreparacaoEtapa({
             <p className="text-sm text-muted-foreground">Expedição fechada. Os vínculos são só consulta.</p>
           ) : semEsperado ? (
             <p className="text-sm text-muted-foreground">Não há quantidade esperada para vincular nesta carga.</p>
+          ) : noTeto ? (
+            <p className="rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-foreground">
+              {textoFaixaCompleta(esperado)}
+            </p>
           ) : null}
         </div>
 

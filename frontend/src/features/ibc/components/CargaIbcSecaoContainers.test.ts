@@ -18,56 +18,96 @@ function container(identificador: string, parcial: Partial<ContainerPaletaDTO> =
   };
 }
 
-function html(secao: SecaoContainersCarga): string {
+function html(secao: SecaoContainersCarga, limite?: number): string {
   return renderToStaticMarkup(
     React.createElement(CargaIbcSecaoContainers, {
       secao,
       estado: "disponivel",
+      limite,
       onSelect: () => undefined,
     }),
   );
 }
 
 describe("CargaIbcSecaoContainers", () => {
-  it("mostra grupo, sigla, amostra e contagem", () => {
+  it("mostra a placa, o nome do grupo e o total da seção", () => {
     const markup = html({
       tipo: "grupo",
-      grupoCodigo: "CLORO",
-      sigla: "CL",
+      grupoCodigo: "G020",
+      sigla: "H",
       corHex: "#00AA00",
+      grupoDescricao: "Hipoclorito",
       containers: [container("HMCL1"), container("HMCL2")],
     });
 
-    assert.match(markup, /CLORO · CL/);
-    assert.match(markup, /2/);
+    assert.match(markup, /G020 · H Hipoclorito/);
+    assert.match(markup, /2 disponíveis/);
     assert.match(markup, /Placa #00AA00/);
     assert.match(markup, /HMCL1/);
     assert.match(markup, /HMCL2/);
   });
 
-  it("usa o cabeçalho Universal sem amostra de grupo", () => {
+  it("omite o nome quando a descrição é nula", () => {
+    const markup = html({
+      tipo: "grupo",
+      grupoCodigo: "G020",
+      sigla: "H",
+      corHex: "#00AA00",
+      grupoDescricao: null,
+      containers: [container("HMCL1")],
+    });
+
+    assert.match(markup, /G020 · H/);
+    assert.match(markup, /1 disponível/);
+    assert.doesNotMatch(markup, /G020 · H /);
+  });
+
+  it("usa swatch cinza e a contagem no Universal", () => {
     const markup = html({
       tipo: "universal",
       grupoCodigo: null,
       sigla: null,
       corHex: null,
+      grupoDescricao: null,
       containers: [container("NH1", { universal: true, homologado: false, grupoCodigo: null, corHex: null })],
     });
 
     assert.match(markup, /Universal/);
+    assert.match(markup, /Placa neutra/);
+    assert.match(markup, /1 disponível/);
     assert.doesNotMatch(markup, / · /);
+    assert.doesNotMatch(markup, /ainda sem homologação de produto/);
   });
 
-  it("explica o que é não homologado", () => {
+  it("lista o órfão sem o parágrafo do prefixo NH", () => {
     const markup = html({
       tipo: "nao-homologado",
       grupoCodigo: null,
       sigla: null,
       corHex: null,
-      containers: [container("NHCL1", { homologado: false })],
+      grupoDescricao: null,
+      containers: [container("NHCL1", { homologado: false, grupoCodigo: null })],
     });
 
     assert.match(markup, /Não homologados/);
-    assert.match(markup, /ainda sem homologação de produto/);
+    assert.match(markup, /1 disponível/);
+    assert.doesNotMatch(markup, /ainda sem homologação de produto/);
+  });
+
+  it("mostra 8 chips e conta o total da seção", () => {
+    const containers = Array.from({ length: 9 }, (_, index) => container(`HM${index + 1}`));
+    const markup = html({
+      tipo: "grupo",
+      grupoCodigo: "G020",
+      sigla: "H",
+      corHex: "#00AA00",
+      grupoDescricao: "Hipoclorito",
+      containers,
+    }, 8);
+
+    assert.match(markup, /9 disponíveis/);
+    assert.match(markup, /HM1/);
+    assert.match(markup, /HM8/);
+    assert.doesNotMatch(markup, /HM9/);
   });
 });

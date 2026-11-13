@@ -80,6 +80,7 @@ export type PlacaGrupoPaletaDTO = {
   grupoCodigo: string;
   sigla: string;
   corHex: string;
+  grupoDescricao: string | null;
 };
 
 /** GET /api/ibc/cargas-expedicao/:codCar/containers */

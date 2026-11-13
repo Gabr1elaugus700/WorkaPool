@@ -25,4 +25,19 @@ export class ProdutoGrupoCatalogoRepository implements IProdutoGrupoCatalogoRepo
     `;
     return rows.length > 0;
   }
+
+  async listDescricoes(
+    grupos: readonly string[],
+  ): Promise<{ grupoCodigo: string; grupoDescricao: string }[]> {
+    const codigos = [...new Set(grupos.map((grupo) => grupo.trim()).filter((grupo) => grupo.length > 0))];
+    if (codigos.length === 0) return [];
+    return this.prisma.$queryRaw<{ grupoCodigo: string; grupoDescricao: string }[]>`
+      SELECT DISTINCT ON (grupo_codigo)
+        grupo_codigo AS "grupoCodigo",
+        grupo_descricao AS "grupoDescricao"
+      FROM produto_grupo_map
+      WHERE grupo_codigo = ANY(${codigos}::varchar[])
+      ORDER BY grupo_codigo, grupo_descricao
+    `;
+  }
 }

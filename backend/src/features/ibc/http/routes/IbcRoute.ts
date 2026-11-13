@@ -153,6 +153,13 @@ router.get(
 );
 
 router.get(
+  "/cargas-expedicao/:codCar/containers",
+  authMiddleware,
+  requireRoles(ibcReadRoles),
+  IbcController.listContainersCarga,
+);
+
+router.get(
   "/cargas-expedicao/:codCar",
   authMiddleware,
   requireRoles(ibcReadRoles),
