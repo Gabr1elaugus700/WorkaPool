@@ -64,6 +64,25 @@ export class IbcProdutoRepository implements IIbcProdutoRepository, IIbcProdutoC
     return rows.flatMap((row) => (row.grupoCodigo ? [row.grupoCodigo] : []));
   }
 
+  async listPlacasDeGrupos(
+    grupos: readonly string[],
+  ): Promise<{ grupoCodigo: string; sigla: string; corHex: string }[]> {
+    const codigos = [...new Set(grupos.map((grupo) => grupo.trim()).filter((grupo) => grupo.length > 0))];
+    if (codigos.length === 0) return [];
+    const rows = await this.prisma.ibcProduto.findMany({
+      where: { universal: false, grupoCodigo: { in: codigos }, sigla: { not: null } },
+      select: { grupoCodigo: true, sigla: true, corHex: true },
+    });
+    return rows.flatMap((row) => {
+      if (!row.grupoCodigo || !row.sigla) return [];
+      return [{
+        grupoCodigo: row.grupoCodigo,
+        sigla: row.sigla.toUpperCase(),
+        corHex: row.corHex.toUpperCase(),
+      }];
+    });
+  }
+
   async findUniversal(): Promise<IbcProdutoConfigRecord | null> {
     const row = await this.prisma.ibcProduto.findFirst({ where: { universal: true }, include: configInclude });
     return row ? toConfig(row) : null;

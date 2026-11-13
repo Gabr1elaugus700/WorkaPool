@@ -25,6 +25,28 @@ export type IbcParaCompatibilidade = {
   grupoCodigo: string | null;
 };
 
+/** IBC ativo com a alocação aberta, se houver, para a paleta da preparação. */
+export type IbcPaletaFonte = {
+  id: string;
+  identificador: string;
+  aptidao: IbcAptidaoValue;
+  custodia: IbcCustodiaValue;
+  dataLimite: Date | null;
+  convertedToContainerId: string | null;
+  universal: boolean;
+  grupoCodigo: string | null;
+  corHex: string | null;
+  homologado: boolean;
+  alocacaoAberta: { id: string; cargaId: string } | null;
+};
+
+export type PlacaGrupoPaleta = {
+  grupoCodigo: string;
+  sigla: string;
+  corHex: string;
+  grupoDescricao: string | null;
+};
+
 export type AlocacaoIbcRecord = {
   id: string;
   ibcId: string;

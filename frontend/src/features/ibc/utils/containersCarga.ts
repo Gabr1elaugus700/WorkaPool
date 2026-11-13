@@ -9,6 +9,7 @@ export type SecaoContainersCarga = {
   grupoCodigo: string | null;
   sigla: string | null;
   corHex: string | null;
+  grupoDescricao: string | null;
   containers: ContainerPaletaDTO[];
 };
 
@@ -16,6 +17,11 @@ export type ContainersVisiveis<T> = {
   visiveis: T[];
   restante: T[];
 };
+
+function nomeDoGrupo(descricao: string): string | null {
+  const nome = descricao.trim();
+  return nome.length > 0 ? nome : null;
+}
 
 function secaoGrupo(
   grupo: PlacaGrupoPaletaDTO,
@@ -26,6 +32,7 @@ function secaoGrupo(
     grupoCodigo: grupo.grupoCodigo,
     sigla: grupo.sigla,
     corHex: grupo.corHex,
+    grupoDescricao: grupo.grupoDescricao == null ? null : nomeDoGrupo(grupo.grupoDescricao),
     containers,
   };
 }
@@ -40,14 +47,13 @@ function agruparDisponiveis(paleta: ContainersCargaDTO): SecaoContainersCarga[] 
       universais.push(container);
       continue;
     }
-    if (!container.homologado) {
-      naoHomologados.push(container);
+    if (container.grupoCodigo != null) {
+      const lista = porGrupo.get(container.grupoCodigo) ?? [];
+      lista.push(container);
+      porGrupo.set(container.grupoCodigo, lista);
       continue;
     }
-    if (container.grupoCodigo == null) continue;
-    const lista = porGrupo.get(container.grupoCodigo) ?? [];
-    lista.push(container);
-    porGrupo.set(container.grupoCodigo, lista);
+    if (!container.homologado) naoHomologados.push(container);
   }
 
   const secoes: SecaoContainersCarga[] = [];
@@ -62,6 +68,7 @@ function agruparDisponiveis(paleta: ContainersCargaDTO): SecaoContainersCarga[] 
       grupoCodigo: null,
       sigla: null,
       corHex: null,
+      grupoDescricao: null,
       containers: universais,
     });
   }
@@ -71,6 +78,7 @@ function agruparDisponiveis(paleta: ContainersCargaDTO): SecaoContainersCarga[] 
       grupoCodigo: null,
       sigla: null,
       corHex: null,
+      grupoDescricao: null,
       containers: naoHomologados,
     });
   }
