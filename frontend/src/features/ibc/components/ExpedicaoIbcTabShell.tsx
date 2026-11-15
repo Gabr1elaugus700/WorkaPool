@@ -2,9 +2,11 @@ import type { ReactNode } from "react";
 import { Package } from "lucide-react";
 import DefaultLayout from "@/layout/DefaultLayout";
 import IbcPageHeader from "./IbcPageHeader";
-import IbcPageTabs from "./IbcPageTabs";
+import ExpedicaoIbcPageTabs from "./ExpedicaoIbcPageTabs";
 import IbcStatusContent, { type IbcStatusContentProps } from "./IbcStatusContent";
-import { EXPEDICAO_IBC_SECTIONS, type ExpedicaoIbcSection } from "../utils/expedicaoIbcSections";
+import { useExpedicaoIbcTabCounts } from "../hooks/useExpedicaoIbcTabCounts";
+import { useIbcRealtime } from "../hooks/useIbcRealtime";
+import type { ExpedicaoIbcSection } from "../utils/expedicaoIbcSections";
 
 type Props = {
   activeSection: ExpedicaoIbcSection;
@@ -15,14 +17,15 @@ type Props = {
 };
 
 export default function ExpedicaoIbcTabShell({ activeSection, description, status, children }: Props) {
+  const { counts } = useExpedicaoIbcTabCounts();
+  useIbcRealtime();
+
   return (
     <DefaultLayout>
       <IbcPageHeader
         title="Expedição IBC"
         icon={<Package className="h-7 w-7 text-primary" aria-hidden />}
-        tabs={
-          <IbcPageTabs tabs={EXPEDICAO_IBC_SECTIONS} activeId={activeSection} ariaLabel="Expedição IBC" />
-        }
+        tabs={<ExpedicaoIbcPageTabs activeId={activeSection} counts={counts} />}
       />
       <p className="mb-4 max-w-prose text-sm text-muted-foreground">{description}</p>
       {status ? (

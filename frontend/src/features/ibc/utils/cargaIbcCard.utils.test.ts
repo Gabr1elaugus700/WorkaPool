@@ -1,8 +1,18 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { formatClientesCarga } from "./cargaIbcCard.utils";
+import { formatCargaPrevisaoSaidaLabel, formatClientesCarga } from "./cargaIbcCard.utils";
 
 const cliente = (nome: string) => ({ cliente: nome, codCli: null });
+
+describe("formatCargaPrevisaoSaidaLabel", () => {
+  it("formata YYYY-MM-DD em pt-BR", () => {
+    assert.equal(formatCargaPrevisaoSaidaLabel("2026-11-20"), "20/11/2026");
+  });
+
+  it("ignora hora em ISO datetime", () => {
+    assert.equal(formatCargaPrevisaoSaidaLabel("2026-11-20T08:00:00.000Z"), "20/11/2026");
+  });
+});
 
 describe("formatClientesCarga", () => {
   it("junta até três clientes", () => {

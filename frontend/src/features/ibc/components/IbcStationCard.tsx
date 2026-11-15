@@ -2,15 +2,28 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { expedicaoIbcStationTone, type ExpedicaoIbcSection } from "../utils/expedicaoIbcSections";
 
+const DEFAULT_ACTIONS_CLASS =
+  "mt-auto flex flex-wrap items-center justify-end gap-2 pt-1";
+
 type Props = {
   station: ExpedicaoIbcSection;
   title: ReactNode;
   meta?: ReactNode;
+  metaClassName?: string;
   actions?: ReactNode;
+  actionsClassName?: string;
   children?: ReactNode;
 };
 
-export default function IbcStationCard({ station, title, meta, actions, children }: Props) {
+export default function IbcStationCard({
+  station,
+  title,
+  meta,
+  metaClassName,
+  actions,
+  actionsClassName,
+  children,
+}: Props) {
   const tone = expedicaoIbcStationTone[station];
 
   return (
@@ -28,9 +41,11 @@ export default function IbcStationCard({ station, title, meta, actions, children
             {tone.label}
           </span>
         </div>
-        {meta ? <div className="text-xs text-muted-foreground">{meta}</div> : null}
+        {meta ? (
+          <div className={cn("text-xs text-muted-foreground", metaClassName)}>{meta}</div>
+        ) : null}
         {children ? <div className="flex-1 text-sm">{children}</div> : null}
-        {actions ? <div className="mt-auto flex flex-wrap items-center justify-end gap-2 pt-1">{actions}</div> : null}
+        {actions ? <div className={cn(DEFAULT_ACTIONS_CLASS, actionsClassName)}>{actions}</div> : null}
       </div>
     </article>
   );
