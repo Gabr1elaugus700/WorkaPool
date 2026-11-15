@@ -1,7 +1,13 @@
+export type IbcChecklistItemTipo = "NUMERICO" | "SIM_NAO";
+export type IbcChecklistItemRespostaEsperada = "SIM" | "NAO";
+
 export type IbcChecklistItemDTO = {
   id: string;
   descricao: string;
+  tipo: IbcChecklistItemTipo;
   critico: boolean;
+  respostaEsperada: IbcChecklistItemRespostaEsperada | null;
+  bloqueante: boolean | null;
   ativo: boolean;
 };
 
@@ -37,7 +43,10 @@ export type IbcChecklistVinculoDTO = {
 
 export type CreateIbcChecklistItemInput = {
   descricao: string;
-  critico: boolean;
+  tipo?: IbcChecklistItemTipo;
+  critico?: boolean;
+  respostaEsperada?: IbcChecklistItemRespostaEsperada;
+  bloqueante?: boolean;
 };
 
 export type UpdateIbcChecklistItemInput = Partial<CreateIbcChecklistItemInput> & {
