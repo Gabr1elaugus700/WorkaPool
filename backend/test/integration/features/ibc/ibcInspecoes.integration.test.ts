@@ -165,8 +165,28 @@ describe("IBC inspeções HTTP (#304)", () => {
     assert.equal(response.body.inspecao.notaMinimaCritico, 7);
     assert.equal(response.body.inspecao.mediaMinima, 6);
     assert.deepEqual(response.body.inspecao.respostas, [
-      { checklistItemId: soda.valvula.id, descricao: soda.valvula.descricao, critico: true, nota: 8 },
-      { checklistItemId: soda.tampa.id, descricao: soda.tampa.descricao, critico: false, nota: 9 },
+      {
+        checklistItemId: soda.valvula.id,
+        descricao: soda.valvula.descricao,
+        tipo: "NUMERICO",
+        critico: true,
+        nota: 8,
+        resposta: null,
+        respostaEsperada: null,
+        bloqueante: null,
+        observacao: null,
+      },
+      {
+        checklistItemId: soda.tampa.id,
+        descricao: soda.tampa.descricao,
+        tipo: "NUMERICO",
+        critico: false,
+        nota: 9,
+        resposta: null,
+        respostaEsperada: null,
+        bloqueante: null,
+        observacao: null,
+      },
     ]);
     const persisted = await readAptidao(ibc.id);
     assert.equal(persisted.aptidao, "APTO");
@@ -364,8 +384,28 @@ describe("IBC inspeções HTTP (#304)", () => {
       inspecionadoEm: response.body[1].inspecionadoEm,
       observacao: "válvula pingando",
       respostas: [
-        { checklistItemId: soda.valvula.id, descricao: soda.valvula.descricao, critico: true, nota: 5 },
-        { checklistItemId: soda.tampa.id, descricao: soda.tampa.descricao, critico: false, nota: 9 },
+        {
+          checklistItemId: soda.valvula.id,
+          descricao: soda.valvula.descricao,
+          tipo: "NUMERICO",
+          critico: true,
+          nota: 5,
+          resposta: null,
+          respostaEsperada: null,
+          bloqueante: null,
+          observacao: null,
+        },
+        {
+          checklistItemId: soda.tampa.id,
+          descricao: soda.tampa.descricao,
+          tipo: "NUMERICO",
+          critico: false,
+          nota: 9,
+          resposta: null,
+          respostaEsperada: null,
+          bloqueante: null,
+          observacao: null,
+        },
       ],
     });
   });
@@ -461,5 +501,76 @@ describe("IBC inspeções HTTP (#304)", () => {
     assert.equal((await post(ibc.id, aprovada(estrutural))).status, 201);
 
     assert.deepEqual(await alertsDoIbc(), []);
+  });
+
+  it("inspeciona checklist só sim/não e reprova bloqueante fora do esperado", async () => {
+    await seed();
+    const ibc = await createIbc("H090");
+    const lacre = await prisma.checklistItem.create({
+      data: {
+        descricao: `${FIXTURE_PREFIX}Lacre`,
+        tipo: "SIM_NAO",
+        respostaEsperada: "SIM",
+        bloqueante: true,
+      },
+    });
+    const checklist = await prisma.checklistModelo.create({
+      data: {
+        nome: `${FIXTURE_PREFIX}Lacre`,
+        tipo: "IBC",
+        notaMinimaCritico: null,
+        mediaMinima: null,
+        itens: { create: [{ checklistItemId: lacre.id, ordem: 0 }] },
+      },
+    });
+    await vincular(ibc.id, checklist.id);
+
+    const reprovada = await post(ibc.id, {
+      checklistModeloId: checklist.id,
+      respostas: [{ checklistItemId: lacre.id, resposta: "NAO" }],
+    });
+    assert.equal(reprovada.status, 201);
+    assert.equal(reprovada.body.inspecao.resultado, "REPROVADA");
+    assert.equal(reprovada.body.inspecao.mediaObtida, null);
+    assert.equal(reprovada.body.inspecao.notaMinimaCritico, null);
+    assert.deepEqual(reprovada.body.inspecao.respostas[0], {
+      checklistItemId: lacre.id,
+      descricao: lacre.descricao,
+      tipo: "SIM_NAO",
+      critico: false,
+      nota: null,
+      resposta: "NAO",
+      respostaEsperada: "SIM",
+      bloqueante: true,
+      observacao: null,
+    });
+
+    const alerts = await get("/alerts", Role.LOGISTICA);
+    const alert = alerts.body.find(
+      (a: { identificador: string }) => a.identificador === ibc.identificador,
+    );
+    assert.deepEqual(alert?.detalhes?.checklists[0]?.itensAbaixoDoMinimo, [
+      {
+        descricao: lacre.descricao,
+        tipo: "SIM_NAO",
+        resposta: "NAO",
+        respostaEsperada: "SIM",
+      },
+    ]);
+  });
+
+  it("recusa inspeção em checklist numérico sem mínimos com 422", async () => {
+    await seed();
+    const ibc = await createIbc("H095");
+    const soda = await createChecklist("SemMinima");
+    await prisma.checklistModelo.update({
+      where: { id: soda.checklist.id },
+      data: { notaMinimaCritico: null, mediaMinima: null },
+    });
+    await vincular(ibc.id, soda.checklist.id);
+
+    const response = await post(ibc.id, aprovada(soda));
+    assert.equal(response.status, 422);
+    assert.equal(response.body.code, "IBC_INSPECAO_CHECKLIST_SEM_MINIMAS");
   });
 });

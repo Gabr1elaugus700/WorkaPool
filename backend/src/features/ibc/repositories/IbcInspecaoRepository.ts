@@ -13,6 +13,7 @@ import {
   IbcInspecaoDto,
   IbcInspecaoHistoricoDto,
   IbcInspecaoReprovadaVigente,
+  IbcInspecaoRespostaDto,
 } from "../types/IbcInspecao.types";
 
 const aptidaoSelect = {
@@ -22,7 +23,17 @@ const aptidaoSelect = {
 } satisfies Prisma.IbcSelect;
 
 const respostasSnapshot = {
-  select: { checklistItemId: true, descricao: true, critico: true, nota: true },
+  select: {
+    checklistItemId: true,
+    descricao: true,
+    tipo: true,
+    critico: true,
+    nota: true,
+    resposta: true,
+    respostaEsperada: true,
+    bloqueante: true,
+    observacao: true,
+  },
   orderBy: [{ critico: "desc" }, { descricao: "asc" }],
 } satisfies Prisma.IbcInspecao$respostasArgs;
 
@@ -63,9 +74,6 @@ export class IbcInspecaoRepository implements IIbcInspecaoRepository, IIbcInspec
     if (!vinculo) return null;
 
     const { ativo, notaMinimaCritico, mediaMinima, itens } = vinculo.checklistModelo;
-    if (notaMinimaCritico == null || mediaMinima == null) {
-      throw new Error(`Checklist ${checklistModeloId} vinculado ao IBC sem limites de nota`);
-    }
     return {
       ativo,
       notaMinimaCritico,
@@ -73,7 +81,10 @@ export class IbcInspecaoRepository implements IIbcInspecaoRepository, IIbcInspec
       itensAtivos: itens.map(({ checklistItem }) => ({
         checklistItemId: checklistItem.id,
         descricao: checklistItem.descricao,
+        tipo: checklistItem.tipo,
         critico: checklistItem.critico,
+        respostaEsperada: checklistItem.respostaEsperada,
+        bloqueante: checklistItem.bloqueante,
       })),
     };
   }
@@ -98,7 +109,23 @@ export class IbcInspecaoRepository implements IIbcInspecaoRepository, IIbcInspec
         select: { id: true },
       });
       const inspecao = await tx.ibcInspecao.create({
-        data: { ...inspecaoData, entradaPatioId: pendente?.id ?? null, respostas: { create: respostas } },
+        data: {
+          ...inspecaoData,
+          entradaPatioId: pendente?.id ?? null,
+          respostas: {
+            create: respostas.map((resposta) => ({
+              checklistItemId: resposta.checklistItemId,
+              tipo: resposta.tipo,
+              nota: resposta.nota,
+              critico: resposta.critico,
+              descricao: resposta.descricao,
+              resposta: resposta.resposta,
+              respostaEsperada: resposta.respostaEsperada,
+              bloqueante: resposta.bloqueante,
+              observacao: resposta.observacao,
+            })),
+          },
+        },
       });
 
       const estado = await tx.ibc.findUniqueOrThrow({
@@ -162,7 +189,7 @@ export class IbcInspecaoRepository implements IIbcInspecaoRepository, IIbcInspec
       mediaObtida: row.mediaObtida,
       notaMinimaCritico: row.notaMinimaCritico,
       mediaMinima: row.mediaMinima,
-      respostas: row.respostas,
+      respostas: row.respostas.map(toRespostaDto),
     }));
   }
 
@@ -204,7 +231,23 @@ function toHistoricoDto(row: HistoricoRow): IbcInspecaoHistoricoDto {
     inspetor: { id: row.inspetor.id, nome: row.inspetor.name },
     inspecionadoEm: row.inspecionadoEm.toISOString(),
     observacao: row.observacao,
-    respostas: row.respostas,
+    respostas: row.respostas.map(toRespostaDto),
+  };
+}
+
+type RespostaRow = Prisma.IbcInspecaoRespostaGetPayload<{ select: typeof respostasSnapshot.select }>;
+
+function toRespostaDto(row: RespostaRow): IbcInspecaoRespostaDto {
+  return {
+    checklistItemId: row.checklistItemId,
+    descricao: row.descricao,
+    tipo: row.tipo,
+    critico: row.critico,
+    nota: row.nota,
+    resposta: row.resposta,
+    respostaEsperada: row.respostaEsperada,
+    bloqueante: row.bloqueante,
+    observacao: row.observacao,
   };
 }
 
