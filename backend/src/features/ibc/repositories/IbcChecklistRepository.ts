@@ -86,7 +86,10 @@ function toChecklistRecord(row: ChecklistModeloComItens): IbcChecklistRecord {
     itens: row.itens.map(({ ordem, checklistItem }) => ({
       itemId: checklistItem.id,
       descricao: checklistItem.descricao,
+      tipo: checklistItem.tipo,
       critico: checklistItem.critico,
+      respostaEsperada: checklistItem.respostaEsperada,
+      bloqueante: checklistItem.bloqueante,
       ativo: checklistItem.ativo,
       ordem,
     })),

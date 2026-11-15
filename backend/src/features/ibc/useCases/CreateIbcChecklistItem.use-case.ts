@@ -2,11 +2,13 @@ import { Role } from "@prisma/client";
 import { assertCanManageIbcChecklists } from "../permissions/assertCanManageIbcChecklists";
 import { IIbcChecklistItemRepository } from "../repositories/IIbcChecklistItemRepository";
 import { IbcChecklistItemRecord } from "../types/IbcChecklist.types";
+import {
+  CreateItemHttpInput,
+  toCreateChecklistItemData,
+} from "../utils/ibcChecklistItemWrite";
 
-export type CreateIbcChecklistItemInput = {
+export type CreateIbcChecklistItemInput = CreateItemHttpInput & {
   actorRole: Role;
-  descricao: string;
-  critico: boolean;
 };
 
 export class CreateIbcChecklistItemUseCase {
@@ -18,9 +20,6 @@ export class CreateIbcChecklistItemUseCase {
 
   async execute(input: CreateIbcChecklistItemInput): Promise<IbcChecklistItemRecord> {
     assertCanManageIbcChecklists(input.actorRole);
-    return this.repository.create({
-      descricao: input.descricao.trim(),
-      critico: input.critico,
-    });
+    return this.repository.create(toCreateChecklistItemData(input));
   }
 }

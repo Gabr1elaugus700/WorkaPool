@@ -16,13 +16,32 @@ import {
 } from "../../../../../src/features/ibc/types/IbcChecklist.types";
 import { AppError } from "../../../../../src/utils/AppError";
 
-const tampa: IbcChecklistItemRecord = { id: "item-1", descricao: "Tampa", critico: true, ativo: true };
-const base: IbcChecklistItemRecord = { id: "item-2", descricao: "Base", critico: false, ativo: true };
+const itemDefaults = {
+  tipo: "NUMERICO" as const,
+  respostaEsperada: null,
+  bloqueante: null,
+};
+
+const tampa: IbcChecklistItemRecord = {
+  id: "item-1",
+  descricao: "Tampa",
+  critico: true,
+  ativo: true,
+  ...itemDefaults,
+};
+const base: IbcChecklistItemRecord = {
+  id: "item-2",
+  descricao: "Base",
+  critico: false,
+  ativo: true,
+  ...itemDefaults,
+};
 const valvulaInativa: IbcChecklistItemRecord = {
   id: "item-3",
   descricao: "Válvula",
   critico: false,
   ativo: false,
+  ...itemDefaults,
 };
 
 const checklistSoda: IbcChecklistRecord = {
@@ -32,7 +51,18 @@ const checklistSoda: IbcChecklistRecord = {
   mediaMinima: 6,
   ativo: true,
   createdAt: "2026-10-06T00:00:00.000Z",
-  itens: [{ itemId: "item-3", descricao: "Válvula", critico: false, ativo: false, ordem: 0 }],
+  itens: [
+    {
+      itemId: "item-3",
+      descricao: "Válvula",
+      tipo: "NUMERICO",
+      critico: false,
+      respostaEsperada: null,
+      bloqueante: null,
+      ativo: false,
+      ordem: 0,
+    },
+  ],
 };
 
 function createRepositories(options: {

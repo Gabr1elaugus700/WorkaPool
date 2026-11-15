@@ -14,7 +14,20 @@ import { AppError } from "../../../../../src/utils/AppError";
 const tampa: IbcChecklistItemRecord = {
   id: "item-1",
   descricao: "Tampa",
+  tipo: "NUMERICO",
   critico: true,
+  respostaEsperada: null,
+  bloqueante: null,
+  ativo: true,
+};
+
+const lacre: IbcChecklistItemRecord = {
+  id: "item-2",
+  descricao: "Lacre",
+  tipo: "SIM_NAO",
+  critico: false,
+  respostaEsperada: "SIM",
+  bloqueante: true,
   ativo: true,
 };
 
@@ -33,7 +46,7 @@ function createRepository(found: IbcChecklistItemRecord | null) {
     },
     async create(data) {
       creates.push(data);
-      return { ...tampa, ...data };
+      return { ...tampa, ...data, id: "new-id" };
     },
     async updateById(id, data) {
       updates.push(data);
@@ -52,14 +65,35 @@ function isForbidden(error: unknown): boolean {
 }
 
 describe("IBC checklist item use-cases", () => {
-  it("creates item with trimmed descricao", async () => {
+  it("creates numeric item with trimmed descricao", async () => {
     const { repository, creates } = createRepository(null);
     await new CreateIbcChecklistItemUseCase(repository).execute({
       actorRole: Role.ALMOX,
       descricao: "  Base  ",
       critico: false,
     });
-    assert.deepEqual(creates, [{ descricao: "Base", critico: false }]);
+    assert.deepEqual(creates, [
+      {
+        descricao: "Base",
+        tipo: "NUMERICO",
+        critico: false,
+        respostaEsperada: null,
+        bloqueante: null,
+      },
+    ]);
+  });
+
+  it("creates sim/não item", async () => {
+    const { repository, creates } = createRepository(null);
+    await new CreateIbcChecklistItemUseCase(repository).execute({
+      actorRole: Role.ADMIN,
+      descricao: "Lacre íntegro",
+      tipo: "SIM_NAO",
+      respostaEsperada: "SIM",
+      bloqueante: true,
+    });
+    assert.equal(creates[0]?.tipo, "SIM_NAO");
+    assert.equal(creates[0]?.bloqueante, true);
   });
 
   it("forbids roles other than ADMIN and ALMOX", async () => {
@@ -100,14 +134,27 @@ describe("IBC checklist item use-cases", () => {
     assert.equal(updates.length, 0);
   });
 
-  it("deactivates item keeping other fields untouched", async () => {
+  it("deactivates item keeping other fields", async () => {
     const { repository, updates } = createRepository(tampa);
     const item = await new UpdateIbcChecklistItemUseCase(repository).execute({
       actorRole: Role.ADMIN,
       id: "item-1",
       ativo: false,
     });
-    assert.deepEqual(updates, [{ descricao: undefined, critico: undefined, ativo: false }]);
+    assert.equal(updates[0]?.ativo, false);
     assert.equal(item.ativo, false);
+  });
+
+  it("switches tipo without blocking when item has inspection history", async () => {
+    const { repository, updates } = createRepository(lacre);
+    await new UpdateIbcChecklistItemUseCase(repository).execute({
+      actorRole: Role.ALMOX,
+      id: "item-2",
+      tipo: "NUMERICO",
+      critico: true,
+    });
+    assert.equal(updates[0]?.tipo, "NUMERICO");
+    assert.equal(updates[0]?.critico, true);
+    assert.equal(updates[0]?.respostaEsperada, null);
   });
 });

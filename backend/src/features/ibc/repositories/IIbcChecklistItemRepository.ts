@@ -1,14 +1,24 @@
-import { IbcChecklistItemRecord } from "../types/IbcChecklist.types";
+import {
+  ChecklistItemRespostaEsperada,
+  ChecklistItemTipo,
+  IbcChecklistItemRecord,
+} from "../types/IbcChecklist.types";
 
 export type CreateIbcChecklistItemData = {
   descricao: string;
+  tipo: ChecklistItemTipo;
   critico: boolean;
+  respostaEsperada: ChecklistItemRespostaEsperada | null;
+  bloqueante: boolean | null;
 };
 
 export type UpdateIbcChecklistItemData = {
-  descricao?: string;
-  critico?: boolean;
-  ativo?: boolean;
+  descricao: string;
+  tipo: ChecklistItemTipo;
+  critico: boolean;
+  respostaEsperada: ChecklistItemRespostaEsperada | null;
+  bloqueante: boolean | null;
+  ativo: boolean;
 };
 
 export interface IIbcChecklistItemRepository {

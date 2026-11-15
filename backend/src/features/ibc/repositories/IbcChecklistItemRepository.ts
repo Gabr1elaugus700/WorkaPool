@@ -44,6 +44,14 @@ export class IbcChecklistItemRepository implements IIbcChecklistItemRepository {
 }
 
 export function toChecklistItemRecord(row: ChecklistItem): IbcChecklistItemRecord {
-  const { id, descricao, critico, ativo } = row;
-  return { id, descricao, critico, ativo };
+  const { id, descricao, tipo, critico, respostaEsperada, bloqueante, ativo } = row;
+  return {
+    id,
+    descricao,
+    tipo,
+    critico,
+    respostaEsperada,
+    bloqueante,
+    ativo,
+  };
 }

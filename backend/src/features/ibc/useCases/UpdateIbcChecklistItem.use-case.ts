@@ -1,13 +1,14 @@
 import { Role } from "@prisma/client";
 import { AppError } from "../../../utils/AppError";
 import { assertCanManageIbcChecklists } from "../permissions/assertCanManageIbcChecklists";
-import {
-  IIbcChecklistItemRepository,
-  UpdateIbcChecklistItemData,
-} from "../repositories/IIbcChecklistItemRepository";
+import { IIbcChecklistItemRepository } from "../repositories/IIbcChecklistItemRepository";
 import { IbcChecklistItemRecord } from "../types/IbcChecklist.types";
+import {
+  toUpdateChecklistItemData,
+  UpdateItemHttpInput,
+} from "../utils/ibcChecklistItemWrite";
 
-export type UpdateIbcChecklistItemInput = UpdateIbcChecklistItemData & {
+export type UpdateIbcChecklistItemInput = UpdateItemHttpInput & {
   actorRole: Role;
   id: string;
 };
@@ -30,10 +31,7 @@ export class UpdateIbcChecklistItemUseCase {
       });
     }
 
-    return this.repository.updateById(input.id, {
-      descricao: input.descricao?.trim(),
-      critico: input.critico,
-      ativo: input.ativo,
-    });
+    const payload = toUpdateChecklistItemData(existing, input);
+    return this.repository.updateById(input.id, payload);
   }
 }
