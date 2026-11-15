@@ -131,32 +131,42 @@ export default function CadastroIbcView() {
               navigate(gestaoIbcSections.path("produtos"));
             }}
           />
+          <Dialog
+            open={mudanca != null}
+            onOpenChange={(open) => { if (!open && !conversao.isPending) setMudanca(null); }}
+          >
+            <DialogContent className="max-w-lg gap-5" aria-labelledby="ibc-mudanca-titulo" aria-describedby="ibc-mudanca-descricao">
+              {mudanca ? (
+                <ConfirmarMudancaIbcModal
+                  key={`${mudanca.ibc.id}-${mudanca.modo}`}
+                  ibc={mudanca.ibc}
+                  modo={mudanca.modo}
+                  config={configQuery.query.data ?? null}
+                  configCarregando={configQuery.query.isLoading}
+                  configErro={configQuery.query.error ? toError(configQuery.query.error).message : null}
+                  submitting={conversao.isPending}
+                  onClose={() => setMudanca(null)}
+                  onConfirm={async (acao) => {
+                    if (acao.tipo === "product_change") await conversao.mudarProduto(mudanca.ibc.id, acao.input);
+                    else await conversao.converter(mudanca.ibc.id, acao.input);
+                    setMudanca(null);
+                  }}
+                />
+              ) : null}
+            </DialogContent>
+          </Dialog>
+          <IbcChecklistsVinculoDrawer
+            open={checklistsIbc != null}
+            identificador={checklistsIbc?.identificador ?? null}
+            state={vinculos}
+            onClose={() => setChecklistsIbc(null)}
+          />
+          <IbcInspecaoDrawer open={inspecaoIbc != null} ibc={inspecaoIbc} onClose={() => setInspecaoIbc(null)} />
         </>
       ) : null}
-      {canWrite && mudanca ? (
-        <Dialog open onOpenChange={(open) => { if (!open && !conversao.isPending) setMudanca(null); }}>
-          <DialogContent className="max-w-lg gap-5" aria-labelledby="ibc-mudanca-titulo" aria-describedby="ibc-mudanca-descricao">
-            <ConfirmarMudancaIbcModal
-              key={`${mudanca.ibc.id}-${mudanca.modo}`}
-              ibc={mudanca.ibc}
-              modo={mudanca.modo}
-              config={configQuery.query.data ?? null}
-              configCarregando={configQuery.query.isLoading}
-              configErro={configQuery.query.error ? toError(configQuery.query.error).message : null}
-              submitting={conversao.isPending}
-              onClose={() => setMudanca(null)}
-              onConfirm={async (acao) => {
-                if (acao.tipo === "product_change") await conversao.mudarProduto(mudanca.ibc.id, acao.input);
-                else await conversao.converter(mudanca.ibc.id, acao.input);
-                setMudanca(null);
-              }}
-            />
-          </DialogContent>
-        </Dialog>
-      ) : null}
-      {historicoIbc ? (
-        <Sheet open onOpenChange={(open) => { if (!open) setHistoricoIbc(null); }}>
-          <SheetContent aria-labelledby="ibc-historico-titulo" aria-describedby="ibc-historico-descricao">
+      <Sheet open={historicoIbc != null} onOpenChange={(open) => { if (!open) setHistoricoIbc(null); }}>
+        <SheetContent aria-labelledby="ibc-historico-titulo" aria-describedby="ibc-historico-descricao">
+          {historicoIbc ? (
             <IbcHistoricoDrawer
               identificador={historicoIbc.identificador}
               eventos={historicoQuery.data ?? []}
@@ -164,20 +174,10 @@ export default function CadastroIbcView() {
               errorMessage={historicoQuery.error ? toError(historicoQuery.error).message : null}
               onRetry={() => void historicoQuery.refetch()}
             />
-          </SheetContent>
-        </Sheet>
-      ) : null}
-      {canWrite && checklistsIbc ? (
-        <IbcChecklistsVinculoDrawer
-          identificador={checklistsIbc.identificador}
-          state={vinculos}
-          onClose={() => setChecklistsIbc(null)}
-        />
-      ) : null}
-      {canWrite && inspecaoIbc ? (
-        <IbcInspecaoDrawer key={inspecaoIbc.id} ibc={inspecaoIbc} onClose={() => setInspecaoIbc(null)} />
-      ) : null}
-      {inspecoesIbc ? <IbcInspecoesDrawer ibc={inspecoesIbc} onClose={() => setInspecoesIbc(null)} /> : null}
+          ) : null}
+        </SheetContent>
+      </Sheet>
+      <IbcInspecoesDrawer open={inspecoesIbc != null} ibc={inspecoesIbc} onClose={() => setInspecoesIbc(null)} />
     </DefaultLayout>
   );
 }

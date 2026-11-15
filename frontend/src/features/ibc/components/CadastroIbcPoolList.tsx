@@ -254,7 +254,8 @@ export default function CadastroIbcPoolList(props: Props) {
                             Inspecionar
                           </Button>
                         ) : null}
-                        <DropdownMenu>
+                        {/* modal={false}: Menu e Dialog do Radix usam cópias distintas de dismissable-layer; abrir um painel pelo item com o menu modal deixa o body com pointer-events: none. */}
+                        <DropdownMenu modal={false}>
                           <DropdownMenuTrigger asChild>
                             <Button
                               type="button"
@@ -281,17 +282,17 @@ export default function CadastroIbcPoolList(props: Props) {
           </Table>
         </div>
       )}
-      {detalhe ? (
-        <Sheet open onOpenChange={(open) => !open && setDetalhe(null)}>
-          <SheetContent>
+      <Sheet open={detalhe != null} onOpenChange={(open) => !open && setDetalhe(null)}>
+        <SheetContent>
+          {detalhe ? (
             <CadastroIbcDetalhe
               ibc={detalhe}
               produto={produtoNome.get(detalhe.produtoId ?? "") ?? null}
               canWrite={canWrite}
             />
-          </SheetContent>
-        </Sheet>
-      ) : null}
+          ) : null}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
