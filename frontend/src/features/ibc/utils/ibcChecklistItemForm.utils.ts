@@ -14,17 +14,12 @@ export type IbcChecklistItemFormState = {
   bloqueante?: boolean;
 };
 
+const emptySimNao = { respostaEsperada: undefined, bloqueante: undefined } as const;
+
 export function initialItemFormState(editing: IbcChecklistItemDTO | null): IbcChecklistItemFormState {
   if (!editing) {
-    return {
-      descricao: "",
-      tipo: "NUMERICO",
-      critico: false,
-      respostaEsperada: undefined,
-      bloqueante: undefined,
-    };
+    return { descricao: "", tipo: "NUMERICO", critico: false, ...emptySimNao };
   }
-
   if (editing.tipo === "SIM_NAO") {
     return {
       descricao: editing.descricao,
@@ -34,14 +29,7 @@ export function initialItemFormState(editing: IbcChecklistItemDTO | null): IbcCh
       bloqueante: editing.bloqueante ?? undefined,
     };
   }
-
-  return {
-    descricao: editing.descricao,
-    tipo: "NUMERICO",
-    critico: editing.critico,
-    respostaEsperada: undefined,
-    bloqueante: undefined,
-  };
+  return { descricao: editing.descricao, tipo: "NUMERICO", critico: editing.critico, ...emptySimNao };
 }
 
 export function applyItemFormTipoChange(
@@ -49,67 +37,33 @@ export function applyItemFormTipoChange(
   nextTipo: IbcChecklistItemTipo,
 ): IbcChecklistItemFormState {
   if (nextTipo === state.tipo) return state;
-
-  if (nextTipo === "NUMERICO") {
-    return {
-      ...state,
-      tipo: "NUMERICO",
-      critico: false,
-      respostaEsperada: undefined,
-      bloqueante: undefined,
-    };
-  }
-
-  return {
-    ...state,
-    tipo: "SIM_NAO",
-    critico: false,
-    respostaEsperada: undefined,
-    bloqueante: undefined,
-  };
+  return nextTipo === "NUMERICO"
+    ? { ...state, tipo: "NUMERICO", critico: false, ...emptySimNao }
+    : { ...state, tipo: "SIM_NAO", critico: false, ...emptySimNao };
 }
 
 export function canSubmitItemForm(state: IbcChecklistItemFormState): boolean {
-  if (state.descricao.trim().length === 0) return false;
-  if (state.tipo === "SIM_NAO") {
-    return state.respostaEsperada !== undefined && state.bloqueante !== undefined;
-  }
-  return true;
+  if (!state.descricao.trim()) return false;
+  return state.tipo !== "SIM_NAO" || (state.respostaEsperada !== undefined && state.bloqueante !== undefined);
 }
 
-type BuildPayloadOptions = {
-  isEdit: boolean;
-  originalTipo?: IbcChecklistItemTipo;
-};
+type BuildPayloadOptions = { isEdit: boolean; originalTipo?: IbcChecklistItemTipo };
 
 export function buildItemPayload(
   state: IbcChecklistItemFormState,
   options: BuildPayloadOptions,
 ): CreateIbcChecklistItemInput | UpdateIbcChecklistItemInput {
   const descricao = state.descricao.trim();
-
   if (state.tipo === "NUMERICO") {
-    const payload: CreateIbcChecklistItemInput = { descricao, critico: state.critico };
-    if (options.isEdit && options.originalTipo === "SIM_NAO") {
-      return { ...payload, tipo: "NUMERICO" };
-    }
-    if (!options.isEdit) return payload;
-    return payload;
+    const payload = { descricao, critico: state.critico };
+    return options.isEdit && options.originalTipo === "SIM_NAO" ? { ...payload, tipo: "NUMERICO" } : payload;
   }
-
-  const simNaoPayload = {
+  return {
     descricao,
-    tipo: "SIM_NAO" as const,
+    tipo: "SIM_NAO",
     respostaEsperada: state.respostaEsperada,
     bloqueante: state.bloqueante,
   };
-
-  if (options.isEdit && options.originalTipo === "NUMERICO") {
-    return simNaoPayload;
-  }
-  if (!options.isEdit) return simNaoPayload;
-
-  return simNaoPayload;
 }
 
 export function resetItemFormAfterSuccess(): IbcChecklistItemFormState {

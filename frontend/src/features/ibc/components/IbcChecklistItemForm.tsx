@@ -29,13 +29,37 @@ type Props = {
   onCancelEdit: () => void;
 };
 
-const TIPO_OPTIONS: { value: IbcChecklistItemTipo; label: string }[] = [
-  { value: "NUMERICO", label: "Numérico" },
-  { value: "SIM_NAO", label: "Sim/não" },
-];
+const BLOQUEANTE_UNSET = "selecione-bloqueante";
+const RESPOSTA_UNSET = "selecione-resposta";
 
-const BLOQUEANTE_PLACEHOLDER = "selecione-bloqueante";
-const RESPOSTA_PLACEHOLDER = "selecione-resposta";
+type UnsetSelectProps = {
+  id: string;
+  label: string;
+  unsetValue: string;
+  value: string;
+  disabled?: boolean;
+  onValueChange: (value: string) => void;
+  options: { value: string; label: string }[];
+};
+
+function UnsetSelect({ id, label, unsetValue, value, disabled, onValueChange, options }: UnsetSelectProps) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className="text-xs">{label}</Label>
+      <Select value={value} onValueChange={onValueChange} disabled={disabled}>
+        <SelectTrigger id={id}>
+          <SelectValue placeholder="Selecione…" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={unsetValue} disabled>Selecione…</SelectItem>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
 
 export default function IbcChecklistItemForm({
   editing,
@@ -51,16 +75,9 @@ export default function IbcChecklistItemForm({
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!canSubmit) return;
-    const payload = buildItemPayload(form, {
-      isEdit: Boolean(editing),
-      originalTipo: editing?.tipo,
-    });
+    const payload = buildItemPayload(form, { isEdit: Boolean(editing), originalTipo: editing?.tipo });
     try {
-      if (editing) {
-        await onUpdate(editing.id, payload as UpdateIbcChecklistItemInput);
-      } else {
-        await onCreate(payload as CreateIbcChecklistItemInput);
-      }
+      await (editing ? onUpdate(editing.id, payload as UpdateIbcChecklistItemInput) : onCreate(payload as CreateIbcChecklistItemInput));
       setForm(resetItemFormAfterSuccess());
       onCancelEdit();
     } catch {
@@ -68,17 +85,11 @@ export default function IbcChecklistItemForm({
     }
   };
 
-  const setTipo = (tipo: IbcChecklistItemTipo) => {
-    setForm((current) => applyItemFormTipoChange(current, tipo));
-  };
-
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="min-w-0 space-y-1.5 sm:col-span-2">
-          <Label htmlFor="ibc-item-descricao" className="text-xs">
-            Descrição do item
-          </Label>
+          <Label htmlFor="ibc-item-descricao" className="text-xs">Descrição do item</Label>
           <Input
             id="ibc-item-descricao"
             ref={inputRef}
@@ -90,23 +101,16 @@ export default function IbcChecklistItemForm({
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="ibc-item-tipo" className="text-xs">
-            Tipo
-          </Label>
+          <Label htmlFor="ibc-item-tipo" className="text-xs">Tipo</Label>
           <Select
             value={form.tipo}
-            onValueChange={(value) => setTipo(value as IbcChecklistItemTipo)}
+            onValueChange={(value) => setForm((current) => applyItemFormTipoChange(current, value as IbcChecklistItemTipo))}
             disabled={saving}
           >
-            <SelectTrigger id="ibc-item-tipo">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger id="ibc-item-tipo"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {TIPO_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
+              <SelectItem value="NUMERICO">Numérico</SelectItem>
+              <SelectItem value="SIM_NAO">Sim/não</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -115,87 +119,52 @@ export default function IbcChecklistItemForm({
             <Checkbox
               id="ibc-item-critico"
               checked={form.critico}
-              onCheckedChange={(checked) =>
-                setForm((current) => ({ ...current, critico: checked === true }))
-              }
+              onCheckedChange={(checked) => setForm((current) => ({ ...current, critico: checked === true }))}
               disabled={saving}
             />
-            <Label htmlFor="ibc-item-critico" className="text-sm">
-              Crítico
-            </Label>
+            <Label htmlFor="ibc-item-critico" className="text-sm">Crítico</Label>
           </div>
         ) : (
           <>
-            <div className="space-y-1.5">
-              <Label htmlFor="ibc-item-resposta" className="text-xs">
-                Resposta esperada
-              </Label>
-              <Select
-                value={form.respostaEsperada ?? RESPOSTA_PLACEHOLDER}
-                onValueChange={(value) =>
-                  setForm((current) => ({
-                    ...current,
-                    respostaEsperada: value as IbcChecklistItemRespostaEsperada,
-                  }))
-                }
-                disabled={saving}
-              >
-                <SelectTrigger id="ibc-item-resposta">
-                  <SelectValue placeholder="Selecione…" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={RESPOSTA_PLACEHOLDER} disabled>
-                    Selecione…
-                  </SelectItem>
-                  <SelectItem value="SIM">Sim</SelectItem>
-                  <SelectItem value="NAO">Não</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="ibc-item-bloqueante" className="text-xs">
-                Bloqueante
-              </Label>
-              <Select
-                value={
-                  form.bloqueante === undefined
-                    ? BLOQUEANTE_PLACEHOLDER
-                    : form.bloqueante
-                      ? "true"
-                      : "false"
-                }
-                onValueChange={(value) => {
-                  if (value === BLOQUEANTE_PLACEHOLDER) return;
-                  setForm((current) => ({
-                    ...current,
-                    bloqueante: value === "true",
-                  }));
-                }}
-                disabled={saving}
-              >
-                <SelectTrigger id="ibc-item-bloqueante">
-                  <SelectValue placeholder="Selecione…" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={BLOQUEANTE_PLACEHOLDER} disabled>
-                    Selecione…
-                  </SelectItem>
-                  <SelectItem value="true">Sim</SelectItem>
-                  <SelectItem value="false">Não</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <UnsetSelect
+              id="ibc-item-resposta"
+              label="Resposta esperada"
+              unsetValue={RESPOSTA_UNSET}
+              value={form.respostaEsperada ?? RESPOSTA_UNSET}
+              disabled={saving}
+              options={[
+                { value: "SIM", label: "Sim" },
+                { value: "NAO", label: "Não" },
+              ]}
+              onValueChange={(value) =>
+                setForm((current) => ({
+                  ...current,
+                  respostaEsperada: value as IbcChecklistItemRespostaEsperada,
+                }))
+              }
+            />
+            <UnsetSelect
+              id="ibc-item-bloqueante"
+              label="Bloqueante"
+              unsetValue={BLOQUEANTE_UNSET}
+              value={form.bloqueante === undefined ? BLOQUEANTE_UNSET : form.bloqueante ? "true" : "false"}
+              disabled={saving}
+              options={[
+                { value: "true", label: "Sim" },
+                { value: "false", label: "Não" },
+              ]}
+              onValueChange={(value) => {
+                if (value === BLOQUEANTE_UNSET) return;
+                setForm((current) => ({ ...current, bloqueante: value === "true" }));
+              }}
+            />
           </>
         )}
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={!canSubmit}>
-          {editing ? "Salvar edição" : "Cadastrar item"}
-        </Button>
+        <Button type="submit" disabled={!canSubmit}>{editing ? "Salvar edição" : "Cadastrar item"}</Button>
         {editing ? (
-          <Button type="button" variant="outline" onClick={onCancelEdit} disabled={saving}>
-            Cancelar
-          </Button>
+          <Button type="button" variant="outline" onClick={onCancelEdit} disabled={saving}>Cancelar</Button>
         ) : null}
       </div>
     </form>
