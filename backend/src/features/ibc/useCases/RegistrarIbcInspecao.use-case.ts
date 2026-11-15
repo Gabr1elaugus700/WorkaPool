@@ -207,7 +207,9 @@ function snapshotResposta(
   }
 
   const observacao =
-    enviada.observacao === undefined || enviada.observacao === "" ? null : enviada.observacao;
+    enviada.observacao === undefined || enviada.observacao.trim() === ""
+      ? null
+      : enviada.observacao.trim();
 
   return {
     checklistItemId: item.checklistItemId,
