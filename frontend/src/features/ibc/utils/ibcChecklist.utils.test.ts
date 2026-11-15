@@ -50,9 +50,33 @@ describe("moveItem", () => {
 
 describe("listItensDisponiveis", () => {
   const itens = [
-    { id: "1", descricao: "Tampa", critico: true, ativo: true },
-    { id: "2", descricao: "Válvula", critico: false, ativo: false },
-    { id: "3", descricao: "Gaiola", critico: false, ativo: true },
+    {
+      id: "1",
+      descricao: "Tampa",
+      tipo: "NUMERICO" as const,
+      critico: true,
+      respostaEsperada: null,
+      bloqueante: null,
+      ativo: true,
+    },
+    {
+      id: "2",
+      descricao: "Válvula",
+      tipo: "NUMERICO" as const,
+      critico: false,
+      respostaEsperada: null,
+      bloqueante: null,
+      ativo: false,
+    },
+    {
+      id: "3",
+      descricao: "Gaiola",
+      tipo: "NUMERICO" as const,
+      critico: false,
+      respostaEsperada: null,
+      bloqueante: null,
+      ativo: true,
+    },
   ];
 
   it("lists only active items not yet in the checklist", () => {

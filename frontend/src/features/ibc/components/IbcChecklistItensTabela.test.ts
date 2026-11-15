@@ -5,13 +5,35 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { IbcChecklistItemDTO } from "../types/ibcChecklist.types";
 import IbcChecklistItensTabela from "./IbcChecklistItensTabela";
 
+const base = (patch: Partial<IbcChecklistItemDTO>, index: number): IbcChecklistItemDTO => ({
+  id: `item-${index}`,
+  descricao: `Item ${index}`,
+  tipo: "NUMERICO",
+  critico: false,
+  respostaEsperada: null,
+  bloqueante: null,
+  ativo: true,
+  ...patch,
+});
+
 const itens = (total: number): IbcChecklistItemDTO[] =>
-  Array.from({ length: total }, (_, index) => ({
-    id: `item-${index + 1}`,
-    descricao: `Item ${index + 1}`,
-    critico: index === 0,
-    ativo: index !== 1,
-  }));
+  Array.from({ length: total }, (_, index) =>
+    base(
+      {
+        critico: index === 0,
+        ativo: index !== 1,
+        ...(index === 2
+          ? {
+              descricao: "Lacre OK",
+              tipo: "SIM_NAO" as const,
+              respostaEsperada: "SIM" as const,
+              bloqueante: true,
+            }
+          : {}),
+      },
+      index + 1,
+    ),
+  );
 
 const render = (lista: IbcChecklistItemDTO[]) =>
   renderToStaticMarkup(
@@ -40,5 +62,13 @@ describe("IbcChecklistItensTabela", () => {
     const html = render([]);
     assert.match(html, /Nenhum item cadastrado\./);
     assert.doesNotMatch(html, /<table/);
+  });
+
+  it("distingue numérico crítico e sim/não na coluna de regra", () => {
+    const html = render(itens(3));
+    assert.match(html, /Numérico/);
+    assert.match(html, /Sim\/não/);
+    assert.match(html, /Crítico/);
+    assert.match(html, /Esperado: Sim · Bloqueante: Sim/);
   });
 });

@@ -5,11 +5,16 @@ import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/formatCount";
 import { paginate } from "@/utils/paginate";
 import type { IbcChecklistItemDTO } from "../types/ibcChecklist.types";
+import {
+  labelBloqueante,
+  labelChecklistItemTipo,
+  labelRespostaEsperada,
+} from "../utils/ibcChecklistItemDisplay.utils";
 import IbcStatusContent from "./IbcStatusContent";
 
 const PAGE_SIZE = 10;
 
-const HEAD = ["Descrição", "Crítico", "Situação"] as const;
+const HEAD = ["Descrição", "Tipo", "Regra", "Situação"] as const;
 
 type Props = {
   itens: IbcChecklistItemDTO[];
@@ -17,6 +22,24 @@ type Props = {
   onEdit: (item: IbcChecklistItemDTO) => void;
   onToggleAtivo: (item: IbcChecklistItemDTO) => void;
 };
+
+function regraCell(item: IbcChecklistItemDTO): string {
+  if (item.tipo === "SIM_NAO") {
+    const esperada = item.respostaEsperada
+      ? labelRespostaEsperada(item.respostaEsperada)
+      : "—";
+    const bloqueante =
+      item.bloqueante === null || item.bloqueante === undefined
+        ? "—"
+        : labelBloqueante(item.bloqueante);
+    return `Esperado: ${esperada} · Bloqueante: ${bloqueante}`;
+  }
+  return item.critico ? "Crítico" : "—";
+}
+
+function regraIsCriticoBadge(item: IbcChecklistItemDTO): boolean {
+  return item.tipo === "NUMERICO" && item.critico;
+}
 
 export default function IbcChecklistItensTabela({ itens, saving, onEdit, onToggleAtivo }: Props) {
   const [requestedPage, setRequestedPage] = useState(1);
@@ -56,13 +79,14 @@ export default function IbcChecklistItensTabela({ itens, saving, onEdit, onToggl
                 <TableCell className={cn("px-3 py-2", !item.ativo && "text-muted-foreground line-through")}>
                   {item.descricao}
                 </TableCell>
-                <TableCell className="px-3 py-2">
-                  {item.critico ? (
+                <TableCell className="px-3 py-2 text-sm">{labelChecklistItemTipo(item.tipo)}</TableCell>
+                <TableCell className="px-3 py-2 text-sm">
+                  {regraIsCriticoBadge(item) ? (
                     <span className="inline-flex items-center rounded-full border border-destructive/30 bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
                       Crítico
                     </span>
                   ) : (
-                    <span className="text-muted-foreground">—</span>
+                    <span className="text-muted-foreground">{regraCell(item)}</span>
                   )}
                 </TableCell>
                 <TableCell className="px-3 py-2 text-muted-foreground">{item.ativo ? "Ativo" : "Inativo"}</TableCell>
