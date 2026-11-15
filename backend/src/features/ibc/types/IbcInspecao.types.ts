@@ -1,21 +1,36 @@
+import type { ChecklistItemTipo, ChecklistItemRespostaEsperada } from "@prisma/client";
 import type { IbcCadastroRecord } from "./IbcCadastro.types";
 
 export type IbcInspecaoResultado = "APROVADA" | "REPROVADA";
 
 export type IbcAptidao = Pick<IbcCadastroRecord, "aptidao" | "motivoInaptidao">;
 
+export type ItemAtivoParaInspecao = {
+  checklistItemId: string;
+  descricao: string;
+  tipo: ChecklistItemTipo;
+  critico: boolean;
+  respostaEsperada: ChecklistItemRespostaEsperada | null;
+  bloqueante: boolean | null;
+};
+
 export type IbcChecklistParaInspecao = {
   ativo: boolean;
-  notaMinimaCritico: number;
-  mediaMinima: number;
-  itensAtivos: Array<{ checklistItemId: string; descricao: string; critico: boolean }>;
+  notaMinimaCritico: number | null;
+  mediaMinima: number | null;
+  itensAtivos: ItemAtivoParaInspecao[];
 };
 
 export type IbcInspecaoRespostaDto = {
   checklistItemId: string;
   descricao: string;
+  tipo: ChecklistItemTipo;
   critico: boolean;
-  nota: number;
+  nota: number | null;
+  resposta: ChecklistItemRespostaEsperada | null;
+  respostaEsperada: ChecklistItemRespostaEsperada | null;
+  bloqueante: boolean | null;
+  observacao: string | null;
 };
 
 export type IbcInspecaoDto = {
@@ -24,8 +39,8 @@ export type IbcInspecaoDto = {
   checklistModeloId: string;
   resultado: IbcInspecaoResultado;
   mediaObtida: number | null;
-  notaMinimaCritico: number;
-  mediaMinima: number;
+  notaMinimaCritico: number | null;
+  mediaMinima: number | null;
   inspetorId: string;
   inspecionadoEm: string;
   observacao: string | null;
@@ -38,8 +53,8 @@ export type IbcInspecaoHistoricoDto = {
   checklistNome: string;
   resultado: IbcInspecaoResultado;
   mediaObtida: number | null;
-  notaMinimaCritico: number;
-  mediaMinima: number;
+  notaMinimaCritico: number | null;
+  mediaMinima: number | null;
   inspetor: { id: string; nome: string };
   inspecionadoEm: string;
   observacao: string | null;
@@ -52,8 +67,8 @@ export type IbcInspecaoReprovadaVigente = {
   checklistModeloId: string;
   checklistNome: string;
   mediaObtida: number | null;
-  notaMinimaCritico: number;
-  mediaMinima: number;
+  notaMinimaCritico: number | null;
+  mediaMinima: number | null;
   respostas: IbcInspecaoRespostaDto[];
 };
 

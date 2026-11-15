@@ -12,22 +12,34 @@ import {
   IbcChecklistParaInspecao,
   IbcInspecaoRespostaDto,
   IbcInspecaoResultado,
+  ItemAtivoParaInspecao,
   RegistrarIbcInspecaoResult,
 } from "../types/IbcInspecao.types";
 import { isDataLimiteDue } from "../utils/ibcDataLimite";
 import { assertIbcAtivo, IbcLookup } from "./findIbcOrThrow";
+
+export type RespostaInspecaoInput = {
+  checklistItemId: string;
+  nota?: number;
+  resposta?: "SIM" | "NAO";
+  observacao?: string;
+};
 
 export type RegistrarIbcInspecaoInput = {
   actorRole: Role;
   actorId: string;
   ibcId: string;
   checklistModeloId: string;
-  respostas: Array<{ checklistItemId: string; nota: number }>;
+  respostas: RespostaInspecaoInput[];
   observacao?: string | null;
 };
 
 function unprocessable(code: string, message: string, details: Record<string, unknown>): AppError {
   return new AppError({ message, statusCode: 422, code, details });
+}
+
+function badRequest(code: string, message: string, details: Record<string, unknown>): AppError {
+  return new AppError({ message, statusCode: 400, code, details });
 }
 
 export class RegistrarIbcInspecaoUseCase {
@@ -102,6 +114,17 @@ export class RegistrarIbcInspecaoUseCase {
     if (!checklist.ativo) {
       throw unprocessable("IBC_CHECKLIST_INATIVO", "Checklist inativo não pode ser usado na inspeção", { checklistModeloId });
     }
+    const temNumericoAtivo = checklist.itensAtivos.some((item) => item.tipo === "NUMERICO");
+    if (
+      temNumericoAtivo &&
+      (checklist.notaMinimaCritico === null || checklist.mediaMinima === null)
+    ) {
+      throw unprocessable(
+        "IBC_INSPECAO_CHECKLIST_SEM_MINIMAS",
+        "O checklist tem item numérico ativo sem nota mínima e média mínima configuradas",
+        { checklistModeloId },
+      );
+    }
     return checklist;
   }
 }
@@ -110,6 +133,7 @@ function montarRespostas(
   checklist: IbcChecklistParaInspecao,
   respostas: RegistrarIbcInspecaoInput["respostas"],
 ): IbcInspecaoRespostaDto[] {
+  const byId = new Map(respostas.map((r) => [r.checklistItemId, r]));
   const ids = respostas.map((r) => r.checklistItemId);
   const ativos = new Set(checklist.itensAtivos.map((item) => item.checklistItemId));
   const faltantes = [...ativos].filter((id) => !ids.includes(id));
@@ -118,12 +142,86 @@ function montarRespostas(
   if (faltantes.length > 0 || estranhos.length > 0 || duplicados.length > 0) {
     throw unprocessable(
       "IBC_INSPECAO_RESPOSTAS_INCOMPLETAS",
-      "A inspeção precisa de uma nota para cada item ativo do checklist",
+      "A inspeção precisa de uma resposta para cada item ativo do checklist",
       { faltantes, estranhos, duplicados },
     );
   }
-  const notas = new Map(respostas.map((r) => [r.checklistItemId, r.nota]));
-  return checklist.itensAtivos.map((item) => ({ ...item, nota: notas.get(item.checklistItemId) ?? 0 }));
+
+  const itensById = new Map(checklist.itensAtivos.map((item) => [item.checklistItemId, item]));
+
+  return checklist.itensAtivos.map((item) => snapshotResposta(item, byId.get(item.checklistItemId)));
+}
+
+function snapshotResposta(
+  item: ItemAtivoParaInspecao,
+  enviada: RespostaInspecaoInput | undefined,
+): IbcInspecaoRespostaDto {
+  if (!enviada) {
+    throw unprocessable("IBC_INSPECAO_RESPOSTAS_INCOMPLETAS", "Resposta ausente para item ativo", {
+      checklistItemId: item.checklistItemId,
+    });
+  }
+
+  if (item.tipo === "NUMERICO") {
+    if (enviada.resposta !== undefined) {
+      throw badRequest(
+        "IBC_INSPECAO_INVALID_BODY",
+        "Item numérico não aceita resposta sim/não",
+        { checklistItemId: item.checklistItemId },
+      );
+    }
+    if (enviada.observacao !== undefined) {
+      throw badRequest(
+        "IBC_INSPECAO_INVALID_BODY",
+        "Item numérico não aceita observação por item",
+        { checklistItemId: item.checklistItemId },
+      );
+    }
+    if (enviada.nota === undefined) {
+      throw unprocessable("IBC_INSPECAO_RESPOSTAS_INCOMPLETAS", "Item numérico exige nota", {
+        checklistItemId: item.checklistItemId,
+      });
+    }
+    return {
+      checklistItemId: item.checklistItemId,
+      descricao: item.descricao,
+      tipo: "NUMERICO",
+      critico: item.critico,
+      nota: enviada.nota,
+      resposta: null,
+      respostaEsperada: null,
+      bloqueante: null,
+      observacao: null,
+    };
+  }
+
+  if (enviada.nota !== undefined) {
+    throw badRequest("IBC_INSPECAO_INVALID_BODY", "Item sim/não não aceita nota", {
+      checklistItemId: item.checklistItemId,
+    });
+  }
+  if (enviada.resposta === undefined) {
+    throw unprocessable("IBC_INSPECAO_RESPOSTAS_INCOMPLETAS", "Item sim/não exige resposta SIM ou NAO", {
+      checklistItemId: item.checklistItemId,
+    });
+  }
+
+  const observacao =
+    enviada.observacao === undefined || enviada.observacao.trim() === ""
+      ? null
+      : enviada.observacao.trim();
+
+  return {
+    checklistItemId: item.checklistItemId,
+    descricao: item.descricao,
+    tipo: "SIM_NAO",
+    critico: false,
+    nota: null,
+    resposta: enviada.resposta,
+    respostaEsperada: item.respostaEsperada,
+    bloqueante: item.bloqueante,
+    observacao,
+  };
 }
 
 function recalcularAptidao(

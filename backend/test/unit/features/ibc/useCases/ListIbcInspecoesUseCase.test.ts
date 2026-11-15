@@ -29,7 +29,19 @@ const inspecao: IbcInspecaoHistoricoDto = {
   inspetor: { id: "ana", nome: "Ana Almox" },
   inspecionadoEm: "2026-10-09T12:00:00.000Z",
   observacao: null,
-  respostas: [{ checklistItemId: "valvula", descricao: "Válvula", critico: true, nota: 4 }],
+  respostas: [
+    {
+      checklistItemId: "valvula",
+      descricao: "Válvula",
+      tipo: "NUMERICO",
+      critico: true,
+      nota: 4,
+      resposta: null,
+      respostaEsperada: null,
+      bloqueante: null,
+      observacao: null,
+    },
+  ],
 };
 
 function setup(ibc: IbcCadastroRecord | null, historico: IbcInspecaoHistoricoDto[]) {
