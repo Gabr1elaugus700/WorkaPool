@@ -9,6 +9,7 @@ import {
 
 export type RelatorioViagemIbc = {
   identificador: string;
+  produto: string | null;
 };
 
 export type RelatorioViagemBloco = {
@@ -36,9 +37,14 @@ export type MontarRelatorioViagemInput = {
   pedidos: CargaPedidoIbcSnapshot[];
   alocacoes: AlocacaoIbcRecord[];
   placa: string | null;
+  /** Primeiro nome do produto, por identificador do container. */
+  produtoPorIdentificador?: ReadonlyMap<string, string>;
 };
 
-function checklistDaCarga(alocacoes: AlocacaoIbcRecord[]): RelatorioViagemIbc[] {
+function checklistDaCarga(
+  alocacoes: AlocacaoIbcRecord[],
+  produtoPorIdentificador: ReadonlyMap<string, string>,
+): RelatorioViagemIbc[] {
   const identificadores = new Set<string>();
   for (const alocacao of alocacoes) {
     const identificador = alocacao.identificador.trim();
@@ -46,7 +52,10 @@ function checklistDaCarga(alocacoes: AlocacaoIbcRecord[]): RelatorioViagemIbc[] 
   }
   return [...identificadores]
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-    .map((identificador) => ({ identificador }));
+    .map((identificador) => ({
+      identificador,
+      produto: produtoPorIdentificador.get(identificador) ?? null,
+    }));
 }
 
 function chaveCliente(bloco: Pick<RelatorioViagemBloco, "codCli" | "cliente">): string {
@@ -56,7 +65,7 @@ function chaveCliente(bloco: Pick<RelatorioViagemBloco, "codCli" | "cliente">): 
 export function montarRelatorioViagem(
   input: MontarRelatorioViagemInput,
 ): RelatorioViagem {
-  const checklist = checklistDaCarga(input.alocacoes);
+  const checklist = checklistDaCarga(input.alocacoes, input.produtoPorIdentificador ?? new Map());
   const blocos = pedidosNaSomaDaCarga(input.pedidos).sort(comparePedidosOrdemEntrega).map(
     (pedido): RelatorioViagemBloco => ({
       codCli: pedido.codCli,

@@ -7,8 +7,11 @@ import {
 } from "./buildRelatorioViagemPdfLayout";
 
 const EMITIDO = new Date("2026-10-12T15:30:00.000Z");
-const MARCAS = ["Ficou no cliente", "Troca"] as const;
-const LISTA = [{ identificador: "H0001" }, { identificador: "H0010" }] as const;
+const MARCAS = ["Ficou no cliente", "Troca", "Retorno"] as const;
+const LISTA = [
+  { identificador: "H0001", produto: "Hipoclorito" },
+  { identificador: "H0010", produto: null },
+] as const;
 
 function relatorio(overrides: Partial<RelatorioViagemDTO> = {}): RelatorioViagemDTO {
   return {
@@ -58,40 +61,56 @@ describe("buildRelatorioViagemPdfLayout", () => {
       .filter((texto) => texto.startsWith("Beta") || texto.startsWith("Acme"));
     const ids = textos(layout.paginas.flatMap((pagina) => pagina.itens))
       .map((item) => item.texto)
-      .filter((texto) => texto === "H0001" || texto === "H0010");
+      .filter((texto) => texto.startsWith("H0001") || texto.startsWith("H0010"));
 
     assert.equal(layout.arquivo, "relatorio-viagem-202.pdf");
     assert.deepEqual(nomes, ["Beta (B)", "Acme (A)"]);
-    assert.deepEqual(ids, ["H0001", "H0010", "H0001", "H0010"]);
+    assert.deepEqual(ids, [
+      "H0001 - Hipoclorito",
+      "H0010",
+      "H0001 - Hipoclorito",
+      "H0010",
+    ]);
   });
 
-  it("monta a faixa, as colunas e as pautas, sem Reimpressão nem destino", () => {
-    const layout = buildRelatorioViagemPdfLayout(relatorio({ placa: null, totalClientes: 2 }), EMITIDO);
+  it("monta a faixa, as colunas e as pautas, sem Reimpressão", () => {
+    const layout = buildRelatorioViagemPdfLayout(relatorio({ placa: "ABC1D23", totalClientes: 2 }), EMITIDO);
     const pagina = layout.paginas[0];
     const unidos = textos(pagina.itens)
       .map((item) => item.texto)
       .join("\n");
-    const data = textoIgual(pagina.itens, "Data: 11/10/2026");
-    const carga = textoIgual(pagina.itens, "Carga: 202");
-    const placa = textoIgual(pagina.itens, "Placa: —");
-    const ibcs = textoIgual(pagina.itens, "Total de IBCs: 2");
-    const clientes = textoIgual(pagina.itens, "Total de clientes: 2");
+    const data = textoIgual(pagina.itens, "Data");
+    const dataValor = textoIgual(pagina.itens, "12/10/2026");
+    const carga = textoIgual(pagina.itens, "Carga");
+    const codigoCarga = textoIgual(pagina.itens, "202");
+    const destino = textoIgual(pagina.itens, "Blumenau");
+    const placa = textoIgual(pagina.itens, "Placa");
+    const ibcs = textoIgual(pagina.itens, "Total de IBCs");
+    const ibcsValor = textoIgual(pagina.itens, "2");
+    const clientes = textoIgual(pagina.itens, "Total de clientes");
     const motorista = textoIgual(pagina.itens, "Motorista");
     const assinatura = textoIgual(pagina.itens, "Assinatura");
     const pedido = textoIgual(pagina.itens, "Pedido 12");
     const quantidade = textoIgual(pagina.itens, "Quantidade 3");
+    const nf = textoIgual(pagina.itens, "NF");
 
     assert.equal(layout.paginas.length, 1);
     assert.equal(pagina.rodape, "Página 1 de 1 · Emitido em 12/10/2026 12:30");
     assert.ok(unidos.includes("Relatório de Viagem"));
     assert.equal(unidos.includes("Reimpressão"), false);
-    assert.equal(unidos.includes("Blumenau"), false);
-    assert.equal(unidos.includes("____"), false);
-    assert.ok(data.y === carga.y && carga.y === placa.y);
-    assert.ok(data.x < carga.x && carga.x < placa.x);
-    assert.ok(ibcs.y === clientes.y && ibcs.y > data.y && ibcs.y - data.y <= 8);
+    assert.equal(unidos.includes("ABC1D23"), false);
+    assert.ok(data.y === placa.y && placa.y === ibcs.y && ibcs.y === clientes.y);
+    assert.ok(data.x < placa.x && placa.x < ibcs.x && ibcs.x < clientes.x);
+    assert.equal(dataValor.y, ibcsValor.y);
+    assert.ok(dataValor.y > data.y);
+    assert.ok(carga.x > clientes.x && codigoCarga.x === carga.x && destino.x === carga.x);
+    assert.ok(carga.y < codigoCarga.y && codigoCarga.y < destino.y && destino.y < data.y);
     assert.equal(motorista.y, assinatura.y);
-    assert.ok(motorista.x < assinatura.x && motorista.y > ibcs.y);
+    assert.ok(motorista.x < assinatura.x && motorista.y > dataValor.y);
+    const molduras = pagina.itens.filter((item) => item.tipo === "moldura");
+    assert.equal(molduras.length, 2);
+    const verticais = pagina.itens.filter((item) => item.tipo === "vertical");
+    assert.equal(verticais.length, 3);
 
     const tracos = pagina.itens.filter((item) => item.tipo === "traco");
     const linhaMotorista = tracos.find((item) => item.papel === "motorista");
@@ -104,23 +123,26 @@ describe("buildRelatorioViagemPdfLayout", () => {
     assert.ok(linhaAssinatura.x2 > assinatura.x);
 
     assert.equal(pedido.y, quantidade.y);
-    assert.ok(pedido.x < quantidade.x);
+    assert.equal(pedido.y, nf.y);
+    assert.ok(pedido.x < quantidade.x && quantidade.x < nf.x);
+    const linhaNf = tracos.filter((item) => item.papel === "nf");
+    assert.equal(linhaNf.length >= 1, true);
+    assert.ok(linhaNf.some((item) => item.y === pedido.y));
     assert.equal(unidos.includes("Empréstimo"), false);
     assert.equal(unidos.includes("Modalidade"), false);
     assert.equal(unidos.includes("Transbordo"), false);
     assert.equal(unidos.includes("Retornou"), false);
-    assert.equal(unidos.includes("Retorno"), false);
 
     const marcas = MARCAS.map((marca) => textoIgual(pagina.itens, marca));
-    assert.equal(marcas.length, 2);
+    assert.equal(marcas.length, 3);
     assert.ok(marcas.every((marca) => marca.y === marcas[0].y && marca.alinhamento === "centro"));
-    assert.ok(marcas[1].x - marcas[0].x > 40);
+    assert.ok(marcas[1].x - marcas[0].x > 20);
 
     const fileiraY = Math.min(
       ...pagina.itens.filter((item) => item.tipo === "caixa").map((item) => item.y),
     );
     const fileira = pagina.itens.filter((item) => item.tipo === "caixa" && item.y === fileiraY);
-    assert.equal(fileira.length, 2);
+    assert.equal(fileira.length, 3);
     marcas.forEach((marca, indice) => {
       const caixa = fileira[indice];
       assert.ok(caixa && caixa.tipo === "caixa");
@@ -135,17 +157,19 @@ describe("buildRelatorioViagemPdfLayout", () => {
       assert.equal(badge.negrito, true);
       assert.equal(badge.alinhamento, "centro");
       const linha = pagina.itens.filter((item) => item.y === badge.y);
-      const identificador = linha.find((item) => item.tipo === "texto" && item.texto.startsWith("H"));
+      const identificador = linha.find(
+        (item) => item.tipo === "texto" && (item.texto.startsWith("H0001") || item.texto.startsWith("H0010")),
+      );
       const selo = linha.find((item) => item.tipo === "selo");
       const caixas = linha.filter((item) => item.tipo === "caixa");
       assert.ok(identificador && identificador.tipo === "texto");
       assert.ok(selo && selo.tipo === "selo");
-      assert.equal(caixas.length, 2);
+      assert.equal(caixas.length, 3);
       assert.ok(selo.x > identificador.x);
       assert.ok(badge.x > selo.x && badge.x < selo.x + selo.largura);
       assert.ok(caixas.every((caixa) => caixa.tipo === "caixa" && caixa.x > selo.x + selo.largura));
     }
-    const yEmprestimo = textoIgual(pagina.itens, "H0001").y;
+    const yEmprestimo = textoIgual(pagina.itens, "H0001 - Hipoclorito").y;
     assert.equal(
       pagina.itens.some(
         (item) => item.y === yEmprestimo && (item.tipo === "selo" || (item.tipo === "texto" && item.texto === "Incluso")),
@@ -164,7 +188,8 @@ describe("buildRelatorioViagemPdfLayout", () => {
     assert.ok(yBeta != null && yAcme != null && yAcme > yBeta);
 
     const checklist = Array.from({ length: 45 }, (_, indice) => ({
-      identificador: `IBC-${indice + 1}`,
+        identificador: `IBC-${indice + 1}`,
+        produto: null,
     }));
     const longo = buildRelatorioViagemPdfLayout(
       relatorio({
