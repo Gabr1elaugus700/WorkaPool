@@ -6,15 +6,15 @@ import {
 
 export type CreateIbcChecklistData = {
   nome: string;
-  notaMinimaCritico: number;
-  mediaMinima: number;
+  notaMinimaCritico: number | null;
+  mediaMinima: number | null;
   itensIds: string[];
 };
 
 export type UpdateIbcChecklistData = {
   nome?: string;
-  notaMinimaCritico?: number;
-  mediaMinima?: number;
+  notaMinimaCritico?: number | null;
+  mediaMinima?: number | null;
   ativo?: boolean;
   itensIds?: string[];
 };

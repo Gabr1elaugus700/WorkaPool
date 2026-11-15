@@ -55,8 +55,8 @@ export type UpdateIbcChecklistItemInput = Partial<CreateIbcChecklistItemInput> &
 
 export type CreateIbcChecklistInput = {
   nome: string;
-  notaMinimaCritico: number;
-  mediaMinima: number;
+  notaMinimaCritico: number | null;
+  mediaMinima: number | null;
   itensIds: string[];
 };
 

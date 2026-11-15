@@ -42,15 +42,15 @@ export const IbcChecklistHttpSchemas = {
     }),
   createChecklist: z.object({
     nome: checklistNome,
-    notaMinimaCritico: nota,
-    mediaMinima: nota,
+    notaMinimaCritico: nota.nullable().optional(),
+    mediaMinima: nota.nullable().optional(),
     itensIds,
   }),
   updateChecklist: z
     .object({
       nome: checklistNome.optional(),
-      notaMinimaCritico: nota.optional(),
-      mediaMinima: nota.optional(),
+      notaMinimaCritico: nota.nullable().optional(),
+      mediaMinima: nota.nullable().optional(),
       ativo: z.boolean().optional(),
       itensIds: itensIds.optional(),
     })

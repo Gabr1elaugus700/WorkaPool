@@ -71,8 +71,10 @@ export default function IbcChecklistsSection({ checklists, catalogo, saving, onL
                 <span className="font-medium">{checklist.nome}</span>
                 {!checklist.ativo ? <Badge variant="outline" className="text-[10px]">Inativo</Badge> : null}
                 <span className="text-muted-foreground">
-                  {checklist.totalItens} itens · crítico ≥ {formatNota(checklist.notaMinimaCritico)} · média ≥{" "}
-                  {formatNota(checklist.mediaMinima)}
+                  {checklist.totalItens} itens
+                  {checklist.notaMinimaCritico === null && checklist.mediaMinima === null
+                    ? " · sem itens numéricos"
+                    : ` · crítico ≥ ${formatNota(checklist.notaMinimaCritico)} · média ≥ ${formatNota(checklist.mediaMinima)}`}
                 </span>
               </div>
               <div className="flex gap-1">

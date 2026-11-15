@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   buildChecklistPayload,
+  checklistTemItemNumerico,
   listChecklistsDisponiveisParaVinculo,
   listItensDisponiveis,
   moveItem,
@@ -134,6 +135,46 @@ describe("listChecklistsDisponiveisParaVinculo", () => {
   });
 });
 
+const catalogo = [
+  {
+    id: "a",
+    descricao: "Tampa",
+    tipo: "NUMERICO" as const,
+    critico: true,
+    respostaEsperada: null,
+    bloqueante: null,
+    ativo: true,
+  },
+  {
+    id: "b",
+    descricao: "Base",
+    tipo: "NUMERICO" as const,
+    critico: false,
+    respostaEsperada: null,
+    bloqueante: null,
+    ativo: true,
+  },
+  {
+    id: "s",
+    descricao: "Lacre",
+    tipo: "SIM_NAO" as const,
+    critico: false,
+    respostaEsperada: "SIM" as const,
+    bloqueante: true,
+    ativo: true,
+  },
+];
+
+describe("checklistTemItemNumerico", () => {
+  it("is true when any selected item is numeric", () => {
+    assert.equal(checklistTemItemNumerico(catalogo, ["s", "b"]), true);
+  });
+
+  it("is false for sim/não-only selection", () => {
+    assert.equal(checklistTemItemNumerico(catalogo, ["s"]), false);
+  });
+});
+
 describe("buildChecklistPayload", () => {
   const form = {
     nome: "  Checklist Soda ",
@@ -143,7 +184,7 @@ describe("buildChecklistPayload", () => {
   };
 
   it("trims the name, parses the grades and keeps item order", () => {
-    assert.deepEqual(buildChecklistPayload(form), {
+    assert.deepEqual(buildChecklistPayload(form, catalogo), {
       nome: "Checklist Soda",
       notaMinimaCritico: 8,
       mediaMinima: 7.5,
@@ -151,10 +192,20 @@ describe("buildChecklistPayload", () => {
     });
   });
 
+  it("returns null minima for sim/não-only checklists", () => {
+    assert.deepEqual(
+      buildChecklistPayload(
+        { nome: "Lacre", notaMinimaCritico: "", mediaMinima: "", itensIds: ["s"] },
+        catalogo,
+      ),
+      { nome: "Lacre", notaMinimaCritico: null, mediaMinima: null, itensIds: ["s"] },
+    );
+  });
+
   it("returns null when name, grades or items are missing", () => {
-    assert.equal(buildChecklistPayload({ ...form, nome: "  " }), null);
-    assert.equal(buildChecklistPayload({ ...form, mediaMinima: "11" }), null);
-    assert.equal(buildChecklistPayload({ ...form, notaMinimaCritico: "" }), null);
-    assert.equal(buildChecklistPayload({ ...form, itensIds: [] }), null);
+    assert.equal(buildChecklistPayload({ ...form, nome: "  " }, catalogo), null);
+    assert.equal(buildChecklistPayload({ ...form, mediaMinima: "11" }, catalogo), null);
+    assert.equal(buildChecklistPayload({ ...form, notaMinimaCritico: "" }, catalogo), null);
+    assert.equal(buildChecklistPayload({ ...form, itensIds: [] }, catalogo), null);
   });
 });

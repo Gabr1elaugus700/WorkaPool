@@ -67,7 +67,7 @@ A cadastrable quality POP factor/question in the single shared catalog (`Checkli
 _Avoid_: embedding checklist only as code constants with no admin cadastro, marking "crítico" per checklist instead of per item, storing sim/não answers on the catalog row instead of on inspeção resposta
 
 **Checklist de IBC**:
-A named set of catalog items (e.g. "Checklist Soda", "Estrutural") stored in `ChecklistModelo` with `tipo = IBC`, ordered items (`ChecklistModeloItem.ordem`), `notaMinimaCritico` and `mediaMinima` (0–10, required for IBC), and `ativo`. Vistoria screens only see `tipo = VISTORIA`.
+A named set of catalog items (e.g. "Checklist Soda", "Estrutural") stored in `ChecklistModelo` with `tipo = IBC`, ordered items (`ChecklistModeloItem.ordem`), `notaMinimaCritico` and `mediaMinima` (0–10 when the list includes at least one numeric catalog item, otherwise both null), and `ativo`. Vistoria screens only see `tipo = VISTORIA`.
 Managed via `/api/ibc/checklists` (GET/POST) and `/api/ibc/checklists/:checklistId` (GET/PATCH); reads ADMIN/ALMOX/LOGISTICA/GERENTE_DPTO, writes ADMIN/ALMOX. `itensIds` is the full ordered list (array index = `ordem`, no duplicates, at least one); sending it on PATCH replaces all items. An inactive item cannot be added (422 `IBC_CHECKLIST_ITEM_INATIVO`), but one already in the checklist that was deactivated later may stay. Unknown item → 404 `IBC_CHECKLIST_ITEM_NOT_FOUND`; missing or non-IBC checklist → 404 `IBC_CHECKLIST_NOT_FOUND`. Deactivation is `ativo: false` (no delete).
 _Avoid_: separate checklist tables for IBC, showing IBC checklists in Vistoria, adding inactive items, deleting checklists
 

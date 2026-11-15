@@ -7,9 +7,14 @@ import {
 import { IIbcChecklistItemRepository } from "../repositories/IIbcChecklistItemRepository";
 import { IbcChecklistRecord } from "../types/IbcChecklist.types";
 import { assertIbcChecklistItensElegiveis } from "./assertIbcChecklistItensElegiveis";
+import { resolveIbcChecklistMinimas } from "./resolveIbcChecklistMinimas";
 
-export type CreateIbcChecklistInput = CreateIbcChecklistData & {
+export type CreateIbcChecklistInput = {
   actorRole: Role;
+  nome: string;
+  notaMinimaCritico?: number | null;
+  mediaMinima?: number | null;
+  itensIds: string[];
 };
 
 export class CreateIbcChecklistUseCase {
@@ -25,11 +30,22 @@ export class CreateIbcChecklistUseCase {
     assertCanManageIbcChecklists(input.actorRole);
     await assertIbcChecklistItensElegiveis(this.itemRepository, input.itensIds);
 
-    return this.repository.create({
-      nome: input.nome.trim(),
-      notaMinimaCritico: input.notaMinimaCritico,
-      mediaMinima: input.mediaMinima,
-      itensIds: input.itensIds,
+    const catalogo = await this.itemRepository.findManyByIds(input.itensIds);
+    const minima = resolveIbcChecklistMinimas({
+      itens: catalogo,
+      incoming: {
+        notaMinimaCritico: input.notaMinimaCritico,
+        mediaMinima: input.mediaMinima,
+      },
     });
+
+    const data: CreateIbcChecklistData = {
+      nome: input.nome.trim(),
+      notaMinimaCritico: minima.notaMinimaCritico,
+      mediaMinima: minima.mediaMinima,
+      itensIds: input.itensIds,
+    };
+
+    return this.repository.create(data);
   }
 }
