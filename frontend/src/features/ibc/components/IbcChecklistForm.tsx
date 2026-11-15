@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { CreateIbcChecklistInput, IbcChecklistItemDTO } from "../types/ibcChecklist.types";
 import {
   buildChecklistPayload,
+  checklistTemItemNumerico,
   listItensDisponiveis,
   moveItem,
   type IbcChecklistForm as FormState,
@@ -29,7 +30,8 @@ const NOTAS = [
 export default function IbcChecklistForm({ initial, catalogo, saving, onSubmit, onCancel }: Props) {
   const [form, setForm] = useState<FormState>(initial);
   const [itemParaAdicionar, setItemParaAdicionar] = useState("");
-  const payload = buildChecklistPayload(form);
+  const exigeMinimas = checklistTemItemNumerico(catalogo, form.itensIds);
+  const payload = buildChecklistPayload(form, catalogo);
   const disponiveis = listItensDisponiveis(catalogo, form.itensIds);
   const porId = new Map(catalogo.map((item) => [item.id, item]));
   const setItens = (itensIds: string[]) => setForm((atual) => ({ ...atual, itensIds }));
@@ -53,17 +55,19 @@ export default function IbcChecklistForm({ initial, catalogo, saving, onSubmit, 
             onChange={(event) => setForm({ ...form, nome: event.target.value })}
           />
         </div>
-        {NOTAS.map(({ key, label }) => (
-          <div key={key} className="space-y-1.5">
-            <Label htmlFor={`ibc-checklist-${key}`} className="text-xs">{label}</Label>
-            <Input
-              id={`ibc-checklist-${key}`}
-              inputMode="decimal"
-              value={form[key]}
-              onChange={(event) => setForm({ ...form, [key]: event.target.value })}
-            />
-          </div>
-        ))}
+        {exigeMinimas
+          ? NOTAS.map(({ key, label }) => (
+              <div key={key} className="space-y-1.5">
+                <Label htmlFor={`ibc-checklist-${key}`} className="text-xs">{label}</Label>
+                <Input
+                  id={`ibc-checklist-${key}`}
+                  inputMode="decimal"
+                  value={form[key]}
+                  onChange={(event) => setForm({ ...form, [key]: event.target.value })}
+                />
+              </div>
+            ))
+          : null}
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">

@@ -28,6 +28,14 @@ export function moveItem(ids: string[], index: number, direcao: "up" | "down"): 
   return copia;
 }
 
+export function checklistTemItemNumerico(
+  catalogo: IbcChecklistItemDTO[],
+  itensIds: string[],
+): boolean {
+  const porId = new Map(catalogo.map((item) => [item.id, item]));
+  return itensIds.some((id) => porId.get(id)?.tipo === "NUMERICO");
+}
+
 export function listItensDisponiveis(
   itens: IbcChecklistItemDTO[],
   idsNoChecklist: string[],
@@ -47,11 +55,23 @@ export function listChecklistsDisponiveisParaVinculo(
 }
 
 /** Monta o payload da API; null enquanto o formulário estiver incompleto ou inválido. */
-export function buildChecklistPayload(form: IbcChecklistForm): CreateIbcChecklistInput | null {
+export function buildChecklistPayload(
+  form: IbcChecklistForm,
+  catalogo: IbcChecklistItemDTO[],
+): CreateIbcChecklistInput | null {
   const nome = form.nome.trim();
+  if (!nome || form.itensIds.length === 0) {
+    return null;
+  }
+
+  const exigeMinimas = checklistTemItemNumerico(catalogo, form.itensIds);
+  if (!exigeMinimas) {
+    return { nome, notaMinimaCritico: null, mediaMinima: null, itensIds: [...form.itensIds] };
+  }
+
   const notaMinimaCritico = parseNotaMinima(form.notaMinimaCritico);
   const mediaMinima = parseNotaMinima(form.mediaMinima);
-  if (!nome || notaMinimaCritico === null || mediaMinima === null || form.itensIds.length === 0) {
+  if (notaMinimaCritico === null || mediaMinima === null) {
     return null;
   }
   return { nome, notaMinimaCritico, mediaMinima, itensIds: [...form.itensIds] };

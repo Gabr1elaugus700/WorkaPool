@@ -52,6 +52,19 @@ async function createItem(descricao: string, ativo = true): Promise<string> {
   return item.id;
 }
 
+async function createSimNaoItem(descricao: string): Promise<string> {
+  const item = await prisma.checklistItem.create({
+    data: {
+      descricao: `${FIXTURE_PREFIX}${descricao}`,
+      tipo: "SIM_NAO",
+      respostaEsperada: "SIM",
+      bloqueante: true,
+      critico: false,
+    },
+  });
+  return item.id;
+}
+
 type ItemNoChecklist = { itemId: string; ordem: number; ativo: boolean };
 
 describe("IBC checklists HTTP persistence (#276)", () => {
@@ -202,6 +215,95 @@ describe("IBC checklists HTTP persistence (#276)", () => {
       .send({ itensIds: [tampa] });
     assert.equal(keep.status, 200);
     assert.equal(keep.body.itens[0].ativo, false);
+  });
+
+  it("stores null minima for sim/não-only checklists (#479)", async () => {
+    const app = createTestApp();
+    const lacre = await createSimNaoItem("Lacre");
+
+    const created = await request(app)
+      .post("/api/ibc/checklists")
+      .set("Authorization", bearer(Role.ALMOX))
+      .send({ nome: `${FIXTURE_PREFIX}Lacre`, itensIds: [lacre] });
+    assert.equal(created.status, 201);
+    assert.equal(created.body.notaMinimaCritico, null);
+    assert.equal(created.body.mediaMinima, null);
+  });
+
+  it("requires minima for numeric items, including inactive (#479)", async () => {
+    const app = createTestApp();
+    const tampa = await createItem("Tampa");
+
+    const semMinima = await request(app)
+      .post("/api/ibc/checklists")
+      .set("Authorization", bearer(Role.ALMOX))
+      .send({ nome: `${FIXTURE_PREFIX}Soda`, itensIds: [tampa] });
+    assert.equal(semMinima.status, 400);
+    assert.equal(semMinima.body.code, "IBC_CHECKLIST_INVALID_BODY");
+
+    const lacre = await createSimNaoItem("Lacre");
+    const misto = await request(app)
+      .post("/api/ibc/checklists")
+      .set("Authorization", bearer(Role.ALMOX))
+      .send({
+        nome: `${FIXTURE_PREFIX}Mix`,
+        notaMinimaCritico: 7,
+        mediaMinima: 6,
+        itensIds: [tampa, lacre],
+      });
+    assert.equal(misto.status, 201);
+
+    await prisma.checklistItem.update({ where: { id: tampa }, data: { ativo: false } });
+    await request(app)
+      .patch(`/api/ibc/checklists/${misto.body.id}`)
+      .set("Authorization", bearer(Role.ALMOX))
+      .send({ itensIds: [tampa, lacre] });
+    const inativoSemMinima = await request(app)
+      .patch(`/api/ibc/checklists/${misto.body.id}`)
+      .set("Authorization", bearer(Role.ALMOX))
+      .send({ notaMinimaCritico: null });
+    assert.equal(inativoSemMinima.status, 400);
+    assert.equal(inativoSemMinima.body.code, "IBC_CHECKLIST_INVALID_BODY");
+  });
+
+  it("clears and restores minima when numeric items leave and return (#479)", async () => {
+    const app = createTestApp();
+    const tampa = await createItem("Tampa");
+    const lacre = await createSimNaoItem("Lacre");
+
+    const numeric = await request(app)
+      .post("/api/ibc/checklists")
+      .set("Authorization", bearer(Role.ALMOX))
+      .send({
+        nome: `${FIXTURE_PREFIX}Misto`,
+        notaMinimaCritico: 7,
+        mediaMinima: 6,
+        itensIds: [tampa, lacre],
+      });
+    assert.equal(numeric.status, 201);
+
+    const soSimNao = await request(app)
+      .patch(`/api/ibc/checklists/${numeric.body.id}`)
+      .set("Authorization", bearer(Role.ALMOX))
+      .send({ itensIds: [lacre] });
+    assert.equal(soSimNao.status, 200);
+    assert.equal(soSimNao.body.notaMinimaCritico, null);
+    assert.equal(soSimNao.body.mediaMinima, null);
+
+    const semMinimaDeNovo = await request(app)
+      .patch(`/api/ibc/checklists/${numeric.body.id}`)
+      .set("Authorization", bearer(Role.ALMOX))
+      .send({ itensIds: [tampa, lacre] });
+    assert.equal(semMinimaDeNovo.status, 400);
+    assert.equal(semMinimaDeNovo.body.code, "IBC_CHECKLIST_INVALID_BODY");
+
+    const comMinima = await request(app)
+      .patch(`/api/ibc/checklists/${numeric.body.id}`)
+      .set("Authorization", bearer(Role.ALMOX))
+      .send({ itensIds: [tampa, lacre], notaMinimaCritico: 8, mediaMinima: 7 });
+    assert.equal(comMinima.status, 200);
+    assert.equal(comMinima.body.notaMinimaCritico, 8);
+    assert.equal(comMinima.body.mediaMinima, 7);
   });
 
   it("returns 404 for unknown item, missing checklist and Vistoria checklist", async () => {
