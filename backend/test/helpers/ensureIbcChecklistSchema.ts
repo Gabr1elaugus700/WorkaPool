@@ -16,9 +16,25 @@ export async function ensureIbcChecklistSchema(
     END $$
   `);
 
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      CREATE TYPE "ChecklistItemTipo" AS ENUM ('NUMERICO', 'SIM_NAO');
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$
+  `);
+  await prisma.$executeRawUnsafe(`
+    DO $$ BEGIN
+      CREATE TYPE "ChecklistItemRespostaEsperada" AS ENUM ('SIM', 'NAO');
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$
+  `);
+
   const statements = [
     `ALTER TABLE "ChecklistItem" ADD COLUMN IF NOT EXISTS "critico" BOOLEAN NOT NULL DEFAULT false`,
     `ALTER TABLE "ChecklistItem" ADD COLUMN IF NOT EXISTS "ativo" BOOLEAN NOT NULL DEFAULT true`,
+    `ALTER TABLE "ChecklistItem" ADD COLUMN IF NOT EXISTS "tipo" "ChecklistItemTipo" NOT NULL DEFAULT 'NUMERICO'`,
+    `ALTER TABLE "ChecklistItem" ADD COLUMN IF NOT EXISTS "respostaEsperada" "ChecklistItemRespostaEsperada"`,
+    `ALTER TABLE "ChecklistItem" ADD COLUMN IF NOT EXISTS "bloqueante" BOOLEAN`,
     `ALTER TABLE "ChecklistModelo" ADD COLUMN IF NOT EXISTS "tipo" "ChecklistTipo" NOT NULL DEFAULT 'VISTORIA'`,
     `ALTER TABLE "ChecklistModelo" ADD COLUMN IF NOT EXISTS "notaMinimaCritico" DOUBLE PRECISION`,
     `ALTER TABLE "ChecklistModelo" ADD COLUMN IF NOT EXISTS "mediaMinima" DOUBLE PRECISION`,

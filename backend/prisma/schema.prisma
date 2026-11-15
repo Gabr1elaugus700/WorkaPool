@@ -573,10 +573,13 @@ model ItemChecklist {
 }
 
 model ChecklistItem {
-  id                   String                @id @default(uuid())
+  id                   String                        @id @default(uuid())
   descricao            String
-  critico              Boolean               @default(false)
-  ativo                Boolean               @default(true)
+  tipo                 ChecklistItemTipo             @default(NUMERICO)
+  critico              Boolean                       @default(false)
+  respostaEsperada     ChecklistItemRespostaEsperada?
+  bloqueante           Boolean?
+  ativo                Boolean                       @default(true)
   checklistInspections ChecklistInspection[]
   checklistModelItems  ChecklistModelItem[]
   modelos              ChecklistModeloItem[]
@@ -597,6 +600,16 @@ model ChecklistModel {
 enum ChecklistTipo {
   VISTORIA
   IBC
+}
+
+enum ChecklistItemTipo {
+  NUMERICO
+  SIM_NAO
+}
+
+enum ChecklistItemRespostaEsperada {
+  SIM
+  NAO
 }
 
 enum IbcChecklistSituacao {
