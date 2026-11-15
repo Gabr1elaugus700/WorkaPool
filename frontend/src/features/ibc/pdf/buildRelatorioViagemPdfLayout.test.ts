@@ -65,33 +65,44 @@ describe("buildRelatorioViagemPdfLayout", () => {
     assert.deepEqual(ids, ["H0001", "H0010", "H0001", "H0010"]);
   });
 
-  it("monta a faixa, as colunas e as pautas, sem Reimpressão nem destino", () => {
-    const layout = buildRelatorioViagemPdfLayout(relatorio({ placa: null, totalClientes: 2 }), EMITIDO);
+  it("monta a faixa, as colunas e as pautas, sem Reimpressão", () => {
+    const layout = buildRelatorioViagemPdfLayout(relatorio({ placa: "ABC1D23", totalClientes: 2 }), EMITIDO);
     const pagina = layout.paginas[0];
     const unidos = textos(pagina.itens)
       .map((item) => item.texto)
       .join("\n");
-    const data = textoIgual(pagina.itens, "Data: 11/10/2026");
-    const carga = textoIgual(pagina.itens, "Carga: 202");
-    const placa = textoIgual(pagina.itens, "Placa: —");
-    const ibcs = textoIgual(pagina.itens, "Total de IBCs: 2");
-    const clientes = textoIgual(pagina.itens, "Total de clientes: 2");
+    const data = textoIgual(pagina.itens, "Data");
+    const dataValor = textoIgual(pagina.itens, "12/10/2026");
+    const carga = textoIgual(pagina.itens, "Carga");
+    const codigoCarga = textoIgual(pagina.itens, "202");
+    const destino = textoIgual(pagina.itens, "Blumenau");
+    const placa = textoIgual(pagina.itens, "Placa");
+    const ibcs = textoIgual(pagina.itens, "Total de IBCs");
+    const ibcsValor = textoIgual(pagina.itens, "2");
+    const clientes = textoIgual(pagina.itens, "Total de clientes");
     const motorista = textoIgual(pagina.itens, "Motorista");
     const assinatura = textoIgual(pagina.itens, "Assinatura");
     const pedido = textoIgual(pagina.itens, "Pedido 12");
     const quantidade = textoIgual(pagina.itens, "Quantidade 3");
+    const nf = textoIgual(pagina.itens, "NF");
 
     assert.equal(layout.paginas.length, 1);
     assert.equal(pagina.rodape, "Página 1 de 1 · Emitido em 12/10/2026 12:30");
     assert.ok(unidos.includes("Relatório de Viagem"));
     assert.equal(unidos.includes("Reimpressão"), false);
-    assert.equal(unidos.includes("Blumenau"), false);
-    assert.equal(unidos.includes("____"), false);
-    assert.ok(data.y === carga.y && carga.y === placa.y);
-    assert.ok(data.x < carga.x && carga.x < placa.x);
-    assert.ok(ibcs.y === clientes.y && ibcs.y > data.y && ibcs.y - data.y <= 8);
+    assert.equal(unidos.includes("ABC1D23"), false);
+    assert.ok(data.y === placa.y && placa.y === ibcs.y && ibcs.y === clientes.y);
+    assert.ok(data.x < placa.x && placa.x < ibcs.x && ibcs.x < clientes.x);
+    assert.equal(dataValor.y, ibcsValor.y);
+    assert.ok(dataValor.y > data.y);
+    assert.ok(carga.x > clientes.x && codigoCarga.x === carga.x && destino.x === carga.x);
+    assert.ok(carga.y < codigoCarga.y && codigoCarga.y < destino.y && destino.y < data.y);
     assert.equal(motorista.y, assinatura.y);
-    assert.ok(motorista.x < assinatura.x && motorista.y > ibcs.y);
+    assert.ok(motorista.x < assinatura.x && motorista.y > dataValor.y);
+    const molduras = pagina.itens.filter((item) => item.tipo === "moldura");
+    assert.equal(molduras.length, 2);
+    const verticais = pagina.itens.filter((item) => item.tipo === "vertical");
+    assert.equal(verticais.length, 3);
 
     const tracos = pagina.itens.filter((item) => item.tipo === "traco");
     const linhaMotorista = tracos.find((item) => item.papel === "motorista");
@@ -104,7 +115,11 @@ describe("buildRelatorioViagemPdfLayout", () => {
     assert.ok(linhaAssinatura.x2 > assinatura.x);
 
     assert.equal(pedido.y, quantidade.y);
-    assert.ok(pedido.x < quantidade.x);
+    assert.equal(pedido.y, nf.y);
+    assert.ok(pedido.x < quantidade.x && quantidade.x < nf.x);
+    const linhaNf = tracos.filter((item) => item.papel === "nf");
+    assert.equal(linhaNf.length >= 1, true);
+    assert.ok(linhaNf.some((item) => item.y === pedido.y));
     assert.equal(unidos.includes("Empréstimo"), false);
     assert.equal(unidos.includes("Modalidade"), false);
     assert.equal(unidos.includes("Transbordo"), false);

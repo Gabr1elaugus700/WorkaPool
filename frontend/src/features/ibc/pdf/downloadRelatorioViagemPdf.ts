@@ -9,6 +9,8 @@ const LARGURA_TRACO: Record<Extract<RelatorioViagemPdfItem, { tipo: "traco" }>["
   fio: 0.2,
   motorista: 0.35,
   assinatura: 0.35,
+  placa: 0.35,
+  nf: 0.35,
   pauta: 0.3,
 };
 
@@ -32,6 +34,12 @@ function desenhar(doc: jsPDF, itens: RelatorioViagemPdfItem[], rodape: string) {
     } else if (item.tipo === "selo") {
       doc.setLineWidth(0.35);
       doc.roundedRect(item.x, item.y - item.altura + 1.2, item.largura, item.altura, 0.8, 0.8);
+    } else if (item.tipo === "moldura") {
+      doc.setLineWidth(0.4);
+      doc.rect(item.x, item.y, item.largura, item.altura);
+    } else if (item.tipo === "vertical") {
+      doc.setLineWidth(0.4);
+      doc.line(item.x, item.y, item.x, item.y + item.altura);
     } else {
       doc.setLineWidth(LARGURA_TRACO[item.papel]);
       doc.line(item.x1, item.y, item.x2, item.y);
