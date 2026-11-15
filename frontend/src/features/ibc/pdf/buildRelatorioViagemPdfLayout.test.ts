@@ -7,8 +7,11 @@ import {
 } from "./buildRelatorioViagemPdfLayout";
 
 const EMITIDO = new Date("2026-10-12T15:30:00.000Z");
-const MARCAS = ["Ficou no cliente", "Troca"] as const;
-const LISTA = [{ identificador: "H0001" }, { identificador: "H0010" }] as const;
+const MARCAS = ["Ficou no cliente", "Troca", "Retorno"] as const;
+const LISTA = [
+  { identificador: "H0001", produto: "Hipoclorito" },
+  { identificador: "H0010", produto: null },
+] as const;
 
 function relatorio(overrides: Partial<RelatorioViagemDTO> = {}): RelatorioViagemDTO {
   return {
@@ -58,11 +61,16 @@ describe("buildRelatorioViagemPdfLayout", () => {
       .filter((texto) => texto.startsWith("Beta") || texto.startsWith("Acme"));
     const ids = textos(layout.paginas.flatMap((pagina) => pagina.itens))
       .map((item) => item.texto)
-      .filter((texto) => texto === "H0001" || texto === "H0010");
+      .filter((texto) => texto.startsWith("H0001") || texto.startsWith("H0010"));
 
     assert.equal(layout.arquivo, "relatorio-viagem-202.pdf");
     assert.deepEqual(nomes, ["Beta (B)", "Acme (A)"]);
-    assert.deepEqual(ids, ["H0001", "H0010", "H0001", "H0010"]);
+    assert.deepEqual(ids, [
+      "H0001 - Hipoclorito",
+      "H0010",
+      "H0001 - Hipoclorito",
+      "H0010",
+    ]);
   });
 
   it("monta a faixa, as colunas e as pautas, sem Reimpressão", () => {
@@ -124,18 +132,17 @@ describe("buildRelatorioViagemPdfLayout", () => {
     assert.equal(unidos.includes("Modalidade"), false);
     assert.equal(unidos.includes("Transbordo"), false);
     assert.equal(unidos.includes("Retornou"), false);
-    assert.equal(unidos.includes("Retorno"), false);
 
     const marcas = MARCAS.map((marca) => textoIgual(pagina.itens, marca));
-    assert.equal(marcas.length, 2);
+    assert.equal(marcas.length, 3);
     assert.ok(marcas.every((marca) => marca.y === marcas[0].y && marca.alinhamento === "centro"));
-    assert.ok(marcas[1].x - marcas[0].x > 40);
+    assert.ok(marcas[1].x - marcas[0].x > 20);
 
     const fileiraY = Math.min(
       ...pagina.itens.filter((item) => item.tipo === "caixa").map((item) => item.y),
     );
     const fileira = pagina.itens.filter((item) => item.tipo === "caixa" && item.y === fileiraY);
-    assert.equal(fileira.length, 2);
+    assert.equal(fileira.length, 3);
     marcas.forEach((marca, indice) => {
       const caixa = fileira[indice];
       assert.ok(caixa && caixa.tipo === "caixa");
@@ -150,17 +157,19 @@ describe("buildRelatorioViagemPdfLayout", () => {
       assert.equal(badge.negrito, true);
       assert.equal(badge.alinhamento, "centro");
       const linha = pagina.itens.filter((item) => item.y === badge.y);
-      const identificador = linha.find((item) => item.tipo === "texto" && item.texto.startsWith("H"));
+      const identificador = linha.find(
+        (item) => item.tipo === "texto" && (item.texto.startsWith("H0001") || item.texto.startsWith("H0010")),
+      );
       const selo = linha.find((item) => item.tipo === "selo");
       const caixas = linha.filter((item) => item.tipo === "caixa");
       assert.ok(identificador && identificador.tipo === "texto");
       assert.ok(selo && selo.tipo === "selo");
-      assert.equal(caixas.length, 2);
+      assert.equal(caixas.length, 3);
       assert.ok(selo.x > identificador.x);
       assert.ok(badge.x > selo.x && badge.x < selo.x + selo.largura);
       assert.ok(caixas.every((caixa) => caixa.tipo === "caixa" && caixa.x > selo.x + selo.largura));
     }
-    const yEmprestimo = textoIgual(pagina.itens, "H0001").y;
+    const yEmprestimo = textoIgual(pagina.itens, "H0001 - Hipoclorito").y;
     assert.equal(
       pagina.itens.some(
         (item) => item.y === yEmprestimo && (item.tipo === "selo" || (item.tipo === "texto" && item.texto === "Incluso")),
@@ -179,7 +188,8 @@ describe("buildRelatorioViagemPdfLayout", () => {
     assert.ok(yBeta != null && yAcme != null && yAcme > yBeta);
 
     const checklist = Array.from({ length: 45 }, (_, indice) => ({
-      identificador: `IBC-${indice + 1}`,
+        identificador: `IBC-${indice + 1}`,
+        produto: null,
     }));
     const longo = buildRelatorioViagemPdfLayout(
       relatorio({

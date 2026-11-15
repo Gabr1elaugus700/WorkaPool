@@ -148,7 +148,7 @@ export type RelatorioViagemBlocoDTO = {
   numPed: string;
   quantidadeEsperada: number;
   incluso: boolean;
-  checklist: { identificador: string }[];
+  checklist: { identificador: string; produto: string | null }[];
 };
 
 export type RelatorioViagemDTO = {

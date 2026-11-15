@@ -59,6 +59,7 @@ type Repo = Pick<
   | "getCargaByCodCar"
   | "listPedidosIbcByCargaId"
   | "listAlocacoesByCargaId"
+  | "listCompatibilidadePorIds"
   | "findExpedicaoByCargaId"
   | "findPlacaByCargaId"
 >;
@@ -75,13 +76,19 @@ const repo = (overrides: Partial<Repo> = {}): Repo => ({
     alocacao("H0002", "10"),
     alocacao("H0001", "20"),
   ]),
+  listCompatibilidadePorIds: mock.fn(async () => []),
   findExpedicaoByCargaId: mock.fn(async () => expedicao()),
   findPlacaByCargaId: mock.fn(async () => "ABC1D23"),
   ...overrides,
 });
 
-const execute = (overrides: Partial<Repo> = {}) =>
-  new GetRelatorioViagemUseCase(repo(overrides) as IIbcExpedicaoRepository).execute({
+const execute = (
+  overrides: Partial<Repo> = {},
+  descricoes: { grupoCodigo: string; grupoDescricao: string }[] = [],
+) =>
+  new GetRelatorioViagemUseCase(repo(overrides) as IIbcExpedicaoRepository, {
+    listDescricoes: async () => descricoes,
+  }).execute({
     codCar: COD_CAR,
   });
 
@@ -170,9 +177,9 @@ describe("GetRelatorioViagemUseCase", () => {
       ]),
     });
     const lista = [
-      { identificador: "H0001" },
-      { identificador: "H0002" },
-      { identificador: "H0010" },
+      { identificador: "H0001", produto: null },
+      { identificador: "H0002", produto: null },
+      { identificador: "H0010", produto: null },
     ];
 
     assert.deepEqual(
@@ -237,9 +244,9 @@ describe("GetRelatorioViagemUseCase", () => {
   it("repete o checklist completo da carga em cada bloco, por identificador", async () => {
     const relatorio = await execute();
     const esperado = [
-      { identificador: "H0001" },
-      { identificador: "H0002" },
-      { identificador: "H0010" },
+      { identificador: "H0001", produto: null },
+      { identificador: "H0002", produto: null },
+      { identificador: "H0010", produto: null },
     ];
 
     assert.equal(relatorio.totalIbcs, 3);
@@ -254,6 +261,21 @@ describe("GetRelatorioViagemUseCase", () => {
       "numPed",
       "quantidadeEsperada",
     ]);
+  });
+
+  it("grava o primeiro nome do produto ao lado do identificador", async () => {
+    const relatorio = await execute(
+      {
+        listCompatibilidadePorIds: mock.fn(async () => [
+          { id: "ibc-H0001", identificador: "H0001", universal: false, grupoCodigo: "G1" },
+          { id: "ibc-H0010", identificador: "H0010", universal: true, grupoCodigo: null },
+        ]),
+      },
+      [{ grupoCodigo: "G1", grupoDescricao: "Hipoclorito de sódio 12%" }],
+    );
+
+    assert.equal(relatorio.blocos[0].checklist.find((item) => item.identificador === "H0001")?.produto, "Hipoclorito");
+    assert.equal(relatorio.blocos[0].checklist.find((item) => item.identificador === "H0010")?.produto, null);
   });
 
   it("devolve placa nula quando a carga não tem CargaDespacho", async () => {

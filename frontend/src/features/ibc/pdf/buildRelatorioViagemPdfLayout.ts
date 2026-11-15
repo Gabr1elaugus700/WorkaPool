@@ -5,11 +5,10 @@ const MARGEM_TOPO = 18;
 const FUNDO = 274;
 const DIREITA = 196;
 const CAIXA = 5;
-const LARGURA_IBC = 34;
+const LARGURA_IBC = 62;
 const LARGURA_BADGE = 22;
-const LARGURA_MARCA = (DIREITA - MARGEM_X - LARGURA_IBC - LARGURA_BADGE) / 2;
-
-const MARCAS = ["Ficou no cliente", "Troca"] as const;
+const MARCAS = ["Ficou no cliente", "Troca", "Retorno"] as const;
+const LARGURA_MARCA = (DIREITA - MARGEM_X - LARGURA_IBC - LARGURA_BADGE) / MARCAS.length;
 
 const dataPt = new Intl.DateTimeFormat("pt-BR", {
   day: "2-digit",
@@ -220,8 +219,13 @@ function emitirSeloIncluso(estado: Estado) {
   texto(estado, "Incluso", centroBadge(), true, 7, "centro");
 }
 
-function emitirLinhaIbc(estado: Estado, identificador: string, incluso: boolean) {
-  texto(estado, identificador, MARGEM_X, false, 10);
+function rotuloIbc(identificador: string, produto: string | null): string {
+  const nome = produto?.trim() ?? "";
+  return nome.length > 0 ? `${identificador} - ${nome}` : identificador;
+}
+
+function emitirLinhaIbc(estado: Estado, identificador: string, produto: string | null, incluso: boolean) {
+  texto(estado, rotuloIbc(identificador, produto), MARGEM_X, false, 10);
   if (incluso) emitirSeloIncluso(estado);
   for (let indice = 0; indice < MARCAS.length; indice += 1) {
     colocar(estado, {
@@ -264,7 +268,7 @@ function emitirBloco(estado: Estado, bloco: RelatorioViagemDTO["blocos"][number]
   if (!garantir(estado, 7 + 8, continuarMarcas)) emitirCabecalhoMarcas(estado);
   for (const ibc of bloco.checklist) {
     garantir(estado, 8, continuarMarcas);
-    emitirLinhaIbc(estado, ibc.identificador, bloco.incluso);
+    emitirLinhaIbc(estado, ibc.identificador, ibc.produto, bloco.incluso);
   }
 
   garantir(estado, 6 + 8 + 8, () => repetirBloco(estado, nome, bloco.numPed));
