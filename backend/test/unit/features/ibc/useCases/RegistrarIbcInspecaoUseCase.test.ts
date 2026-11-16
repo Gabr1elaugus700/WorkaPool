@@ -36,11 +36,51 @@ const soda: IbcChecklistParaInspecao = {
   notaMinimaCritico: 7,
   mediaMinima: 6,
   itensAtivos: [
-    { checklistItemId: "valvula", descricao: "Válvula", critico: true },
-    { checklistItemId: "tampa", descricao: "Tampa", critico: false },
-    { checklistItemId: "grade", descricao: "Grade", critico: false },
+    {
+      checklistItemId: "valvula",
+      descricao: "Válvula",
+      tipo: "NUMERICO",
+      critico: true,
+      respostaEsperada: null,
+      bloqueante: null,
+    },
+    {
+      checklistItemId: "tampa",
+      descricao: "Tampa",
+      tipo: "NUMERICO",
+      critico: false,
+      respostaEsperada: null,
+      bloqueante: null,
+    },
+    {
+      checklistItemId: "grade",
+      descricao: "Grade",
+      tipo: "NUMERICO",
+      critico: false,
+      respostaEsperada: null,
+      bloqueante: null,
+    },
   ],
 };
+
+function respostaNumerica(
+  checklistItemId: string,
+  descricao: string,
+  critico: boolean,
+  nota: number,
+) {
+  return {
+    checklistItemId,
+    descricao,
+    tipo: "NUMERICO" as const,
+    critico,
+    nota,
+    resposta: null,
+    respostaEsperada: null,
+    bloqueante: null,
+    observacao: null,
+  };
+}
 
 type SetupOptions = {
   ibc?: IbcCadastroRecord | null;
@@ -226,6 +266,48 @@ describe("RegistrarIbcInspecaoUseCase — recusas", () => {
     await assert.rejects(() => useCase.execute(input({ respostas: [] })));
     assert.equal(gravadas.length, 0);
   });
+
+  it("recusa checklist com item numérico ativo sem mínimos com 422", async () => {
+    const { useCase } = setup({
+      checklists: {
+        soda: { ...soda, notaMinimaCritico: null, mediaMinima: null },
+      },
+    });
+    await assert.rejects(
+      () => useCase.execute(input()),
+      hasCode("IBC_INSPECAO_CHECKLIST_SEM_MINIMAS", 422),
+    );
+  });
+
+  it("recusa nota em item sim/não com 400", async () => {
+    const { useCase } = setup({
+      checklists: {
+        lacre: {
+          ativo: true,
+          notaMinimaCritico: null,
+          mediaMinima: null,
+          itensAtivos: [
+            {
+              checklistItemId: "lacre",
+              descricao: "Lacre",
+              tipo: "SIM_NAO",
+              critico: false,
+              respostaEsperada: "SIM",
+              bloqueante: true,
+            },
+          ],
+        },
+      },
+    });
+    await assert.rejects(
+      () =>
+        useCase.execute({
+          ...input({ checklistModeloId: "lacre" }),
+          respostas: [{ checklistItemId: "lacre", nota: 8 }],
+        }),
+      hasCode("IBC_INSPECAO_INVALID_BODY", 400),
+    );
+  });
 });
 
 describe("RegistrarIbcInspecaoUseCase — registro e aptidão", () => {
@@ -245,9 +327,9 @@ describe("RegistrarIbcInspecaoUseCase — registro e aptidão", () => {
         inspecionadoEm: NOW,
         observacao: "ok",
         respostas: [
-          { checklistItemId: "valvula", descricao: "Válvula", critico: true, nota: 8 },
-          { checklistItemId: "tampa", descricao: "Tampa", critico: false, nota: 7 },
-          { checklistItemId: "grade", descricao: "Grade", critico: false, nota: 6 },
+          respostaNumerica("valvula", "Válvula", true, 8),
+          respostaNumerica("tampa", "Tampa", false, 7),
+          respostaNumerica("grade", "Grade", false, 6),
         ],
       },
     ]);
@@ -336,5 +418,74 @@ describe("RegistrarIbcInspecaoUseCase — registro e aptidão", () => {
     const result = await useCase.execute(input());
 
     assert.equal(result.aviso, undefined);
+  });
+
+  it("reprova checklist só sim/não quando bloqueante difere do esperado", async () => {
+    const { useCase } = setup({
+      checklists: {
+        lacre: {
+          ativo: true,
+          notaMinimaCritico: null,
+          mediaMinima: null,
+          itensAtivos: [
+            {
+              checklistItemId: "lacre",
+              descricao: "Lacre",
+              tipo: "SIM_NAO",
+              critico: false,
+              respostaEsperada: "SIM",
+              bloqueante: true,
+            },
+          ],
+        },
+      },
+    });
+    const result = await useCase.execute({
+      ...input({ checklistModeloId: "lacre" }),
+      respostas: [{ checklistItemId: "lacre", resposta: "NAO" }],
+    });
+
+    assert.equal(result.inspecao.resultado, "REPROVADA");
+    assert.equal(result.ibc.aptidao, "INAPTO");
+    assert.deepEqual(result.inspecao.respostas[0], {
+      checklistItemId: "lacre",
+      descricao: "Lacre",
+      tipo: "SIM_NAO",
+      critico: false,
+      nota: null,
+      resposta: "NAO",
+      respostaEsperada: "SIM",
+      bloqueante: true,
+      observacao: null,
+    });
+  });
+
+  it("aprova sim/não não bloqueante fora do esperado", async () => {
+    const { useCase } = setup({
+      checklists: {
+        lacre: {
+          ativo: true,
+          notaMinimaCritico: null,
+          mediaMinima: null,
+          itensAtivos: [
+            {
+              checklistItemId: "lacre",
+              descricao: "Lacre",
+              tipo: "SIM_NAO",
+              critico: false,
+              respostaEsperada: "SIM",
+              bloqueante: false,
+            },
+          ],
+        },
+      },
+    });
+    const result = await useCase.execute({
+      ...input({ checklistModeloId: "lacre" }),
+      respostas: [{ checklistItemId: "lacre", resposta: "NAO", observacao: " risco aceito " }],
+    });
+
+    assert.equal(result.inspecao.resultado, "APROVADA");
+    assert.equal(result.inspecao.respostas[0]?.observacao, "risco aceito");
   });
 });

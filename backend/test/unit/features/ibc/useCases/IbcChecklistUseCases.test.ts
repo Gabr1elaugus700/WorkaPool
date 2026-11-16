@@ -16,13 +16,41 @@ import {
 } from "../../../../../src/features/ibc/types/IbcChecklist.types";
 import { AppError } from "../../../../../src/utils/AppError";
 
-const tampa: IbcChecklistItemRecord = { id: "item-1", descricao: "Tampa", critico: true, ativo: true };
-const base: IbcChecklistItemRecord = { id: "item-2", descricao: "Base", critico: false, ativo: true };
+const itemDefaults = {
+  tipo: "NUMERICO" as const,
+  respostaEsperada: null,
+  bloqueante: null,
+};
+
+const tampa: IbcChecklistItemRecord = {
+  id: "item-1",
+  descricao: "Tampa",
+  critico: true,
+  ativo: true,
+  ...itemDefaults,
+};
+const base: IbcChecklistItemRecord = {
+  id: "item-2",
+  descricao: "Base",
+  critico: false,
+  ativo: true,
+  ...itemDefaults,
+};
 const valvulaInativa: IbcChecklistItemRecord = {
   id: "item-3",
   descricao: "Válvula",
   critico: false,
   ativo: false,
+  ...itemDefaults,
+};
+const lacreSimNao: IbcChecklistItemRecord = {
+  id: "item-4",
+  descricao: "Lacre",
+  critico: false,
+  ativo: true,
+  tipo: "SIM_NAO",
+  respostaEsperada: "SIM",
+  bloqueante: true,
 };
 
 const checklistSoda: IbcChecklistRecord = {
@@ -32,7 +60,18 @@ const checklistSoda: IbcChecklistRecord = {
   mediaMinima: 6,
   ativo: true,
   createdAt: "2026-10-06T00:00:00.000Z",
-  itens: [{ itemId: "item-3", descricao: "Válvula", critico: false, ativo: false, ordem: 0 }],
+  itens: [
+    {
+      itemId: "item-3",
+      descricao: "Válvula",
+      tipo: "NUMERICO",
+      critico: false,
+      respostaEsperada: null,
+      bloqueante: null,
+      ativo: false,
+      ordem: 0,
+    },
+  ],
 };
 
 function createRepositories(options: {
@@ -192,6 +231,62 @@ describe("IBC checklist use-cases", () => {
       hasCode("IBC_CHECKLIST_NOT_FOUND", 404),
     );
     assert.equal(updates.length, 0);
+  });
+
+  it("creates sim/não-only checklist with null minima", async () => {
+    const { checklists, itens, creates } = createRepositories({ catalog: [lacreSimNao] });
+    await new CreateIbcChecklistUseCase(checklists, itens).execute({
+      actorRole: Role.ALMOX,
+      nome: "Checklist Lacre",
+      itensIds: ["item-4"],
+    });
+    assert.deepEqual(creates, [
+      { nome: "Checklist Lacre", notaMinimaCritico: null, mediaMinima: null, itensIds: ["item-4"] },
+    ]);
+  });
+
+  it("refuses create with numeric item and no minima", async () => {
+    const { checklists, itens, creates } = createRepositories({});
+    await assert.rejects(
+      () =>
+        new CreateIbcChecklistUseCase(checklists, itens).execute({
+          actorRole: Role.ADMIN,
+          nome: "Checklist Soda",
+          itensIds: ["item-1"],
+        }),
+      hasCode("IBC_CHECKLIST_INVALID_BODY", 400),
+    );
+    assert.equal(creates.length, 0);
+  });
+
+  it("requires minima when an inactive numeric item stays in the list", async () => {
+    const { checklists, itens, updates } = createRepositories({
+      checklist: { ...checklistSoda, notaMinimaCritico: null, mediaMinima: null },
+    });
+    await assert.rejects(
+      () =>
+        new UpdateIbcChecklistUseCase(checklists, itens).execute({
+          actorRole: Role.ADMIN,
+          id: "checklist-1",
+          itensIds: ["item-3"],
+        }),
+      hasCode("IBC_CHECKLIST_INVALID_BODY", 400),
+    );
+    assert.equal(updates.length, 0);
+  });
+
+  it("clears minima when update replaces items with sim/não only", async () => {
+    const { checklists, itens, updates } = createRepositories({
+      checklist: checklistSoda,
+      catalog: [tampa, base, valvulaInativa, lacreSimNao],
+    });
+    await new UpdateIbcChecklistUseCase(checklists, itens).execute({
+      actorRole: Role.ALMOX,
+      id: "checklist-1",
+      itensIds: ["item-4"],
+    });
+    assert.equal(updates[0]?.notaMinimaCritico, null);
+    assert.equal(updates[0]?.mediaMinima, null);
   });
 
   it("forbids roles other than ADMIN and ALMOX", async () => {

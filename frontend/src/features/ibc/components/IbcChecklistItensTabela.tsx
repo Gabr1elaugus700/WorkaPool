@@ -5,11 +5,11 @@ import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/formatCount";
 import { paginate } from "@/utils/paginate";
 import type { IbcChecklistItemDTO } from "../types/ibcChecklist.types";
+import { labelBloqueanteSimNao, labelRespostaSimNao } from "../utils/ibcChecklistLabels";
 import IbcStatusContent from "./IbcStatusContent";
 
 const PAGE_SIZE = 10;
-
-const HEAD = ["Descrição", "Crítico", "Situação"] as const;
+const HEAD = ["Descrição", "Tipo", "Regra", "Situação"] as const;
 
 type Props = {
   itens: IbcChecklistItemDTO[];
@@ -17,6 +17,15 @@ type Props = {
   onEdit: (item: IbcChecklistItemDTO) => void;
   onToggleAtivo: (item: IbcChecklistItemDTO) => void;
 };
+
+function regraCell(item: IbcChecklistItemDTO): string {
+  if (item.tipo === "SIM_NAO") {
+    const esperada = item.respostaEsperada ? labelRespostaSimNao(item.respostaEsperada) : "—";
+    const bloqueante = labelBloqueanteSimNao(item.bloqueante);
+    return `Esperado: ${esperada} · Bloqueante: ${bloqueante}`;
+  }
+  return item.critico ? "Crítico" : "—";
+}
 
 export default function IbcChecklistItensTabela({ itens, saving, onEdit, onToggleAtivo }: Props) {
   const [requestedPage, setRequestedPage] = useState(1);
@@ -41,9 +50,7 @@ export default function IbcChecklistItensTabela({ itens, saving, onEdit, onToggl
           <TableHeader className="bg-muted/40">
             <TableRow>
               {HEAD.map((label) => (
-                <TableHead key={label} className="h-9 px-3 text-xs font-medium">
-                  {label}
-                </TableHead>
+                <TableHead key={label} className="h-9 px-3 text-xs font-medium">{label}</TableHead>
               ))}
               <TableHead className="h-9 px-3 text-right text-xs font-medium">
                 <span className="sr-only">Ações</span>
@@ -56,13 +63,16 @@ export default function IbcChecklistItensTabela({ itens, saving, onEdit, onToggl
                 <TableCell className={cn("px-3 py-2", !item.ativo && "text-muted-foreground line-through")}>
                   {item.descricao}
                 </TableCell>
-                <TableCell className="px-3 py-2">
-                  {item.critico ? (
+                <TableCell className="px-3 py-2 text-sm">
+                  {item.tipo === "SIM_NAO" ? "Sim/não" : "Numérico"}
+                </TableCell>
+                <TableCell className="px-3 py-2 text-sm">
+                  {item.tipo === "NUMERICO" && item.critico ? (
                     <span className="inline-flex items-center rounded-full border border-destructive/30 bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
                       Crítico
                     </span>
                   ) : (
-                    <span className="text-muted-foreground">—</span>
+                    <span className="text-muted-foreground">{regraCell(item)}</span>
                   )}
                 </TableCell>
                 <TableCell className="px-3 py-2 text-muted-foreground">{item.ativo ? "Ativo" : "Inativo"}</TableCell>
@@ -71,13 +81,7 @@ export default function IbcChecklistItensTabela({ itens, saving, onEdit, onToggl
                     <Button type="button" variant="ghost" size="sm" disabled={saving} onClick={() => onEdit(item)}>
                       Editar
                     </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      disabled={saving}
-                      onClick={() => onToggleAtivo(item)}
-                    >
+                    <Button type="button" variant="ghost" size="sm" disabled={saving} onClick={() => onToggleAtivo(item)}>
                       {item.ativo ? "Desativar" : "Ativar"}
                     </Button>
                   </div>
@@ -93,20 +97,10 @@ export default function IbcChecklistItensTabela({ itens, saving, onEdit, onToggl
             {`Página ${page} de ${totalPages} · ${formatCount(itens.length, "item", "itens")}`}
           </span>
           <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setRequestedPage(page - 1)}
-            >
+            <Button type="button" variant="outline" disabled={page <= 1} onClick={() => setRequestedPage(page - 1)}>
               Anterior
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={page >= totalPages}
-              onClick={() => setRequestedPage(page + 1)}
-            >
+            <Button type="button" variant="outline" disabled={page >= totalPages} onClick={() => setRequestedPage(page + 1)}>
               Próxima
             </Button>
           </div>

@@ -573,10 +573,13 @@ model ItemChecklist {
 }
 
 model ChecklistItem {
-  id                   String                @id @default(uuid())
+  id                   String                        @id @default(uuid())
   descricao            String
-  critico              Boolean               @default(false)
-  ativo                Boolean               @default(true)
+  tipo                 ChecklistItemTipo             @default(NUMERICO)
+  critico              Boolean                       @default(false)
+  respostaEsperada     ChecklistItemRespostaEsperada?
+  bloqueante           Boolean?
+  ativo                Boolean                       @default(true)
   checklistInspections ChecklistInspection[]
   checklistModelItems  ChecklistModelItem[]
   modelos              ChecklistModeloItem[]
@@ -597,6 +600,16 @@ model ChecklistModel {
 enum ChecklistTipo {
   VISTORIA
   IBC
+}
+
+enum ChecklistItemTipo {
+  NUMERICO
+  SIM_NAO
+}
+
+enum ChecklistItemRespostaEsperada {
+  SIM
+  NAO
 }
 
 enum IbcChecklistSituacao {
@@ -659,8 +672,8 @@ model IbcInspecao {
   checklistModeloId String
   resultado         IbcInspecaoResultado
   mediaObtida       Float?
-  notaMinimaCritico Float
-  mediaMinima       Float
+  notaMinimaCritico Float?
+  mediaMinima       Float?
   inspetorId        String
   inspecionadoEm    DateTime              @default(now())
   observacao        String?
@@ -678,14 +691,19 @@ model IbcInspecao {
 }
 
 model IbcInspecaoResposta {
-  id              String        @id @default(uuid())
-  inspecaoId      String
-  checklistItemId String
-  nota            Int
-  critico         Boolean
-  descricao       String
-  inspecao        IbcInspecao   @relation(fields: [inspecaoId], references: [id], onDelete: Cascade)
-  checklistItem   ChecklistItem @relation(fields: [checklistItemId], references: [id])
+  id                 String                         @id @default(uuid())
+  inspecaoId         String
+  checklistItemId    String
+  tipo               ChecklistItemTipo              @default(NUMERICO)
+  nota               Int?
+  critico            Boolean
+  descricao          String
+  resposta           ChecklistItemRespostaEsperada?
+  respostaEsperada   ChecklistItemRespostaEsperada?
+  bloqueante         Boolean?
+  observacao         String?
+  inspecao           IbcInspecao                    @relation(fields: [inspecaoId], references: [id], onDelete: Cascade)
+  checklistItem      ChecklistItem                  @relation(fields: [checklistItemId], references: [id])
 
   @@unique([inspecaoId, checklistItemId])
   @@index([checklistItemId])

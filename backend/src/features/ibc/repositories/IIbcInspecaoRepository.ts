@@ -14,8 +14,8 @@ export type CreateIbcInspecaoData = {
   checklistModeloId: string;
   resultado: IbcInspecaoResultado;
   mediaObtida: number | null;
-  notaMinimaCritico: number;
-  mediaMinima: number;
+  notaMinimaCritico: number | null;
+  mediaMinima: number | null;
   inspetorId: string;
   inspecionadoEm: Date;
   observacao: string | null;

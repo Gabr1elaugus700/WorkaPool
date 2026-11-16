@@ -9,9 +9,33 @@ describe("listarItensAbaixoDoMinimo", () => {
     const result = listarItensAbaixoDoMinimo({
       ...limites,
       respostas: [
-        { descricao: "Válvula", critico: true, nota: 6 },
-        { descricao: "Tampa", critico: false, nota: 5 },
-        { descricao: "Grade", critico: false, nota: 9 },
+        {
+          descricao: "Válvula",
+          tipo: "NUMERICO",
+          critico: true,
+          nota: 6,
+          resposta: null,
+          respostaEsperada: null,
+          bloqueante: null,
+        },
+        {
+          descricao: "Tampa",
+          tipo: "NUMERICO",
+          critico: false,
+          nota: 5,
+          resposta: null,
+          respostaEsperada: null,
+          bloqueante: null,
+        },
+        {
+          descricao: "Grade",
+          tipo: "NUMERICO",
+          critico: false,
+          nota: 9,
+          resposta: null,
+          respostaEsperada: null,
+          bloqueante: null,
+        },
       ],
     });
 
@@ -25,11 +49,54 @@ describe("listarItensAbaixoDoMinimo", () => {
     const result = listarItensAbaixoDoMinimo({
       ...limites,
       respostas: [
-        { descricao: "Válvula", critico: true, nota: 7 },
-        { descricao: "Tampa", critico: false, nota: 6 },
+        {
+          descricao: "Válvula",
+          tipo: "NUMERICO",
+          critico: true,
+          nota: 7,
+          resposta: null,
+          respostaEsperada: null,
+          bloqueante: null,
+        },
+        {
+          descricao: "Tampa",
+          tipo: "NUMERICO",
+          critico: false,
+          nota: 6,
+          resposta: null,
+          respostaEsperada: null,
+          bloqueante: null,
+        },
       ],
     });
 
     assert.deepEqual(result, []);
+  });
+
+  it("lista sim/não bloqueante fora do esperado", () => {
+    const result = listarItensAbaixoDoMinimo({
+      notaMinimaCritico: null,
+      mediaMinima: null,
+      respostas: [
+        {
+          descricao: "Lacre",
+          tipo: "SIM_NAO",
+          critico: false,
+          nota: null,
+          resposta: "NAO",
+          respostaEsperada: "SIM",
+          bloqueante: true,
+        },
+      ],
+    });
+
+    assert.deepEqual(result, [
+      {
+        descricao: "Lacre",
+        tipo: "SIM_NAO",
+        resposta: "NAO",
+        respostaEsperada: "SIM",
+      },
+    ]);
   });
 });

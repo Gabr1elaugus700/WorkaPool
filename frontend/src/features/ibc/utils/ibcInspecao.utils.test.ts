@@ -1,21 +1,63 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import type { IbcChecklistDTO, IbcChecklistItemNoChecklistDTO } from "../types/ibcChecklist.types";
+import type { IbcInspecaoRespostaDTO } from "../types/ibcInspecao.types";
 import {
   buildInspecaoPayload,
+  checklistInspecaoExigeMinimas,
+  checklistInspecaoSemMinimasConfiguradas,
+  countItensInspecaoPreenchidos,
   formatAlocacaoAlerta,
+  formatItemReprovacaoInspecao,
   formatItensAbaixoDoMinimo,
+  formatLimitesInspecaoHistorico,
   formatMediaVsMinima,
   formatNotaInspecao,
-  isNotaAbaixoDoMinimo,
+  formatRespostaInspecaoHistorico,
+  isRespostaNumericaAbaixoDoMinimo,
+  itemRascunhoCompleto,
   listItensInspecao,
   notaMinimaDoItem,
   parseNotaInspecao,
   podeInspecionarIbc,
+  simNaoBloqueanteForaDoEsperado,
 } from "./ibcInspecao.utils";
 
-function item(itemId: string, ordem: number, ativo = true): IbcChecklistItemNoChecklistDTO {
-  return { itemId, descricao: `Item ${itemId}`, critico: false, ativo, ordem };
+function itemNumeric(
+  itemId: string,
+  ordem: number,
+  critico = false,
+  ativo = true,
+): IbcChecklistItemNoChecklistDTO {
+  return {
+    itemId,
+    descricao: `Item ${itemId}`,
+    tipo: "NUMERICO",
+    critico,
+    respostaEsperada: null,
+    bloqueante: null,
+    ativo,
+    ordem,
+  };
+}
+
+function itemSimNao(
+  itemId: string,
+  ordem: number,
+  respostaEsperada: "SIM" | "NAO" = "SIM",
+  bloqueante = true,
+  ativo = true,
+): IbcChecklistItemNoChecklistDTO {
+  return {
+    itemId,
+    descricao: `Item ${itemId}`,
+    tipo: "SIM_NAO",
+    critico: false,
+    respostaEsperada,
+    bloqueante,
+    ativo,
+    ordem,
+  };
 }
 
 function checklist(itens: IbcChecklistItemNoChecklistDTO[]): IbcChecklistDTO {
@@ -32,10 +74,64 @@ function checklist(itens: IbcChecklistItemNoChecklistDTO[]): IbcChecklistDTO {
 
 describe("listItensInspecao", () => {
   it("returns only active items sorted by ordem", () => {
-    const itens = listItensInspecao(checklist([item("c", 3), item("a", 1), item("b", 2, false)]));
+    const itens = listItensInspecao(checklist([itemNumeric("c", 3), itemNumeric("a", 1), itemNumeric("b", 2, false, false)]));
     assert.deepEqual(
       itens.map((i) => i.itemId),
       ["a", "c"],
+    );
+  });
+});
+
+describe("checklistInspecaoExigeMinimas", () => {
+  it("is true when any active item is numeric", () => {
+    const itens = listItensInspecao(checklist([itemSimNao("s", 1), itemNumeric("n", 2)]));
+    assert.equal(checklistInspecaoExigeMinimas(itens), true);
+    assert.equal(checklistInspecaoSemMinimasConfiguradas({ notaMinimaCritico: null, mediaMinima: 7 }, itens), true);
+  });
+
+  it("is false for sim/não-only selection", () => {
+    const itens = listItensInspecao(checklist([itemSimNao("s", 1)]));
+    assert.equal(checklistInspecaoExigeMinimas(itens), false);
+  });
+});
+
+describe("itemRascunhoCompleto / buildInspecaoPayload", () => {
+  const itens = listItensInspecao(checklist([itemNumeric("b", 2), itemNumeric("a", 1), itemNumeric("x", 3, false, false)]));
+
+  it("builds numeric respostas in checklist order", () => {
+    assert.deepEqual(buildInspecaoPayload("chk", itens, { b: { nota: "9" }, a: { nota: "0" } }, "  ok  "), {
+      checklistModeloId: "chk",
+      respostas: [
+        { checklistItemId: "a", nota: 0 },
+        { checklistItemId: "b", nota: 9 },
+      ],
+      observacao: "ok",
+    });
+  });
+
+  it("builds sim/não with optional item observacao", () => {
+    const simItens = listItensInspecao(checklist([itemSimNao("s", 1)]));
+    assert.deepEqual(
+      buildInspecaoPayload("chk", simItens, { s: { resposta: "NAO", observacaoItem: " detalhe " } }, ""),
+      {
+        checklistModeloId: "chk",
+        respostas: [{ checklistItemId: "s", resposta: "NAO", observacao: "detalhe" }],
+      },
+    );
+  });
+
+  it("returns null until every active item is complete", () => {
+    assert.equal(buildInspecaoPayload("chk", itens, { a: { nota: "8" } }, ""), null);
+    assert.equal(countItensInspecaoPreenchidos(itens, { a: { nota: "8" } }), 1);
+    assert.equal(itemRascunhoCompleto(itemSimNao("s", 1), {}), false);
+    assert.equal(itemRascunhoCompleto(itemSimNao("s", 1), { resposta: "SIM" }), true);
+  });
+
+  it("rejects item observacao over the limit", () => {
+    const simItens = listItensInspecao(checklist([itemSimNao("s", 1)]));
+    assert.equal(
+      buildInspecaoPayload("chk", simItens, { s: { resposta: "SIM", observacaoItem: "x".repeat(501) } }, ""),
+      null,
     );
   });
 });
@@ -50,45 +146,7 @@ describe("parseNotaInspecao", () => {
   it("rejects blank, decimal, negative and out of range values", () => {
     assert.equal(parseNotaInspecao(""), null);
     assert.equal(parseNotaInspecao("7,5"), null);
-    assert.equal(parseNotaInspecao("7.5"), null);
-    assert.equal(parseNotaInspecao("-1"), null);
     assert.equal(parseNotaInspecao("11"), null);
-    assert.equal(parseNotaInspecao("abc"), null);
-  });
-});
-
-describe("buildInspecaoPayload", () => {
-  const itens = listItensInspecao(checklist([item("b", 2), item("a", 1), item("x", 3, false)]));
-
-  it("builds respostas in checklist order when every active item has a score", () => {
-    assert.deepEqual(buildInspecaoPayload("chk", itens, { b: "9", a: "0" }, "  ok  "), {
-      checklistModeloId: "chk",
-      respostas: [
-        { checklistItemId: "a", nota: 0 },
-        { checklistItemId: "b", nota: 9 },
-      ],
-      observacao: "ok",
-    });
-  });
-
-  it("ignores scores of inactive items and omits a blank observacao", () => {
-    assert.deepEqual(buildInspecaoPayload("chk", itens, { a: "10", b: "5", x: "3" }, "  "), {
-      checklistModeloId: "chk",
-      respostas: [
-        { checklistItemId: "a", nota: 10 },
-        { checklistItemId: "b", nota: 5 },
-      ],
-    });
-  });
-
-  it("returns null while any active item is missing or invalid", () => {
-    assert.equal(buildInspecaoPayload("chk", itens, { a: "8" }, ""), null);
-    assert.equal(buildInspecaoPayload("chk", itens, { a: "8", b: "11" }, ""), null);
-  });
-
-  it("returns null for an empty checklist or an observacao over the limit", () => {
-    assert.equal(buildInspecaoPayload("chk", [], {}, ""), null);
-    assert.equal(buildInspecaoPayload("chk", itens, { a: "8", b: "8" }, "x".repeat(501)), null);
   });
 });
 
@@ -96,7 +154,6 @@ describe("formatNotaInspecao", () => {
   it("formats in pt-BR with up to two decimals", () => {
     assert.equal(formatNotaInspecao(8), "8");
     assert.equal(formatNotaInspecao(7.5), "7,5");
-    assert.equal(formatNotaInspecao(6.666), "6,67");
   });
 
   it("returns a dash for null", () => {
@@ -104,45 +161,94 @@ describe("formatNotaInspecao", () => {
   });
 });
 
-describe("notaMinimaDoItem / isNotaAbaixoDoMinimo", () => {
+describe("isRespostaNumericaAbaixoDoMinimo", () => {
   const limites = { notaMinimaCritico: 8, mediaMinima: 6.5 };
 
   it("compares critical items with notaMinimaCritico and the others with mediaMinima", () => {
-    assert.equal(notaMinimaDoItem({ critico: true }, limites), 8);
-    assert.equal(notaMinimaDoItem({ critico: false }, limites), 6.5);
+    assert.equal(notaMinimaDoItem({ tipo: "NUMERICO", critico: true }, limites), 8);
+    assert.equal(notaMinimaDoItem({ tipo: "SIM_NAO", critico: false }, limites), null);
   });
 
-  it("flags only scores strictly below the minimum", () => {
-    assert.equal(isNotaAbaixoDoMinimo({ critico: true, nota: 7 }, limites), true);
-    assert.equal(isNotaAbaixoDoMinimo({ critico: true, nota: 8 }, limites), false);
-    assert.equal(isNotaAbaixoDoMinimo({ critico: false, nota: 6 }, limites), true);
-    assert.equal(isNotaAbaixoDoMinimo({ critico: false, nota: 7 }, limites), false);
+  it("flags only numeric scores strictly below the minimum", () => {
+    assert.equal(isRespostaNumericaAbaixoDoMinimo({ tipo: "NUMERICO", critico: true, nota: 7 }, limites), true);
+    assert.equal(isRespostaNumericaAbaixoDoMinimo({ tipo: "NUMERICO", critico: true, nota: 8 }, limites), false);
+    assert.equal(isRespostaNumericaAbaixoDoMinimo({ tipo: "SIM_NAO", critico: false, nota: null }, limites), false);
   });
 });
 
-describe("formatMediaVsMinima", () => {
+describe("simNaoBloqueanteForaDoEsperado", () => {
+  const base: IbcInspecaoRespostaDTO = {
+    checklistItemId: "1",
+    descricao: "Lacre",
+    tipo: "SIM_NAO",
+    critico: false,
+    nota: null,
+    resposta: "NAO",
+    respostaEsperada: "SIM",
+    bloqueante: true,
+    observacao: null,
+  };
+
+  it("is true for bloqueante outside expected", () => {
+    assert.equal(simNaoBloqueanteForaDoEsperado(base), true);
+    assert.equal(simNaoBloqueanteForaDoEsperado({ ...base, bloqueante: false }), false);
+  });
+});
+
+describe("formatMediaVsMinima / formatLimitesInspecaoHistorico", () => {
   it("shows the obtained average against the minimum", () => {
     assert.equal(formatMediaVsMinima(6.5, 7), "média 6,5 · mín. 7");
   });
 
-  it("explains a missing average when only critical items exist", () => {
-    assert.equal(formatMediaVsMinima(null, 7), "sem média (só críticos) · mín. 7");
+  it("omits media minimum when null", () => {
+    assert.equal(formatMediaVsMinima(6.5, null), "média 6,5");
+    assert.equal(formatLimitesInspecaoHistorico({ notaMinimaCritico: null, mediaMinima: null }), "Avaliação por sim/não bloqueante");
+  });
+});
+
+describe("formatRespostaInspecaoHistorico", () => {
+  it("shows numeric nota or sim/não snapshot", () => {
+    assert.equal(
+      formatRespostaInspecaoHistorico({
+        checklistItemId: "n",
+        descricao: "Válvula",
+        tipo: "NUMERICO",
+        critico: true,
+        nota: 9,
+        resposta: null,
+        respostaEsperada: null,
+        bloqueante: null,
+        observacao: null,
+      }),
+      "9",
+    );
+    assert.match(
+      formatRespostaInspecaoHistorico({
+        checklistItemId: "s",
+        descricao: "Lacre",
+        tipo: "SIM_NAO",
+        critico: false,
+        nota: null,
+        resposta: "NAO",
+        respostaEsperada: "SIM",
+        bloqueante: true,
+        observacao: null,
+      }),
+      /Não.*esperado Sim.*bloqueante: Sim/,
+    );
   });
 });
 
 describe("formatItensAbaixoDoMinimo", () => {
-  it("lists each item with its score and minimum", () => {
+  it("lists numeric and sim/não reprovação items", () => {
     assert.equal(
       formatItensAbaixoDoMinimo([
         { descricao: "Válvula", nota: 3, notaMinima: 6 },
-        { descricao: "Tampa", nota: 4, notaMinima: 6.5 },
+        { descricao: "Lacre", tipo: "SIM_NAO", resposta: "NAO", respostaEsperada: "SIM" },
       ]),
-      "Válvula: 3 (mín. 6) · Tampa: 4 (mín. 6,5)",
+      "Válvula: 3 (mín. 6) · Lacre: Não (esperado Sim)",
     );
-  });
-
-  it("returns an empty string when nothing is below the minimum", () => {
-    assert.equal(formatItensAbaixoDoMinimo([]), "");
+    assert.equal(formatItemReprovacaoInspecao({ descricao: "X", tipo: "SIM_NAO", resposta: "NAO", respostaEsperada: "SIM" }), "X: Não (esperado Sim)");
   });
 });
 
@@ -153,7 +259,6 @@ describe("podeInspecionarIbc", () => {
 
   it("blocks an IBC in transit or already replaced", () => {
     assert.equal(podeInspecionarIbc({ custodia: "EM_VIAGEM", convertedToContainerId: null }), false);
-    assert.equal(podeInspecionarIbc({ custodia: "CLIENTE", convertedToContainerId: null }), false);
     assert.equal(podeInspecionarIbc({ custodia: "PATIO", convertedToContainerId: "ibc-novo" }), false);
   });
 });

@@ -1,16 +1,25 @@
 import { ChecklistTipo } from "@prisma/client";
 
+export type ChecklistItemTipo = "NUMERICO" | "SIM_NAO";
+export type ChecklistItemRespostaEsperada = "SIM" | "NAO";
+
 export type IbcChecklistItemRecord = {
   id: string;
   descricao: string;
+  tipo: ChecklistItemTipo;
   critico: boolean;
+  respostaEsperada: ChecklistItemRespostaEsperada | null;
+  bloqueante: boolean | null;
   ativo: boolean;
 };
 
 export type IbcChecklistItemNoChecklist = {
   itemId: string;
   descricao: string;
+  tipo: ChecklistItemTipo;
   critico: boolean;
+  respostaEsperada: ChecklistItemRespostaEsperada | null;
+  bloqueante: boolean | null;
   ativo: boolean;
   ordem: number;
 };

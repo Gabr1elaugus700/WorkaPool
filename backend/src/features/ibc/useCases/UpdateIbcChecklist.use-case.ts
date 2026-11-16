@@ -8,6 +8,7 @@ import { IIbcChecklistItemRepository } from "../repositories/IIbcChecklistItemRe
 import { IbcChecklistRecord } from "../types/IbcChecklist.types";
 import { assertIbcChecklistItensElegiveis } from "./assertIbcChecklistItensElegiveis";
 import { ibcChecklistNotFound } from "./GetIbcChecklist.use-case";
+import { resolveIbcChecklistMinimas } from "./resolveIbcChecklistMinimas";
 
 export type UpdateIbcChecklistInput = UpdateIbcChecklistData & {
   actorRole: Role;
@@ -33,10 +34,36 @@ export class UpdateIbcChecklistUseCase {
       await assertIbcChecklistItensElegiveis(this.itemRepository, input.itensIds, idsJaPresentes);
     }
 
+    let notaMinimaCritico = input.notaMinimaCritico;
+    let mediaMinima = input.mediaMinima;
+
+    const minimaInformada =
+      input.notaMinimaCritico !== undefined || input.mediaMinima !== undefined;
+
+    if (input.itensIds || minimaInformada) {
+      const itensParaMinima = input.itensIds
+        ? await this.itemRepository.findManyByIds(input.itensIds)
+        : existing.itens.map((item) => ({ tipo: item.tipo }));
+
+      const minima = resolveIbcChecklistMinimas({
+        itens: itensParaMinima,
+        incoming: {
+          notaMinimaCritico: input.notaMinimaCritico,
+          mediaMinima: input.mediaMinima,
+        },
+        existing: {
+          notaMinimaCritico: existing.notaMinimaCritico,
+          mediaMinima: existing.mediaMinima,
+        },
+      });
+      notaMinimaCritico = minima.notaMinimaCritico;
+      mediaMinima = minima.mediaMinima;
+    }
+
     return this.repository.updateById(input.id, {
       nome: input.nome?.trim(),
-      notaMinimaCritico: input.notaMinimaCritico,
-      mediaMinima: input.mediaMinima,
+      notaMinimaCritico,
+      mediaMinima,
       ativo: input.ativo,
       itensIds: input.itensIds,
     });

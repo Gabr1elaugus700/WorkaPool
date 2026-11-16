@@ -12,7 +12,7 @@ export type IbcAlertChecklistReprovado = {
   checklistModeloId: string;
   nome: string;
   mediaObtida: number | null;
-  mediaMinima: number;
+  mediaMinima: number | null;
   itensAbaixoDoMinimo: ItemAbaixoDoMinimo[];
 };
 
