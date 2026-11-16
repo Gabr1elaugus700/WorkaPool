@@ -33,11 +33,12 @@ export function useRegistrarIbcInspecao() {
     mutationFn: ({ ibcId, input }: { ibcId: string; input: RegistrarIbcInspecaoInput }) =>
       ibcInspecaoService.registrar(ibcId, input),
     onSuccess: async ({ inspecao, aviso }) => {
-      const media = `média ${formatNotaInspecao(inspecao.mediaObtida)}`;
+      const detalheMedia =
+        inspecao.mediaObtida === null ? "" : ` · média ${formatNotaInspecao(inspecao.mediaObtida)}`;
       if (inspecao.resultado === "APROVADA") {
-        toast.success(`Inspeção aprovada · ${media}`);
+        toast.success(`Inspeção aprovada${detalheMedia}`);
       } else {
-        toast.warning(`Inspeção reprovada · ${media}`);
+        toast.warning(`Inspeção reprovada${detalheMedia}`);
       }
       if (aviso?.code === "IBC_ALOCADO_INAPTO") {
         toast.warning(

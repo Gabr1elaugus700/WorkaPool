@@ -11,13 +11,16 @@ import { cn } from "@/lib/utils";
 import { formatIsoDateTimeLabel } from "@/utils/formatDate";
 import { useIbcInspecoes } from "../hooks/useIbcInspecao";
 import type { IbcCadastroDTO } from "../types/ibcCadastro.types";
-import type { IbcInspecaoHistoricoDTO } from "../types/ibcInspecao.types";
+import type { IbcInspecaoHistoricoDTO, IbcInspecaoRespostaDTO } from "../types/ibcInspecao.types";
 import { ibcCadastroLabels } from "../utils/ibcCadastroLabels";
 import {
+  formatLimitesInspecaoHistorico,
   formatMediaVsMinima,
   formatNotaInspecao,
-  isNotaAbaixoDoMinimo,
+  formatRespostaInspecaoHistorico,
+  isRespostaNumericaAbaixoDoMinimo,
   notaMinimaDoItem,
+  simNaoBloqueanteForaDoEsperado,
 } from "../utils/ibcInspecao.utils";
 import { toError } from "../utils/toError";
 import CadastroIbcSectionError from "./CadastroIbcSectionError";
@@ -70,6 +73,7 @@ function InspecoesConteudo({ ibc }: { ibc: IbcConsultado }) {
 
 function InspecaoItem({ inspecao }: { inspecao: IbcInspecaoHistoricoDTO }) {
   const reprovada = inspecao.resultado === "REPROVADA";
+  const limitesTexto = formatLimitesInspecaoHistorico(inspecao);
   return (
     <li className="space-y-2 text-sm">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -82,29 +86,49 @@ function InspecaoItem({ inspecao }: { inspecao: IbcInspecaoHistoricoDTO }) {
         {formatIsoDateTimeLabel(inspecao.inspecionadoEm)} · {inspecao.inspetor.nome}
       </p>
       <p className="text-xs text-muted-foreground">
-        {formatMediaVsMinima(inspecao.mediaObtida, inspecao.mediaMinima)} · crítico mín.{" "}
-        {formatNotaInspecao(inspecao.notaMinimaCritico)}
+        {formatMediaVsMinima(inspecao.mediaObtida, inspecao.mediaMinima)}
+        {limitesTexto ? ` · ${limitesTexto}` : null}
       </p>
       <ul className={cn("divide-y divide-border rounded-md border", reprovada && "border-destructive/40")}>
-        {inspecao.respostas.map((resposta) => {
-          const abaixo = isNotaAbaixoDoMinimo(resposta, inspecao);
-          return (
-            <li key={resposta.checklistItemId} className="flex items-center justify-between gap-3 px-3 py-1.5">
-              <span className="flex min-w-0 flex-wrap items-center gap-2">
-                <span className="break-words">{resposta.descricao}</span>
-                {resposta.critico ? (
-                  <span className="text-xs font-medium text-muted-foreground">Crítico</span>
-                ) : null}
-              </span>
-              <span className={cn("shrink-0 tabular-nums", abaixo && "font-medium text-destructive")}>
-                {formatNotaInspecao(resposta.nota)}
-                {abaixo ? ` (mín. ${formatNotaInspecao(notaMinimaDoItem(resposta, inspecao))})` : null}
-              </span>
-            </li>
-          );
-        })}
+        {inspecao.respostas.map((resposta) => (
+          <RespostaHistoricoItem key={resposta.checklistItemId} resposta={resposta} inspecao={inspecao} />
+        ))}
       </ul>
       {inspecao.observacao ? <p className="text-muted-foreground">“{inspecao.observacao}”</p> : null}
+    </li>
+  );
+}
+
+function RespostaHistoricoItem({
+  resposta,
+  inspecao,
+}: {
+  resposta: IbcInspecaoRespostaDTO;
+  inspecao: IbcInspecaoHistoricoDTO;
+}) {
+  const abaixo = isRespostaNumericaAbaixoDoMinimo(resposta, inspecao);
+  const simNaoFora = simNaoBloqueanteForaDoEsperado(resposta);
+  const destacar = abaixo || simNaoFora;
+
+  return (
+    <li className="space-y-1 px-3 py-2">
+      <div className="flex items-start justify-between gap-3">
+        <span className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="break-words">{resposta.descricao}</span>
+          {resposta.tipo === "NUMERICO" && resposta.critico ? (
+            <span className="text-xs font-medium text-muted-foreground">Crítico</span>
+          ) : null}
+        </span>
+        <span className={cn("shrink-0 text-right text-sm tabular-nums", destacar && "font-medium text-destructive")}>
+          {formatRespostaInspecaoHistorico(resposta)}
+          {abaixo
+            ? ` (mín. ${formatNotaInspecao(notaMinimaDoItem(resposta, inspecao))})`
+            : null}
+        </span>
+      </div>
+      {resposta.observacao ? (
+        <p className="text-xs text-muted-foreground">Obs. item: “{resposta.observacao}”</p>
+      ) : null}
     </li>
   );
 }

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/formatCount";
 import { paginate } from "@/utils/paginate";
 import type { IbcChecklistItemDTO } from "../types/ibcChecklist.types";
+import { labelBloqueanteSimNao, labelRespostaSimNao } from "../utils/ibcChecklistLabels";
 import IbcStatusContent from "./IbcStatusContent";
 
 const PAGE_SIZE = 10;
@@ -17,12 +18,10 @@ type Props = {
   onToggleAtivo: (item: IbcChecklistItemDTO) => void;
 };
 
-const labelSimNao = (valor: "SIM" | "NAO") => (valor === "SIM" ? "Sim" : "Não");
-
 function regraCell(item: IbcChecklistItemDTO): string {
   if (item.tipo === "SIM_NAO") {
-    const esperada = item.respostaEsperada ? labelSimNao(item.respostaEsperada) : "—";
-    const bloqueante = item.bloqueante == null ? "—" : item.bloqueante ? "Sim" : "Não";
+    const esperada = item.respostaEsperada ? labelRespostaSimNao(item.respostaEsperada) : "—";
+    const bloqueante = labelBloqueanteSimNao(item.bloqueante);
     return `Esperado: ${esperada} · Bloqueante: ${bloqueante}`;
   }
   return item.critico ? "Crítico" : "—";

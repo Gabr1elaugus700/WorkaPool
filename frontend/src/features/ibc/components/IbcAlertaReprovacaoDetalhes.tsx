@@ -23,7 +23,7 @@ export default function IbcAlertaReprovacaoDetalhes({ detalhes }: Props) {
           </p>
           {checklist.itensAbaixoDoMinimo.length > 0 ? (
             <p className="text-destructive">
-              Abaixo do mínimo: {formatItensAbaixoDoMinimo(checklist.itensAbaixoDoMinimo)}
+              Itens que reprovaram: {formatItensAbaixoDoMinimo(checklist.itensAbaixoDoMinimo)}
             </p>
           ) : null}
         </div>

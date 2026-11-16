@@ -57,11 +57,20 @@ export type ChangeIbcProdutoInput = IbcMudancaConfirmacaoInput & {
   produtoId: string;
 };
 
-export type IbcItemAbaixoDoMinimoDTO = {
+export type IbcItemAbaixoDoMinimoNumericoDTO = {
   descricao: string;
   nota: number;
   notaMinima: number;
 };
+
+export type IbcItemAbaixoDoMinimoSimNaoDTO = {
+  descricao: string;
+  tipo: "SIM_NAO";
+  resposta: "SIM" | "NAO";
+  respostaEsperada: "SIM" | "NAO";
+};
+
+export type IbcItemAbaixoDoMinimoDTO = IbcItemAbaixoDoMinimoNumericoDTO | IbcItemAbaixoDoMinimoSimNaoDTO;
 
 export type IbcAlocacaoAbertaDTO = { codCar: number; numPed: string };
 
@@ -70,7 +79,7 @@ export type IbcAlertDetalhesDTO = {
     checklistModeloId: string;
     nome: string;
     mediaObtida: number | null;
-    mediaMinima: number;
+    mediaMinima: number | null;
     itensAbaixoDoMinimo: IbcItemAbaixoDoMinimoDTO[];
   }>;
   alocacao?: IbcAlocacaoAbertaDTO;

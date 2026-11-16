@@ -14,7 +14,10 @@ export type IbcChecklistItemDTO = {
 export type IbcChecklistItemNoChecklistDTO = {
   itemId: string;
   descricao: string;
+  tipo: IbcChecklistItemTipo;
   critico: boolean;
+  respostaEsperada: IbcChecklistItemRespostaEsperada | null;
+  bloqueante: boolean | null;
   ativo: boolean;
   ordem: number;
 };
