@@ -104,9 +104,6 @@ function normalizar(
     if (!alocacoes.has(item.alocacaoIbcId)) {
       falha(409, "IBC_CONCILIACAO_FORA_DA_VIAGEM", "IBC fora da viagem", { alocacaoIbcId: item.alocacaoIbcId });
     }
-    if (entradas.get(item.alocacaoIbcId) && item.destino !== "TROCA") {
-      falha(409, "IBC_TROCA_JA_VINCULADA", "A troca já tem IBC de entrada vinculado", { alocacaoIbcId: item.alocacaoIbcId });
-    }
     const numPed = item.numPed ?? null;
     const resolvido = conciliacaoViagem.resolverApontamento({
       destino: item.destino,
@@ -118,6 +115,12 @@ function normalizar(
     return { alocacaoIbcId: item.alocacaoIbcId, destino: item.destino, modalidade: resolvido.modalidade, numPed: resolvido.numPed };
   });
 
+  const destinosPorId = new Map(input.itens.map((item) => [item.alocacaoIbcId, item.destino]));
+  for (const [alocacaoIbcId, entradaId] of entradas) {
+    if (entradaId && destinosPorId.get(alocacaoIbcId) !== "TROCA") {
+      falha(409, "IBC_TROCA_JA_VINCULADA", "A troca já tem IBC de entrada vinculado", { alocacaoIbcId });
+    }
+  }
   const chavesVistas = new Set<string>();
   const retornos = input.retornosSemId.map((retorno) => {
     if (chavesVistas.has(retorno.chaveCliente)) {

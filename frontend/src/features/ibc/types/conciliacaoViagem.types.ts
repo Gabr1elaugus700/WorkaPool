@@ -7,11 +7,17 @@ export type PedidoConciliacaoDTO = {
   incluso: boolean;
   quantidadeEsperada: number;
   quantidadeApontada: number;
+  posCar: number | null;
+  gruposCodigo: string[];
 };
 export type ConciliacaoViagemItemDTO = {
   alocacaoIbcId: string;
   ibcId: string;
   identificador: string;
+  corHex: string | null;
+  grupoCodigo: string | null;
+  universal: boolean;
+  homologado: boolean;
   numPed: string | null;
   codCli: string | null;
   cliente: string;
@@ -31,6 +37,7 @@ export type ConciliacaoViagemDTO = {
   codCar: number;
   expedicaoIbcId: string;
   viagemFechadaEm: string | null;
+  chegaramAMais: number;
   itens: ConciliacaoViagemItemDTO[];
   pedidos: PedidoConciliacaoDTO[];
   clientes: ConciliacaoViagemClienteDTO[];
@@ -41,17 +48,8 @@ export type SalvarConciliacaoInput = {
     destino: DestinoConciliacao;
     numPed?: string;
   }>;
-  retornosSemId?: Array<{
-    chaveCliente: string;
-    quantidadePapel: number;
-    confirmouDivergencia?: boolean;
-  }>;
+  chegaramAMais?: number;
 };
 export type FecharViagemInput = {
   confirmacoes?: Array<{ numPed: string }>;
-};
-export type RegistrarTrocaInput = {
-  alocacaoIbcId: string;
-  produtoId: string;
-  dataLimite: string;
 };

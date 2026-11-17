@@ -30,6 +30,6 @@ export const IbcConciliacaoHttpSchemas = {
       }))
       .max(200)
       .optional(),
-    chegaramAMais: z.number().int().min(0).max(9999).optional(),
+    chegaramAMais: z.number().int().min(0).optional(),
   }),
 } as const;

@@ -2,13 +2,12 @@ import { apiFetch, apiFetchJson } from "@/lib/apiFetch";
 import type {
   ConciliacaoViagemDTO,
   FecharViagemInput,
-  RegistrarTrocaInput,
   SalvarConciliacaoInput,
 } from "../types/conciliacaoViagem.types";
 import { ibcProdutoCompatibilidade } from "../utils/ibcProdutoCompatibilidade";
 
-function path(codCar: number, suffix = ""): string {
-  return `/api/ibc/expedicoes/${encodeURIComponent(String(codCar))}/conciliacao${suffix}`;
+function path(codCar: number): string {
+  return `/api/ibc/expedicoes/${encodeURIComponent(String(codCar))}/conciliacao`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -55,10 +54,4 @@ export const conciliacaoViagemService = {
       },
       "Não foi possível fechar a viagem.",
     ),
-
-  registrarTroca: (
-    codCar: number,
-    input: RegistrarTrocaInput,
-  ): Promise<{ alocacaoIbcId: string; ibcEntradaId: string; identificador: string }> =>
-    apiFetchJson(path(codCar, "/trocas"), { method: "POST", body: JSON.stringify(input) }),
 };
