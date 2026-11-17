@@ -26,10 +26,17 @@ export type FicouNaViagem = {
   numPed: string;
 };
 
+export type TrocaStageNoFechamento = {
+  alocacaoIbcId: string;
+  ibcId: string;
+  numPed: string;
+};
+
 export type PlanoFechamentoViagem = {
   entradas: EntradaNoFechamento[];
   efeitos: EfeitoFechamentoIbc[];
   ficaram: FicouNaViagem[];
+  stages: TrocaStageNoFechamento[];
 };
 
 function falha(statusCode: number, code: string, message: string, details?: unknown): never {
@@ -57,6 +64,7 @@ export function planejarFechamentoViagem(input: {
   const entradas: EntradaNoFechamento[] = [];
   const efeitos: EfeitoFechamentoIbc[] = [];
   const ficaram: FicouNaViagem[] = [];
+  const stages: TrocaStageNoFechamento[] = [];
 
   for (const alocacao of input.alocacoes) {
     const marca = marcas.get(alocacao.id);
@@ -77,9 +85,6 @@ export function planejarFechamentoViagem(input: {
     }
 
     const entradaTrocaId = marca.destino === "TROCA" ? marca.ibcEntradaId : null;
-    if (marca.destino === "TROCA" && !entradaTrocaId) {
-      falha(409, "IBC_TROCA_SEM_ENTRADA", "Troca sem IBC de entrada", { alocacaoIbcId: alocacao.id });
-    }
     const pedido = marca.numPed == null ? undefined : elegiveis.get(marca.numPed);
     const modalidade = pedido
       ? conciliacaoViagem.sugerirModalidade(pedido.quantidadeEsperadaVenda, pedido.quantidadeEsperadaEmprestimo)
@@ -90,7 +95,15 @@ export function planejarFechamentoViagem(input: {
         numPed: marca.numPed,
       });
     }
-    if (entradaTrocaId) entradas.push({ ibcId: entradaTrocaId, origem: "TROCA" });
+    if (entradaTrocaId) {
+      entradas.push({ ibcId: entradaTrocaId, origem: "TROCA" });
+    } else if (marca.destino === "TROCA") {
+      stages.push({
+        alocacaoIbcId: alocacao.id,
+        ibcId: alocacao.ibcId,
+        numPed: pedido.numPed,
+      });
+    }
 
     const emprestimo = modalidade === "EMPRESTIMO";
     efeitos.push({
@@ -127,5 +140,5 @@ export function planejarFechamentoViagem(input: {
     falha(409, "IBC_DIVERGENCIA_PEDIDO", "A quantidade apontada diverge da esperada neste pedido", { divergencias });
   }
 
-  return { entradas, efeitos, ficaram };
+  return { entradas, efeitos, ficaram, stages };
 }

@@ -261,6 +261,15 @@ export class IbcExpedicaoRepository implements IIbcExpedicaoRepository {
     }));
   }
 
+  async listPlacaPaletaPorIbcIds(ids: readonly string[]): Promise<Map<string, IbcPlacaPaleta>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.prisma.ibc.findMany({
+      where: { id: { in: [...ids] } },
+      select: { id: true, ...ibcPlacaSelect },
+    });
+    return new Map(rows.map((row) => [row.id, toPlacaPaleta(row)]));
+  }
+
   async findExpedicaoByCargaId(
     cargaId: string,
   ): Promise<ExpedicaoIbcRecord | null> {

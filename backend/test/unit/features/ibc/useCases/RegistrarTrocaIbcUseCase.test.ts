@@ -59,7 +59,7 @@ function harness(options: { destino?: "TROCA" | "FICOU"; ibcEntradaId?: string |
   const softDelete = mock.fn(async () => entrada());
   const vincularEntradaTroca = mock.fn(async () => options.vincula ?? true);
   const conciliacoes: IIbcConciliacaoRepository = {
-    findPorCarga: mock.fn(async () => ({ id: "exp-1", viagemFechadaEm: null, viagemFechadaPorId: null })),
+    findPorCarga: mock.fn(async () => ({ id: "exp-1", viagemFechadaEm: null, viagemFechadaPorId: null, chegaramAMais: 0 })),
     listMarcas: mock.fn(async () => [{
       alocacaoIbcId: "aloc-1",
       destino: options.destino ?? "TROCA",

@@ -66,6 +66,7 @@ export class FecharViagemIbcUseCase {
         codCar: carga.codCar,
         efeitos: plano.efeitos,
         ficaram: plano.ficaram,
+        stages: plano.stages,
       },
       async (tx) => {
         for (const entrada of plano.entradas) {

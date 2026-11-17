@@ -247,15 +247,17 @@ describe("planejarFechamentoViagem", () => {
     assert.equal(fechado.ficaram.some((item) => item.identificador === "H1"), false);
   });
 
-  it("bloqueia troca sem o container de entrada", () => {
-    assert.throws(
-      () => plano({
-        alocacoes: [alocacao("troca", "H4")],
-        pedidos: [pedido({ quantidadeEsperadaTotal: 1, quantidadeEsperadaVenda: 1 })],
-        marcas: [marca({ alocacaoIbcId: "troca", destino: "TROCA", numPed: "10", ibcEntradaId: null })],
-      }),
-      hasCode("IBC_TROCA_SEM_ENTRADA"),
-    );
+  it("planeja stage e custódia na troca sem IBC de entrada", () => {
+    const fechado = plano({
+      alocacoes: [alocacao("troca", "H4")],
+      pedidos: [pedido({ quantidadeEsperadaTotal: 1, quantidadeEsperadaVenda: 1 })],
+      marcas: [marca({ alocacaoIbcId: "troca", destino: "TROCA", numPed: "10", ibcEntradaId: null })],
+    });
+    assert.equal(fechado.entradas.length, 0);
+    assert.deepEqual(fechado.stages, [{ alocacaoIbcId: "troca", ibcId: "ibc-troca", numPed: "10" }]);
+    assert.equal(fechado.efeitos[0]?.trocaEntradaId, null);
+    assert.equal(fechado.efeitos[0]?.custodia, "CLIENTE");
+    assert.equal(fechado.efeitos[0]?.motivoBaixa, "VENDA");
   });
 });
 
@@ -298,7 +300,7 @@ describe("FecharViagemIbcUseCase", () => {
     });
     const execute = mock.fn(async () => ({ id: "entrada-1" }));
     const conciliacoes = {
-      findPorCarga: async () => ({ id: "exp-1", viagemFechadaEm: null, viagemFechadaPorId: null }),
+      findPorCarga: async () => ({ id: "exp-1", viagemFechadaEm: null, viagemFechadaPorId: null, chegaramAMais: 0 }),
       listMarcas: async () => [marcaRetorno],
       fecharViagem,
     } as unknown as IIbcConciliacaoRepository;
@@ -319,6 +321,24 @@ describe("FecharViagemIbcUseCase", () => {
     assert.equal(result.viagemFechadaEm, NOW);
   });
 
+  it("repassa stages ao fechar troca sem entrada", async () => {
+    const fecharViagem = mock.fn(async (cmd: FecharViagemComando) => {
+      assert.deepEqual(cmd.stages, [{ alocacaoIbcId: "troca", ibcId: "ibc-troca", numPed: "10" }]);
+    });
+    const conciliacoes = {
+      findPorCarga: async () => ({ id: "exp-1", viagemFechadaEm: null, viagemFechadaPorId: null, chegaramAMais: 0 }),
+      listMarcas: async () => [marca({ alocacaoIbcId: "troca", destino: "TROCA", numPed: "10", ibcEntradaId: null })],
+      fecharViagem,
+    } as unknown as IIbcConciliacaoRepository;
+    await new FecharViagemIbcUseCase(
+      expedicoes([pedido({ quantidadeEsperadaTotal: 1, quantidadeEsperadaVenda: 1 })], [alocacao("troca", "H4")]),
+      conciliacoes,
+      { execute: async () => ({ id: "entrada" }) } as unknown as AbrirEntradaPatioUseCase,
+      () => NOW,
+    ).execute({ codCar: 202, actorRole: Role.ALMOX, actorId: "almox-1" });
+    assert.equal(fecharViagem.mock.callCount(), 1);
+  });
+
   it("não grava 1/2 sem confirmação e grava quando o pedido confirma", async () => {
     const fecharViagem = mock.fn(async (cmd: FecharViagemComando) => {
       assert.deepEqual(cmd.ficaram.map((item) => item.modalidade), ["VENDA"]);
@@ -326,7 +346,7 @@ describe("FecharViagemIbcUseCase", () => {
       assert.equal(cmd.efeitos[0]?.emprestimoVenceEm, null);
     });
     const conciliacoes = {
-      findPorCarga: async () => ({ id: "exp-1", viagemFechadaEm: null, viagemFechadaPorId: null }),
+      findPorCarga: async () => ({ id: "exp-1", viagemFechadaEm: null, viagemFechadaPorId: null, chegaramAMais: 0 }),
       listMarcas: async () => [marca({ alocacaoIbcId: "a1", destino: "FICOU" })],
       fecharViagem,
     } as unknown as IIbcConciliacaoRepository;
@@ -349,7 +369,7 @@ describe("FecharViagemIbcUseCase", () => {
     const fecharViagem = mock.fn(async () => undefined);
     const execute = mock.fn(async () => ({ id: "entrada" }));
     const conciliacoes = {
-      findPorCarga: async () => ({ id: "exp-1", viagemFechadaEm: NOW, viagemFechadaPorId: "antes" }),
+      findPorCarga: async () => ({ id: "exp-1", viagemFechadaEm: NOW, viagemFechadaPorId: "antes", chegaramAMais: 0 }),
       fecharViagem,
     } as unknown as IIbcConciliacaoRepository;
     await assert.rejects(
@@ -407,7 +427,7 @@ describe("FecharViagemIbcUseCase compatibilidade", () => {
     });
     const execute = mock.fn(async () => ({ id: "entrada" }));
     const conciliacoes = {
-      findPorCarga: async () => ({ id: "exp-1", viagemFechadaEm: null, viagemFechadaPorId: null }),
+      findPorCarga: async () => ({ id: "exp-1", viagemFechadaEm: null, viagemFechadaPorId: null, chegaramAMais: 0 }),
       listMarcas: async () => options.marcas,
       fecharViagem,
     } as unknown as IIbcConciliacaoRepository;

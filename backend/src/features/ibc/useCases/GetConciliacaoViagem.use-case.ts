@@ -15,13 +15,18 @@ import {
   ModalidadeConciliacaoIbc,
   PedidoConciliacaoViagem,
 } from "../services/conciliacaoViagem";
-import { AlocacaoIbcRecord, CargaPedidoIbcSnapshot } from "../types/IbcExpedicao.types";
+import { AlocacaoIbcRecord, CargaPedidoIbcSnapshot, IbcPlacaPaleta } from "../types/IbcExpedicao.types";
+import { mapContainerPaleta } from "../mappers/containerPaleta.mapper";
 import { loadCargaFotoExpedicao } from "./loadCargaFotoExpedicao";
 
 export type ConciliacaoViagemItem = {
   alocacaoIbcId: string;
   ibcId: string;
   identificador: string;
+  corHex: string | null;
+  grupoCodigo: string | null;
+  universal: boolean;
+  homologado: boolean;
   numPed: string | null;
   codCli: string | null;
   cliente: string;
@@ -41,6 +46,7 @@ export type ConciliacaoViagemView = {
   expedicaoIbcId: string;
   viagemFechadaEm: Date | null;
   viagemFechadaPorId: string | null;
+  chegaramAMais: number;
   itens: ConciliacaoViagemItem[];
   pedidos: PedidoConciliacaoViagem[];
   clientes: ConciliacaoViagemCliente[];
@@ -64,7 +70,8 @@ export class GetConciliacaoViagemUseCase {
       this.conciliacoes.listMarcas(expedicao.id),
       this.conciliacoes.listRetornos(expedicao.id),
     ]);
-    return montar({ codCar: carga.codCar, expedicao, pedidos: pedidosIbc, alocacoes, marcas, retornos });
+    const placas = await this.expedicoes.listPlacaPaletaPorIbcIds(alocacoes.map((item) => item.ibcId));
+    return montar({ codCar: carga.codCar, expedicao, pedidos: pedidosIbc, alocacoes, marcas, retornos, placas });
   }
 }
 
@@ -75,6 +82,7 @@ function montar(input: {
   alocacoes: AlocacaoIbcRecord[];
   marcas: MarcaConciliacaoSalva[];
   retornos: RetornoSemIdSalvo[];
+  placas: Map<string, IbcPlacaPaleta>;
 }): ConciliacaoViagemView {
   const pedidos = new Map(input.pedidos.map((pedido) => [pedido.numPed, pedido]));
   const marcas = new Map(input.marcas.map((marca) => [marca.alocacaoIbcId, marca]));
@@ -97,10 +105,24 @@ function montar(input: {
     const numPed = escolhas[index]?.exibido ?? null;
     const pedido = numPed == null ? undefined : pedidos.get(numPed);
     const sugestao = viagemFechada && alocacao.numPed != null ? pedidos.get(alocacao.numPed) : undefined;
+    const paleta = mapContainerPaleta(
+      input.placas.get(alocacao.ibcId) ?? {
+        identificador: alocacao.identificador,
+        prefixo: null,
+        universal: false,
+        grupoCodigo: null,
+        corHex: null,
+      },
+      alocacao.id,
+    );
     return {
       alocacaoIbcId: alocacao.id,
       ibcId: alocacao.ibcId,
       identificador: alocacao.identificador,
+      corHex: paleta.corHex,
+      grupoCodigo: paleta.grupoCodigo,
+      universal: paleta.universal,
+      homologado: paleta.homologado,
       numPed,
       codCli: pedido?.codCli ?? null,
       cliente: pedido?.cliente ?? "",
@@ -117,6 +139,7 @@ function montar(input: {
     expedicaoIbcId: input.expedicao.id,
     viagemFechadaEm: input.expedicao.viagemFechadaEm,
     viagemFechadaPorId: input.expedicao.viagemFechadaPorId,
+    chegaramAMais: input.expedicao.chegaramAMais,
     itens,
     pedidos: conciliacaoViagem.progressoPedidos(input.pedidos, escolhas.map((escolha) => escolha.apontado)),
     clientes: conciliacaoViagem.clientes(input.pedidos).map((cliente) => {

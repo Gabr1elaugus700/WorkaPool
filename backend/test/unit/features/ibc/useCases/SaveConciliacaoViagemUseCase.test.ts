@@ -66,6 +66,7 @@ function harness(options: {
       id: "exp-1",
       viagemFechadaEm: options.fechada ? new Date("2026-10-13T12:00:00.000Z") : null,
       viagemFechadaPorId: options.fechada ? "almox-1" : null,
+      chegaramAMais: 0,
     })),
     listMarcas: mock.fn(async () => marcas),
     listRetornos: mock.fn(async () => retornos),
@@ -76,6 +77,7 @@ function harness(options: {
     getCargaByCodCar: mock.fn(async () => carga()),
     listPedidosIbcByCargaId: mock.fn(async () => options.pedidos ?? [pedido()]),
     listAlocacoesByCargaId: mock.fn(async () => alocacoes),
+    listPlacaPaletaPorIbcIds: mock.fn(async () => new Map()),
     listCompatibilidadePorIds: mock.fn(async (ids: readonly string[]) =>
       [...ids].map((id) => {
         const informado = options.ibcs?.find((ibc) => ibc.id === id);
@@ -107,6 +109,24 @@ const input = {
 };
 
 describe("SaveConciliacaoViagemUseCase", () => {
+  it("grava chegaramAMais e usa zero quando ausente", async () => {
+    const { useCase, save } = harness();
+    await useCase.execute({
+      ...input,
+      itens: [{ alocacaoIbcId: "aloc-1", destino: "FICOU", numPed: "10" }],
+      chegaramAMais: 5,
+    });
+    const gravado = save.mock.calls[0]?.arguments[0] as SalvarConciliacaoData;
+    assert.equal(gravado.chegaramAMais, 5);
+
+    const soDestinos = harness();
+    await soDestinos.useCase.execute({
+      ...input,
+      itens: [{ alocacaoIbcId: "aloc-1", destino: "FICOU", numPed: "10" }],
+    });
+    assert.equal((soDestinos.save.mock.calls[0]?.arguments[0] as SalvarConciliacaoData).chegaramAMais, 0);
+  });
+
   it("grava o pedido apontado, deriva a venda e devolve esperado e apontado", async () => {
     const { useCase, save } = harness();
     const view = await useCase.execute({

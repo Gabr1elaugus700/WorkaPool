@@ -48,6 +48,7 @@ export class IbcConciliacaoController {
         actorId,
         itens: parsed.data.itens ?? [],
         retornosSemId: parsed.data.retornosSemId ?? [],
+        chegaramAMais: parsed.data.chegaramAMais,
       });
       return res.status(200).json(view);
     } catch (err: unknown) {

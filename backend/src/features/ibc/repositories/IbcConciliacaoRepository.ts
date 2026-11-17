@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Prisma, PrismaClient } from "@prisma/client";
 import prismaInstance from "../../../config/prisma";
 import { AppError } from "../../../utils/AppError";
-import { EfeitoFechamentoIbc, FicouNaViagem } from "../services/planejarFechamentoViagem";
+import { EfeitoFechamentoIbc, FicouNaViagem, TrocaStageNoFechamento } from "../services/planejarFechamentoViagem";
 import {
   DestinoConciliacaoIbc,
   ModalidadeConciliacaoIbc,
@@ -26,6 +26,7 @@ export type ExpedicaoParaConciliar = {
   id: string;
   viagemFechadaEm: Date | null;
   viagemFechadaPorId: string | null;
+  chegaramAMais: number;
 };
 
 export type SalvarConciliacaoData = {
@@ -42,6 +43,7 @@ export type SalvarConciliacaoData = {
     quantidadePapel: number;
     confirmouDivergencia: boolean;
   }>;
+  chegaramAMais?: number;
 };
 
 export interface IIbcConciliacaoRepository {
@@ -63,6 +65,7 @@ export type FecharViagemComando = {
   codCar: number;
   efeitos: EfeitoFechamentoIbc[];
   ficaram: FicouNaViagem[];
+  stages: TrocaStageNoFechamento[];
 };
 
 export class IbcConciliacaoRepository implements IIbcConciliacaoRepository {
@@ -75,6 +78,7 @@ export class IbcConciliacaoRepository implements IIbcConciliacaoRepository {
       id: row.id,
       viagemFechadaEm: row.viagemFechadaEm,
       viagemFechadaPorId: row.viagemFechadaPorId,
+      chegaramAMais: row.chegaramAMais,
     };
   }
 
@@ -107,8 +111,18 @@ export class IbcConciliacaoRepository implements IIbcConciliacaoRepository {
   }
 
   async save(data: SalvarConciliacaoData): Promise<void> {
-    if (data.marcas.length === 0 && data.retornos.length === 0) return;
-    await this.prisma.$transaction([
+    const atualizaChegaram = data.chegaramAMais != null;
+    if (data.marcas.length === 0 && data.retornos.length === 0 && !atualizaChegaram) return;
+    const ops: Prisma.PrismaPromise<unknown>[] = [];
+    if (atualizaChegaram) {
+      ops.push(
+        this.prisma.expedicaoIbc.update({
+          where: { id: data.expedicaoIbcId },
+          data: { chegaramAMais: data.chegaramAMais },
+        }),
+      );
+    }
+    ops.push(
       ...data.marcas.map((marca) =>
         this.prisma.conciliacaoViagemIbc.upsert({
           where: { alocacaoIbcId: marca.alocacaoIbcId },
@@ -156,7 +170,8 @@ export class IbcConciliacaoRepository implements IIbcConciliacaoRepository {
           },
         }),
       ),
-    ]);
+    );
+    await this.prisma.$transaction(ops);
   }
 
   async fecharViagem(
@@ -170,6 +185,16 @@ export class IbcConciliacaoRepository implements IIbcConciliacaoRepository {
       });
       if (locked.count !== 1) {
         throw new AppError({ message: "A viagem já foi fechada", statusCode: 409, code: "IBC_VIAGEM_JA_FECHADA", details: { expedicaoId: cmd.expedicaoId } });
+      }
+      if (cmd.stages.length > 0) {
+        await tx.conciliacaoTrocaStage.createMany({
+          data: cmd.stages.map((stage) => ({
+            expedicaoIbcId: cmd.expedicaoId,
+            alocacaoIbcId: stage.alocacaoIbcId,
+            ibcId: stage.ibcId,
+            numPed: stage.numPed,
+          })),
+        });
       }
       await abrirEntradas(tx);
       for (const efeito of cmd.efeitos) {
