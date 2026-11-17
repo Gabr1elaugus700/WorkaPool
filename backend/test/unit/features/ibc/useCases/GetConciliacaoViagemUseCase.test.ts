@@ -55,10 +55,11 @@ function repos(overrides: {
       pedido({ numPed: "20", codCli: "A", cliente: "Acme", posCar: 2, quantidadeEsperadaVenda: 2, quantidadeEsperadaEmprestimo: 1 }),
     ]),
     listAlocacoesByCargaId: mock.fn(async () => [alocacao("H0020", "20"), alocacao("H0010", "10")]),
+    listPlacaPaletaPorIbcIds: mock.fn(async () => new Map()),
     ...overrides.expedicao,
   } as IIbcExpedicaoRepository;
   const conciliacoes: IIbcConciliacaoRepository = {
-    findPorCarga: mock.fn(async () => ({ id: "exp-1", viagemFechadaEm: null, viagemFechadaPorId: null })),
+    findPorCarga: mock.fn(async () => ({ id: "exp-1", viagemFechadaEm: null, viagemFechadaPorId: null, chegaramAMais: 0 })),
     listMarcas: mock.fn(async () => [
       { alocacaoIbcId: "aloc-H0010", destino: "FICOU" as const, modalidade: "EMPRESTIMO" as const, ibcEntradaId: null },
     ]),
@@ -112,7 +113,16 @@ describe("GetConciliacaoViagemUseCase", () => {
     assert.equal(view.itens[1]?.numPed, null);
     assert.equal(view.itens[0]?.codCli, null);
     assert.deepEqual(view.pedidos, [
-      { numPed: "10", codCli: "B", cliente: "Beta", incluso: false, quantidadeEsperada: 1, quantidadeApontada: 0 },
+      {
+        numPed: "10",
+        codCli: "B",
+        cliente: "Beta",
+        incluso: false,
+        quantidadeEsperada: 1,
+        quantidadeApontada: 0,
+        posCar: 1,
+        gruposCodigo: [],
+      },
     ]);
     assert.deepEqual(view.clientes, [
       { chaveCliente: "B\u0000Beta", codCli: "B", cliente: "Beta", quantidadePapel: 1, confirmouDivergencia: false },
@@ -154,6 +164,7 @@ describe("GetConciliacaoViagemUseCase", () => {
           id: "exp-1",
           viagemFechadaEm: fechadaEm,
           viagemFechadaPorId: "almox-1",
+          chegaramAMais: 5,
         })),
         listMarcas: mock.fn(async () => [
           { alocacaoIbcId: "aloc-H0010", destino: "FICOU" as const, modalidade: "EMPRESTIMO" as const, numPed: null, ibcEntradaId: null },

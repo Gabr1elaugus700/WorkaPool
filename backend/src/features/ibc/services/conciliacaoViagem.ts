@@ -43,6 +43,8 @@ export type PedidoConciliacaoViagem = {
   incluso: boolean;
   quantidadeEsperada: number;
   quantidadeApontada: number;
+  posCar: number | null;
+  gruposCodigo: readonly string[];
 };
 
 export type PedidoNaVolta = {
@@ -123,6 +125,8 @@ function progressoPedidos(
     quantidadeEsperada: pedido.quantidadeEsperadaTotal,
     quantidadeApontada: contagem.get(pedido.numPed) ?? 0,
     incluso: pedido.quantidadeEsperadaVenda > 0,
+    posCar: pedido.posCar,
+    gruposCodigo: pedido.gruposCodigo,
   }));
 }
 

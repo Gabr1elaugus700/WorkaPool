@@ -197,6 +197,7 @@ model Ibc {
   trocaEntrada     Ibc?                @relation("TrocaIbcVinculo", fields: [trocaEntradaId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   trocaSaida       Ibc?                @relation("TrocaIbcVinculo")
   conciliacaoEntrada ConciliacaoViagemIbc? @relation("ConciliacaoIbcEntrada")
+  conciliacaoTrocaStagesSaida ConciliacaoTrocaStage[]
 
   convertedToContainerId String?
   convertedToContainer   Ibc?                   @relation("IbcConversionLink", fields: [convertedToContainerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
@@ -261,7 +262,8 @@ model AlocacaoIbc {
   carga        Cargas        @relation(fields: [cargaId], references: [id])
   alocadoPor   User          @relation("AlocacaoIbcAlocadoPor", fields: [alocadoPorId], references: [id])
   expedicaoIbc ExpedicaoIbc? @relation(fields: [expedicaoIbcId], references: [id])
-  conciliacao  ConciliacaoViagemIbc?
+  conciliacao       ConciliacaoViagemIbc?
+  conciliacaoTrocaStage ConciliacaoTrocaStage?
 
   @@index([cargaId, numPed])
   @@index([ibcId])
@@ -274,6 +276,7 @@ model ExpedicaoIbc {
   fechadoEm          DateTime  @default(now())
   viagemFechadaPorId String?
   viagemFechadaEm    DateTime?
+  chegaramAMais      Int           @default(0)
 
   carga            Cargas        @relation(fields: [cargaId], references: [id])
   fechadoPor       User          @relation("ExpedicaoIbcFechadoPor", fields: [fechadoPorId], references: [id])
@@ -281,6 +284,7 @@ model ExpedicaoIbc {
   alocacoes        AlocacaoIbc[]
   conciliacoes     ConciliacaoViagemIbc[]
   retornosSemId    ConciliacaoRetornoSemId[]
+  trocaStages      ConciliacaoTrocaStage[]
   avisosRepresentante AvisoRepresentanteIbc[]
 }
 
@@ -316,6 +320,22 @@ model ConciliacaoRetornoSemId {
   lancadoPor           User         @relation("ConciliacaoRetornoSemIdLancadoPor", fields: [lancadoPorId], references: [id])
 
   @@unique([expedicaoIbcId, chaveCliente])
+}
+
+/// Stage de troca criada na transação do Fechar Viagem (container que saiu ainda sem entrada).
+model ConciliacaoTrocaStage {
+  id             String @id @default(uuid())
+  expedicaoIbcId String
+  alocacaoIbcId  String @unique
+  ibcId          String
+  numPed         String
+  criadoEm       DateTime @default(now())
+
+  expedicao ExpedicaoIbc @relation(fields: [expedicaoIbcId], references: [id])
+  alocacao  AlocacaoIbc  @relation(fields: [alocacaoIbcId], references: [id])
+  ibc       Ibc          @relation(fields: [ibcId], references: [id])
+
+  @@index([expedicaoIbcId])
 }
 
 model AvisoRepresentanteIbc {

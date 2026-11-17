@@ -21,6 +21,7 @@ export type SalvarConciliacaoInput = {
     modalidade?: ModalidadeConciliacaoIbc | null;
   }>;
   retornosSemId: Array<{ chaveCliente: string; quantidadePapel: number; confirmouDivergencia?: boolean }>;
+  chegaramAMais?: number;
 };
 
 function falha(statusCode: number, code: string, message: string, details: unknown): never {
@@ -52,7 +53,13 @@ export class SaveConciliacaoViagemUseCase {
     const chaves = new Set(conciliacaoViagem.clientes(pedidosIbc).map((cliente) => cliente.chaveCliente));
     const entradas = new Map(marcas.map((marca) => [marca.alocacaoIbcId, marca.ibcEntradaId]));
     const pedidos = new Map(pedidosIbc.map((pedido) => [pedido.numPed, pedido]));
-    const normalizado = normalizar(input, new Set(alocacoes.map((alocacao) => alocacao.id)), entradas, chaves, pedidos);
+    const normalizado = normalizar(
+      { ...input, retornosSemId: input.retornosSemId ?? [], itens: input.itens ?? [] },
+      new Set(alocacoes.map((alocacao) => alocacao.id)),
+      entradas,
+      chaves,
+      pedidos,
+    );
     await assertIbcCompativelNaVolta({
       alocacoes,
       marcas: normalizado.marcas,
@@ -64,6 +71,7 @@ export class SaveConciliacaoViagemUseCase {
       expedicaoIbcId: expedicao.id,
       lancadoPorId: input.actorId,
       ...normalizado,
+      chegaramAMais: input.chegaramAMais ?? 0,
     });
     return this.consultar.execute({ codCar: input.codCar, actorRole: input.actorRole });
   }

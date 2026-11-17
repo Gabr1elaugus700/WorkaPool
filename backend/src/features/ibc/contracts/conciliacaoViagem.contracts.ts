@@ -37,18 +37,49 @@ const comum = {
   "500": { description: "Erro interno do servidor", schema: internalServerErrorSchema, componentName: "InternalServerError" },
 };
 
+const itemConciliacaoSchema = z.object({
+  alocacaoIbcId: z.string(),
+  identificador: z.string(),
+  corHex: z.string().nullable(),
+  grupoCodigo: z.string().nullable(),
+  universal: z.boolean(),
+  homologado: z.boolean(),
+  destino: z.enum(["FICOU", "RETORNOU", "TROCA"]).nullable(),
+  numPed: z.string().nullable(),
+});
+
 const gravadaSchema = z.object({
   codCar: z.number(),
   expedicaoIbcId: z.string(),
-  itens: z.array(z.object({
-    alocacaoIbcId: z.string(),
-    identificador: z.string(),
-    destino: z.enum(["FICOU", "RETORNOU", "TROCA"]).nullable(),
-    numPed: z.string().nullable(),
+  chegaramAMais: z.number().int(),
+  itens: z.array(itemConciliacaoSchema),
+  pedidos: z.array(z.object({
+    numPed: z.string(),
+    posCar: z.number().nullable(),
+    gruposCodigo: z.array(z.string()),
   })),
 });
 
+const consultaSchema = gravadaSchema.extend({
+  viagemFechadaEm: z.string().datetime().nullable(),
+  clientes: z.array(z.unknown()),
+});
+
 export const conciliacaoViagemContracts: RouteContract[] = [
+  {
+    method: "get",
+    path: "/api/ibc/expedicoes/{codCar}/conciliacao",
+    tags: ["IBC"],
+    security: bearer,
+    summary: "Consulta destinos parciais e Chegaram a mais",
+    description:
+      "Viagem aberta: containers sem pedido escolhido. Inclui placa (corHex, grupo, universal, homologado), pedidos com posCar e gruposCodigo, e chegaramAMais.",
+    request: { params: codCarParams },
+    responses: {
+      "200": { description: "Conciliação", schema: consultaSchema, componentName: "ConciliacaoViagemConsulta" },
+      ...comum,
+    },
+  },
   {
     method: "put",
     path: "/api/ibc/expedicoes/{codCar}/conciliacao",
