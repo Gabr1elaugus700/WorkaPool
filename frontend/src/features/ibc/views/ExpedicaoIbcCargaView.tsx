@@ -54,7 +54,7 @@ export default function ExpedicaoIbcCargaView() {
   const carregamento = cargaIbcEtapa.carregamento({
     detalheCarregado: detalhe != null && codCar != null,
     temExpedicao,
-    viagemCarregada: viagem != null,
+    viagemCarregada: viagem != null && !paleta.isLoading,
     erroConciliacao: conciliacao.error != null,
     fechouExpedicaoNestaTela: codCar != null && expedicaoFechadaNaCarga === codCar,
   });
@@ -124,21 +124,19 @@ export default function ExpedicaoIbcCargaView() {
       ) : vista === "fechar-viagem" ? (
         viagem ? (
           <CargaIbcFecharViagemEtapa
-            codCar={codCar}
             viagem={viagem}
+            grupos={paleta.data?.grupos ?? []}
+            chegaramAMais={conciliacao.chegaramAMais}
             aviso={conciliacao.aviso}
             salvando={conciliacao.salvando}
             fechada={conciliacao.fechada}
             marcados={conciliacao.marcados}
             total={conciliacao.total}
             podeFechar={conciliacao.podeFechar}
-            barras={conciliacao.barras}
             divergencias={conciliacao.divergencias}
             pedindoConfirmacao={conciliacao.pedindoConfirmacao}
-            onDestino={conciliacao.marcarDestino}
-            onPedido={conciliacao.marcarPedido}
-            onTrocaRegistrada={conciliacao.vincularTroca}
-            onClienteChange={conciliacao.atualizarCliente}
+            onAlternarDestino={conciliacao.alternarDestino}
+            onChegaramAMaisChange={conciliacao.alterarChegaramAMais}
             onSalvar={() => void conciliacao.salvarAndamento()}
             onFechar={() => void conciliacao.fecharViagem()}
             onConfirmarFechamento={() => void conciliacao.confirmarFechamento()}

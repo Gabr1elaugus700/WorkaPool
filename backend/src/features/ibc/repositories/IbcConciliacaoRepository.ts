@@ -111,10 +111,17 @@ export class IbcConciliacaoRepository implements IIbcConciliacaoRepository {
   }
 
   async save(data: SalvarConciliacaoData): Promise<void> {
-    const atualizaChegaram = data.chegaramAMais != null;
-    if (data.marcas.length === 0 && data.retornos.length === 0 && !atualizaChegaram) return;
-    const ops: Prisma.PrismaPromise<unknown>[] = [];
-    if (atualizaChegaram) {
+    const idsMarcados = data.marcas.map((marca) => marca.alocacaoIbcId);
+    const ops: Prisma.PrismaPromise<unknown>[] = [
+      this.prisma.conciliacaoViagemIbc.deleteMany({
+        where: { expedicaoIbcId: data.expedicaoIbcId, ibcEntradaId: null, alocacaoIbcId: { notIn: idsMarcados } },
+      }),
+      this.prisma.alocacaoIbc.updateMany({
+        where: { expedicaoIbcId: data.expedicaoIbcId, id: { notIn: idsMarcados } },
+        data: { numPed: null },
+      }),
+    ];
+    if (data.chegaramAMais != null) {
       ops.push(
         this.prisma.expedicaoIbc.update({
           where: { id: data.expedicaoIbcId },

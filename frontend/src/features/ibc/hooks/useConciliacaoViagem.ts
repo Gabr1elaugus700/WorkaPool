@@ -2,18 +2,15 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { conciliacaoViagemService } from "../services/conciliacaoViagemService";
 import type {
-  ConciliacaoViagemClienteDTO,
   ConciliacaoViagemDTO,
-  ConciliacaoViagemItemDTO,
   DestinoConciliacao,
 } from "../types/conciliacaoViagem.types";
 import { conciliacaoVolta } from "../utils/conciliacaoVolta.utils";
 import { toError } from "../utils/toError";
 
-type ClientePatch = Partial<Pick<ConciliacaoViagemClienteDTO, "quantidadePapel" | "confirmouDivergencia">>;
-
 export function useConciliacaoViagem(codCar: number | null, enabled: boolean, onFechada: () => void) {
   const [viagem, setViagem] = useState<ConciliacaoViagemDTO | null>(null);
+  const [chegaramAMais, setChegaramAMais] = useState("0");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -25,7 +22,9 @@ export function useConciliacaoViagem(codCar: number | null, enabled: boolean, on
     setLoading(true);
     setError(null);
     try {
-      setViagem(await conciliacaoViagemService.consultar(codCar));
+      const carregada = await conciliacaoViagemService.consultar(codCar);
+      setViagem(carregada);
+      setChegaramAMais(String(carregada.chegaramAMais));
     } catch (err) {
       setError(toError(err));
     } finally {
@@ -37,76 +36,37 @@ export function useConciliacaoViagem(codCar: number | null, enabled: boolean, on
     if (enabled) void carregar();
   }, [enabled, carregar]);
 
-  const editar = (recipe: (atual: ConciliacaoViagemDTO) => ConciliacaoViagemDTO) => {
+  const alternarDestino = (alocacaoIbcId: string, destino: DestinoConciliacao, numPed: string | null) => {
     setPedindoConfirmacao(false);
-    setViagem((atual) => (atual ? recipe(atual) : atual));
+    setViagem((atual) => (
+      atual
+        ? { ...atual, itens: conciliacaoVolta.alternarDestino(atual.itens, atual.pedidos, alocacaoIbcId, destino, numPed) }
+        : atual
+    ));
   };
 
-  const atualizarItem = (
-    alocacaoIbcId: string,
-    patch: (item: ConciliacaoViagemItemDTO) => ConciliacaoViagemItemDTO,
-  ) => {
-    editar((atual) => ({
-      ...atual,
-      itens: atual.itens.map((item) => (item.alocacaoIbcId === alocacaoIbcId ? patch(item) : item)),
-    }));
+  const alterarChegaramAMais = (valor: string) => {
+    setPedindoConfirmacao(false);
+    setChegaramAMais(valor);
   };
-
-  const marcarDestino = (alocacaoIbcId: string, destino: DestinoConciliacao) =>
-    atualizarItem(alocacaoIbcId, (atual) => ({
-      ...atual,
-      destino,
-      numPed: destino === "RETORNOU" ? null : atual.numPed,
-      codCli: destino === "RETORNOU" ? null : atual.codCli,
-      cliente: destino === "RETORNOU" ? "" : atual.cliente,
-      modalidade: null,
-    }));
-
-  const marcarPedido = (alocacaoIbcId: string, numPed: string) =>
-    editar((atual) => {
-      const pedido = atual.pedidos.find((item) => item.numPed === numPed);
-      return {
-        ...atual,
-        itens: atual.itens.map((item) => item.alocacaoIbcId !== alocacaoIbcId ? item : {
-          ...item,
-          numPed,
-          codCli: pedido?.codCli ?? null,
-          cliente: pedido?.cliente ?? "",
-        }),
-      };
-    });
-
-  const vincularTroca = (alocacaoIbcId: string, ibcEntradaId: string) =>
-    atualizarItem(alocacaoIbcId, (atual) => ({ ...atual, ibcEntradaId }));
-
-  const atualizarCliente = (chaveCliente: string, patch: ClientePatch) =>
-    editar((atual) => ({
-      ...atual,
-      clientes: atual.clientes.map((cliente) => (cliente.chaveCliente === chaveCliente ? { ...cliente, ...patch } : cliente)),
-    }));
 
   const persistir = async (): Promise<ConciliacaoViagemDTO | null> => {
     if (!viagem || codCar == null) return null;
-    const incompleta = viagem.itens.find(
-      (item) => (item.destino === "FICOU" || item.destino === "TROCA") && !item.numPed,
-    );
-    if (incompleta) {
-      setAviso(`Escolha o pedido do IBC ${incompleta.identificador}.`);
+    const lido = conciliacaoVolta.lerChegaramAMais(chegaramAMais);
+    if (!lido.ok) {
+      setAviso("Informe um inteiro não negativo em Chegaram a mais.");
       return null;
     }
     const salva = await conciliacaoViagemService.salvar(codCar, {
-      itens: viagem.itens.flatMap((item) => item.destino == null ? [] : [{
+      itens: viagem.itens.flatMap((item) => !conciliacaoVolta.temDestino(item) || item.destino == null ? [] : [{
         alocacaoIbcId: item.alocacaoIbcId,
         destino: item.destino,
         ...(item.destino === "RETORNOU" || !item.numPed ? {} : { numPed: item.numPed }),
       }]),
-      retornosSemId: viagem.clientes.flatMap((cliente) => cliente.quantidadePapel == null ? [] : [{
-        chaveCliente: cliente.chaveCliente,
-        quantidadePapel: cliente.quantidadePapel,
-        confirmouDivergencia: cliente.confirmouDivergencia,
-      }]),
+      chegaramAMais: lido.valor,
     });
     setViagem(salva);
+    setChegaramAMais(String(salva.chegaramAMais));
     return salva;
   };
 
@@ -157,13 +117,13 @@ export function useConciliacaoViagem(codCar: number | null, enabled: boolean, on
   };
 
   const fechada = viagem?.viagemFechadaEm != null;
-  const marcados = viagem?.itens.filter((item) => item.destino != null).length ?? 0;
+  const marcados = viagem?.itens.filter(conciliacaoVolta.temDestino).length ?? 0;
   const total = viagem?.itens.length ?? 0;
-  const papelCompleto = viagem?.clientes.every((cliente) => cliente.quantidadePapel != null) ?? false;
   const barras = viagem ? conciliacaoVolta.barras(viagem.pedidos, viagem.itens) : [];
 
   return {
     viagem,
+    chegaramAMais,
     loading,
     error,
     aviso,
@@ -171,14 +131,11 @@ export function useConciliacaoViagem(codCar: number | null, enabled: boolean, on
     fechada,
     marcados,
     total,
-    barras,
     divergencias: conciliacaoVolta.divergentes(barras),
     pedindoConfirmacao,
-    podeFechar: !salvando && marcados === total && total > 0 && papelCompleto,
-    marcarDestino,
-    marcarPedido,
-    vincularTroca,
-    atualizarCliente,
+    podeFechar: !fechada && !salvando && marcados === total && total > 0,
+    alternarDestino,
+    alterarChegaramAMais,
     salvarAndamento: () => executar(false),
     fecharViagem: () => executar(true),
     confirmarFechamento,
