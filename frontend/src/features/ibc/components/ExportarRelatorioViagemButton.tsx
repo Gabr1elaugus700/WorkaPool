@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Printer } from "lucide-react";
 import { toast } from "sonner";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { downloadRelatorioViagemPdf } from "../pdf/downloadRelatorioViagemPdf";
@@ -9,9 +10,15 @@ type Props = {
   codCar: number;
   rotulo: string;
   variant?: ButtonProps["variant"];
+  aparencia?: "texto" | "pdf";
 };
 
-export default function ExportarRelatorioViagemButton({ codCar, rotulo, variant = "outline" }: Props) {
+export default function ExportarRelatorioViagemButton({
+  codCar,
+  rotulo,
+  variant = "outline",
+  aparencia = "texto",
+}: Props) {
   const [gerando, setGerando] = useState(false);
 
   const exportar = async () => {
@@ -26,17 +33,21 @@ export default function ExportarRelatorioViagemButton({ codCar, rotulo, variant 
     }
   };
 
+  const pdf = aparencia === "pdf";
+
   return (
     <Button
       type="button"
       variant={variant}
-      size="sm"
+      size={pdf ? "icon" : "sm"}
+      className={pdf ? "border-destructive bg-transparent text-destructive hover:bg-destructive/10 hover:text-destructive" : undefined}
       disabled={gerando}
+      aria-label={pdf ? (gerando ? "Gerando…" : rotulo) : undefined}
       onClick={() => {
         void exportar();
       }}
     >
-      {gerando ? "Gerando…" : rotulo}
+      {pdf ? <Printer aria-hidden /> : gerando ? "Gerando…" : rotulo}
     </Button>
   );
 }
