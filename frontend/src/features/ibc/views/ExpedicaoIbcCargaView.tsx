@@ -72,10 +72,13 @@ export default function ExpedicaoIbcCargaView() {
   if (rota.redirectTo != null) return <Navigate to={rota.redirectTo} replace />;
   const { vista } = rota;
 
+  const destino = detalhe.destino.trim();
+  const reimprimir = atual !== "preparacao";
   const relatorio = temExpedicao ? (
     <ExportarRelatorioViagemButton
       codCar={codCar}
-      rotulo={atual === "preparacao" ? "Exportar viagem" : "Reimprimir relatório de viagem"}
+      rotulo={reimprimir ? "Reimprimir relatório de viagem" : "Exportar viagem"}
+      aparencia={reimprimir ? "pdf" : "texto"}
     />
   ) : null;
 
@@ -102,8 +105,8 @@ export default function ExpedicaoIbcCargaView() {
   return (
     <DefaultLayout>
       <IbcPageHeader
-        title={`Carga ${detalhe.codCar}`}
-        subtitle={detalhe.destino || undefined}
+        title={destino || `Carga ${detalhe.codCar}`}
+        subtitle={destino ? `Carga ${detalhe.codCar}` : undefined}
         icon={<Package className="h-7 w-7 text-primary" aria-hidden />}
         secondaryActions={
           <>

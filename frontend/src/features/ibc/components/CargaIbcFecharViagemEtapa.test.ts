@@ -154,7 +154,10 @@ describe("CargaIbcFecharViagemEtapa", () => {
       viagem: { ...viagem(), viagemFechadaEm: "2026-11-17T12:00:00.000Z" },
     });
     assert.match(fechada, /só para consulta/);
-    assert.match(fechada, /id="chegaram-a-mais"[^>]*disabled=""/);
+    for (const rotulo of ["Diminuir containers extras", "Aumentar containers extras"]) {
+      const botao = fechada.match(new RegExp(`<button[^>]*aria-label="${rotulo}"[^>]*>`))?.[0] ?? "";
+      assert.match(botao, /disabled=""/);
+    }
     assert.doesNotMatch(fechada, /Salvar andamento|Fechar viagem<\/button>|Confirmar e fechar|Desmarcar/);
   });
 });

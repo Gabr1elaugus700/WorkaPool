@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import type {
   ConciliacaoViagemDTO,
   DestinoConciliacao,
@@ -13,6 +12,59 @@ import { conciliacaoVolta } from "../utils/conciliacaoVolta.utils";
 import { ibcProdutoCompatibilidade } from "../utils/ibcProdutoCompatibilidade";
 import ConciliacaoClienteBloco from "./ConciliacaoClienteBloco";
 import IbcContainerChip from "./IbcContainerChip";
+
+function inteiroNaoNegativo(valor: string): number {
+  const lido = Number.parseInt(valor, 10);
+  return Number.isFinite(lido) && lido >= 0 ? lido : 0;
+}
+
+function ChegaramAMaisLinha({
+  valor,
+  disabled,
+  onChange,
+}: {
+  valor: string;
+  disabled: boolean;
+  onChange: (valor: string) => void;
+}) {
+  const quantidade = inteiroNaoNegativo(valor);
+
+  return (
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <p id="chegaram-a-mais-rotulo" className="text-sm font-semibold text-foreground">Chegaram a mais</p>
+        <p className="mt-1 max-w-[65ch] text-xs text-muted-foreground">Quantidade inteira de containers extras trazidos na carga.</p>
+      </div>
+      <div className="inline-flex items-center gap-1" role="group" aria-labelledby="chegaram-a-mais-rotulo">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-9 w-9"
+          disabled={disabled || quantidade <= 0}
+          aria-label="Diminuir containers extras"
+          onClick={() => onChange(String(quantidade - 1))}
+        >
+          −
+        </Button>
+        <span id="chegaram-a-mais" className="w-10 text-center text-sm font-medium tabular-nums text-foreground" aria-live="polite">
+          {quantidade}
+        </span>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-9 w-9"
+          disabled={disabled}
+          aria-label="Aumentar containers extras"
+          onClick={() => onChange(String(quantidade + 1))}
+        >
+          +
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 type Props = {
   viagem: ConciliacaoViagemDTO;
@@ -99,11 +151,7 @@ export default function CargaIbcFecharViagemEtapa({
           </ul>
         )}
       </section>
-      <div className="mt-4 rounded-lg border border-border bg-card p-4 shadow-sm">
-        <label htmlFor="chegaram-a-mais" className="block text-sm font-semibold text-foreground">Chegaram a mais</label>
-        <p className="mt-1 max-w-[65ch] text-xs text-muted-foreground">Quantidade inteira de containers extras trazidos na carga.</p>
-        <Input id="chegaram-a-mais" type="number" min={0} step={1} inputMode="numeric" disabled={bloqueada} value={chegaramAMais} onChange={(event) => onChegaramAMaisChange(event.target.value)} className="mt-2 w-28 tabular-nums" />
-      </div>
+      <ChegaramAMaisLinha valor={chegaramAMais} disabled={bloqueada} onChange={onChegaramAMaisChange} />
       {fechada ? null : pedindoConfirmacao ? (
         <div className="mt-6 border-t border-border pt-4" aria-live="polite">
           <p className="max-w-[65ch] text-sm text-foreground">
