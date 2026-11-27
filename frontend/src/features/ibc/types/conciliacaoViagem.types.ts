@@ -9,6 +9,7 @@ export type PedidoConciliacaoDTO = {
   quantidadeApontada: number;
   posCar: number | null;
   gruposCodigo: string[];
+  vendedor: string | null;
 };
 export type ConciliacaoViagemItemDTO = {
   alocacaoIbcId: string;

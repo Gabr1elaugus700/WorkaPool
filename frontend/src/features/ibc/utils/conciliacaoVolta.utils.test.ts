@@ -12,6 +12,7 @@ function pedido(patch: Partial<PedidoConciliacaoDTO> & Pick<PedidoConciliacaoDTO
     quantidadeApontada: 0,
     posCar: 1,
     gruposCodigo: ["HIPO"],
+    vendedor: null,
     ...patch,
   };
 }
@@ -199,6 +200,31 @@ describe("conciliacaoVolta", () => {
     assert.deepEqual(desmarcado.retornaram, []);
     assert.equal(desmarcado.clientes[0]?.subBlocos[0]?.secoes[0]?.itens.length, 1);
     assert.equal(desmarcado.clientes[1]?.subBlocos[0]?.secoes[0]?.itens.length, 1);
+  });
+
+  it("junta os vendedores distintos do cliente e ignora nome vazio", () => {
+    const visao = conciliacaoVolta.montarVisao({
+      codCar: 383,
+      expedicaoIbcId: "exp-1",
+      viagemFechadaEm: null,
+      chegaramAMais: 0,
+      itens: [],
+      clientes: [],
+      pedidos: [
+        pedido({ numPed: "11", cliente: "Alpha", vendedor: "Ana" }),
+        pedido({ numPed: "30", cliente: "Alpha", posCar: 2, vendedor: "Ana" }),
+        pedido({ numPed: "12", codCli: "B", cliente: "Beta", posCar: 3, vendedor: " Bruno " }),
+        pedido({ numPed: "40", codCli: "B", cliente: "Beta", posCar: 4, vendedor: "Carla" }),
+        pedido({ numPed: "50", codCli: "C", cliente: "Gamma", posCar: 5, vendedor: "  " }),
+      ],
+    });
+    const porCliente = new Map(visao.clientes.map((bloco) => [
+      bloco.cliente,
+      conciliacaoVolta.rotuloVendedores(bloco.subBlocos.map((sub) => sub.vendedor)),
+    ]));
+    assert.equal(porCliente.get("Alpha"), "Ana");
+    assert.equal(porCliente.get("Beta"), "Bruno · Carla");
+    assert.equal(porCliente.get("Gamma"), null);
   });
 
   it("interpreta Chegaram a mais vazio como zero e recusa negativo ou decimal", () => {

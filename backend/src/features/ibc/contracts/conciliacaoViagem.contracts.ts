@@ -57,6 +57,7 @@ const gravadaSchema = z.object({
     numPed: z.string(),
     posCar: z.number().nullable(),
     gruposCodigo: z.array(z.string()),
+    vendedor: z.string().nullable(),
   })),
 });
 

@@ -17,6 +17,7 @@ const pedido = (
   quantidadeApontada: 1,
   posCar: numPed === "10" ? 2 : 1,
   gruposCodigo: ["HIPO"],
+  vendedor: null,
   ...overrides,
 });
 

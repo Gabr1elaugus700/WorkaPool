@@ -89,7 +89,7 @@ function montarVisao(viagem: ConciliacaoViagemDTO, gruposPaleta: readonly PlacaG
       return {
         chaveCliente, codCli: pedidos[0].codCli, cliente: pedidos[0].cliente, ficou: noCliente("FICOU"), troca: noCliente("TROCA"),
         subBlocos: pedidos.map((p) => ({
-          numPed: p.numPed, incluso: p.incluso, quantidadeEsperada: p.quantidadeEsperada,
+          numPed: p.numPed, incluso: p.incluso, quantidadeEsperada: p.quantidadeEsperada, vendedor: p.vendedor,
           secoes: agruparPorSecao(viagem.itens.filter((i) => (apontaPedido(i) && i.numPed === p.numPed) || (!fechada && !temDestino(i) && ehCompativel(i, p.gruposCodigo))), gruposPaleta),
         })),
       };
@@ -115,6 +115,16 @@ function alternarDestino(
   });
 }
 
+function rotuloVendedores(nomes: readonly (string | null | undefined)[]): string | null {
+  const distintos: string[] = [];
+  for (const nome of nomes) {
+    const limpo = nome?.trim() ?? "";
+    if (limpo.length === 0 || distintos.includes(limpo)) continue;
+    distintos.push(limpo);
+  }
+  return distintos.length === 0 ? null : distintos.join(" · ");
+}
+
 function lerChegaramAMais(texto: string): { ok: true; valor: number } | { ok: false } {
   const limpo = texto.trim();
   if (limpo === "") return { ok: true, valor: 0 };
@@ -130,6 +140,7 @@ export const conciliacaoVolta = {
   temDestino,
   chip,
   montarVisao,
+  rotuloVendedores,
   alternarDestino,
   lerChegaramAMais,
 };

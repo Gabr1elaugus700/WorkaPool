@@ -21,6 +21,7 @@ const rotuloSecao = (s: SecaoConciliacao) =>
   `${s.sigla ? `${s.grupoCodigo} · ${s.sigla}` : (s.grupoCodigo ?? "")}${s.grupoDescricao ? ` ${s.grupoDescricao}` : ""}`;
 
 export default function ConciliacaoClienteBloco({ bloco, disabled, onAlternarDestino }: Props) {
+  const rotulo = conciliacaoVolta.rotuloVendedores(bloco.subBlocos.map((sub) => sub.vendedor));
   const soma = bloco.ficou + bloco.troca;
   const pctFicou = soma === 0 ? 0 : Math.round((bloco.ficou / soma) * 100);
   const pctTroca = soma === 0 ? 0 : 100 - pctFicou;
@@ -28,7 +29,10 @@ export default function ConciliacaoClienteBloco({ bloco, disabled, onAlternarDes
   return (
     <article className="rounded-lg border border-border bg-card p-4 shadow-sm">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="text-base font-semibold text-foreground">{bloco.cliente}</h2>
+        <h2 className="text-base font-semibold text-foreground">
+          {bloco.cliente}
+          {rotulo ? <span className="ml-2 text-sm font-normal text-muted-foreground">{rotulo}</span> : null}
+        </h2>
         <p className="text-xs font-medium tabular-nums text-muted-foreground">Ficou: {bloco.ficou} · Troca: {bloco.troca}</p>
       </div>
       <div role="img" aria-label={`${bloco.cliente}: ${bloco.ficou} ficou, ${bloco.troca} troca`} className="mt-2 flex h-2 overflow-hidden rounded-full bg-secondary">

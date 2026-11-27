@@ -70,6 +70,7 @@ function harness(options: {
     })),
     listMarcas: mock.fn(async () => marcas),
     listRetornos: mock.fn(async () => retornos),
+    listPedidosFechados: mock.fn(async () => []),
     save,
   };
   const alocacoes = options.alocacoes ?? [alocacao()];
