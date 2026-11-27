@@ -66,6 +66,7 @@ function repos(overrides: {
     listRetornos: mock.fn(async () => [
       { chaveCliente: "B\u0000Beta", quantidadePapel: 1, confirmouDivergencia: false },
     ]),
+    listPedidosFechados: mock.fn(async () => []),
     ...overrides.conciliacao,
   };
   return { expedicoes, conciliacoes };
@@ -122,6 +123,7 @@ describe("GetConciliacaoViagemUseCase", () => {
         quantidadeApontada: 0,
         posCar: 1,
         gruposCodigo: [],
+        vendedor: null,
       },
     ]);
     assert.deepEqual(view.clientes, [
@@ -170,6 +172,10 @@ describe("GetConciliacaoViagemUseCase", () => {
           { alocacaoIbcId: "aloc-H0010", destino: "FICOU" as const, modalidade: "EMPRESTIMO" as const, numPed: null, ibcEntradaId: null },
         ]),
         listRetornos: mock.fn(async () => []),
+        listPedidosFechados: mock.fn(async () => [
+          { numPed: "10", vendedor: " Carlos " },
+          { numPed: "20", vendedor: "" },
+        ]),
       },
     });
 
@@ -185,6 +191,7 @@ describe("GetConciliacaoViagemUseCase", () => {
     assert.equal(porIdentificador.get("H0099"), null);
     assert.equal(view.pedidos[0]?.numPed, "10");
     assert.equal(view.pedidos[0]?.quantidadeApontada, 1);
+    assert.equal(view.pedidos[0]?.vendedor, "Carlos");
     assert.equal(view.pedidos.some((pedido) => pedido.numPed === "20"), false);
   });
 });

@@ -17,6 +17,7 @@ import {
 } from "../services/conciliacaoViagem";
 import { AlocacaoIbcRecord, CargaPedidoIbcSnapshot, IbcPlacaPaleta } from "../types/IbcExpedicao.types";
 import { mapContainerPaleta } from "../mappers/containerPaleta.mapper";
+import { vendedoresPorPedido } from "../services/vendedoresPorPedido";
 import { loadCargaFotoExpedicao } from "./loadCargaFotoExpedicao";
 
 export type ConciliacaoViagemItem = {
@@ -65,13 +66,23 @@ export class GetConciliacaoViagemUseCase {
     if (!expedicao) {
       throw new AppError({ message: `Carga ${input.codCar} não tem expedição IBC fechada`, statusCode: 409, code: "IBC_EXPEDICAO_AUSENTE", details: { codCar: input.codCar } });
     }
-    const [alocacoes, marcas, retornos] = await Promise.all([
+    const [alocacoes, marcas, retornos, pedidosFechados] = await Promise.all([
       this.expedicoes.listAlocacoesByCargaId(carga.id),
       this.conciliacoes.listMarcas(expedicao.id),
       this.conciliacoes.listRetornos(expedicao.id),
+      this.conciliacoes.listPedidosFechados(carga.id),
     ]);
     const placas = await this.expedicoes.listPlacaPaletaPorIbcIds(alocacoes.map((item) => item.ibcId));
-    return montar({ codCar: carga.codCar, expedicao, pedidos: pedidosIbc, alocacoes, marcas, retornos, placas });
+    return montar({
+      codCar: carga.codCar,
+      expedicao,
+      pedidos: pedidosIbc,
+      alocacoes,
+      marcas,
+      retornos,
+      placas,
+      vendedores: vendedoresPorPedido(pedidosFechados),
+    });
   }
 }
 
@@ -83,6 +94,7 @@ function montar(input: {
   marcas: MarcaConciliacaoSalva[];
   retornos: RetornoSemIdSalvo[];
   placas: Map<string, IbcPlacaPaleta>;
+  vendedores: ReadonlyMap<string, string>;
 }): ConciliacaoViagemView {
   const pedidos = new Map(input.pedidos.map((pedido) => [pedido.numPed, pedido]));
   const marcas = new Map(input.marcas.map((marca) => [marca.alocacaoIbcId, marca]));
@@ -141,7 +153,11 @@ function montar(input: {
     viagemFechadaPorId: input.expedicao.viagemFechadaPorId,
     chegaramAMais: input.expedicao.chegaramAMais,
     itens,
-    pedidos: conciliacaoViagem.progressoPedidos(input.pedidos, escolhas.map((escolha) => escolha.apontado)),
+    pedidos: conciliacaoViagem.progressoPedidos(
+      input.pedidos,
+      escolhas.map((escolha) => escolha.apontado),
+      input.vendedores,
+    ),
     clientes: conciliacaoViagem.clientes(input.pedidos).map((cliente) => {
       const salvo = retornos.get(cliente.chaveCliente);
       return {

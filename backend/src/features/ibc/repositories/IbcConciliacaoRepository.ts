@@ -48,6 +48,7 @@ export type SalvarConciliacaoData = {
 
 export interface IIbcConciliacaoRepository {
   findPorCarga(cargaId: string): Promise<ExpedicaoParaConciliar | null>;
+  listPedidosFechados(cargaId: string): Promise<unknown>;
   listMarcas(expedicaoIbcId: string): Promise<MarcaConciliacaoSalva[]>;
   listRetornos(expedicaoIbcId: string): Promise<RetornoSemIdSalvo[]>;
   save(data: SalvarConciliacaoData): Promise<void>;
@@ -80,6 +81,15 @@ export class IbcConciliacaoRepository implements IIbcConciliacaoRepository {
       viagemFechadaPorId: row.viagemFechadaPorId,
       chegaramAMais: row.chegaramAMais,
     };
+  }
+
+  async listPedidosFechados(cargaId: string): Promise<unknown> {
+    const fechada = await this.prisma.cargasFechadas.findFirst({
+      where: { cargaId },
+      orderBy: { createdAt: "desc" },
+      select: { pedidos: true },
+    });
+    return fechada?.pedidos ?? [];
   }
 
   async listMarcas(expedicaoIbcId: string): Promise<MarcaConciliacaoSalva[]> {

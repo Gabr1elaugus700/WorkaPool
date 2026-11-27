@@ -45,6 +45,7 @@ export type PedidoConciliacaoViagem = {
   quantidadeApontada: number;
   posCar: number | null;
   gruposCodigo: readonly string[];
+  vendedor: string | null;
 };
 
 export type PedidoNaVolta = {
@@ -112,6 +113,7 @@ function pedidoNaVolta(input: {
 function progressoPedidos(
   pedidos: readonly CargaPedidoIbcSnapshot[],
   apontados: readonly (string | null)[],
+  vendedores: ReadonlyMap<string, string> = new Map(),
 ): PedidoConciliacaoViagem[] {
   const contagem = new Map<string, number>();
   for (const numPed of apontados) {
@@ -127,6 +129,7 @@ function progressoPedidos(
     incluso: pedido.quantidadeEsperadaVenda > 0,
     posCar: pedido.posCar,
     gruposCodigo: pedido.gruposCodigo,
+    vendedor: vendedores.get(pedido.numPed) ?? null,
   }));
 }
 
